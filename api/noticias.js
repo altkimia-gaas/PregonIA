@@ -106,7 +106,8 @@ Agrupa las que cuentan el mismo hecho, aunque sean de medios distintos. Responde
 async function clasificar(comuna, notas){
   if (!process.env.ANTHROPIC_API_KEY || !notas.length) return {porI: new Map(), ok: false};
   const lotes = []; for (let k = 0; k < notas.length; k += LOTE) lotes.push(k);
-  const [grupos, ...partes] = await Promise.all([llamar(promptGrupos(comuna, notas), 4000), ...lotes.map(k => llamar(promptLote(comuna, notas.slice(k, k + LOTE), k), 4000))]);
+  const lote = async k => (await llamar(promptLote(comuna, notas.slice(k, k + LOTE), k), 4000)) || (await llamar(promptLote(comuna, notas.slice(k, k + LOTE), k), 4000)); // un reintento
+  const [grupos, ...partes] = await Promise.all([llamar(promptGrupos(comuna, notas), 4000), ...lotes.map(lote)]);
   const porI = new Map();
   partes.forEach(p => (p || []).forEach(c => { if (Number.isInteger(Number(c.i))) porI.set(Number(c.i), {...c}); }));
   (grupos || []).forEach(c => { const x = porI.get(Number(c.i)); if (x && c.g) x.g = c.g; else if (c.g) porI.set(Number(c.i), {g: c.g}); });

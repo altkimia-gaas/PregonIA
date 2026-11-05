@@ -1091,7 +1091,7 @@ async function cargarReales(){
   try {
     const r = await fetch("/api/noticias?comuna=" + encodeURIComponent(org)); if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json(); if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
-    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, hay: norm(n.t + " " + n.res + " " + (n.x || "")), ht: norm(n.t), real: true}));
+    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + org + " comuna"), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna
     NOTAS.splice(0, NOTAS.length, ...nuevas); MODO = {...MODO, tipo: "real", info: {...j, notas: nuevas}, cargando: false};
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
     pintarModo(); render();
