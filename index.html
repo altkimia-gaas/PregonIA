@@ -1737,23 +1737,23 @@ document.addEventListener("keydown", e => {
 window.addEventListener("hashchange", () => { if (helpOpen) renderHelp(); });
 
 
-/* Portada de bienvenida: al entrar sin sección en la dirección, una vez por sesión, o con #portada */
-function portadaVista(){ try { return sessionStorage.getItem("pregonia-portada") === "1"; } catch(e) { return false; } }
+/* Portada de bienvenida: aparece cada vez que se abre o recarga la aplicación, y con #portada o el logo.
+   "Empezar" lleva a la sección de la dirección si había una (enlaces compartidos); si no, a Inicio. */
 function mostrarPortada(on){
   const p = $("#portada"); if (!p) return;
   p.hidden = !on; document.body.classList.toggle("pt-on", on);
-  if (on) setTimeout(() => $("#ptGo").focus({preventScroll:true}), 60);
+  if (on) { window.scrollTo(0, 0); setTimeout(() => $("#ptGo").focus({preventScroll:true}), 60); }
 }
 document.addEventListener("click", e => {
   if (!e.target.closest("#ptGo")) return;
-  try { sessionStorage.setItem("pregonia-portada", "1"); } catch(err) {}
   mostrarPortada(false);
-  if (location.hash !== "#inicio") location.hash = "inicio"; else render(true);
+  const k = location.hash.slice(1);
+  if (!k || k === "portada") location.hash = "inicio"; else render(true);
 });
-window.addEventListener("hashchange", () => mostrarPortada(location.hash === "#portada"));
+window.addEventListener("hashchange", () => { if (location.hash === "#portada") mostrarPortada(true); });
 
 render();
-mostrarPortada(location.hash === "#portada" || (!location.hash && !portadaVista()));
+mostrarPortada(!/[?&]sin-portada\b/.test(location.search));
 
 </script>
 </body>
