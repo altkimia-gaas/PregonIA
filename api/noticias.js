@@ -60,31 +60,52 @@ function parsear(xml){
   return out.filter(x => x.titulo && x.url);
 }
 
-/* Clasificación con Claude Haiku: relevancia, tono, resumen propio, palabras clave y agrupación por hecho. */
-async function clasificar(comuna, notas){
-  const clave = process.env.ANTHROPIC_API_KEY; if (!clave || !notas.length) return null;
-  const lista = notas.map((n, i) => `${i}. [${n.medio} · ${n.ambito}] ${n.titulo}${n.desc ? " — " + n.desc.slice(0, 260) : ""}`).join("\n");
-  const prompt = `Eres analista de prensa de PregonIA para la Municipalidad de ${comuna}, Región de Valparaíso, Chile. Revisa estas notas de prensa:
+/* Clasificación con Claude Haiku, en lotes paralelos para responder rápido: relevancia, tono, resumen propio y palabras clave.
+   En paralelo, una llamada corta solo con los titulares agrupa las notas que cuentan el mismo hecho. */
+const LOTE = 15;
+async function llamar(prompt, maxTok){
+  const clave = process.env.ANTHROPIC_API_KEY; if (!clave) return null;
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", signal: AbortSignal.timeout(28000),
+      headers: { "x-api-key": clave, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL_RAPIDO || "claude-haiku-5-5", max_tokens: maxTok, messages: [{ role: "user", content: prompt }] })
+    });
+    if (!r.ok) { console.error("Anthropic", r.status, (await r.text()).slice(0, 300)); return null; }
+    const d = await r.json(), txt = (d.content || []).map(c => c.text || "").join("");
+    const a = JSON.parse(txt.slice(txt.indexOf("["), txt.lastIndexOf("]") + 1)); return Array.isArray(a) ? a : null;
+  } catch(e) { console.error("Anthropic", e && e.name, String(e).slice(0, 200)); return null; }
+}
+const linea = (n, i) => `${i}. [${n.medio} · ${n.ambito}] ${n.titulo}${n.desc ? " — " + n.desc.slice(0, 240) : ""}`;
+function promptLote(comuna, notas, base){
+  return `Eres analista de prensa de PregonIA para la Municipalidad de ${comuna}, Región de Valparaíso, Chile. Revisa estas notas de prensa:
 
-${lista}
+${notas.map((n, k) => linea(n, base + k)).join("\n")}
 
 Para cada nota devuelve un objeto con:
 - "i": su número.
 - "rel": true solo si trata de la comuna de ${comuna} en Chile, su municipio, sus autoridades o hechos ocurridos allí; false si es otro lugar con el mismo nombre, si la comuna aparece solo de pasada o si solo es el lugar de una cárcel, un tribunal, una carretera o un trámite judicial y el hecho no afecta a los vecinos ni al municipio.
 - "tono": "cri" si es negativa o riesgosa para la gestión o la imagen del municipio o la comuna (reclamos, emergencias, conflictos, críticas), "pos" si la favorece (logros, inversiones, eventos exitosos), "neu" si es informativa.
-- "res": un resumen propio de una frase, de máximo 22 palabras, en español de Chile, sin copiar frases del medio.
-- "x": entre 3 y 8 palabras clave en minúsculas separadas por espacios (temas, lugares, instituciones).
-- "g": una etiqueta corta en minúsculas para el hecho; usa la misma etiqueta en todas las notas que cuentan el mismo hecho, aunque sean de medios distintos.
+- "res": un resumen propio de una frase, de máximo 20 palabras, en español de Chile, sin copiar frases del medio.
+- "x": entre 3 y 6 palabras clave en minúsculas separadas por espacios (temas, lugares, instituciones).
 
 Responde solo con un arreglo JSON, sin texto adicional.`;
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST", signal: AbortSignal.timeout(40000),
-    headers: { "x-api-key": clave, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL_RAPIDO || "claude-haiku-5-5", max_tokens: 9000, messages: [{ role: "user", content: prompt }] })
-  });
-  if (!r.ok) { console.error("Anthropic", r.status, (await r.text()).slice(0, 300)); return null; }
-  const d = await r.json(), txt = (d.content || []).map(c => c.text || "").join("");
-  try { const a = JSON.parse(txt.slice(txt.indexOf("["), txt.lastIndexOf("]") + 1)); return Array.isArray(a) ? a : null; } catch { return null; }
+}
+function promptGrupos(comuna, notas){
+  return `Estas son notas de prensa sobre ${comuna}, Chile:
+
+${notas.map((n, i) => `${i}. ${n.titulo} (${n.medio})`).join("\n")}
+
+Agrupa las que cuentan el mismo hecho, aunque sean de medios distintos. Responde solo con un arreglo JSON de objetos {"i": número, "g": "etiqueta-corta-del-hecho"}, uno por nota; las notas del mismo hecho llevan la misma etiqueta.`;
+}
+async function clasificar(comuna, notas){
+  if (!process.env.ANTHROPIC_API_KEY || !notas.length) return {porI: new Map(), ok: false};
+  const lotes = []; for (let k = 0; k < notas.length; k += LOTE) lotes.push(k);
+  const [grupos, ...partes] = await Promise.all([llamar(promptGrupos(comuna, notas), 2500), ...lotes.map(k => llamar(promptLote(comuna, notas.slice(k, k + LOTE), k), 2600))]);
+  const porI = new Map();
+  partes.forEach(p => (p || []).forEach(c => { if (Number.isInteger(Number(c.i))) porI.set(Number(c.i), {...c}); }));
+  (grupos || []).forEach(c => { const x = porI.get(Number(c.i)); if (x && c.g) x.g = c.g; else if (c.g) porI.set(Number(c.i), {g: c.g}); });
+  return {porI, ok: partes.every(Boolean) && Boolean(grupos)};
 }
 
 export async function GET(req){
@@ -123,22 +144,22 @@ export async function GET(req){
   candidatas.sort((a, b) => b.ts - a.ts);
   const lote = candidatas.slice(0, MAX_IA);
 
-  let clas = null; try { clas = await clasificar(comuna, lote); } catch(e) { console.error("clasificar", e); }
-  const porI = new Map((clas || []).map(c => [Number(c.i), c]));
+  let clas = {porI: new Map(), ok: false}; try { clas = await clasificar(comuna, lote); } catch(e) { console.error("clasificar", e); }
+  const porI = clas.porI;
   const notas = [], grupos = new Map();
   lote.forEach((n, i) => {
     const c = porI.get(i);
     if (c && c.rel === false) return;
-    const etiqueta = c && c.g ? "g:" + norm(c.g) : n.id;
-    notas.push({ id: n.id, m: n.m, ts: n.ts, t: n.titulo, url: n.url, tono: c && ["cri", "neu", "pos"].includes(c.tono) ? c.tono : "neu", res: c && c.res ? String(c.res).slice(0, 220) : n.titulo, x: c && c.x ? String(c.x).slice(0, 120) : "", etiqueta });
+    const etiqueta = c && c.g ? "g:" + norm(c.g) : n.id, clasificada = Boolean(c && c.tono);
+    notas.push({ id: n.id, m: n.m, ts: n.ts, t: n.titulo, url: n.url, tono: c && ["cri", "neu", "pos"].includes(c.tono) ? c.tono : "neu", res: c && c.res ? String(c.res).slice(0, 220) : n.titulo, x: c && c.x ? String(c.x).slice(0, 120) : "", clasificada, etiqueta });
   });
   // Grupo estable: el id de la nota más antigua del mismo hecho, para que "respondida" o "no corresponde" sobrevivan a una nueva lectura.
   notas.slice().sort((a, b) => a.ts - b.ts).forEach(n => { if (!grupos.has(n.etiqueta)) grupos.set(n.etiqueta, n.id); });
   notas.forEach(n => { n.g = grupos.get(n.etiqueta); delete n.etiqueta; });
 
   return json({
-    comuna, generado: new Date(ahora).toISOString(), ventana_dias: VENTANA_DIAS, ia: Boolean(clas),
+    comuna, generado: new Date(ahora).toISOString(), ventana_dias: VENTANA_DIAS, ia: clas.ok, ia_parcial: !clas.ok && clas.porI.size > 0,
     fuentes: { leidas: fuentes.length + 1 - errores.length, total: fuentes.length + 1, con_error: errores.slice(0, 40) },
     candidatas: candidatas.length, notas
-  }, 200, { "cache-control": "public, max-age=0, s-maxage=900, stale-while-revalidate=3600" });
+  }, 200, { "cache-control": clas.ok ? "public, max-age=0, s-maxage=900, stale-while-revalidate=3600" : "public, max-age=0, s-maxage=60" });
 }
