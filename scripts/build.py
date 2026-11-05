@@ -4,7 +4,7 @@
 Uso: python3 scripts/build.py
 Orden del script embebido: base.js (constantes y catálogo) → corpus.js (noticias ficticias) → app.js (aplicación).
 """
-import csv, json, pathlib
+import base64, csv, json, pathlib
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 SRC, DATA = RAIZ / "src", RAIZ / "data"
@@ -18,7 +18,8 @@ def main():
     leer = lambda n: (SRC / n).read_text(encoding="utf-8")
     js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("app.js")
     js = js.replace("/*CATALOG*/", json.dumps(catalogo(), ensure_ascii=False, separators=(",", ":")), 1)
-    html = leer("shell.html") + "<script>\n" + js + "\n</script>\n"
+    foto = "data:image/jpeg;base64," + base64.b64encode((RAIZ / "assets" / "portada.jpg").read_bytes()).decode()
+    html = leer("shell.html").replace("assets/portada.jpg", foto) + "<script>\n" + js + "\n</script>\n"
     (RAIZ / "index.html").write_text(html, encoding="utf-8")
     print(f"index.html listo ({len(html.encode('utf-8')) // 1024} KB)")
 

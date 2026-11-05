@@ -909,4 +909,21 @@ document.addEventListener("keydown", e => {
 });
 window.addEventListener("hashchange", () => { if (helpOpen) renderHelp(); });
 
+
+/* Portada de bienvenida: al entrar sin sección en la dirección, una vez por sesión, o con #portada */
+function portadaVista(){ try { return sessionStorage.getItem("pregonia-portada") === "1"; } catch(e) { return false; } }
+function mostrarPortada(on){
+  const p = $("#portada"); if (!p) return;
+  p.hidden = !on; document.body.classList.toggle("pt-on", on);
+  if (on) setTimeout(() => $("#ptGo").focus({preventScroll:true}), 60);
+}
+document.addEventListener("click", e => {
+  if (!e.target.closest("#ptGo")) return;
+  try { sessionStorage.setItem("pregonia-portada", "1"); } catch(err) {}
+  mostrarPortada(false);
+  if (location.hash !== "#inicio") location.hash = "inicio"; else render(true);
+});
+window.addEventListener("hashchange", () => mostrarPortada(location.hash === "#portada"));
+
 render();
+mostrarPortada(location.hash === "#portada" || (!location.hash && !portadaVista()));

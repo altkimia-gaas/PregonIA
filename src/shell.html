@@ -606,14 +606,50 @@ details.resp[open] summary{margin-bottom:12px}
 .hp-ans{margin-top:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);white-space:pre-wrap;font-size:14px;line-height:1.55}
 body.hp-on{overflow:hidden}
 @media (max-width:820px){ .helpbtn{margin-left:auto;padding:6px 9px} .helpbtn span{display:none} .help{width:100vw;border-left:0} }
+
+/* Portada de bienvenida */
+.portada{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;overflow:hidden;background:#0B1624;color:#F3F6FA;color-scheme:dark}
+.portada::before{content:"";position:absolute;inset:0;background:#0B1624 url("assets/portada.jpg") 40% 30% / cover no-repeat;transform:scale(1.04);animation:ptzoom 20s ease-out forwards}
+.portada::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,13,22,.35) 0%,rgba(6,13,22,.12) 30%,rgba(6,13,22,.72) 58%,rgba(6,13,22,.95) 100%),linear-gradient(90deg,rgba(6,13,22,.6) 0%,rgba(6,13,22,0) 65%)}
+@keyframes ptzoom{to{transform:scale(1)}}
+.pt-in{position:relative;z-index:1;width:100%;max-width:1240px;margin:0 auto;display:grid;gap:18px;justify-items:start;padding-top:24px;padding-bottom:calc(56px + env(safe-area-inset-bottom,0px));padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.pt-logo{margin:0;display:inline-flex;align-items:center;gap:14px;font-size:clamp(38px,5.4vw,60px);font-weight:800;letter-spacing:-.035em;line-height:1}
+.pt-logo b{color:#8FB8EA;font-weight:800}
+.pt-logo .mk{display:inline-flex;align-items:flex-end;gap:4px;height:.8em}
+.pt-logo .mk i{width:.17em;border-radius:3px;background:#8FB8EA}
+.pt-logo .mk i:nth-child(1){height:38%;opacity:.55}.pt-logo .mk i:nth-child(2){height:68%;opacity:.8}.pt-logo .mk i:nth-child(3){height:100%}
+.pt-kick{margin:0;font-family:var(--f-news);font-style:italic;font-size:18px;color:#C3D0DF}
+.pt-h{margin:4px 0 0;max-width:30ch;font-family:var(--f-news);font-weight:600;font-size:clamp(27px,3.4vw,44px);line-height:1.16;letter-spacing:-.01em;text-wrap:balance;text-shadow:0 2px 18px rgba(0,0,0,.35)}
+.pt-h em{font-style:normal;color:#8FB8EA}
+.pt-sub{margin:0;font-size:14.5px;color:#C3D0DF;display:flex;flex-wrap:wrap;gap:4px 16px}
+.pt-sub span{display:inline-flex;align-items:center;gap:7px}
+.pt-sub span::before{content:"";width:6px;height:6px;border-radius:50%;background:#3DD6B5}
+.pt-go{margin-top:8px;display:inline-flex;align-items:center;gap:10px;border:0;border-radius:10px;padding:15px 30px;background:#F3F6FA;color:#0F2236;font:inherit;font-size:16.5px;font-weight:800;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .15s,background .15s}
+.pt-go:hover{background:#FFFFFF;transform:translateY(-1px)}
+.pt-go:focus-visible{outline:3px solid #8FB8EA;outline-offset:3px}
+.pt-go .ico{width:19px;height:19px;stroke-width:2.4}
+.pt-note{position:absolute;z-index:1;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));margin:0;font-size:11.5px;color:#9FB0C4;text-align:right}
+body.pt-on{overflow:hidden}
+@media (max-width:820px){ .portada::before{background-position:38% 20%} .pt-in{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))} .pt-note{left:max(24px,env(safe-area-inset-left,0px));right:auto;text-align:left} .pt-go{width:100%;justify-content:center} }
+@media (prefers-reduced-motion: reduce){ .portada::before{animation:none;transform:none} .pt-go{transition:none} }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="pat-pos" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" style="fill:var(--pos)"/></pattern></defs></svg>
+<section class="portada" id="portada" aria-labelledby="ptT" hidden>
+  <div class="pt-in">
+    <p class="pt-logo" id="ptT"><span class="mk" aria-hidden="true"><i></i><i></i><i></i></span><span>Pregon<b>IA</b></span></p>
+    <p class="pt-kick">Escucha la plaza. Decide a tiempo.</p>
+    <h1 class="pt-h">Sabe qué dice la prensa de tu comuna, hasta dónde ha llegado y qué responder, <em>antes de que el tema escale.</em></h1>
+    <p class="pt-sub"><span>100 medios nacionales, regionales y comunales</span><span>Alertas e informes para quien decide</span><span>Respuestas redactadas con IA</span></p>
+    <button class="pt-go" id="ptGo" type="button">Empezar <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </div>
+  <p class="pt-note">Prototipo con noticias ficticias · Imagen ilustrativa generada con IA</p>
+</section>
 <div class="demo" role="note"><b>Prototipo</b>Noticias y cifras ficticias · catálogo de 100 medios real · enlaces a las notas originales en producción</div>
 <div class="app">
   <header class="topbar">
     <div class="top-in">
-      <a class="logo" href="#inicio" aria-label="PregonIA, inicio"><span class="mk" aria-hidden="true"><i></i><i></i><i></i></span><span>Pregon<b>IA</b></span></a>
+      <a class="logo" href="#portada" aria-label="PregonIA, portada"><span class="mk" aria-hidden="true"><i></i><i></i><i></i></span><span>Pregon<b>IA</b></span></a>
       <span class="slogan">Escucha la plaza. Decide a tiempo.</span>
       <div class="org"><label for="org">Municipio</label><select id="org" aria-label="Municipio"></select></div>
       <span class="live"><i class="dot" aria-hidden="true"></i><span id="fecha"></span></span>

@@ -8,6 +8,7 @@ Producto de ALTKimia. Piloto: Casablanca, Algarrobo, El Quisco, El Tabo, Cartage
 Versión de demostración: el catálogo de medios es real; las noticias, cifras y fechas son ficticias.
 
 ## Qué incluye el prototipo
+- **Portada:** logo, propuesta de valor y botón Empezar sobre una foto de un periodista en terreno (imagen ilustrativa generada con IA). Aparece al entrar sin sección en la dirección, una vez por sesión, o con `#portada`; también al tocar el logo.
 - **Inicio:** portada de diario digital del día (lo último, indicadores, para revisar hoy, por tema, medios que más hablan).
 - **Menciones:** cada noticia una vez aunque la publiquen varios medios; filtros por tono, período, tema y palabra; "¿Por qué aparece?" y "No corresponde".
 - **Reportes por lector:** parte semanal del alcalde (copiable a WhatsApp), mesa diaria de comunicaciones, informe de gestión mensual y episodio crítico. Cada asunto muestra hasta dónde llegó: prensa comunal, regional o nacional.
@@ -23,6 +24,7 @@ Los datos de la demo se guardan en el navegador (localStorage, clave `pregonia-d
 - `src/base.js` constantes, planes y utilidades; recibe el catálogo de medios al compilar.
 - `src/corpus.js` noticias ficticias de la demo.
 - `src/app.js` motor de calce, métricas, vistas, informes, comunicados y ayuda.
+- `assets/portada.jpg` foto de la portada; se embebe en `index.html` al compilar.
 - `data/catalogo_medios.csv` los 100 medios con método de lectura, URL y estado (listo, requiere_ajuste, restringido).
 - `docs/especificacion.md` especificación funcional del MVP.
 - `scripts/build.py` arma `index.html` desde `src/` y `data/`.
