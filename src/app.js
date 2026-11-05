@@ -1028,6 +1028,7 @@ function renderHelp(){
     <section class="hp-here"><span class="kick">Estás en</span><h3>${esc(t)}</h3><p>${esc(d)}</p></section>
     <section><h3 class="hp-h">Cómo se usa, en cinco pasos</h3><ol class="hp-guia">${GUIA.map(([a, b]) => `<li><b>${a}</b><span>${b}</span></li>`).join("")}</ol></section>
     <section><h3 class="hp-h">Preguntas frecuentes</h3><input id="helpQ" class="hp-q" type="search" placeholder="Busca, por ejemplo: tono, WhatsApp, límite" aria-label="Buscar en las preguntas frecuentes" value="${esc(helpQ)}"><div id="faqOut">${faqHtml()}</div></section>
+    <section class="hp-teclado"><h3 class="hp-h">Atajos de teclado</h3><dl class="hp-atajos"><dt><span class="kbd">1</span> a <span class="kbd">5</span></dt><dd>Ir a Inicio, Menciones, Reportes, Comunicados o Ajustes</dd><dt><span class="kbd">/</span></dt><dd>Buscar en las menciones</dd><dt><span class="kbd">?</span></dt><dd>Abrir o cerrar esta ayuda</dd><dt><span class="kbd">Esc</span></dt><dd>Cerrar ventanas y menús</dd></dl></section>
     <section class="hp-ask"><h3 class="hp-h">¿No encuentras la respuesta?</h3><p class="hint" style="margin:0 0 8px">Pregúntale a PregonIA. Responde con la guía y las preguntas frecuentes de este sistema.</p>
       <form id="helpForm"><textarea id="helpAsk" rows="2" placeholder="Por ejemplo: ¿cómo agrego un tema nuevo?" aria-label="Tu pregunta"></textarea><div style="display:flex;gap:8px;margin-top:8px"><button class="btn primary sm" type="submit" id="helpBtn">Preguntar</button><button class="btn sm" type="button" data-act="help-stop" id="helpStop" hidden>Detener</button></div></form>
       <div id="helpAns" class="hp-ans" aria-live="polite" hidden></div></section>`;
@@ -1073,6 +1074,34 @@ document.addEventListener("keydown", e => {
 });
 window.addEventListener("hashchange", () => { if (helpOpen) renderHelp(); });
 
+
+/* Tema: la marca es oscura; el modo claro es una opción que se recuerda en este navegador. */
+const TEMA_KEY = "pregonia-tema", ICO_TEMA = {sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>', luna: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'};
+function temaActual(){ return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"; }
+function pintarTema(){ const claro = temaActual() === "light", b = $("#temaBtn"); if (!b) return; $("#temaIco").innerHTML = claro ? ICO_TEMA.luna : ICO_TEMA.sol; b.setAttribute("aria-label", claro ? "Cambiar a modo oscuro" : "Cambiar a modo claro"); b.title = claro ? "Modo oscuro" : "Modo claro"; }
+try { const t = localStorage.getItem(TEMA_KEY); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch(e) {}
+pintarTema();
+new MutationObserver(pintarTema).observe(document.documentElement, {attributes: true, attributeFilter: ["data-theme"]});
+/* Volver arriba: aparece en páginas largas, por encima de la barra inferior en el celular. */
+addEventListener("scroll", () => { const b = $("#arriba"); if (b) b.hidden = scrollY < innerHeight * 0.9 || document.body.classList.contains("pt-on"); }, {passive: true});
+function irAlContenido(){ const h = $("#view h2") || $("#view"); h.setAttribute("tabindex", "-1"); h.focus({preventScroll: true}); }
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return; const a = b.dataset.act;
+  if (a === "tema") { const n = temaActual() === "light" ? "dark" : "light"; document.documentElement.setAttribute("data-theme", n); try { localStorage.setItem(TEMA_KEY, n); } catch(err) {} toast(n === "light" ? "Modo claro activado." : "Modo oscuro activado."); }
+  if (a === "skip") irAlContenido();
+  if (a === "arriba") { scrollTo({top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); irAlContenido(); }
+});
+/* Atajos: 1 a 5 cambian de sección, / busca en menciones, ? abre la ayuda. Nunca mientras se escribe ni con ventanas abiertas. */
+document.addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
+  const el = e.target; if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+  if (document.body.classList.contains("pt-on") || document.body.classList.contains("vid-on") || $("#shrPop")) return;
+  if (e.key === "?") { e.preventDefault(); helpOpen ? cerrarAyuda() : abrirAyuda(); return; }
+  if (helpOpen) return;
+  const sec = ["inicio", "menciones", "reportes", "comunicados", "temas"][Number(e.key) - 1];
+  if (sec) { e.preventDefault(); if (location.hash !== "#" + sec) location.hash = sec; return; }
+  if (e.key === "/") { e.preventDefault(); const q = () => { const i = $("#fQ"); if (i) { i.focus(); i.select(); } }; if (route() === "menciones") q(); else { location.hash = "menciones"; setTimeout(q, 80); } }
+});
 
 /* Portada de bienvenida: aparece cada vez que se abre o recarga la aplicación, y con #portada o el logo.
    "Empezar" lleva a la sección de la dirección si había una (enlaces compartidos); si no, a Inicio. */

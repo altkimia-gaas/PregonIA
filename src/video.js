@@ -4,7 +4,7 @@
    (más rápido que tiempo real) y, si el navegador no lo permite, se graba con MediaRecorder. Todo en el navegador. */
 const VW = 1080, VH = 1920, VFPS = 30, VOUT = [720, 1280];
 const VC = {bg:"#080B12", card:"#111827", line:"#1E2D4A", text:"#F0F4FF", muted:"#8B9DC3", blue:"#2196F3", cri:"#EF6A50", pos:"#2BB3A3", neu:"#A3AEBB"};
-const VF = {h:'"Space Grotesk", "Public Sans", system-ui, sans-serif', b:'"Public Sans", system-ui, sans-serif', n:'Newsreader, Georgia, serif'};
+const VF = {h:'Inter, system-ui, sans-serif', b:'Inter, system-ui, sans-serif', n:'Newsreader, Georgia, serif'};
 const vtono = t => VC[t] || VC.neu;
 const vease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
 const vin = (l, t0, d = 0.6) => vease((l - t0) / d);
@@ -330,7 +330,7 @@ function videoAbrir(){
   vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const b = $("#vozAdd"), st = $("#vozEstado");
     if (e === "ok") { b.disabled = false; st.textContent = "Sin voz · voz chilena con ElevenLabs"; }
     else st.textContent = e === "sin-clave" ? "Falta configurar la clave de ElevenLabs en Vercel" : "Disponible en pregonia.vercel.app"; });
-  const fuentes = ['700 80px "Space Grotesk"', '500 40px "Space Grotesk"', '400 40px "Public Sans"', '500 40px "Public Sans"', '600 40px "Public Sans"', '700 40px "Public Sans"', '600 60px Newsreader'];
+  const fuentes = ['400 40px Inter', '500 40px Inter', '600 40px Inter', '700 40px Inter', '600 60px Newsreader'];
   Promise.all(fuentes.map(f => document.fonts.load(f).catch(() => {}))).then(() => { vgrid = null; });
   const loop = now => {
     if (!VID) return; const pl = VID.plan;
@@ -354,7 +354,7 @@ async function videoPreparar(){
   btn.hidden = true; prog.hidden = false; $("#vidOut").hidden = true;
   const ctl = VID.ctl = new AbortController(), plan = VID.plan;
   const avance = p => { bar.style.width = Math.round(p * 100) + "%"; pct.textContent = Math.round(p * 100) + "%"; };
-  try { await Promise.all(['700 80px "Space Grotesk"', '600 60px Newsreader', '500 40px "Public Sans"'].map(f => document.fonts.load(f).catch(() => {}))); } catch(e) {}
+  try { await Promise.all(['700 80px Inter', '600 60px Newsreader', '500 40px Inter'].map(f => document.fonts.load(f).catch(() => {}))); } catch(e) {}
   let blob = null;
   try {
     plan.audioCodec = undefined; blob = await videoMP4(plan, avance, ctl.signal);
