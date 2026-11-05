@@ -2,6 +2,8 @@
 
 Monitoreo de noticias sobre municipios y actores públicos en 100 medios digitales chilenos (50 nacionales y 50 de la Región de Valparaíso), con lectura de tono, alcance territorial (comunal, regional, nacional), informes por lector y redacción asistida de respuestas.
 
+Demo publicada: https://pregonia.vercel.app
+
 Producto de ALTKimia. Piloto: Casablanca, Algarrobo, El Quisco, El Tabo, Cartagena y San Antonio.
 Versión de demostración: el catálogo de medios es real; las noticias, cifras y fechas son ficticias.
 
