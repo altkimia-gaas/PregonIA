@@ -70,7 +70,7 @@ ${lista}
 
 Para cada nota devuelve un objeto con:
 - "i": su número.
-- "rel": true solo si trata de la comuna de ${comuna} en Chile, su municipio, sus autoridades o hechos ocurridos allí; false si es otro lugar con el mismo nombre o si la comuna aparece solo de pasada.
+- "rel": true solo si trata de la comuna de ${comuna} en Chile, su municipio, sus autoridades o hechos ocurridos allí; false si es otro lugar con el mismo nombre, si la comuna aparece solo de pasada o si solo es el lugar de una cárcel, un tribunal, una carretera o un trámite judicial y el hecho no afecta a los vecinos ni al municipio.
 - "tono": "cri" si es negativa o riesgosa para la gestión o la imagen del municipio o la comuna (reclamos, emergencias, conflictos, críticas), "pos" si la favorece (logros, inversiones, eventos exitosos), "neu" si es informativa.
 - "res": un resumen propio de una frase, de máximo 22 palabras, en español de Chile, sin copiar frases del medio.
 - "x": entre 3 y 8 palabras clave en minúsculas separadas por espacios (temas, lugares, instituciones).
