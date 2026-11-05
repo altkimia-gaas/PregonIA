@@ -142,6 +142,13 @@ body.vid-on{overflow:hidden}
 .vid-prog .bar{height:10px}
 .vid-prog .bar i{background:#1976D2;transition:width .2s}
 @media (max-width:700px){ .vid-b{grid-template-columns:minmax(0,1fr);padding:14px} .vid-stage{display:grid;justify-items:center} .vid-stage canvas{height:min(46vh,480px)} .vid-h{padding:12px 14px 10px} .vid-h p{font-size:12.5px} }
+.vid-voz{display:grid;gap:8px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.vid-voz-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:13.5px}
+.vid-voz-h span{color:var(--muted);font-size:12.5px}
+.vid-voz details summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--accent);padding:4px 0}
+.vid-lineas{display:grid;gap:8px;margin:8px 0 10px;max-height:300px;overflow:auto;padding-right:4px}
+.vid-lineas label{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
+.vid-lineas textarea{font:inherit;font-size:13px;font-weight:400;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px;line-height:1.45;resize:vertical;width:100%}
 .shr-pop{position:fixed;z-index:60;display:grid;min-width:240px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(15,23,42,.18)}
 .shr-pop button{all:unset;box-sizing:border-box;padding:10px 12px;border-radius:7px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;min-height:40px;display:flex;align-items:center}
 .shr-pop button:hover,.shr-pop button:focus-visible{background:var(--accent-soft);color:var(--accent)}

@@ -28,6 +28,8 @@ Los datos de la demo se guardan en el navegador (localStorage, clave `pregonia-d
 - `data/catalogo_medios.csv` los 100 medios con método de lectura, URL y estado (listo, requiere_ajuste, restringido).
 - `docs/especificacion.md` especificación funcional del MVP.
 - `api/ia.js` función de servidor (Vercel Edge) que conecta la IA con la clave en el servidor.
+- `api/voz.js` función de servidor que graba la voz del video resumen con ElevenLabs.
+- `src/video.js` video resumen del parte del alcalde: escenas en canvas, guion, voz y exportación a MP4 en el navegador.
 - `scripts/build.py` arma `index.html` desde `src/`, `assets/` y `data/`.
 
 ## Uso
@@ -47,6 +49,14 @@ Configuración en Vercel (Settings › Environment Variables), luego Redeploy:
 - `ANTHROPIC_MODEL` (opcional): fuerza un modelo; por defecto Claude Sonnet 5.5 para redactar y Claude Haiku 5.5 para la ayuda.
 - `ALLOWED_ORIGINS` (opcional): otros dominios autorizados, separados por coma (por ejemplo, un dominio propio).
 - `IA_LIMITE` (opcional): solicitudes por IP cada 10 minutos (por defecto 20).
+
+Voz del video resumen (opcional; sin ella el video sale sin narración):
+
+- `ELEVENLABS_API_KEY`: clave de ElevenLabs con permiso de texto a voz.
+- `ELEVENLABS_VOICE_ID` (opcional): voz a usar. Por defecto, Felipe (español de Chile).
+- `ELEVENLABS_MODEL` (opcional): por defecto `eleven_multilingual_v2`.
+- `ELEVENLABS_SPEED` (opcional): velocidad de lectura, de 0,7 a 1,2 (por defecto 1,06).
+- `VOZ_LIMITE` (opcional): grabaciones por IP cada 10 minutos (por defecto 60). Un video usa de 6 a 8.
 
 La función solo acepta pedidos desde el propio sitio, limita el largo del texto y las respuestas, y se niega a tareas ajenas a PregonIA. Sin la clave, la aplicación usa plantillas y lo indica en pantalla.
 

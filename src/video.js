@@ -33,8 +33,73 @@ function videoPlan(){
   if (!d.asuntos.length) S0.push({k: "calma", dur: 4.5});
   if (d.buena) S0.push({k: "buena", dur: 8, f: ficha(d.buena)});
   S0.push({k: "cierre", dur: 5.5});
-  let t = 0; S0.forEach(s => { s.t0 = t; t += s.dur; });
-  return {d, scenes: S0, total: t, org: S.org, per: d.per, sig: d.asuntos[0] ? ficha(d.asuntos[0]) : null};
+  S0.forEach(s => { s.base = s.dur; });
+  const plan = {d, scenes: S0, total: 0, org: S.org, per: d.per, sig: d.asuntos[0] ? ficha(d.asuntos[0]) : null, temas};
+  return retimar(plan);
+}
+
+/* Con voz, cada escena dura lo que su narración (más un respiro); sin voz, su duración base. */
+const VOZ_INI = 0.35, VOZ_COLA = 0.75;
+function retimar(plan){
+  let t = 0; plan.scenes.forEach(s => { s.dur = s.voz ? Math.max(s.base, VOZ_INI + s.voz.duration + VOZ_COLA) : s.base; s.t0 = t; t += s.dur; });
+  plan.total = t; return plan;
+}
+
+/* Guion de la voz: texto base armado con los datos, que la IA puede pulir sin agregar hechos. */
+const VNOMBRE = {intro: "Portada", veredicto: "Cómo te trató la prensa", temas: "Temas de la semana", asunto: "Asunto", calma: "Sin asuntos de riesgo", buena: "Para aprovechar", cierre: "Próximo paso"};
+const VPAL = {intro: 16, veredicto: 28, temas: 22, asunto: 38, calma: 20, buena: 28, cierre: 22};
+const ORD = ["Primer", "Segundo", "Tercer"];
+const fechaHablada = ts => new Date(ts).toLocaleDateString("es-CL", {day: "numeric", month: "long"});
+const yLista = a => a.length <= 1 ? a.join("") : a.slice(0, -1).join(", ") + " y " + a[a.length - 1];
+const resp = r => yLista(r.split(" · "));
+const minus = t => t.charAt(0).toLowerCase() + t.slice(1);
+function guionBase(plan){
+  const {M, v, comp} = plan.d, frase = t => t.trim().replace(/([^.!?])$/, "$1.");
+  return plan.scenes.map(s => {
+    if (s.k === "intro") return `Parte de prensa de la Municipalidad de ${plan.org}, del ${fechaHablada(NOW - 6 * DAY)} al ${fechaHablada(NOW)}.`;
+    if (s.k === "veredicto") return `La prensa fue ${v.n.toLowerCase()} esta semana: ${plural(M.vol, "noticia", "noticias")}, ${M.pos} positivas, ${M.neu} neutras y ${M.cri} críticas. ${comp}`;
+    if (s.k === "temas") { const t = s.temas.filter(x => !x.otros).slice(0, 2); return t.length ? `Los temas con más publicaciones fueron ${t.map((x, i) => `${x.nombre.toLowerCase()}, con ${i ? x.n : plural(x.n, "publicación", "publicaciones")}`).join(", y ")}.` : "La cobertura de la semana no se concentró en un tema en particular."; }
+    if (s.k === "asunto") { const f = s.f; return `${ORD[s.i]} asunto: ${frase(minus(f.m.lead.res))} Salió en ${plural(f.medios.length, "medio", "medios")} y ${llego(f.e).toLowerCase().replace(/^solo/, "se quedó solo en la")}. Recomendación: ${frase(minus(f.ac.a))} Responsable: ${resp(f.ac.r)}.`; }
+    if (s.k === "calma") return "Esta semana no hay asuntos de riesgo. PregonIA sigue revisando los medios y avisará si algo cambia.";
+    if (s.k === "buena") { const f = s.f; return `Para aprovechar: ${frase(minus(f.m.lead.res))} ${llego(f.e)}. La recomendación es ${frase(f.ac.a.charAt(0).toLowerCase() + f.ac.a.slice(1))}`; }
+    if (s.k === "cierre") return plan.sig ? `Próximo paso: ${frase(minus(plan.sig.ac.a))} Preparado con PregonIA.` : "Próximo paso: aprovechar la buena noticia en la próxima vocería. Preparado con PregonIA.";
+    return "";
+  });
+}
+async function guionIA(plan, base, signal){
+  const sample = await samplePromise; if (!sample) return null;
+  const n = base.length, lista = plan.scenes.map((s, i) => `${i + 1}. [${VNOMBRE[s.k]}${s.k === "asunto" ? " " + (s.i + 1) : ""}, máximo ${VPAL[s.k]} palabras] ${base[i]}`).join("\n");
+  const p = `Eres guionista de PregonIA. Reescribe, para que lo lea en voz alta un locutor, el guion de un video interno de alrededor de un minuto para el alcalde de ${plan.org} y su equipo directivo. Escribe en español de Chile.
+
+Reglas obligatorias:
+1. Conserva exactamente los hechos, cifras, nombres de temas y medios, niveles de difusión, recomendaciones y responsables del texto base. No agregues datos, opiniones, adjetivos sobre autoridades ni frases de promoción personal o partidaria.
+2. Frases cortas, naturales y sobrias, fáciles de decir en voz alta. Usa cifras, no palabras, para los números.
+3. Respeta el máximo de palabras de cada escena.
+4. Responde solo con un arreglo JSON de ${n} cadenas de texto, en el mismo orden, sin ningún texto adicional.
+
+Escenas:
+${lista}`;
+  try {
+    const {text} = await sample(p, {signal, modelTier: "quick", cache: false});
+    const j = JSON.parse(text.slice(text.indexOf("["), text.lastIndexOf("]") + 1));
+    if (!Array.isArray(j) || j.length !== n || !j.every(x => typeof x === "string" && x.trim() && x.length < 650)) return null;
+    return j.map(x => x.replace(/[*#_]/g, "").replace(/\s+/g, " ").trim());
+  } catch(err) { if (err && err.code === "cancelled") throw err; return null; }
+}
+async function vozDisponible(){
+  if (!/^https?:$/.test(location.protocol)) return "sin-servidor";
+  try { const r = await fetch("/api/voz", {cache: "no-store"}); if (!r.ok) return "sin-servidor"; const j = await r.json(); return j.ok ? "ok" : "sin-clave"; } catch(e) { return "sin-servidor"; }
+}
+async function vozGrabar(texto, ac, signal){
+  const r = await fetch("/api/voz", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({texto}), signal});
+  if (!r.ok) { let m = ""; try { m = (await r.json()).error; } catch(e) {} throw {code: r.status === 429 ? "rate_limited" : "voz", message: m || "El servicio de voz no respondió"}; }
+  const buf = await r.arrayBuffer();
+  return await new Promise((ok, no) => { const p = ac.decodeAudioData(buf, ok, no); if (p && p.then) p.then(ok, no); });
+}
+async function vozMezcla(plan){
+  const SR = 48000, oc = new OfflineAudioContext(1, Math.ceil(plan.total * SR), SR);
+  plan.scenes.forEach(s => { if (!s.voz) return; const src = oc.createBufferSource(); src.buffer = s.voz; src.connect(oc.destination); src.start(s.t0 + VOZ_INI); });
+  return await oc.startRendering();
 }
 
 /* Primitivas de dibujo */
@@ -183,7 +248,24 @@ async function videoMP4(plan, onProg, signal){
   for (const codec of ["avc1.640028", "avc1.4d0028", "avc1.42e028", "avc1.42001f"]) { try { const c = {...base, codec}; if ((await VideoEncoder.isConfigSupported(c)).supported) { cfg = c; break; } } catch(e) {} }
   if (!cfg) return null;
   let Mx; try { Mx = await cargarMuxer(); } catch(e) { return null; }
-  const muxer = new Mx.Muxer({target: new Mx.ArrayBufferTarget(), video: {codec: "avc", width: w, height: h, frameRate: VFPS}, fastStart: "in-memory"});
+  let acfg = null;
+  if (plan.audio && window.AudioEncoder && window.AudioData) {
+    for (const [codec, mx] of [["mp4a.40.2", "aac"], ["opus", "opus"]]) { try { const c = {codec, sampleRate: 48000, numberOfChannels: 1, bitrate: 128000}; if ((await AudioEncoder.isConfigSupported(c)).supported) { acfg = {c, mx}; break; } } catch(e) {} }
+  }
+  const muxer = new Mx.Muxer({target: new Mx.ArrayBufferTarget(), video: {codec: "avc", width: w, height: h, frameRate: VFPS}, ...(acfg ? {audio: {codec: acfg.mx, numberOfChannels: 1, sampleRate: 48000}} : {}), fastStart: "in-memory"});
+  plan.audioCodec = acfg ? acfg.mx : null;
+  if (acfg) {
+    let afallo = null; const aenc = new AudioEncoder({output: (c, m) => muxer.addAudioChunk(c, m), error: e => { afallo = e; }});
+    aenc.configure(acfg.c);
+    const pcm = plan.audio.getChannelData(0), PASO = 4800;
+    for (let i = 0; i < pcm.length; i += PASO) {
+      const trozo = pcm.slice(i, Math.min(pcm.length, i + PASO));
+      const ad = new AudioData({format: "f32-planar", sampleRate: 48000, numberOfFrames: trozo.length, numberOfChannels: 1, timestamp: Math.round(i / 48000 * 1e6), data: trozo});
+      aenc.encode(ad); ad.close();
+      while (aenc.encodeQueueSize > 20) await new Promise(r => setTimeout(r, 2));
+    }
+    await aenc.flush(); aenc.close(); if (afallo) throw afallo;
+  }
   let fallo = null; const enc = new VideoEncoder({output: (c, m) => muxer.addVideoChunk(c, m), error: e => { fallo = e; }});
   enc.configure(cfg);
   const cv = document.createElement("canvas"); cv.width = w; cv.height = h; const ctx = cv.getContext("2d");
@@ -208,12 +290,14 @@ async function videoGrabado(plan, onProg, signal){
   const tipos = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"], mime = tipos.find(t => MediaRecorder.isTypeSupported(t));
   if (!mime) return null;
   const [w, h] = VOUT, cv = document.createElement("canvas"); cv.width = w; cv.height = h; const ctx = cv.getContext("2d"); vdibujar(ctx, 0, plan);
-  const rec = new MediaRecorder(cv.captureStream(VFPS), {mimeType: mime, videoBitsPerSecond: 3_500_000}), partes = [];
+  const pista = cv.captureStream(VFPS); let ac2 = null, fuente = null;
+  if (plan.audio) { try { ac2 = new (window.AudioContext || window.webkitAudioContext)(); const dest = ac2.createMediaStreamDestination(); fuente = ac2.createBufferSource(); fuente.buffer = plan.audio; fuente.connect(dest); dest.stream.getAudioTracks().forEach(t => pista.addTrack(t)); } catch(e) { ac2 = null; fuente = null; } }
+  const rec = new MediaRecorder(pista, {mimeType: mime, videoBitsPerSecond: 3_500_000}), partes = [];
   rec.ondataavailable = e => { if (e.data && e.data.size) partes.push(e.data); };
-  const fin = new Promise(r => rec.onstop = r); rec.start(500);
+  const fin = new Promise(r => rec.onstop = r); rec.start(500); if (fuente) { await ac2.resume().catch(() => {}); fuente.start(); }
   const t0 = performance.now();
   await new Promise(ok => { const loop = () => { const t = (performance.now() - t0) / 1000; if ((signal && signal.aborted) || t >= plan.total) return ok(); vdibujar(ctx, t, plan); onProg(t / plan.total); requestAnimationFrame(loop); }; loop(); });
-  rec.stop(); await fin;
+  rec.stop(); await fin; if (ac2) ac2.close().catch(() => {});
   if (signal && signal.aborted) throw {code: "cancelled"};
   return new Blob(partes, {type: mime.split(";")[0]});
 }
@@ -230,6 +314,10 @@ function videoAbrir(){
       <div class="vid-side">
         <p class="vid-meta">${Math.round(plan.total)} segundos · vertical, para ver en el celular · ${plan.scenes.length} escenas armadas con el análisis de temas y publicaciones de la semana.</p>
         <div class="vid-ctrl"><button class="btn" type="button" data-act="vid-play" id="vidPlay">Pausa</button><button class="btn" type="button" data-act="vid-replay">Desde el inicio</button></div>
+        <div class="vid-voz" id="vozBox"><div class="vid-voz-h"><b>Voz</b><span id="vozEstado">Revisando…</span></div>
+          <button class="btn" type="button" data-act="voz-add" id="vozAdd" disabled><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Agregar voz</button>
+          <details id="vozGuion" hidden><summary>Ver y editar el guion</summary><div class="vid-lineas" id="vozLineas"></div><button class="btn sm" type="button" data-act="voz-regrabar">Grabar de nuevo con este guion</button></details>
+        </div>
         <button class="btn alt" type="button" data-act="vid-make" id="vidMake">Preparar video MP4</button>
         <div class="vid-prog" id="vidProg" hidden><span class="bar"><i style="width:0%"></i></span><span class="mono" id="vidPct">0%</span><button class="btn sm" type="button" data-act="vid-stop">Cancelar</button></div>
         <div class="vid-out" id="vidOut" hidden><button class="btn b-wa" type="button" data-act="vid-wa"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="vid-dl"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar</button></div>
@@ -238,16 +326,26 @@ function videoAbrir(){
     </div></section>`;
   document.body.appendChild(ov); document.body.classList.add("vid-on");
   const cv = $("#vidCv"), ctx = cv.getContext("2d"), quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  VID = {plan, ctx, t: quieto ? 2 : 0, play: !quieto, last: null, raf: 0, blob: null, ctl: null, origen: document.activeElement};
+  VID = {plan, ctx, t: quieto ? 2 : 0, play: !quieto, last: null, raf: 0, blob: null, ctl: null, origen: document.activeElement, ac: null, src: null, a0: 0};
+  vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const b = $("#vozAdd"), st = $("#vozEstado");
+    if (e === "ok") { b.disabled = false; st.textContent = "Sin voz · voz chilena con ElevenLabs"; }
+    else st.textContent = e === "sin-clave" ? "Falta configurar la clave de ElevenLabs en Vercel" : "Disponible en pregonia.vercel.app"; });
   const fuentes = ['700 80px "Space Grotesk"', '500 40px "Space Grotesk"', '400 40px "Public Sans"', '500 40px "Public Sans"', '600 40px "Public Sans"', '700 40px "Public Sans"', '600 60px Newsreader'];
   Promise.all(fuentes.map(f => document.fonts.load(f).catch(() => {}))).then(() => { vgrid = null; });
-  const loop = now => { if (!VID) return; if (VID.play) { if (VID.last != null) VID.t += (now - VID.last) / 1000; if (VID.t > plan.total + 1) VID.t = 0; } VID.last = now; vdibujar(ctx, Math.min(VID.t, plan.total - 0.001), plan); VID.raf = requestAnimationFrame(loop); };
+  const loop = now => {
+    if (!VID) return; const pl = VID.plan;
+    if (VID.play) {
+      if (VID.src) VID.t = VID.ac.currentTime - VID.a0; else if (VID.last != null) VID.t += (now - VID.last) / 1000;
+      if (VID.t > pl.total + 1) { VID.t = 0; vozSonar(); }
+    }
+    VID.last = now; vdibujar(ctx, Math.max(0, Math.min(VID.t, pl.total - 0.001)), pl); VID.raf = requestAnimationFrame(loop);
+  };
   VID.raf = requestAnimationFrame(loop);
   $("#vidPlay").textContent = VID.play ? "Pausa" : "Reproducir";
   ov.querySelector('[data-act="vid-close"]').focus();
 }
 function videoCerrar(){
-  if (!VID) return; cancelAnimationFrame(VID.raf); VID.ctl?.abort(); const o = VID.origen; VID = null;
+  if (!VID) return; cancelAnimationFrame(VID.raf); VID.ctl?.abort(); VID.vctl?.abort(); vozCallar(); VID.ac?.close().catch(() => {}); const o = VID.origen; VID = null;
   $("#vidBack")?.remove(); document.body.classList.remove("vid-on"); if (o && o.isConnected) o.focus();
 }
 const videoNombre = () => `PregonIA-Video-parte-semanal-${slug(S.org)}-${hoyISO()}.${VID && VID.blob && /webm/.test(VID.blob.type) ? "webm" : "mp4"}`;
@@ -259,7 +357,7 @@ async function videoPreparar(){
   try { await Promise.all(['700 80px "Space Grotesk"', '600 60px Newsreader', '500 40px "Public Sans"'].map(f => document.fonts.load(f).catch(() => {}))); } catch(e) {}
   let blob = null;
   try {
-    blob = await videoMP4(plan, avance, ctl.signal);
+    plan.audioCodec = undefined; blob = await videoMP4(plan, avance, ctl.signal);
     if (!blob) { note.textContent = "Este navegador graba el video en tiempo real: deja esta ventana abierta unos " + Math.round(plan.total) + " segundos."; blob = await videoGrabado(plan, avance, ctl.signal); }
     if (!blob) throw {code: "unsupported"};
   } catch(err) {
@@ -270,7 +368,8 @@ async function videoPreparar(){
   }
   if (!VID) return;
   VID.blob = blob; VID.ctl = null; prog.hidden = true; $("#vidOut").hidden = false; btn.hidden = false; btn.textContent = "Preparar de nuevo";
-  note.textContent = `Listo: ${(blob.size / 1048576).toFixed(1)} MB${/webm/.test(blob.type) ? " en formato WebM (en iPhone puede no reproducirse; Chrome o Edge generan MP4)" : " en MP4"}. Envíalo por WhatsApp o descárgalo.`;
+  const sinAudio = plan.audio && /mp4/.test(blob.type) && plan.audioCodec === null ? " Este navegador no pudo incluir la voz; prueba con Chrome o Edge en el computador." : plan.audio && plan.audioCodec === "opus" ? " La voz va en formato Opus: si no suena en algún teléfono, prepáralo desde Chrome en un computador con Windows o Mac." : "";
+  note.textContent = `Listo: ${(blob.size / 1048576).toFixed(1)} MB${/webm/.test(blob.type) ? " en formato WebM (en iPhone puede no reproducirse; Chrome o Edge generan MP4)" : " en MP4"}${plan.audio ? " con voz" : ""}. Envíalo por WhatsApp o descárgalo.${sinAudio}`;
   $("#vidOut button").focus();
 }
 async function videoWhatsApp(){
@@ -289,8 +388,10 @@ document.addEventListener("click", e => {
   if (a === "vid-open") videoAbrir();
   if (!VID) return;
   if (a === "vid-close") videoCerrar();
-  if (a === "vid-play") { VID.play = !VID.play; VID.last = null; b.textContent = VID.play ? "Pausa" : "Reproducir"; }
-  if (a === "vid-replay") { VID.t = 0; VID.play = true; VID.last = null; $("#vidPlay").textContent = "Pausa"; }
+  if (a === "vid-play") { VID.play = !VID.play; VID.last = null; b.textContent = VID.play ? "Pausa" : "Reproducir"; if (VID.play) vozSonar(); else vozCallar(); }
+  if (a === "vid-replay") { VID.t = 0; VID.play = true; VID.last = null; $("#vidPlay").textContent = "Pausa"; vozSonar(); }
+  if (a === "voz-add") vozAgregar(false);
+  if (a === "voz-regrabar") vozAgregar(true);
   if (a === "vid-make") videoPreparar();
   if (a === "vid-stop") VID.ctl?.abort();
   if (a === "vid-wa") videoWhatsApp();
@@ -300,5 +401,44 @@ document.addEventListener("click", e => { if (VID && e.target.id === "vidBack") 
 document.addEventListener("keydown", e => {
   if (!VID) return;
   if (e.key === "Escape") { e.preventDefault(); videoCerrar(); return; }
-  if (e.key === "Tab") { const f = [...document.querySelectorAll("#vidBack button:not([hidden]):not(:disabled)")].filter(x => x.offsetParent); if (!f.length) return; const i = f.indexOf(document.activeElement); if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); } }
+  if (e.key === "Tab") { const f = [...document.querySelectorAll("#vidBack button:not([hidden]):not(:disabled), #vidBack summary, #vidBack textarea")].filter(x => x.offsetParent); if (!f.length) return; const i = f.indexOf(document.activeElement); if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); } }
 });
+
+/* Voz en la vista previa, sincronizada con el reloj de audio */
+function vozCallar(){ if (VID && VID.src) { try { VID.src.stop(); } catch(e) {} VID.src = null; } }
+function vozSonar(){
+  if (!VID || !VID.plan.audio || !VID.ac) return; vozCallar();
+  const src = VID.ac.createBufferSource(); src.buffer = VID.plan.audio; src.connect(VID.ac.destination);
+  const desde = Math.max(0, Math.min(VID.t, VID.plan.total - 0.05)); VID.ac.resume().catch(() => {});
+  src.start(0, desde); VID.a0 = VID.ac.currentTime - desde; VID.src = src;
+  src.onended = () => { if (VID && VID.src === src) VID.src = null; };
+}
+async function vozAgregar(regrabar){
+  if (!VID) return;
+  const plan = VID.plan, st = $("#vozEstado"), btn = $("#vozAdd"), det = $("#vozGuion");
+  VID.ac ||= new (window.AudioContext || window.webkitAudioContext)(); VID.ac.resume().catch(() => {});
+  VID.vctl?.abort(); const ctl = VID.vctl = new AbortController();
+  btn.disabled = true; vozCallar();
+  let lineas;
+  try {
+    if (regrabar) lineas = [...document.querySelectorAll("#vozLineas textarea")].map(t => t.value.replace(/\s+/g, " ").trim());
+    else { st.textContent = "Escribiendo el guion…"; const base = guionBase(plan); lineas = (await guionIA(plan, base, ctl.signal)) || base; }
+    if (lineas.some(x => x.length > 650)) throw {code: "largo"};
+    $("#vozLineas").innerHTML = plan.scenes.map((s, i) => `<label><span>${i + 1}. ${VNOMBRE[s.k]}${s.k === "asunto" ? " " + (s.i + 1) : ""}</span><textarea rows="3">${esc(lineas[i])}</textarea></label>`).join("");
+    det.hidden = false;
+    let hechas = 0; st.textContent = `Grabando la voz… 0 de ${lineas.length}`;
+    const voces = new Array(lineas.length); let k = 0;
+    await Promise.all([0, 1, 2].map(async () => { while (k < lineas.length) { const i = k++; voces[i] = lineas[i] ? await vozGrabar(lineas[i], VID.ac, ctl.signal) : null; hechas++; if (VID) st.textContent = `Grabando la voz… ${hechas} de ${lineas.length}`; } }));
+    if (!VID || ctl.signal.aborted) return;
+    plan.scenes.forEach((s, i) => { s.voz = voces[i]; s.texto = lineas[i]; });
+    retimar(plan); plan.audio = await vozMezcla(plan);
+  } catch(err) {
+    if (!VID || (err && err.name === "AbortError") || (err && err.code === "cancelled")) return;
+    btn.disabled = false; st.textContent = err && err.code === "largo" ? "Una escena es demasiado larga: acórtala a unas 90 palabras." : err && err.code === "rate_limited" ? "El servicio de voz está ocupado. Intenta en unos minutos." : (err && err.message) || "No se pudo grabar la voz.";
+    return;
+  }
+  VID.blob = null; $("#vidOut").hidden = true; $("#vidMake").textContent = "Preparar video MP4";
+  $(".vid-meta").textContent = `${Math.round(plan.total)} segundos con voz · vertical, para ver en el celular · ${plan.scenes.length} escenas armadas con el análisis de temas y publicaciones de la semana.`;
+  st.textContent = `Voz lista · ${Math.round(plan.total)} segundos`; btn.disabled = false; btn.lastChild.textContent = "Escribir y grabar de nuevo";
+  VID.t = 0; VID.play = true; VID.last = null; $("#vidPlay").textContent = "Pausa"; vozSonar();
+}
