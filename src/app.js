@@ -1081,12 +1081,17 @@ let MODO = {tipo: "demo", info: null, cargando: false, disponible: false};
 const horaCorta = iso => new Date(iso).toLocaleTimeString("es-CL", {hour: "2-digit", minute: "2-digit", hourCycle: "h23"});
 function pintarModo(){
   const el = $("#demo"); if (!el) return;
-  if (MODO.cargando) { el.className = "demo"; el.innerHTML = `<b>Leyendo medios</b>Buscando noticias de ${esc(S.org)}<span class="demo-mas"> en unas 70 fuentes; puede tardar hasta un minuto</span>…`; return; }
-  if (MODO.tipo === "real" && MODO.info) { const i = MODO.info; el.className = "demo real"; el.innerHTML = `<b>Datos reales</b>${plural(i.notas.length, "nota", "notas")}<span class="demo-mas"> de ${esc(i.comuna)} en ${i.ventana_dias} días · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : i.ia_parcial ? " · tono clasificado en parte" : " · tono sin clasificar"}</span><button class="demo-btn" type="button" data-act="modo-demo"><span class="demo-mas">Ver demostración</span><span class="solo-movil">Ver demo</span></button>`; return; }
-  el.className = "demo"; el.innerHTML = `<b>Prototipo</b><span class="demo-mas">Noticias y cifras ficticias · catálogo de 100 medios real</span><span class="solo-movil">Datos ficticios</span>${MODO.disponible ? `<button class="demo-btn" type="button" data-act="modo-real"><span class="demo-mas">Ver noticias reales</span><span class="solo-movil">Ver reales</span></button>` : ""}`;
+  const real = MODO.tipo === "real" && MODO.info, i = MODO.info;
+  // Selector siempre visible con las dos opciones; en claude.ai (sin servidor) "Reales" lleva al sitio publicado.
+  const sw = MODO.disponible || MODO.cargando
+    ? `<span class="modo-sw" role="group" aria-label="Noticias que muestra la aplicación"><button type="button" data-act="modo-demo" aria-pressed="${!real && !MODO.cargando}"><span class="demo-mas">Demostración</span><span class="solo-movil">Demo</span></button><button type="button" data-act="modo-real" aria-pressed="${Boolean(real) || MODO.cargando}" ${MODO.cargando ? "disabled" : ""}>${MODO.cargando ? "Leyendo…" : `<span class="demo-mas">Noticias reales</span><span class="solo-movil">Reales</span>`}</button></span>`
+    : (/^https?:$/.test(location.protocol) ? "" : `<a class="modo-link" href="https://pregonia.vercel.app/" target="_blank" rel="noopener">Noticias reales en pregonia.vercel.app</a>`);
+  if (MODO.cargando) { el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Leyendo medios</b>Buscando noticias de ${esc(S.org)}<span class="demo-mas"> en unas 70 fuentes; puede tardar hasta un minuto</span>…</span>${sw}`; return; }
+  if (real) { el.className = "demo real"; el.innerHTML = `<span class="demo-txt"><b>Datos reales</b>${plural(i.notas.length, "nota", "notas")}<span class="demo-mas"> de ${esc(i.comuna)} en ${i.ventana_dias} días · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : i.ia_parcial ? " · tono clasificado en parte" : " · tono sin clasificar"}</span></span>${sw}`; return; }
+  el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">Noticias y cifras ficticias · catálogo de 100 medios real</span><span class="solo-movil">Datos ficticios</span></span>${sw}`;
 }
-async function cargarReales(){
-  if (MODO.cargando) return; MODO.cargando = true; pintarModo();
+async function cargarReales(force){
+  if (MODO.cargando || (MODO.tipo === "real" && MODO.info && MODO.info.comuna === S.org && !force)) return; MODO.cargando = true; pintarModo();
   const org = S.org;
   try {
     const r = await fetch("/api/noticias?comuna=" + encodeURIComponent(org)); if (!r.ok) throw new Error("HTTP " + r.status);
@@ -1098,9 +1103,9 @@ async function cargarReales(){
     toast(nuevas.length ? `Listo: ${plural(nuevas.length, "nota real", "notas reales")} de ${org}. Ábrelas en Menciones.` : `Los medios leídos no publicaron sobre ${org} en los últimos ${j.ventana_dias} días.`);
   } catch(e) { MODO.cargando = false; pintarModo(); toast("No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
 }
-function usarDemo(){ NOTAS.splice(0, NOTAS.length, ...NOTAS_DEMO); MODO = {...MODO, tipo: "demo", info: null}; try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
+function usarDemo(){ if (MODO.tipo === "demo") return; NOTAS.splice(0, NOTAS.length, ...NOTAS_DEMO); MODO = {...MODO, tipo: "demo", info: null}; try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
 document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; if (b.dataset.act === "modo-real") cargarReales(); if (b.dataset.act === "modo-demo") usarDemo(); });
-$("#org").addEventListener("change", () => { if (MODO.tipo === "real") cargarReales(); });
+$("#org").addEventListener("change", () => { if (MODO.tipo === "real") cargarReales(true); });
 (async () => {
   pintarModo();
   if (!/^https?:$/.test(location.protocol)) return;
