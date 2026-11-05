@@ -18,7 +18,7 @@ refrescarNotas(); render();
 
 const ahoraLocal = () => { const d = new Date(Date.now() - new Date().getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); };
 function capAbrir(){
-  const nombres = [...new Set([...S.fbPaginas.filter(p => !p.c || p.c === S.org).map(p => p.n), ...CATALOG.filter(m => m.a === "local" && (m.c === S.org || !m.c)).map(m => m.n)])];
+  const nombres = [...new Set([...S.fbPaginas.filter(p => !p.c || p.c === S.org).map(p => p.n), ...CATALOG.filter(m => m.a === "local" && (m.c || "").split(";").includes(S.org)).sort((x, y) => (y.m === "facebook") - (x.m === "facebook")).map(m => m.n)])];
   const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "capBack";
   ov.innerHTML = `<section class="vid cap" role="dialog" aria-modal="true" aria-labelledby="capT">
     <header class="vid-h"><div><h2 id="capT">Agregar publicación</h2><p>Para medios que publican en Facebook u otras redes. PregonIA la analiza como cualquier noticia de ${esc(S.org)}.</p></div><button class="btn ghost" type="button" data-act="cap-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>

@@ -899,5 +899,23 @@ export const CATALOGO = [
 "metodo": "portada",
 "url": "http://www.losandesonline.cl/",
 "estado": "requiere_ajuste"
+},
+{
+"id": 101,
+"nombre": "31TV Casablanca",
+"ambito": "local",
+"comuna": "Casablanca",
+"metodo": "facebook",
+"url": "https://www.facebook.com/31tv.cl",
+"estado": "captura_asistida"
+},
+{
+"id": 102,
+"nombre": "Agenda Regional",
+"ambito": "local",
+"comuna": "Casablanca",
+"metodo": "facebook",
+"url": "https://www.facebook.com/profile.php?id=61576308577918",
+"estado": "captura_asistida"
 }
 ];

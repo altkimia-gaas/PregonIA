@@ -99,3 +99,5 @@ id,nombre,ambito,provincia,comuna,tipo,nivel,metodo,url_lectura,estado,observaci
 98,Radio Orolonco 107.1,local,San Felipe,Santa María,Radio,C,rss,https://oroloncofm.cl/feed/,listo,Feed dominado por notas nacionales
 99,Radio Superandina 88.5,local,Los Andes,Los Andes;Calle Larga;Rinconada;San Esteban,Radio,C,sitemap_noticias,https://www.superandina.cl/sitemap/google-news/sitemap.xml,listo,Fechas sin zona horaria
 100,Andes Online,local,Los Andes,Los Andes,Diario digital,C,portada,http://www.losandesonline.cl/,requiere_ajuste,Sin feed; portada sin fechas
+101,31TV Casablanca,local,Valparaíso,Casablanca,TV en línea,C,facebook,https://www.facebook.com/31tv.cl,captura_asistida,Solo Facebook e Instagram (31tv.cl); sin sitio web ni feed. Se ingresa con captura asistida
+102,Agenda Regional,local,Valparaíso,Casablanca,Medio digital,C,facebook,https://www.facebook.com/profile.php?id=61576308577918,captura_asistida,"Solo Facebook; cubre la región de Valparaíso y Casablanca. No confundir con agendaregional.cl, que es otro proyecto"

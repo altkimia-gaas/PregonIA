@@ -309,12 +309,12 @@ function propHtml(){
 function vFuentes(){
   const f = tState.fuente, rows = CATALOG.filter(m => (f.a==="todos"||m.a===f.a) && (f.e==="todos"||m.e===f.e));
   const cnt = k => CATALOG.filter(m => m.e===k).length;
-  const lbl = {listo:"Listo", requiere_ajuste:"Requiere ajuste", restringido:"Restringido"};
-  const met = {rss:"RSS", sitemap_noticias:"Sitemap de noticias", sitemap:"Sitemap", sitemap_mensual:"Sitemap mensual", portada:"Portada", google_news:"Google News", rss_filtrado:"RSS filtrado", sitemap_filtrado:"Sitemap filtrado"};
-  return `<div class="head"><div><h2 tabindex="-1">Fuentes</h2><p>Los 100 medios que PregonIA lee y cómo se lee cada uno (verificado el 3 de noviembre de 2026). Los restringidos se consultan solo vía Google News.</p></div></div>
+  const lbl = {listo:"Listo", requiere_ajuste:"Requiere ajuste", restringido:"Restringido", captura_asistida:"Captura asistida"};
+  const met = {rss:"RSS", sitemap_noticias:"Sitemap de noticias", sitemap:"Sitemap", sitemap_mensual:"Sitemap mensual", portada:"Portada", google_news:"Google News", rss_filtrado:"RSS filtrado", sitemap_filtrado:"Sitemap filtrado", facebook:"Facebook"};
+  return `<div class="head"><div><h2 tabindex="-1">Fuentes</h2><p>Los ${CATALOG.filter(m => m.m !== "facebook").length} medios web que PregonIA lee y cómo se lee cada uno (verificado el 3 de noviembre de 2026), más ${plural(CATALOG.filter(m => m.m === "facebook").length, "página", "páginas")} de Facebook. Los restringidos se consultan solo vía Google News; las de Facebook se ingresan con Agregar publicación, en Menciones.</p></div></div>
   ${subtabs()}
   <div class="filters">
-    <div class="seg" role="group" aria-label="Estado">${[["todos","Todos",CATALOG.length],["listo","Listos",cnt("listo")],["requiere_ajuste","Requieren ajuste",cnt("requiere_ajuste")],["restringido","Restringidos",cnt("restringido")]].map(([v,l,n]) => `<button data-act="f-est" data-k="${v}" aria-pressed="${f.e===v}">${l}<span class="c">${n}</span></button>`).join("")}</div>
+    <div class="seg" role="group" aria-label="Estado">${[["todos","Todos",CATALOG.length],["listo","Listos",cnt("listo")],["requiere_ajuste","Requieren ajuste",cnt("requiere_ajuste")],["restringido","Restringidos",cnt("restringido")],["captura_asistida","Facebook",cnt("captura_asistida")]].map(([v,l,n]) => `<button data-act="f-est" data-k="${v}" aria-pressed="${f.e===v}">${l}<span class="c">${n}</span></button>`).join("")}</div>
     <div class="seg" role="group" aria-label="Ámbito">${[["todos","Todos"],["nacional","Nacional"],["regional","Regional"],["local","Local"]].map(([v,l]) => `<button data-act="f-amb" data-k="${v}" aria-pressed="${f.a===v}">${l}</button>`).join("")}</div>
   </div>
   <div class="card scroll" style="padding:0"><table class="ftab"><thead><tr><th>Medio</th><th>Ámbito</th><th>Comuna</th><th>Lectura</th><th>Estado</th></tr></thead><tbody>${rows.map(m => `<tr><td class="fm"><b>${esc(m.n)}</b>${m.o?`<div class="muted" style="font-size:12px">${esc(m.o)}</div>`:""}</td><td data-l="Ámbito">${m.a}</td><td data-l="Comuna">${esc((m.c||"").replace(/;/g, ", ")) || '<span class="muted">—</span>'}</td><td data-l="Lectura">${met[m.m]||m.m}</td><td data-l="Estado"><span class="pill e-${m.e}">${lbl[m.e]}</span></td></tr>`).join("")}</tbody></table></div>`;
@@ -983,7 +983,7 @@ const GUIA = [
 ];
 const FAQ = [
   ["Monitoreo", [
-    ["¿Qué medios revisa PregonIA?", "100 medios digitales: 50 nacionales y 50 de la Región de Valparaíso, incluidos los medios comunales del litoral central. La lista completa, con el estado de cada uno, está en Ajustes › Fuentes."],
+    ["¿Qué medios revisa PregonIA?", "100 medios digitales: 50 nacionales y 50 de la Región de Valparaíso, incluidos los medios comunales del litoral central, más páginas de Facebook de medios locales que se ingresan con captura asistida. La lista completa, con el estado de cada uno, está en Ajustes › Fuentes."],
     ["¿Cada cuánto se actualiza?", "Cada 15 minutos. La barra superior muestra la hora de la última actualización. En este prototipo las noticias son ficticias."],
     ["¿Por qué no aparece una noticia que vi?", "Puede que el medio no esté en el catálogo, que sea un medio restringido (se lee vía Google News y llega con retraso) o que la nota no calce con los términos del tema. Revisa términos, variantes y exclusiones en Ajustes › Mis temas."],
     ["¿Por qué aparece una noticia que no tiene que ver?", "Suele ser una coincidencia de nombre, como Casablanca la película o San Antonio de Texas. Márcala como \"No corresponde\" y agrega esa palabra a las exclusiones del tema."],
