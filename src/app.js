@@ -460,7 +460,8 @@ function repAlcalde(){
     <section class="ver"><span class="kick">Cómo lo trató la prensa esta semana</span><p class="vbig ${d.v.k}">${d.v.n}</p><p class="vtx">${d.v.f.charAt(0).toUpperCase() + d.v.f.slice(1)}: ${conteo(d.M)}. ${d.comp}</p>${escala(d.v.i)}</section>
     <section><h4>Lo que se puede complicar</h4>${d.asuntos.length ? `<ol class="asuntos">${d.asuntos.map(item).join("")}</ol>` : `<p class="vtx">Ningún asunto de riesgo esta semana.</p>`}</section>
     ${d.buena ? `<section class="cap"><h4>Para aprovechar</h4><ol class="asuntos">${item(d.buena, -1).replace('<span class="n">0</span>', `<span class="n">${ri("pos")}</span>`)}</ol></section>` : ""}
-    <div class="acts"><button class="btn primary" data-act="copiar-parte">Copiar para WhatsApp</button><button class="btn" data-act="goto" data-tono="todos" data-dias="7">Ver las noticias de la semana</button></div>
+    <div class="acts"><button class="btn primary" data-act="copiar-parte">Copiar texto</button><button class="btn" data-act="goto" data-tono="todos" data-dias="7">Ver las noticias de la semana</button></div>
+    ${shareBar("parte")}
   </div>
   ${muestra(d.M.vol)}`;
 }
@@ -646,9 +647,138 @@ function vComunicados(){
       <textarea id="kOut" class="draft" aria-label="Borrador" placeholder="El borrador aparecerá aquí. También puedes escribirlo tú.">${esc(draft)}</textarea>
       <p class="note" id="kNote">Antes de aprobar, completa lo marcado [completar] y valida las citas con el vocero.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="aprobar" id="btnAprob" ${draft.trim()?"":"disabled"}>Aprobar</button><button class="btn" data-act="copiar" id="btnCopy" ${draft.trim()?"":"disabled"}>Copiar</button></div>
+      ${shareBar("draft", {off: !draft.trim(), id: "shareDraft"})}
     </div>
   </div>
-  <div class="card" style="margin-top:14px"><h3>Aprobados</h3>${aprob.length ? `<div class="scroll"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Responde a</th><th>Estado</th></tr></thead><tbody>${aprob.map(x => `<tr><td class="mono">${fecha(x.ts)}</td><td>${esc(x.pieza)}</td><td>${esc(x.origen)}</td><td><span class="pill done">Aprobado</span></td></tr>`).join("")}</tbody></table></div>` : '<p class="muted" style="margin:0">Todavía no apruebas ninguno en esta cuenta.</p>'}</div>`;
+  <div class="card" style="margin-top:14px"><h3>Aprobados</h3>${aprob.length ? `<div class="scroll"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Responde a</th><th>Estado</th><th>Compartir</th></tr></thead><tbody>${aprob.map((x, i) => `<tr><td class="mono">${fecha(x.ts)}</td><td>${esc(x.pieza)}</td><td>${esc(x.origen)}</td><td><span class="pill done">Aprobado</span></td><td>${shareBar("aprob", {i, compact: true})}</td></tr>`).join("")}</tbody></table></div>` : '<p class="muted" style="margin:0">Todavía no apruebas ninguno en esta cuenta.</p>'}</div>`;
+}
+
+/* Compartir: WhatsApp, correo, Word (.docx) y PDF. Sin servidor: los archivos se arman en el navegador. */
+const SH_ICO = {
+  wa:'<path d="M4.4 19.6l1.3-3.8a8 8 0 1 1 2.8 2.6z"/><path d="M9 9.4c.4 2.3 2 3.9 4.6 4.6"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.6 6.6L12 13l8.4-6.4"/>',
+  docx:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 15h6M9 18h4"/>',
+  pdf:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M12 10.5v6.5M9.2 14.3l2.8 2.8 2.8-2.8"/>'
+};
+const SH_VIAS = [["wa","WhatsApp"],["mail","Correo"],["docx","Word"],["pdf","PDF"]];
+function shareBar(src, {i = null, compact = false, off = false, id = ""} = {}){
+  return `<div class="shr${compact ? " compact" : ""}"${id ? ` id="${id}"` : ""} role="group" aria-label="Compartir">${compact ? "" : '<span class="lbl">Compartir</span>'}${SH_VIAS.map(([v, n]) => `<button class="btn sm" type="button" data-act="share" data-via="${v}" data-src="${src}"${i != null ? ` data-i="${i}"` : ""}${compact ? ` aria-label="${n}" title="${n}"` : ""}${off ? " disabled" : ""}><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO[v]}</svg>${compact ? "" : `<span>${n}</span>`}</button>`).join("")}</div>`;
+}
+const plano = t => t.replace(/\*([^*\n]+)\*/g, "$1");
+function shareDoc(src, i){
+  if (src === "draft") {
+    const pz = document.querySelector('input[name="pieza"]:checked')?.value || "comunicado", m = tState.draft && menciones().find(x => x.g === tState.draft), t = ($("#kOut")?.value || "").trim();
+    return {titulo: PIEZAS[pz][0], sub: m ? "Responde a: " + m.lead.t : "Anuncio propio", texto: t, cuerpo: t, borrador: true};
+  }
+  if (src === "parte") { const t = parteTexto(); return {titulo: "Parte semanal del alcalde", sub: "Semana del " + parteData().per, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
+  if (src === "aprob") { const x = S.comunicados.filter(y => y.org === S.org)[i]; return x && x.texto ? {titulo: x.pieza, sub: "Responde a: " + x.origen + " · aprobado el " + fecha(x.ts), texto: x.texto, cuerpo: x.texto} : null; }
+  return null;
+}
+const hoyISO = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const hoyTxt = () => new Date().toLocaleDateString("es-CL", {day: "numeric", month: "long", year: "numeric"});
+const slug = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const nombreArchivo = (d, ext) => `PregonIA-${slug(d.titulo)}-${slug(S.org)}-${hoyISO()}.${ext}`;
+function abrirEnlace(url, nueva){ const a = document.createElement("a"); a.href = url; if (nueva) { a.target = "_blank"; a.rel = "noopener"; } document.body.appendChild(a); a.click(); a.remove(); }
+const dlCap = (window.claude && window.claude.use) ? window.claude.use("downloads").catch(() => null) : Promise.resolve(null);
+async function guardarArchivo(nombre, blob){
+  const dl = await dlCap;
+  if (dl) {
+    try { await dl.save({filename: nombre, data: blob}); toast("Guardado: " + nombre); }
+    catch(err) { if (err && err.code === "declined") return; toast(err && err.code === "rate_limited" ? "Ya hay una descarga esperando tu confirmación." : "Esta vista no permite guardar archivos. Ábrela en pregonia.vercel.app."); }
+    return;
+  }
+  const u = URL.createObjectURL(blob), a = document.createElement("a"); a.href = u; a.download = nombre; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 5000);
+  toast("Descargado: " + nombre);
+}
+/* Word: .docx mínimo (OOXML) empaquetado en un ZIP sin compresión. */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = u => { let c = 0xFFFFFFFF; for (let i = 0; i < u.length; i++) c = CRC_T[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+function zipBlob(files, type){
+  const enc = new TextEncoder(), loc = [], cen = []; let off = 0;
+  for (const [nombre, txt] of files) {
+    const n = enc.encode(nombre), d = enc.encode(txt), crc = crc32(d), h = new DataView(new ArrayBuffer(30)), c = new DataView(new ArrayBuffer(46));
+    [[0, 0x04034b50, 4], [4, 20], [6, 0x0800], [12, 0x21], [14, crc, 4], [18, d.length, 4], [22, d.length, 4], [26, n.length]].forEach(([o, v, z]) => z === 4 ? h.setUint32(o, v, true) : h.setUint16(o, v, true));
+    [[0, 0x02014b50, 4], [4, 20], [6, 20], [8, 0x0800], [14, 0x21], [16, crc, 4], [20, d.length, 4], [24, d.length, 4], [28, n.length], [42, off, 4]].forEach(([o, v, z]) => z === 4 ? c.setUint32(o, v, true) : c.setUint16(o, v, true));
+    loc.push(new Uint8Array(h.buffer), n, d); cen.push(new Uint8Array(c.buffer), n); off += 30 + n.length + d.length;
+  }
+  const tam = cen.reduce((s, x) => s + x.length, 0), e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, tam, true); e.setUint32(16, off, true);
+  return new Blob([...loc, ...cen, new Uint8Array(e.buffer)], {type});
+}
+function docxBlob(d){
+  const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main", X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  const xe = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
+  const run = (t, b, rpr = "") => `<w:r><w:rPr>${b ? "<w:b/>" : ""}${rpr}</w:rPr><w:t xml:space="preserve">${xe(t)}</w:t></w:r>`;
+  const par = (runs, ppr = "") => `<w:p>${ppr ? `<w:pPr>${ppr}</w:pPr>` : ""}${runs}</w:p>`;
+  const linea = l => l.split(/\*([^*\n]+)\*/).map((t, k) => t ? run(t, k % 2 === 1) : "").join("");
+  const cuerpo = [
+    par(run("PregonIA · Municipalidad de " + S.org, false, '<w:color w:val="1E4D8C"/><w:sz w:val="18"/>')),
+    par(run(d.titulo, true, '<w:sz w:val="32"/>'), '<w:spacing w:after="60"/>'),
+    par(run(d.sub + (d.sinFecha ? "" : " · " + hoyTxt()), false, '<w:color w:val="5B6573"/><w:sz w:val="19"/>'), '<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="6" w:color="D5DBE3"/></w:pBdr><w:spacing w:after="240"/>'),
+    ...d.cuerpo.split("\n").map(l => par(linea(l))),
+    par(run(d.borrador ? "Borrador preparado con PregonIA. Revisar lo marcado [completar] y validar las citas antes de difundir." : "Preparado con PregonIA.", false, '<w:i/><w:color w:val="5B6573"/><w:sz w:val="17"/>'), '<w:spacing w:before="360"/>')
+  ].join("");
+  return zipBlob([
+    ["[Content_Types].xml", X + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>'],
+    ["_rels/.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>'],
+    ["docProps/core.xml", X + `<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xe(d.titulo + " · " + S.org)}</dc:title><dc:creator>PregonIA</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString().slice(0, 19)}Z</dcterms:created></cp:coreProperties>`],
+    ["word/_rels/document.xml.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ["word/styles.xml", X + `<w:styles xmlns:w="${W}"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="es-CL"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="80" w:line="276" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style></w:styles>`],
+    ["word/document.xml", X + `<w:document xmlns:w="${W}"><w:body>${cuerpo}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1418" w:right="1418" w:bottom="1418" w:left="1418" w:header="709" w:footer="709" w:gutter="0"/></w:sectPr></w:body></w:document>`]
+  ], "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+}
+/* PDF: jsPDF se carga solo al primer uso. Sus fuentes base cubren el español (WinAnsi); lo demás se aproxima. */
+let jspdfP = null;
+function cargarJsPDF(){
+  return jspdfP ||= new Promise((ok, no) => {
+    if (window.jspdf) return ok(window.jspdf);
+    const s = document.createElement("script"); s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    s.onload = () => window.jspdf ? ok(window.jspdf) : no(new Error("jspdf")); s.onerror = () => { jspdfP = null; s.remove(); no(new Error("jspdf")); };
+    document.head.appendChild(s);
+  });
+}
+const CP1252 = "€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ";
+const pdfTxt = s => s.replace(/[→⟶➜]/g, "->").replace(/[‐-‒−]/g, "-").replace(/­/g, "").replace(/[^\x09\x0A\x20-\x7E\xA0-\xFF]/g, ch => CP1252.includes(ch) ? ch : ch.normalize("NFKD").replace(/[^\x20-\x7E\xA0-\xFF]/g, ""));
+async function pdfBlob(d){
+  const {jsPDF} = await cargarJsPDF(), doc = new jsPDF({unit: "mm", format: "a4"}), M = 20, AN = 210 - 2 * M, ALTO = 297, PIE = ALTO - 14;
+  doc.setProperties({title: pdfTxt(d.titulo + " · " + S.org), author: "PregonIA", creator: "PregonIA"});
+  let y = M;
+  const salto = h => { if (y + h > PIE - 6) { doc.addPage(); y = M; } };
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(30, 77, 140); doc.text(pdfTxt("PregonIA · Municipalidad de " + S.org), M, y); y += 8;
+  doc.setFont("helvetica", "bold"); doc.setFontSize(17); doc.setTextColor(21, 27, 36);
+  doc.splitTextToSize(pdfTxt(d.titulo), AN).forEach(l => { doc.text(l, M, y); y += 7; });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(91, 101, 115);
+  doc.splitTextToSize(pdfTxt(d.sub + (d.sinFecha ? "" : " · " + hoyTxt())), AN).forEach(l => { doc.text(l, M, y); y += 4.6; });
+  y += 2; doc.setDrawColor(213, 219, 227); doc.setLineWidth(0.3); doc.line(M, y, M + AN, y); y += 8;
+  doc.setTextColor(21, 27, 36); doc.setFontSize(11);
+  for (const bruta of d.cuerpo.split("\n")) {
+    if (!bruta.trim()) { y += 2.6; continue; }
+    const negrita = /^\s*\*[^*]+\*\s*$/.test(bruta), sangria = Math.min(12, (bruta.match(/^ */)[0].length) * 1.4), txt = pdfTxt(plano(bruta).trim());
+    doc.setFont("helvetica", negrita ? "bold" : "normal");
+    for (const l of doc.splitTextToSize(txt, AN - sangria)) { salto(5.6); doc.text(l, M + sangria, y); y += 5.6; }
+    y += 1.4;
+  }
+  const n = doc.getNumberOfPages(), pie = d.borrador ? "Borrador preparado con PregonIA · Revisar antes de difundir" : "Preparado con PregonIA";
+  for (let p = 1; p <= n; p++) { doc.setPage(p); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(120, 128, 140); doc.text(pdfTxt(pie), M, PIE + 6); doc.text(`Página ${p} de ${n}`, M + AN, PIE + 6, {align: "right"}); }
+  return doc.output("blob");
+}
+async function compartir(b){
+  const d = shareDoc(b.dataset.src, Number(b.dataset.i));
+  if (!d || !d.texto) { toast("No hay texto para compartir todavía."); return; }
+  const via = b.dataset.via, aviso = d.borrador && /\[completar/i.test(d.texto) ? " Ojo: aún hay partes marcadas [completar]." : "";
+  if (via === "wa") { abrirEnlace("https://wa.me/?text=" + encodeURIComponent(d.texto), true); toast("Se abrió WhatsApp con el texto listo para elegir a quién enviarlo." + aviso); return; }
+  if (via === "mail") {
+    const cuerpo = plano(d.texto);
+    if (navigator.clipboard) navigator.clipboard.writeText(cuerpo).catch(() => {});
+    abrirEnlace("mailto:?subject=" + encodeURIComponent(d.titulo + " · Municipalidad de " + S.org) + "&body=" + encodeURIComponent(cuerpo), false);
+    toast("Abrimos tu correo con el texto. También quedó copiado, por si el correo no se abre." + aviso); return;
+  }
+  b.disabled = true;
+  try {
+    if (via === "docx") await guardarArchivo(nombreArchivo(d, "docx"), docxBlob(d));
+    if (via === "pdf") await guardarArchivo(nombreArchivo(d, "pdf"), await pdfBlob(d));
+  } catch(err) { toast(via === "pdf" ? "No se pudo preparar el PDF. Revisa la conexión e intenta de nuevo." : "No se pudo preparar el archivo."); }
+  finally { b.disabled = false; }
 }
 
 /* Render y navegación */
@@ -673,7 +803,7 @@ document.addEventListener("change", e => {
 let qTimer;
 document.addEventListener("input", e => {
   if (e.target.id === "fQ") { clearTimeout(qTimer); const v = e.target.value; qTimer = setTimeout(() => { tState.q = v; render(); const el = $("#fQ"); if (el) { el.focus(); el.setSelectionRange(v.length, v.length); } }, 250); }
-  if (e.target.id === "kOut") { const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = e.target.value; save(); const has = !!e.target.value.trim(); $("#btnAprob").disabled = !has; $("#btnCopy").disabled = !has; }
+  if (e.target.id === "kOut") { const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = e.target.value; save(); const has = !!e.target.value.trim(); $("#btnAprob").disabled = !has; $("#btnCopy").disabled = !has; document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
 });
 function chipAdd(el){
   const v = el.value.replace(/,/g, "").trim(); if (!v) return;
@@ -725,6 +855,7 @@ document.addEventListener("click", async e => {
   if (act === "descartar") { propuesta = null; $("#propOut").innerHTML = ""; }
   if (act === "rep") { tState.rep = b.dataset.k; render(); }
   if (act === "copiar-parte") { const txt = parteTexto(); try { await navigator.clipboard.writeText(txt); toast("Parte copiado. Pégalo en WhatsApp o en un correo."); } catch(err) { const ta = document.createElement("textarea"); ta.value = txt; ta.className = "draft"; ta.style.marginTop = "12px"; b.closest(".acts").after(ta); ta.focus(); ta.select(); toast("Texto seleccionado: cópialo con el teclado."); } }
+  if (act === "share") compartir(b);
   if (act === "lectura") lectura(b);
   if (act === "stop") ctl?.abort();
   if (act === "aprobar") {
@@ -776,7 +907,7 @@ ${base}`;
 function plantilla(m, pieza){
   return `${PIEZAS[pieza][0]} · Municipalidad de ${S.org}\n\n[Plantilla: la IA no está disponible en esta vista]\n\nEn relación con ${m ? "lo informado por " + MED[m.lead.m].n + " (" + m.lead.res.replace(/\.$/,"") + ")" : "[completar: anuncio]"}, la Municipalidad de ${S.org} informa:\n\n1. [completar: hechos verificados]\n2. [completar: medidas adoptadas y plazos]\n3. [completar: canal de contacto para vecinos]\n\n[cita propuesta, validar con el vocero]: «[completar]»\n\nContacto de prensa: [completar]`;
 }
-function setDraft(txt){ const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = txt; const has = !!txt.trim(); const a = $("#btnAprob"), k = $("#btnCopy"); if (a) a.disabled = !has; if (k) k.disabled = !has; }
+function setDraft(txt){ const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = txt; const has = !!txt.trim(); const a = $("#btnAprob"), k = $("#btnCopy"); if (a) a.disabled = !has; if (k) k.disabled = !has; document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
 async function generar(){
   const c = cuenta(), pl = PLANES[c.perfil.plan];
   const m = tState.draft && menciones().find(x => x.g === tState.draft);
@@ -819,11 +950,11 @@ async function lectura(btn){
 const AYUDA_VISTA = {
   inicio:["Inicio", "La portada del día. Arriba ves cuántas noticias críticas faltan por responder, lo último que se publicó y cuatro indicadores. \"Para revisar hoy\" pone primero la noticia crítica más importante; \"Por tema\" muestra cada tema con su última nota. Toca un indicador o un tema para ver sus noticias."],
   menciones:["Menciones", "Todas las noticias que calzaron con tus temas. Cada noticia aparece una vez aunque la publiquen varios medios. Filtra por tono, período, tema o palabra. \"¿Por qué aparece?\" muestra qué término calzó; \"No corresponde\" la descarta y ayuda a afinar las exclusiones."],
-  comunicados:["Comunicados", "Prepara una respuesta en tres decisiones: a qué respondes, qué pieza necesitas y con qué enfoque. La IA redacta solo con la noticia y los datos del municipio; lo que falta queda marcado [completar]. Nada se publica: tú apruebas, copias y difundes."],
+  comunicados:["Comunicados", "Prepara una respuesta en tres decisiones: a qué respondes, qué pieza necesitas y con qué enfoque. La IA redacta solo con la noticia y los datos del municipio; lo que falta queda marcado [completar]. Nada se publica: tú apruebas y difundes. Desde el borrador o la lista de aprobados puedes enviarlo por WhatsApp o correo, o guardarlo en Word o PDF."],
   temas:["Mis temas", "Los temas que PregonIA vigila. Cada tema tiene términos (lo que se busca), contexto (palabras que deben acompañar) y exclusiones (lo que descarta). Tu plan define cuántos temas activos puedes tener."],
   asistente:["Asistente de temas", "Responde cinco preguntas sobre el municipio y PregonIA propone los temas base de tu plan, más sugerencias para sumar. Revisa la propuesta antes de activarla."],
   fuentes:["Fuentes", "Los 100 medios del catálogo: 50 nacionales y 50 de la Región de Valparaíso. Cada uno muestra cómo se lee y su estado: listo, requiere ajuste o restringido (se lee vía Google News)."],
-  rep_alcalde:["Reportes · Parte del alcalde", "Para el alcalde, cada lunes, en dos minutos. Dice cómo lo trató la prensa en la semana, hasta tres asuntos que se pueden complicar con qué hacer y quién se encarga, y una buena noticia para aprovechar. \"Copiar para WhatsApp\" lo deja listo para enviar."],
+  rep_alcalde:["Reportes · Parte del alcalde", "Para el alcalde, cada lunes, en dos minutos. Dice cómo lo trató la prensa en la semana, hasta tres asuntos que se pueden complicar con qué hacer y quién se encarga, y una buena noticia para aprovechar. Se comparte por WhatsApp o correo, o se guarda en Word o PDF."],
   rep_mesa:["Reportes · Mesa de comunicaciones", "Para el encargado de comunicaciones, cada mañana. Críticas sin respuesta, temas que están subiendo de la prensa comunal a la regional o nacional, buenas noticias por difundir y los medios a los que conviene llamar."],
   rep_gestion:["Reportes · Informe de gestión", "Para el alcalde y su equipo, una vez al mes. Tendencia, tono y alcance por tema, comparación interna con las comunas vecinas, lectura del analista y el respaldo con todas las notas."],
   rep_crisis:["Reportes · Episodio crítico", "Se activa solo cuando una noticia crítica se propaga. Muestra cuántos medios la publicaron, hasta dónde llegó, la cronología y si ya hay respuesta aprobada."]
@@ -863,7 +994,8 @@ const FAQ = [
     ["¿Qué pasa si llego al límite del plan?", "PregonIA avisa al 80% y al 100% del límite de temas, menciones o borradores. Antes de sumar un paquete conviene ajustar exclusiones; si hace falta, se suma un paquete de 5 temas."],
     ["¿Otros municipios ven mis datos?", "No. Cada cuenta ve solo lo suyo. La comparación con las comunas vecinas usa solo noticias públicas, nunca la configuración ni los datos de otra cuenta."],
     ["¿Cuántas personas pueden usarlo?", "El plan Comunal incluye 3 usuarios y el Regional o Político, 5."],
-    ["¿Cómo comparto el parte con el alcalde?", "En Reportes › Parte del alcalde, el botón \"Copiar para WhatsApp\" deja el texto listo para pegar en un mensaje o un correo."]
+    ["¿Cómo comparto el parte con el alcalde?", "En Reportes › Parte del alcalde, la barra Compartir lo abre en WhatsApp o en tu correo con el texto listo, o lo guarda en tu computador como Word o PDF."],
+    ["¿Cómo envío o guardo una respuesta?", "Bajo el borrador está la barra Compartir: WhatsApp y Correo abren el mensaje con el texto listo para elegir el destinatario; Word y PDF guardan un archivo en tu computador con el membrete del municipio. Los ya aprobados tienen los mismos botones en la lista. Nada se envía solo: tú eliges a quién."]
   ]]
 ];
 let helpOpen = false, helpQ = "", helpReturn = null, helpCtl = null;
