@@ -63,18 +63,19 @@ function parsear(xml){
 /* Clasificación con Claude Haiku, en lotes paralelos para responder rápido: relevancia, tono, resumen propio y palabras clave.
    En paralelo, una llamada corta solo con los titulares agrupa las notas que cuentan el mismo hecho. */
 const LOTE = 15;
+const DIAG = [];
 async function llamar(prompt, maxTok){
-  const clave = process.env.ANTHROPIC_API_KEY; if (!clave) return null;
+  const clave = process.env.ANTHROPIC_API_KEY; if (!clave) return null; let txt = "";
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST", signal: AbortSignal.timeout(28000),
       headers: { "x-api-key": clave, "anthropic-version": "2023-06-01", "content-type": "application/json" },
       body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL_RAPIDO || "claude-haiku-5-5", max_tokens: maxTok, messages: [{ role: "user", content: prompt }] })
     });
-    if (!r.ok) { console.error("Anthropic", r.status, (await r.text()).slice(0, 300)); return null; }
-    const d = await r.json(), txt = (d.content || []).map(c => c.text || "").join("");
+    if (!r.ok) { const e = (await r.text()).slice(0, 200); console.error("Anthropic", r.status, e); DIAG.push("HTTP " + r.status + " " + e.replace(/\s+/g, " ").slice(0, 120)); return null; }
+    const d = await r.json(); txt = (d.content || []).map(c => c.text || "").join("");
     const a = JSON.parse(txt.slice(txt.indexOf("["), txt.lastIndexOf("]") + 1)); return Array.isArray(a) ? a : null;
-  } catch(e) { console.error("Anthropic", e && e.name, String(e).slice(0, 200)); return null; }
+  } catch(e) { console.error("Anthropic", e && e.name, String(e).slice(0, 200)); DIAG.push((e && e.name || "error") + ": " + String(e && e.message || e).slice(0, 80) + (txt ? " | salida: " + txt.slice(0, 80) + " … " + txt.slice(-60) : "")); return null; }
 }
 const linea = (n, i) => `${i}. [${n.medio} · ${n.ambito}] ${n.titulo}${n.desc ? " — " + n.desc.slice(0, 240) : ""}`;
 function promptLote(comuna, notas, base){
@@ -109,7 +110,7 @@ async function clasificar(comuna, notas){
 }
 
 export async function GET(req){
-  const u = new URL(req.url);
+  const u = new URL(req.url); DIAG.length = 0;
   if (u.searchParams.has("ping")) return json({ ok: true, ia: Boolean(process.env.ANTHROPIC_API_KEY) }, 200, { "cache-control": "no-store" });
   const comuna = u.searchParams.get("comuna") || "Casablanca", claves = COMUNAS[comuna];
   if (!claves) return json({ error: "Comuna no disponible" }, 400);
@@ -160,6 +161,6 @@ export async function GET(req){
   return json({
     comuna, generado: new Date(ahora).toISOString(), ventana_dias: VENTANA_DIAS, ia: clas.ok, ia_parcial: !clas.ok && clas.porI.size > 0,
     fuentes: { leidas: fuentes.length + 1 - errores.length, total: fuentes.length + 1, con_error: errores.slice(0, 40) },
-    candidatas: candidatas.length, notas
+    candidatas: candidatas.length, ...(DIAG.length ? {ia_diagnostico: DIAG.slice(0, 6)} : {}), notas
   }, 200, { "cache-control": clas.ok ? "public, max-age=0, s-maxage=900, stale-while-revalidate=3600" : "public, max-age=0, s-maxage=60" });
 }
