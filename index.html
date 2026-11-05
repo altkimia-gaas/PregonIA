@@ -119,9 +119,14 @@ button.kpi:hover{border-color:var(--accent)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .shr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:6px;padding-top:10px;border-top:1px solid var(--line)}
 .shr .lbl{grid-column:1 / -1;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
-.shr .btn{background:#1976D2;border-color:#1976D2;color:#fff;white-space:nowrap}
-.shr .btn:hover{background:#1565C0;border-color:#1565C0}
-.shr .btn:focus-visible{outline:2px solid #2196F3;outline-offset:2px}
+.shr .btn{white-space:nowrap;color:#fff}
+.shr .btn[data-via="wa"]{background:#15803D;border-color:#15803D}
+.shr .btn[data-via="wa"]:hover{background:#166534;border-color:#166534}
+.shr .btn[data-via="mail"]{background:#FBBC04;border-color:#FBBC04;color:#1F1A00}
+.shr .btn[data-via="mail"]:hover{background:#E5A800;border-color:#E5A800}
+.shr .btn[data-via="pdf"]{background:#D93025;border-color:#D93025}
+.shr .btn[data-via="pdf"]:hover{background:#B3261E;border-color:#B3261E}
+.shr .btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .shr .btn .ico{width:16px;height:16px}
 .shr.compact{display:flex;flex-wrap:nowrap;gap:4px;padding-top:0;border-top:0}
 .shr.compact .btn{padding:5px 7px}
