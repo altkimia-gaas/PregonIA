@@ -123,6 +123,25 @@ button.kpi:hover{border-color:var(--accent)}
 .shr.compact{display:flex;flex-wrap:nowrap;gap:4px;padding-top:0;border-top:0}
 .shr.compact .btn{padding:5px 7px}
 .parte .shr{margin-top:2px}
+.btn.alt{background:#1976D2;border-color:#1976D2;color:#fff}
+.btn.alt:hover{background:#1565C0;border-color:#1565C0}
+.btn.b-wa{background:#15803D;border-color:#15803D;color:#fff}
+.btn.b-wa:hover{background:#166534;border-color:#166534}
+body.vid-on{overflow:hidden}
+.vid-back{position:fixed;inset:0;z-index:70;background:rgba(4,8,16,.72);display:grid;place-items:center;overflow:auto;padding-block:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.vid{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,.4);width:min(860px,100%);max-height:100%;overflow:auto}
+.vid-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+.vid-h h2{margin:0;font-size:20px;letter-spacing:-.01em}
+.vid-h p{margin:3px 0 0;color:var(--muted);font-size:13px}
+.vid-b{display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;padding:18px}
+.vid-stage canvas{display:block;height:min(66vh,620px);width:auto;max-width:100%;object-fit:contain;border-radius:12px;background:#080B12}
+.vid-side{display:grid;gap:12px;align-content:start;min-width:0}
+.vid-meta{margin:0;color:var(--muted);font-size:13.5px;line-height:1.5}
+.vid-ctrl,.vid-out{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.vid-prog{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center}
+.vid-prog .bar{height:10px}
+.vid-prog .bar i{background:#1976D2;transition:width .2s}
+@media (max-width:700px){ .vid-b{grid-template-columns:minmax(0,1fr);padding:14px} .vid-stage{display:grid;justify-items:center} .vid-stage canvas{height:min(46vh,480px)} .vid-h{padding:12px 14px 10px} .vid-h p{font-size:12.5px} }
 .shr-pop{position:fixed;z-index:60;display:grid;min-width:240px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(15,23,42,.18)}
 .shr-pop button{all:unset;box-sizing:border-box;padding:10px 12px;border-radius:7px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;min-height:40px;display:flex;align-items:center}
 .shr-pop button:hover,.shr-pop button:focus-visible{background:var(--accent-soft);color:var(--accent)}

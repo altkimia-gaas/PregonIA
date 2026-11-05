@@ -2,7 +2,7 @@
 """Arma index.html autónomo desde src/ y data/catalogo_medios.csv.
 
 Uso: python3 scripts/build.py
-Orden del script embebido: base.js (constantes y catálogo) → corpus.js (noticias ficticias) → app.js (aplicación).
+Orden del script embebido: base.js (constantes y catálogo) → corpus.js (noticias ficticias) → app.js (aplicación) → video.js (video resumen del parte).
 """
 import base64, csv, json, pathlib
 
@@ -16,7 +16,7 @@ def catalogo():
 
 def main():
     leer = lambda n: (SRC / n).read_text(encoding="utf-8")
-    js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("app.js")
+    js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("app.js") + "\n" + leer("video.js")
     js = js.replace("/*CATALOG*/", json.dumps(catalogo(), ensure_ascii=False, separators=(",", ":")), 1)
     foto = "data:image/jpeg;base64," + base64.b64encode((RAIZ / "assets" / "portada.jpg").read_bytes()).decode()
     cuerpo = leer("shell.html").replace("assets/portada.jpg", foto) + "<script>\n" + js + "\n</script>\n"
