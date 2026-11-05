@@ -144,6 +144,17 @@ body.vid-on{overflow:hidden}
 .vid-lineas{display:grid;gap:8px;margin:8px 0 10px;max-height:300px;overflow:auto;padding-right:4px}
 .vid-lineas label{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
 .vid-lineas textarea{font:inherit;font-size:13px;font-weight:400;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px;line-height:1.45;resize:vertical;width:100%}
+.cap{width:min(660px,100%)}
+.cap-f{display:grid;gap:14px;padding:18px}
+.cap-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px}
+.cap-l{display:grid;gap:6px;font-size:13px;font-weight:600;color:var(--ink)}
+.cap-l input,.cap-l select,.cap-l textarea{font:inherit;font-weight:400;font-size:14px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-btn);padding:9px 10px;min-height:42px;width:100%}
+.cap-l textarea{resize:vertical;line-height:1.5}
+.cap-l small{font-weight:400;color:var(--muted);font-size:12px}
+.opc{font-weight:400;color:var(--muted);font-size:12px}
+.cap-err{margin:0;color:var(--cri-ink);font-size:13px;font-weight:600}
+.cap-acts{display:flex;gap:8px;flex-wrap:wrap}
+@media (max-width:700px){ .cap-row{grid-template-columns:minmax(0,1fr)} .cap-f{padding:14px} }
 .shr-pop{position:fixed;z-index:60;display:grid;min-width:240px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(15,23,42,.18)}
 .shr-pop button{all:unset;box-sizing:border-box;padding:10px 12px;border-radius:7px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;min-height:40px;display:flex;align-items:center}
 .shr-pop button:hover,.shr-pop button:focus-visible{background:var(--accent-soft);color:var(--accent)}

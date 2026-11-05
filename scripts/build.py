@@ -16,7 +16,7 @@ def catalogo():
 
 def main():
     leer = lambda n: (SRC / n).read_text(encoding="utf-8")
-    js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("app.js") + "\n" + leer("video.js")
+    js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("app.js") + "\n" + leer("captura.js") + "\n" + leer("video.js")
     js = js.replace("/*CATALOG*/", json.dumps(catalogo(), ensure_ascii=False, separators=(",", ":")), 1)
     foto = "data:image/jpeg;base64," + base64.b64encode((RAIZ / "assets" / "portada.jpg").read_bytes()).decode()
     cuerpo = leer("shell.html").replace("assets/portada.jpg", foto) + "<script>\n" + js + "\n</script>\n"

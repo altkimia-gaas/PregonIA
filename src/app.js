@@ -138,7 +138,7 @@ function dia(ts){ const a = new Date(NOW); a.setHours(0,0,0,0); const d = Math.r
 const tonoLbl = {pos:"Positivo", neu:"Neutro", cri:"Crítico"};
 const tonoPl = {pos:"Positivas", neu:"Neutras", cri:"Críticas"};
 const pillTono = t => `<span class="pill ic t-${t}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${({cri:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.4h.01"/>',pos:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.2 9.6"/>',neu:'<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>'})[t]}</svg>${tonoLbl[t]}</span>`;
-const medioN = n => MED[n.m].n + (MED[n.m].e === "restringido" ? " (vía Google News)" : "");
+const medioN = n => MED[n.m].n + (n.via === "facebook" || MED[n.m].t === "Facebook" ? " · Facebook" : MED[n.m].e === "restringido" ? " (vía Google News)" : "");
 const signo = n => (n > 0 ? "+" : "") + n;
 const plural = (n, s, p) => n + " " + (n === 1 ? s : p);
 /* Balance del tono: veredicto en cinco niveles. El índice (positivas − críticas) / total solo decide el nivel; el usuario ve palabras y conteos. */
@@ -236,7 +236,7 @@ function itemHtml(m){
     <h4>${m.lead.url ? `<a class="ext" href="${esc(m.lead.url)}" target="_blank" rel="noopener">${esc(m.lead.t)}<span class="sr"> (abre el medio en otra pestaña)</span></a>` : esc(m.lead.t)}</h4>
     <p class="res">${esc(m.lead.res)}</p>
     <details><summary>¿Por qué aparece?</summary><p>${temas.map(x => `Tema <b>${esc(x.tema.nombre)}</b>: contiene «${[...x.found].map(esc).join("», «")}»${x.enTitulo?" en el titular":""}.`).join(" ")}${otros.length?` También la publicaron ${otros.join(", ")}.`:""}</p></details>
-    <div class="acts">${resp ? `<button class="btn sm" data-act="responder" data-g="${m.g}" data-from="menciones">Ver respuesta</button>` : `<button class="btn ${m.critico?"primary":""} sm" data-act="responder" data-g="${m.g}" data-from="menciones">Responder</button>`}<button class="btn ghost sm" data-act="fp" data-g="${m.g}">No corresponde</button></div>
+    <div class="acts">${resp ? `<button class="btn sm" data-act="responder" data-g="${m.g}" data-from="menciones">Ver respuesta</button>` : `<button class="btn ${m.critico?"primary":""} sm" data-act="responder" data-g="${m.g}" data-from="menciones">Responder</button>`}<button class="btn ghost sm" data-act="fp" data-g="${m.g}">No corresponde</button>${m.notas.some(n => n.captura) ? `<button class="btn ghost sm" data-act="cap-del" data-g="${m.g}">Quitar lo que agregué</button>` : ""}</div>
   </article>`;
 }
 function vMenciones(){
@@ -250,7 +250,7 @@ function vMenciones(){
   const activos = (tState.tema!=="todos") + (tState.tono!=="todos") + (tState.dias!=="30") + !!tState.q.trim();
   let html = "", last = "";
   ms.forEach(m => { const d = dia(m.last); if (d !== last) { html += `<h3 class="day">${d}</h3>`; last = d; } html += itemHtml(m); });
-  return `<div class="head"><div><h2 tabindex="-1">Menciones</h2><p>Cada noticia aparece una vez aunque la publiquen varios medios. El resumen es propio; el texto del medio no se reproduce.</p></div></div>
+  return `<div class="head"><div><h2 tabindex="-1">Menciones</h2><p>Cada noticia aparece una vez aunque la publiquen varios medios. El resumen es propio; el texto del medio no se reproduce.</p></div><button class="btn alt" type="button" data-act="cap-open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Agregar publicación</button></div>
   <div class="filters">
     <div class="seg" role="group" aria-label="Tono">${["todos","cri","neu","pos"].map(k => `<button data-act="f-tono" data-k="${k}" aria-pressed="${tState.tono===k}">${k==="todos"?"Todas":tonoPl[k]}<span class="c">${cnt(k)}</span></button>`).join("")}</div>
     <div class="seg" role="group" aria-label="Período">${[["1","24 h"],["7","7 días"],["30","30 días"]].map(([v,l]) => `<button data-act="f-dias" data-k="${v}" aria-pressed="${tState.dias===v}">${l}</button>`).join("")}</div>
@@ -1010,6 +1010,7 @@ const FAQ = [
     ["¿Otros municipios ven mis datos?", "No. Cada cuenta ve solo lo suyo. La comparación con las comunas vecinas usa solo noticias públicas, nunca la configuración ni los datos de otra cuenta."],
     ["¿Cuántas personas pueden usarlo?", "El plan Comunal incluye 3 usuarios y el Regional o Político, 5."],
     ["¿Cómo comparto el parte con el alcalde?", "En Reportes › Parte del alcalde, la barra Compartir lo envía en PDF por WhatsApp o por correo, o lo guarda en PDF en tu computador."],
+    ["¿Cómo agrego publicaciones de Facebook?", "En Menciones, el botón Agregar publicación: indicas la página o medio, pegas el enlace y el texto del post, y PregonIA lo analiza como cualquier noticia (tono, resumen, tema, si es el mismo hecho que ya publicó otro medio). Sirve para medios locales que publican solo en Facebook. PregonIA guarda un resumen propio, no el texto del post, y no lee Facebook por su cuenta."],
     ["¿Qué es el video resumen?", "En Reportes › Parte del alcalde, el botón Video resumen arma un video vertical de menos de un minuto con el resultado de la semana, los temas con más publicaciones, hasta tres asuntos que se pueden complicar (en qué medios salió, hasta dónde llegó, qué hacer y quién responde) y la buena noticia. Se ve en la pantalla, se prepara en MP4 y se envía por WhatsApp o se descarga. Es para uso interno: no usa fotos ni logos de los medios."],
     ["¿Cómo envío o guardo una respuesta?", "Bajo el borrador está la barra Compartir. En el celular, WhatsApp y Correo abren la hoja de compartir con el PDF adjunto: eliges la app y el contacto. En el computador, WhatsApp abre el chat y guarda el PDF para que lo adjuntes con el clip; Correo te deja elegir Gmail, Outlook o el programa de correo del equipo, con asunto y texto listos. Nada se envía solo: tú eliges a quién."]
   ]]
@@ -1097,13 +1098,13 @@ async function cargarReales(force){
     const r = await fetch("/api/noticias?comuna=" + encodeURIComponent(org)); if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json(); if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
     const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + org + " comuna"), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna
-    NOTAS.splice(0, NOTAS.length, ...nuevas); MODO = {...MODO, tipo: "real", info: {...j, notas: nuevas}, cargando: false};
+    refrescarNotas(nuevas); MODO = {...MODO, tipo: "real", info: {...j, notas: nuevas}, cargando: false};
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
     pintarModo(); render();
     toast(nuevas.length ? `Listo: ${plural(nuevas.length, "nota real", "notas reales")} de ${org}. Ábrelas en Menciones.` : `Los medios leídos no publicaron sobre ${org} en los últimos ${j.ventana_dias} días.`);
   } catch(e) { MODO.cargando = false; pintarModo(); toast("No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
 }
-function usarDemo(){ if (MODO.tipo === "demo") return; NOTAS.splice(0, NOTAS.length, ...NOTAS_DEMO); MODO = {...MODO, tipo: "demo", info: null}; try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
+function usarDemo(){ if (MODO.tipo === "demo") return; refrescarNotas(NOTAS_DEMO); MODO = {...MODO, tipo: "demo", info: null}; try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
 document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; if (b.dataset.act === "modo-real") cargarReales(); if (b.dataset.act === "modo-demo") usarDemo(); });
 $("#org").addEventListener("change", () => { if (MODO.tipo === "real") cargarReales(true); });
 (async () => {
