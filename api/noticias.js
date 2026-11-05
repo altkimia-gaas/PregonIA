@@ -62,7 +62,7 @@ function parsear(xml){
 
 /* Clasificación con Claude Haiku, en lotes paralelos para responder rápido: relevancia, tono, resumen propio y palabras clave.
    En paralelo, una llamada corta solo con los titulares agrupa las notas que cuentan el mismo hecho. */
-const LOTE = 15;
+const LOTE = 10;
 const DIAG = [];
 async function llamar(prompt, maxTok){
   const clave = process.env.ANTHROPIC_API_KEY; if (!clave) return null; let txt = "";
@@ -74,7 +74,11 @@ async function llamar(prompt, maxTok){
     });
     if (!r.ok) { const e = (await r.text()).slice(0, 200); console.error("Anthropic", r.status, e); DIAG.push("HTTP " + r.status + " " + e.replace(/\s+/g, " ").slice(0, 120)); return null; }
     const d = await r.json(); txt = (d.content || []).map(c => c.text || "").join("");
-    const a = JSON.parse(txt.slice(txt.indexOf("["), txt.lastIndexOf("]") + 1)); return Array.isArray(a) ? a : null;
+    try { const a = JSON.parse(txt.slice(txt.indexOf("["), txt.lastIndexOf("]") + 1)); if (Array.isArray(a)) return a; } catch {}
+    // Respuesta cortada o con texto extra: se rescatan los objetos completos uno a uno.
+    const sueltos = (txt.match(/\{[^{}]*\}/g) || []).map(s => { try { return JSON.parse(s); } catch { return null; } }).filter(Boolean);
+    if (sueltos.length) { DIAG.push("rescate parcial: " + sueltos.length + " objetos"); return sueltos; }
+    throw new SyntaxError("sin JSON");
   } catch(e) { console.error("Anthropic", e && e.name, String(e).slice(0, 200)); DIAG.push((e && e.name || "error") + ": " + String(e && e.message || e).slice(0, 80) + (txt ? " | salida: " + txt.slice(0, 80) + " … " + txt.slice(-60) : "")); return null; }
 }
 const linea = (n, i) => `${i}. [${n.medio} · ${n.ambito}] ${n.titulo}${n.desc ? " — " + n.desc.slice(0, 240) : ""}`;
@@ -90,19 +94,19 @@ Para cada nota devuelve un objeto con:
 - "res": un resumen propio de una frase, de máximo 20 palabras, en español de Chile, sin copiar frases del medio.
 - "x": entre 3 y 6 palabras clave en minúsculas separadas por espacios (temas, lugares, instituciones).
 
-Responde solo con un arreglo JSON, sin texto adicional.`;
+Responde solo con un arreglo JSON compacto, en una sola línea, sin bloque de código ni texto adicional.`;
 }
 function promptGrupos(comuna, notas){
   return `Estas son notas de prensa sobre ${comuna}, Chile:
 
 ${notas.map((n, i) => `${i}. ${n.titulo} (${n.medio})`).join("\n")}
 
-Agrupa las que cuentan el mismo hecho, aunque sean de medios distintos. Responde solo con un arreglo JSON de objetos {"i": número, "g": "etiqueta-corta-del-hecho"}, uno por nota; las notas del mismo hecho llevan la misma etiqueta.`;
+Agrupa las que cuentan el mismo hecho, aunque sean de medios distintos. Responde solo con un arreglo JSON de objetos {"i": número, "g": "etiqueta-corta-del-hecho"}, uno por nota; las notas del mismo hecho llevan la misma etiqueta. JSON compacto en una sola línea, sin bloque de código.`;
 }
 async function clasificar(comuna, notas){
   if (!process.env.ANTHROPIC_API_KEY || !notas.length) return {porI: new Map(), ok: false};
   const lotes = []; for (let k = 0; k < notas.length; k += LOTE) lotes.push(k);
-  const [grupos, ...partes] = await Promise.all([llamar(promptGrupos(comuna, notas), 2500), ...lotes.map(k => llamar(promptLote(comuna, notas.slice(k, k + LOTE), k), 2600))]);
+  const [grupos, ...partes] = await Promise.all([llamar(promptGrupos(comuna, notas), 4000), ...lotes.map(k => llamar(promptLote(comuna, notas.slice(k, k + LOTE), k), 4000))]);
   const porI = new Map();
   partes.forEach(p => (p || []).forEach(c => { if (Number.isInteger(Number(c.i))) porI.set(Number(c.i), {...c}); }));
   (grupos || []).forEach(c => { const x = porI.get(Number(c.i)); if (x && c.g) x.g = c.g; else if (c.g) porI.set(Number(c.i), {g: c.g}); });
