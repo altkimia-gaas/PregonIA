@@ -140,7 +140,7 @@ function vcabecera(ctx, plan){
   vfont(ctx, 700, 40, VF.h); ctx.textAlign = "left"; ctx.fillStyle = VC.text; ctx.fillText("Pregon", 60, 140); const w = ctx.measureText("Pregon").width; ctx.fillStyle = VC.blue; ctx.fillText("IA", 60 + w, 140);
   vfont(ctx, 500, 30, VF.b); ctx.textAlign = "right"; ctx.fillStyle = VC.muted; ctx.fillText(plan.org + " · " + plan.per, VW - 60, 138);
 }
-function vpie(ctx){ vfont(ctx, 400, 26, VF.b); ctx.textAlign = "center"; ctx.fillStyle = "rgba(139,157,195,.8)"; ctx.fillText("PregonIA · Prototipo con noticias ficticias", VW / 2, VH - 60); }
+function vpie(ctx){ vfont(ctx, 400, 26, VF.b); ctx.textAlign = "center"; ctx.fillStyle = "rgba(139,157,195,.8)"; ctx.fillText(typeof MODO !== "undefined" && MODO.tipo === "real" ? "PregonIA · Noticias reales de medios digitales" : "PregonIA · Prototipo con noticias ficticias", VW / 2, VH - 60); }
 function vkicker(ctx, txt, y, color, a){ return vtexto(ctx, txt.toUpperCase(), 90, y, {px: 32, w: 700, fam: VF.h, color, a, ls: 5}); }
 
 /* Escenas */
@@ -321,7 +321,7 @@ function videoAbrir(){
         <button class="btn alt" type="button" data-act="vid-make" id="vidMake">Preparar video MP4</button>
         <div class="vid-prog" id="vidProg" hidden><span class="bar"><i style="width:0%"></i></span><span class="mono" id="vidPct">0%</span><button class="btn sm" type="button" data-act="vid-stop">Cancelar</button></div>
         <div class="vid-out" id="vidOut" hidden><button class="btn b-wa" type="button" data-act="vid-wa"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="vid-dl"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar</button></div>
-        <p class="note" id="vidNote">Uso interno del alcalde y su equipo. Es un prototipo con noticias ficticias; no usa fotos ni logos de los medios.</p>
+        <p class="note" id="vidNote">Uso interno del alcalde y su equipo. ${MODO.tipo === "real" ? "Hecho con noticias reales; los medios se citan por su nombre" : "Es un prototipo con noticias ficticias"}; no usa fotos ni logos de los medios.</p>
       </div>
     </div></section>`;
   document.body.appendChild(ov); document.body.classList.add("vid-on");

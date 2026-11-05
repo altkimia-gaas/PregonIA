@@ -230,10 +230,10 @@ function vInicio(){
 /* Menciones */
 function itemHtml(m){
   const temas = [...m.temas.values()], resp = respondida(m.g);
-  const otros = m.notas.filter(n => n !== m.lead).map(n => esc(MED[n.m].n));
+  const otros = m.notas.filter(n => n !== m.lead).map(n => n.url ? `<a class="ext" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(MED[n.m].n)}</a>` : esc(MED[n.m].n));
   return `<article class="item ${resp?"resp":(m.critico?"cri":"")}">
     <div class="meta">${pillTono(m.tono)}${resp?'<span class="pill done">Respondida</span>':""}<span>${esc(medioN(m.lead))}</span><span>·</span><span title="${fecha(m.lead.ts)}">${ago(m.lead.ts)}</span>${m.notas.length>1?`<span>·</span><span>en ${m.notas.length} medios</span>`:""}</div>
-    <h4>${esc(m.lead.t)}</h4>
+    <h4>${m.lead.url ? `<a class="ext" href="${esc(m.lead.url)}" target="_blank" rel="noopener">${esc(m.lead.t)}<span class="sr"> (abre el medio en otra pestaña)</span></a>` : esc(m.lead.t)}</h4>
     <p class="res">${esc(m.lead.res)}</p>
     <details><summary>¿Por qué aparece?</summary><p>${temas.map(x => `Tema <b>${esc(x.tema.nombre)}</b>: contiene «${[...x.found].map(esc).join("», «")}»${x.enTitulo?" en el titular":""}.`).join(" ")}${otros.length?` También la publicaron ${otros.join(", ")}.`:""}</p></details>
     <div class="acts">${resp ? `<button class="btn sm" data-act="responder" data-g="${m.g}" data-from="menciones">Ver respuesta</button>` : `<button class="btn ${m.critico?"primary":""} sm" data-act="responder" data-g="${m.g}" data-from="menciones">Responder</button>`}<button class="btn ghost sm" data-act="fp" data-g="${m.g}">No corresponde</button></div>
@@ -595,7 +595,7 @@ function repCrisis(){
   </div>
   <div class="card" style="margin-top:14px"><h3>Cómo se propagó</h3>${propagacion(m)}</div>
   <div class="rgrid r21" style="margin-top:14px">
-    <div class="card"><h3>Cronología</h3><ol class="timeline">${m.notas.map(n => `<li><b>${fecha(n.ts)}</b> · ${esc(medioN(n))}<br><span class="muted">${esc(n.res)}</span></li>`).join("")}</ol></div>
+    <div class="card"><h3>Cronología</h3><ol class="timeline">${m.notas.map(n => `<li><b>${fecha(n.ts)}</b> · ${n.url ? `<a class="ext" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(medioN(n))}</a>` : esc(medioN(n))}<br><span class="muted">${esc(n.res)}</span></li>`).join("")}</ol></div>
     <div class="card" style="display:grid;gap:12px;align-content:start"><h3 style="margin:0">Qué hacer</h3><p class="note">Informa medidas concretas en las próximas horas, con una sola vocería y datos oficiales.</p><button class="btn primary" data-act="responder" data-g="${m.g}" data-from="reportes">${resp?"Ver respuesta":"Preparar respuesta"}</button>${ms.length>1?`<p class="hint" style="margin:0">Otros episodios de la semana: ${ms.slice(1,4).map(x => esc(x.lead.t)).join(" · ")}</p>`:""}</div>
   </div>`;
 }
@@ -1074,6 +1074,41 @@ document.addEventListener("keydown", e => {
 });
 window.addEventListener("hashchange", () => { if (helpOpen) renderHelp(); });
 
+
+/* Noticias reales (etapa 1): /api/noticias lee los medios del catálogo y la demostración queda a un clic. */
+const NOTAS_DEMO = NOTAS.slice(), MODO_KEY = "pregonia-modo";
+let MODO = {tipo: "demo", info: null, cargando: false, disponible: false};
+const horaCorta = iso => new Date(iso).toLocaleTimeString("es-CL", {hour: "2-digit", minute: "2-digit", hourCycle: "h23"});
+function pintarModo(){
+  const el = $("#demo"); if (!el) return;
+  if (MODO.cargando) { el.className = "demo"; el.innerHTML = `<b>Leyendo medios</b>Buscando noticias de ${esc(S.org)}<span class="demo-mas"> en unas 70 fuentes; puede tardar hasta un minuto</span>…`; return; }
+  if (MODO.tipo === "real" && MODO.info) { const i = MODO.info; el.className = "demo real"; el.innerHTML = `<b>Datos reales</b>${plural(i.notas.length, "nota", "notas")}<span class="demo-mas"> de ${esc(i.comuna)} en ${i.ventana_dias} días · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : " · tono sin clasificar"}</span><button class="demo-btn" type="button" data-act="modo-demo"><span class="demo-mas">Ver demostración</span><span class="solo-movil">Ver demo</span></button>`; return; }
+  el.className = "demo"; el.innerHTML = `<b>Prototipo</b><span class="demo-mas">Noticias y cifras ficticias · catálogo de 100 medios real</span><span class="solo-movil">Datos ficticios</span>${MODO.disponible ? `<button class="demo-btn" type="button" data-act="modo-real"><span class="demo-mas">Ver noticias reales</span><span class="solo-movil">Ver reales</span></button>` : ""}`;
+}
+async function cargarReales(){
+  if (MODO.cargando) return; MODO.cargando = true; pintarModo();
+  const org = S.org;
+  try {
+    const r = await fetch("/api/noticias?comuna=" + encodeURIComponent(org)); if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json(); if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
+    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, hay: norm(n.t + " " + n.res + " " + (n.x || "")), ht: norm(n.t), real: true}));
+    NOTAS.splice(0, NOTAS.length, ...nuevas); MODO = {...MODO, tipo: "real", info: {...j, notas: nuevas}, cargando: false};
+    try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
+    pintarModo(); render();
+    toast(nuevas.length ? `Listo: ${plural(nuevas.length, "nota real", "notas reales")} de ${org}. Ábrelas en Menciones.` : `Los medios leídos no publicaron sobre ${org} en los últimos ${j.ventana_dias} días.`);
+  } catch(e) { MODO.cargando = false; pintarModo(); toast("No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
+}
+function usarDemo(){ NOTAS.splice(0, NOTAS.length, ...NOTAS_DEMO); MODO = {...MODO, tipo: "demo", info: null}; try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
+document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; if (b.dataset.act === "modo-real") cargarReales(); if (b.dataset.act === "modo-demo") usarDemo(); });
+$("#org").addEventListener("change", () => { if (MODO.tipo === "real") cargarReales(); });
+(async () => {
+  pintarModo();
+  if (!/^https?:$/.test(location.protocol)) return;
+  try { const r = await fetch("/api/noticias?ping=1", {cache: "no-store"}); if (!r.ok || !(await r.json()).ok) return; } catch(e) { return; }
+  MODO.disponible = true; pintarModo();
+  let pref = null; try { pref = localStorage.getItem(MODO_KEY); } catch(e) {}
+  if (pref === "real") cargarReales();
+})();
 
 /* Tema: la marca es oscura; el modo claro es una opción que se recuerda en este navegador. */
 const TEMA_KEY = "pregonia-tema", ICO_TEMA = {sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>', luna: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'};

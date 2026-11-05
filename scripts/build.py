@@ -27,6 +27,10 @@ def main():
               '</head>\n<body>\n')
     html = cabeza + cuerpo + "</body>\n</html>\n"
     (RAIZ / "index.html").write_text(html, encoding="utf-8")
+    # Catálogo para la función de noticias reales (api/noticias.js); el guion bajo evita que Vercel lo publique como ruta.
+    filas = [{"id": int(f["id"]), "nombre": f["nombre"], "ambito": f["ambito"], "comuna": f["comuna"], "metodo": f["metodo"], "url": f["url_lectura"], "estado": f["estado"]}
+             for f in csv.DictReader(open(DATA / "catalogo_medios.csv", encoding="utf-8"))]
+    (RAIZ / "api" / "_catalogo.js").write_text("// Generado por scripts/build.py desde data/catalogo_medios.csv. No editar a mano.\nexport const CATALOGO = " + json.dumps(filas, ensure_ascii=False, indent=0) + ";\n", encoding="utf-8")
     # Versión para publicar como artifact en claude.ai, que pone su propio esqueleto.
     (RAIZ / "artifact.html").write_text(cuerpo, encoding="utf-8")
     print(f"index.html listo ({len(html.encode('utf-8')) // 1024} KB)")
