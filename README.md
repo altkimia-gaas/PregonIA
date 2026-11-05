@@ -27,7 +27,8 @@ Los datos de la demo se guardan en el navegador (localStorage, clave `pregonia-d
 - `assets/portada.jpg` foto de la portada; se embebe en `index.html` al compilar.
 - `data/catalogo_medios.csv` los 100 medios con método de lectura, URL y estado (listo, requiere_ajuste, restringido).
 - `docs/especificacion.md` especificación funcional del MVP.
-- `scripts/build.py` arma `index.html` desde `src/` y `data/`.
+- `api/ia.js` función de servidor (Vercel Edge) que conecta la IA con la clave en el servidor.
+- `scripts/build.py` arma `index.html` desde `src/`, `assets/` y `data/`.
 
 ## Uso
 ```
@@ -37,7 +38,17 @@ python3 -m http.server 8000   # vista local en http://localhost:8000
 Para publicar en Vercel o GitHub Pages basta servir `index.html` desde la raíz; no requiere compilación en el servidor.
 
 ## IA
-La redacción de comunicados, la lectura del analista y "Pregúntale a PregonIA" usan Claude cuando la página se abre como artifact en claude.ai. Fuera de ahí (por ejemplo en Vercel) el prototipo usa plantillas y lo indica en pantalla. En producción la IA va detrás de una API propia, con la clave solo en el servidor.
+La redacción de comunicados, la lectura del analista y "Pregúntale a PregonIA" usan Claude:
+- **En claude.ai** (artifact): con la cuenta de quien abre la página.
+- **En Vercel:** por la función `api/ia.js`, que llama a la API de Anthropic con la clave guardada en el servidor. El navegador nunca ve la clave.
+
+Configuración en Vercel (Settings › Environment Variables), luego Redeploy:
+- `ANTHROPIC_API_KEY` (obligatoria): clave de la consola de Anthropic. Conviene fijar un límite de gasto mensual en la consola.
+- `ANTHROPIC_MODEL` (opcional): fuerza un modelo; por defecto Claude Sonnet 5.5 para redactar y Claude Haiku 5.5 para la ayuda.
+- `ALLOWED_ORIGINS` (opcional): otros dominios autorizados, separados por coma (por ejemplo, un dominio propio).
+- `IA_LIMITE` (opcional): solicitudes por IP cada 10 minutos (por defecto 20).
+
+La función solo acepta pedidos desde el propio sitio, limita el largo del texto y las respuestas, y se niega a tareas ajenas a PregonIA. Sin la clave, la aplicación usa plantillas y lo indica en pantalla.
 
 ## Próximos pasos para producción
 1. Ingesta real en cascada (RSS, sitemap de noticias, portada, Google News) respetando robots.txt; texto retenido 30 días.

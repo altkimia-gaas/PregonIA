@@ -19,8 +19,16 @@ def main():
     js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("app.js")
     js = js.replace("/*CATALOG*/", json.dumps(catalogo(), ensure_ascii=False, separators=(",", ":")), 1)
     foto = "data:image/jpeg;base64," + base64.b64encode((RAIZ / "assets" / "portada.jpg").read_bytes()).decode()
-    html = leer("shell.html").replace("assets/portada.jpg", foto) + "<script>\n" + js + "\n</script>\n"
+    cuerpo = leer("shell.html").replace("assets/portada.jpg", foto) + "<script>\n" + js + "\n</script>\n"
+    # Documento completo para Vercel o GitHub Pages: sin charset ni viewport el celular lo mostraría como escritorio.
+    cabeza = ('<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n'
+              '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
+              '<meta name="description" content="PregonIA: qué dice la prensa de tu comuna, hasta dónde ha llegado y qué responder.">\n'
+              '</head>\n<body>\n')
+    html = cabeza + cuerpo + "</body>\n</html>\n"
     (RAIZ / "index.html").write_text(html, encoding="utf-8")
+    # Versión para publicar como artifact en claude.ai, que pone su propio esqueleto.
+    (RAIZ / "artifact.html").write_text(cuerpo, encoding="utf-8")
     print(f"index.html listo ({len(html.encode('utf-8')) // 1024} KB)")
 
 if __name__ == "__main__":

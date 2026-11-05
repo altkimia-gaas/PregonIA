@@ -739,7 +739,23 @@ document.addEventListener("click", async e => {
 });
 
 /* IA desde la página (usa la cuenta de Claude de quien la abre) */
-let samplePromise = (window.claude && window.claude.use) ? window.claude.use("sample").catch(() => null) : Promise.resolve(null);
+/* Fuera de claude.ai (por ejemplo en Vercel) la IA va por /api/ia, con la clave solo en el servidor. Misma forma que sample(): (texto, {signal, onText, modelTier}) → {text}. */
+async function iaServidor(){
+  if (!/^https?:$/.test(location.protocol)) return null;
+  try { const r = await fetch("/api/ia", {cache: "no-store"}); if (!r.ok) return null; const j = await r.json(); if (!j.ok) return null; } catch(e) { return null; }
+  return async function(input, opts = {}){
+    let r;
+    try { r = await fetch("/api/ia", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({prompt: String(input), tier: opts.modelTier === "quick" ? "quick" : "default"}), signal: opts.signal}); }
+    catch(err) { throw {code: err && err.name === "AbortError" ? "cancelled" : "network", message: String(err)}; }
+    if (r.status === 429) throw {code: "rate_limited"};
+    if (!r.ok || !r.body) throw {code: "error", message: await r.text().catch(() => "")};
+    const lector = r.body.getReader(), dec = new TextDecoder(); let text = "";
+    try { for (;;) { const {done, value} = await lector.read(); if (done) break; const delta = dec.decode(value, {stream: true}); text += delta; if (opts.onText) opts.onText({text, delta}); } }
+    catch(err) { throw {code: opts.signal && opts.signal.aborted ? "cancelled" : "error", text}; }
+    return {text, truncated: false};
+  };
+}
+let samplePromise = ((window.claude && window.claude.use) ? window.claude.use("sample").catch(() => null) : Promise.resolve(null)).then(s => s || iaServidor());
 let ctl = null;
 function prompt(m, pieza, enfoque, base){
   return `Eres el asistente de comunicaciones de PregonIA para la Municipalidad de ${S.org}, en Chile. Redacta en español de Chile: ${PIEZAS[pieza][2]}. Enfoque: ${ENFOQUES[enfoque]}.
