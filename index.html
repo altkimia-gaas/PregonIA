@@ -1,0 +1,1627 @@
+<title>PregonIA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sala de situación — barra superior con el estado del monitoreo, secciones en pestañas, tarjetas sobrias y el color reservado para el riesgo (crítico, atención, favorable). Titulares de prensa en serif; análisis de PregonIA en sans. */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --surface-2:#EDF1F5; --ink:#132235; --muted:#5B6A7C; --line:#DAE1E9; --track:#E6EBF1;
+  --top:#0F2236; --top-ink:#E8EEF5; --top-muted:#9FB0C4; --top-line:#263D55; --top-accent:#8FB8EA; --live:#3DD6B5;
+  --accent:#1E4D8C; --accent-ink:#FFFFFF; --accent-soft:#E4ECF7;
+  --bell:#A8650F; --bell-soft:#FBEFD9;
+  --pos:#00897B; --pos-soft:#DCF1EE; --pos-ink:#00695E;
+  --neu:#A3AEBB; --neu-soft:#EDF0F4; --neu-ink:#525F6E;
+  --cri:#C8412C; --cri-soft:#FBE7E2; --cri-ink:#A23422;
+  --amb-n:#1F3A5F; --amb-r:#5476A0; --amb-l:#8FA6C4;
+  --shadow:0 1px 2px rgba(16,34,54,.06),0 1px 3px rgba(16,34,54,.04);
+  --f-display:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-ui:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-news:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0B131D; --surface:#121D2A; --surface-2:#192737; --ink:#E5ECF4; --muted:#97A6B8; --line:#243548; --track:#1E2D3F;
+  --top:#070E17; --top-ink:#E5ECF4; --top-muted:#8C9DB2; --top-line:#1F3045; --top-accent:#8FB8EA; --live:#3DD6B5;
+  --accent:#7FAAE0; --accent-ink:#0B131D; --accent-soft:#1A2C45;
+  --bell:#E9A44C; --bell-soft:#33260F;
+  --pos:#20A493; --pos-soft:#0F2E2B; --pos-ink:#5FD0C0;
+  --neu:#5F6E80; --neu-soft:#1C2836; --neu-ink:#A8B5C4;
+  --cri:#E0604A; --cri-soft:#3A1C16; --cri-ink:#F39582;
+  --amb-n:#A9C6EA; --amb-r:#6F93C0; --amb-l:#3F5878;
+  --shadow:none; color-scheme:dark;
+} }
+:root[data-theme="dark"]{
+  --bg:#0B131D; --surface:#121D2A; --surface-2:#192737; --ink:#E5ECF4; --muted:#97A6B8; --line:#243548; --track:#1E2D3F;
+  --top:#070E17; --top-ink:#E5ECF4; --top-muted:#8C9DB2; --top-line:#1F3045; --top-accent:#8FB8EA; --live:#3DD6B5;
+  --accent:#7FAAE0; --accent-ink:#0B131D; --accent-soft:#1A2C45;
+  --bell:#E9A44C; --bell-soft:#33260F;
+  --pos:#20A493; --pos-soft:#0F2E2B; --pos-ink:#5FD0C0;
+  --neu:#5F6E80; --neu-soft:#1C2836; --neu-ink:#A8B5C4;
+  --cri:#E0604A; --cri-soft:#3A1C16; --cri-ink:#F39582;
+  --amb-n:#A9C6EA; --amb-r:#6F93C0; --amb-l:#3F5878;
+  --shadow:none; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ico{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.demo{background:var(--bell-soft);border-bottom:1px solid var(--line);padding-block:7px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-size:12.5px}
+.demo b{color:var(--bell)}
+.app{display:grid;grid-template-columns:236px minmax(0,1fr)}
+.side{background:var(--surface);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:16px;position:sticky;top:0;align-self:start;height:100vh;overflow:auto}
+.brand h1{font-family:var(--f-display);font-size:24px;line-height:1;margin:0;letter-spacing:-.01em}
+.brand h1 span{color:var(--accent)}
+.brand p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.brand{padding:0 6px}
+.org label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 6px 4px}
+.org select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font-weight:600}
+.plan{margin:6px 6px 0;font-size:12px;color:var(--muted)}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav .grp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:10px 10px 4px}
+.nav a{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;text-decoration:none;color:var(--ink);font-weight:500}
+.nav a:hover{background:var(--surface-2)}
+.nav a[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+.nav .count,.bnav .count{margin-left:auto;font-family:var(--f-mono);font-size:11px;background:var(--cri);color:#fff;border-radius:99px;padding:1px 7px;font-weight:600}
+.usage{display:flex;flex-direction:column;gap:5px;margin:10px 6px 0}
+.usage .row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+.usage a{font-size:11.5px;font-weight:600}
+.side .foot{margin-top:auto;font-size:11.5px;color:var(--muted);padding:0 6px}
+.bnav{display:none}
+.main{padding-block:24px 64px;padding-left:max(16px,min(4vw,40px));padding-right:max(16px,min(4vw,40px));min-width:0;max-width:1240px}
+.main:focus{outline:none}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:18px}
+.head h2{font-family:var(--f-display);font-size:28px;line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-.01em}
+.head h2:focus{outline:none}
+.head p{margin:5px 0 0;color:var(--muted);max-width:66ch}
+.back{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;text-decoration:none;margin-bottom:8px}
+.grid{display:grid;gap:14px}
+.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.card > h3,.sec{font-size:12px;margin:0 0 10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+button.kpi{display:block;text-align:left;cursor:pointer;width:100%;transition:border-color .15s}
+button.kpi:hover{border-color:var(--accent)}
+.kpi .k{font-size:12.5px;font-weight:600;color:var(--muted)}
+.kpi .v{font-family:var(--f-display);font-size:32px;line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .s{color:var(--muted);font-size:12.5px;margin-top:4px}
+.kpi .go{font-size:12px;color:var(--accent);font-weight:600;margin-top:8px}
+.two{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;border-radius:99px;padding:2px 9px;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.ic::before{display:none}
+.pill .ico{width:13px;height:13px;stroke-width:2.2}
+.t-pos{background:var(--pos-soft);color:var(--pos-ink)} .t-neu{background:var(--neu-soft);color:var(--neu-ink)} .t-cri{background:var(--cri-soft);color:var(--cri-ink)}
+.e-listo,.done{background:var(--pos-soft);color:var(--pos-ink)} .e-requiere_ajuste{background:var(--bell-soft);color:var(--bell)} .e-restringido{background:var(--cri-soft);color:var(--cri-ink)}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:11px;background:var(--surface-2);border-radius:5px;padding:1px 6px}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 13px;cursor:pointer;font-weight:600;font-size:13px;text-decoration:none;color:var(--ink);min-height:36px}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--accent);padding:6px 8px}
+.btn.ghost:hover{background:var(--accent-soft)}
+.btn.sm{padding:5px 10px;min-height:30px;font-size:12.5px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.onb{background:var(--accent-soft);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px;display:grid;gap:10px}
+.onb h3{margin:0;font-family:var(--f-display);font-size:18px}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;list-style:none;margin:0;padding:0}
+.steps li{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.steps .n{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.steps li.ok{opacity:.7}
+.steps li.ok .n{color:var(--pos);font-weight:600}
+.today{display:flex;flex-direction:column;gap:8px}
+.today li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-left:3px solid var(--cri);border-radius:8px;background:var(--surface)}
+.today ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.allgood{display:flex;gap:10px;align-items:center;padding:12px;border-radius:8px;background:var(--pos-soft);color:var(--pos-ink);font-weight:600}
+.feed{display:flex;flex-direction:column;gap:10px}
+.day{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:10px 0 0}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px}
+.item.cri{border-left:3px solid var(--cri)}
+.item.resp{border-left:3px solid var(--pos)}
+.item h4{margin:0;font-size:15.5px;line-height:1.35;text-wrap:pretty}
+.item .meta{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.item .res{margin:0}
+.item details{font-size:12.5px;color:var(--muted)}
+.item summary{cursor:pointer;color:var(--accent);font-weight:600;width:max-content;list-style:none}
+.item summary::-webkit-details-marker{display:none}
+.item summary::after{content:" ▾"}
+.item details[open] summary::after{content:" ▴"}
+.item details p{margin:6px 0 0}
+.item .acts{grid-column:2;grid-row:1 / span 4;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+.filters select,.filters input{padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-height:36px}
+.filters input{min-width:0;flex:1 1 200px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:7px 11px;cursor:pointer;font-weight:600;font-size:12.5px;color:var(--muted);border-right:1px solid var(--line);min-height:36px;white-space:nowrap}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.seg .c{font-family:var(--f-mono);font-weight:500;margin-left:4px}
+.active{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12.5px;color:var(--muted);margin:0 0 6px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+td.n,th.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
+.scroll{overflow-x:auto}
+.bar{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden;display:block}
+.bar i{display:block;height:100%;background:var(--accent)}
+.bar.full i{background:var(--bell)}
+.rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.rows li button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) 110px 30px;gap:10px;align-items:center;width:100%;padding:7px 6px;border-radius:6px;cursor:pointer}
+.rows li button:hover{background:var(--surface-2)}
+.rows li button:focus-visible{outline:2px solid var(--accent)}
+.list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.list li{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field > label,.field legend,.lbl{font-size:12.5px;font-weight:600;color:var(--ink)}
+.field input,.field select,.field textarea{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);width:100%;min-height:36px}
+.field textarea{min-height:110px;resize:vertical;line-height:1.5}
+.field small,.hint{color:var(--muted);font-size:12px}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.checks label{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:99px;padding:5px 11px;font-size:12.5px;font-weight:500;cursor:pointer;background:var(--surface)}
+.checks input{accent-color:var(--accent)}
+.span2{grid-column:1 / -1}
+.prop{display:flex;flex-direction:column;gap:8px}
+.prow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.prow .num{font-family:var(--f-mono);color:var(--muted);font-size:12px}
+.prow.sug{border-style:dashed}
+.origin{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--accent)}
+.subtabs,.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.subtabs a,.tabs button{border:0;background:none;padding:9px 12px;cursor:pointer;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;text-decoration:none;font-size:13.5px}
+.subtabs a[aria-current="page"],.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.tema{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.tema .top{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 14px}
+.tema .top h4{margin:1px 0 0;font-size:15.5px}
+.tema .body{border-top:1px solid var(--line);padding:14px;display:grid;gap:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-height:40px}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border-radius:99px;padding:3px 4px 3px 10px;font-size:12.5px}
+.chip.ex{background:var(--cri-soft);color:var(--cri)}
+.chip button{border:0;background:none;cursor:pointer;width:22px;height:22px;border-radius:50%;color:inherit;font-size:15px;line-height:1}
+.chip button:hover{background:var(--line)}
+.chips input{border:0;outline:0;background:none;flex:1 1 140px;min-width:120px;padding:4px 6px;min-height:28px}
+.chips:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.opt{position:relative;display:flex;flex-direction:column;gap:3px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;background:var(--surface)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt b{font-size:13.5px}
+.opt span{font-size:12px;color:var(--muted)}
+.opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.opt:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.opt .rec{order:-1;font-size:10.5px;font-weight:700;color:var(--pos);text-transform:uppercase;letter-spacing:.04em}
+.stepper{display:grid;gap:18px}
+.stepper > section{display:grid;gap:8px}
+.stepper h3{margin:0;font-size:15px;display:flex;gap:8px;align-items:center}
+.stepper h3 .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:12px;font-family:var(--f-mono)}
+.mini{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface-2);display:grid;gap:4px}
+details.kb summary{cursor:pointer;font-weight:600;font-size:13px}
+.draft{white-space:pre-wrap;font-family:var(--f-body);min-height:280px;border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--surface);width:100%;line-height:1.55}
+.note{font-size:12.5px;color:var(--ink);border-left:3px solid var(--bell);padding:6px 10px;background:var(--bell-soft);border-radius:0 6px 6px 0;margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 12px 10px 16px;border-radius:10px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:flex;gap:12px;align-items:center;max-width:calc(100vw - 32px);z-index:30}
+.toast button{border:0;background:none;color:var(--accent-soft);font-weight:700;cursor:pointer;padding:4px 6px}
+.chart text{font-family:var(--f-mono);font-size:10px;fill:var(--muted)}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.timeline{list-style:none;margin:0;padding:0;border-left:2px solid var(--line);display:flex;flex-direction:column;gap:12px}
+.timeline li{padding-left:14px;position:relative}
+.timeline li::before{content:"";position:absolute;left:-6px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--cri)}
+.repdesc{margin:-6px 0 14px;color:var(--muted);font-size:13px}
+
+/* Reportes: cada resultado se lee como gráfico y como cifra */
+.rgrid{display:grid;gap:14px}
+.r4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.r3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.r21{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.rhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 16px;margin:0 0 14px}
+.rhead h3{margin:0;font-family:var(--f-display);font-size:21px;letter-spacing:-.01em}
+.rhead .per{color:var(--muted);font-size:13px;display:inline-flex;gap:6px;align-items:center}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:8px;align-content:start;min-width:0}
+.tile .top{display:flex;align-items:center;gap:10px}
+.chipi{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
+.chipi.cri{background:var(--cri-soft);color:var(--cri-ink)} .chipi.pos{background:var(--pos-soft);color:var(--pos-ink)} .chipi.neu{background:var(--neu-soft);color:var(--neu-ink)}
+.chipi .ico{width:18px;height:18px}
+.tile .lb{font-size:13px;font-weight:600;color:var(--muted);line-height:1.25}
+.tile .big{font-family:var(--f-display);font-size:34px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.tile .big small{font-family:var(--f-body);font-size:14px;font-weight:600;color:var(--muted);margin-left:4px;letter-spacing:0}
+.delta{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.delta.up-bad{color:var(--cri-ink)} .delta.up-good{color:var(--pos-ink)}
+.delta .ico{width:13px;height:13px;stroke-width:2.4}
+.sub{font-size:12.5px;color:var(--muted)}
+.spark{display:block;width:100%;height:40px}
+.gauge{position:relative;height:10px;border-radius:99px;background:linear-gradient(90deg,var(--cri-soft) 0 50%,var(--pos-soft) 50% 100%);margin:6px 0 2px}
+.gauge::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line)}
+.gauge i{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;transform:translate(-50%,-50%);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line)}
+.scale{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:10.5px;color:var(--muted)}
+.segbar{display:flex;gap:2px;height:14px;border-radius:4px;overflow:hidden}
+.segbar span{display:block;height:100%;min-width:3px}
+.segbar.tall{height:22px}
+.meter{height:10px;border-radius:99px;background:var(--cri-soft);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--cri);border-radius:99px}
+.keys{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink)}
+.keys span{display:inline-flex;align-items:center;gap:6px}
+.keys i{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
+.keys b{font-family:var(--f-mono);font-weight:500}
+.find{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.find li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;align-items:center}
+.find p{margin:0}
+.tone3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.tone3 div{display:grid;gap:2px;justify-items:start}
+.tone3 .n{font-family:var(--f-display);font-size:24px;line-height:1.05;font-variant-numeric:tabular-nums}
+.tone3 .l{font-size:12px;color:var(--muted);display:inline-flex;gap:5px;align-items:center}
+.tone3 .l .ico{width:14px;height:14px}
+.div{display:grid;gap:2px}
+.div .hd,.div .rw{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr) 54px 54px 54px 118px;gap:12px;align-items:center}
+.div .hd{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;padding:0 6px 6px;border-bottom:1px solid var(--line)}
+.div .hd .ax{display:flex;justify-content:space-between}
+.div .rw{padding:8px 6px;border-radius:8px;cursor:pointer}
+.div .rw:hover,.div .rw:focus-visible{background:var(--surface-2)}
+.div .nm{font-weight:600;font-size:13px;line-height:1.3}
+.div .num{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:13px}
+.div .num.c{color:var(--cri-ink)} .div .num.p{color:var(--pos-ink)}
+.dbar{display:grid;grid-template-columns:1fr 1fr;height:16px;position:relative}
+.dbar::after{content:"";position:absolute;left:50%;top:-4px;bottom:-4px;width:1px;background:var(--ink);opacity:.35}
+.dbar .L,.dbar .R{display:flex;gap:2px;height:100%}
+.dbar .L{justify-content:flex-end;padding-right:1px} .dbar .R{padding-left:1px}
+.dbar span{display:block;height:100%}
+.dbar .L span:first-child{border-radius:4px 0 0 4px} .dbar .R span:last-child{border-radius:0 4px 4px 0}
+.clima{display:inline-flex;align-items:center;justify-content:flex-end;gap:3px;font-family:var(--f-mono);font-size:13px;font-weight:500}
+.clima .ico{width:13px;height:13px;stroke-width:2.4}
+.hbars{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.hbars li{display:grid;grid-template-columns:minmax(0,1fr) minmax(60px,1.2fr) 34px;gap:10px;align-items:center;font-size:13px}
+.hbars .t{display:flex;gap:7px;align-items:center;min-width:0}
+.hbars .t span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbars .t i{width:9px;height:9px;border-radius:50%;flex:none}
+.hbars .b{height:12px;background:var(--track);border-radius:0 4px 4px 0;overflow:hidden}
+.hbars .b i{display:block;height:100%;border-radius:0 4px 4px 0}
+.hbars .v{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.amb3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.amb3 > div{display:grid;gap:4px;padding:10px 12px;border-radius:8px;background:var(--surface-2)}
+.amb3 .n{font-family:var(--f-display);font-size:22px;line-height:1.05;font-variant-numeric:tabular-nums}
+.amb3 .l{font-size:12px;color:var(--muted);display:inline-flex;gap:6px;align-items:center}
+.amb3 .l i{width:9px;height:9px;border-radius:50%}
+.cols3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.grp h4{margin:0 0 8px;display:flex;align-items:center;gap:8px;font-size:14px}
+.grp h4 .c{margin-left:auto;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.grp ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.grp li{border:1px solid var(--line);border-radius:8px;padding:9px 11px;display:grid;gap:2px;background:var(--surface)}
+.grp li b{font-size:13px;line-height:1.35}
+.grp li span{font-size:12px;color:var(--muted)}
+.grp .empty{font-size:12.5px;color:var(--muted);padding:6px 2px}
+.cmp{display:grid;gap:2px}
+.cmp .hd,.cmp .rw{display:grid;grid-template-columns:minmax(96px,150px) minmax(0,1fr) minmax(0,1fr) 128px;gap:16px;align-items:center}
+.cmp .hd{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;padding:0 8px 6px;border-bottom:1px solid var(--line)}
+.cmp .rw{padding:9px 8px;border-radius:8px}
+.cmp .rw.me{background:var(--accent-soft)}
+.cmp .nm{font-weight:600}
+.share{display:grid;grid-template-columns:minmax(0,1fr) 42px;gap:8px;align-items:center}
+.share .b{height:14px;background:var(--track);border-radius:0 4px 4px 0;overflow:hidden}
+.share .b i{display:block;height:100%;border-radius:0 4px 4px 0;background:var(--neu)}
+.cmp .me .share .b i{background:var(--accent)}
+.share .v{font-family:var(--f-mono);font-size:12.5px;text-align:right}
+.dot{position:relative;height:20px}
+.dot::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line)}
+.dot::after{content:"";position:absolute;left:50%;top:2px;bottom:2px;width:1px;background:var(--ink);opacity:.3}
+.dot i{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid var(--surface);z-index:1}
+.dot b{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--f-mono);font-size:11.5px;font-weight:500;white-space:nowrap}
+.tip{position:fixed;z-index:40;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;line-height:1.4;padding:7px 10px;border-radius:7px;max-width:260px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.chart .hit{fill:transparent;cursor:default}
+.chart .hit:hover{fill:var(--ink);fill-opacity:.05}
+@media (max-width:1040px){ .r4{grid-template-columns:repeat(2,minmax(0,1fr))} .r21{grid-template-columns:minmax(0,1fr)} .cols3{grid-template-columns:minmax(0,1fr)} }
+@media (max-width:820px){
+  .div .hd{display:none}
+  .div .rw{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px 10px;border-bottom:1px solid var(--line);border-radius:0}
+  .div .nm,.div .dbar{grid-column:1 / -1}
+  .div .num::before{content:attr(data-l);display:block;font-family:var(--f-body);font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .div .num{text-align:left}
+  .cmp .hd{display:none}
+  .cmp .rw{grid-template-columns:minmax(0,1fr);gap:6px}
+  .r3,.amb3,.tone3{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:480px){ .r4,.r3{grid-template-columns:minmax(0,1fr)} .tile .big{font-size:30px} }
+
+@media (max-width:1040px){ .kpis{grid-template-columns:repeat(2,minmax(0,1fr))} .two{grid-template-columns:minmax(0,1fr)} .opts{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:820px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px}
+  .brand{padding:0} .brand p{display:none}
+  .org label,.plan,.usage,.side .nav,.side .foot{display:none}
+  .bnav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+  .bnav a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;text-decoration:none;color:var(--muted);font-size:11px;font-weight:600;border-radius:8px;position:relative}
+  .bnav a[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
+  .bnav .count{position:absolute;top:2px;right:calc(50% - 22px);margin:0;font-size:10px;padding:0 5px}
+  .main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .form{grid-template-columns:minmax(0,1fr)}
+  .item{grid-template-columns:minmax(0,1fr)}
+  .item .acts{grid-column:1;grid-row:auto;flex-direction:row;align-items:center;flex-wrap:wrap}
+  .steps{grid-template-columns:minmax(0,1fr)}
+  .tema .top{grid-template-columns:minmax(0,1fr) auto}
+  .tema .top .cnt{grid-column:1;grid-row:2}
+}
+@media (max-width:480px){ .kpis{grid-template-columns:minmax(0,1fr)} .head h2{font-size:23px} .opts{grid-template-columns:minmax(0,1fr)} .rows li button{grid-template-columns:minmax(0,1fr) 70px 26px} }
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important;scroll-behavior:auto!important} }
+
+/* ===== Sala de situación ===== */
+html,body{background:var(--bg);color:var(--ink)}
+body{font-size:14.5px}
+.ico{stroke-width:1.9}
+.demo{background:var(--bell-soft);color:var(--ink);border-bottom:1px solid var(--line);text-align:center;font-size:12px}
+.demo b{color:var(--bell);text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;margin-right:8px}
+.app{display:block}
+
+/* Barra superior: identidad, municipio y estado del monitoreo */
+.topbar{background:var(--top);color:var(--top-ink);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top-in{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding-block:12px}
+.logo{display:inline-flex;align-items:center;gap:9px;margin:0;font-size:21px;font-weight:800;letter-spacing:-.02em;color:var(--top-ink);text-decoration:none;line-height:1}
+.logo b{color:var(--top-accent);font-weight:800}
+.logo .mk{display:inline-flex;align-items:flex-end;gap:2px;height:18px}
+.logo .mk i{width:5px;border-radius:1.5px;background:var(--top-accent)}
+.logo .mk i:nth-child(1){height:7px;opacity:.55}.logo .mk i:nth-child(2){height:12px;opacity:.8}.logo .mk i:nth-child(3){height:18px}
+.slogan{font-family:var(--f-news);font-style:italic;font-size:14px;color:var(--top-muted)}
+.org{display:inline-flex;align-items:center;gap:8px}
+.org label{margin:0;color:var(--top-muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+.org select{width:auto;background:var(--top-line);color:var(--top-ink);border:1px solid transparent;border-radius:8px;padding:6px 10px;font-weight:700;font-size:14px;min-height:34px;cursor:pointer}
+.org select:hover{border-color:var(--top-muted)}
+.live{margin-left:auto;display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--top-muted)}
+.live .dot{width:8px;height:8px;border-radius:50%;background:var(--live);box-shadow:0 0 0 0 var(--live);animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--live) 55%,transparent)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.planbox{position:relative}
+.planbox summary{list-style:none;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--top-ink);border:1px solid var(--top-line);border-radius:8px;padding:6px 10px}
+.planbox summary::-webkit-details-marker{display:none}
+.planbox summary::after{content:" ▾";color:var(--top-muted)}
+.planbox[open] summary{background:var(--top-line)}
+.planbox .usage{position:absolute;right:0;top:calc(100% + 8px);z-index:25;width:260px;margin:0;padding:12px 14px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(10,20,35,.18)}
+.planbox .usage .row{color:var(--muted)}
+.navbar{background:var(--surface);border-bottom:1px solid var(--line);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));position:sticky;top:env(safe-area-inset-top,0px);z-index:15}
+.navbar .nav{max-width:1240px;margin:0 auto;flex-direction:row;gap:2px;overflow-x:auto}
+.navbar .nav a{border-radius:0;padding:13px 14px 11px;color:var(--muted);font-weight:600;border-bottom:2px solid transparent;white-space:nowrap}
+.navbar .nav a:hover{background:transparent;color:var(--ink)}
+.navbar .nav a[aria-current="page"]{background:transparent;color:var(--ink);border-bottom-color:var(--accent)}
+.navbar .nav a[aria-current="page"] .ico{color:var(--accent)}
+.navbar .nav a:last-child{margin-left:auto}
+.nav .count{margin-left:4px}
+.main{margin:0 auto;padding-block:26px 72px}
+
+/* Superficies y tipografía */
+.card,.tile,.tema,.item,.onb{box-shadow:var(--shadow)}
+.head h2{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.card > h3,.sec{font-size:11.5px;font-weight:700;letter-spacing:.08em}
+.tile .lb{font-size:12.5px}
+.tile .big,.kpi .v{font-weight:800;letter-spacing:-.02em}
+.item h4,.today li b,.mini b,.grp li > b,.cola li > b{font-family:var(--f-news);font-weight:600;letter-spacing:0}
+.item h4{font-size:17.5px;line-height:1.3}
+.rhead h3{font-size:20px;font-weight:800}
+.tabs{gap:6px;border-bottom:1px solid var(--line)}
+.tabs button{font-size:14px;padding:10px 12px;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.word{font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.kpi .v.word{font-size:26px}
+.tile .big .word{font-size:26px}
+.chart text{font-family:var(--f-mono)}
+.clima{font-family:var(--f-ui);font-size:12.5px;font-weight:600;white-space:nowrap}
+@media (max-width:820px){ .div .rw{grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.4fr)} .clima{white-space:normal;font-size:11.5px;justify-content:flex-start} }
+
+/* Escala del veredicto: en contra → equilibrada → a favor */
+.vscale{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:10px 0 4px;align-items:center;height:16px}
+.vscale span{height:8px;border-radius:99px;opacity:.28}
+.vscale span:nth-child(1){background:var(--cri)}
+.vscale span:nth-child(2){background:color-mix(in oklab,var(--cri) 55%,var(--neu))}
+.vscale span:nth-child(3){background:var(--neu)}
+.vscale span:nth-child(4){background:color-mix(in oklab,var(--pos) 55%,var(--neu))}
+.vscale span:nth-child(5){background:var(--pos)}
+.vscale span.on{opacity:1;height:14px;box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--ink)}
+
+/* Señal de alcance: comunal, regional, nacional */
+.esc{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-ui);font-size:12.5px;font-weight:600;color:var(--ink);flex-wrap:wrap}
+.sig{display:inline-flex;align-items:flex-end;gap:2px;height:16px;flex:none}
+.sig i{width:5px;border-radius:1.5px;background:var(--track);box-shadow:inset 0 0 0 1px var(--line)}
+.sig i:nth-child(1){height:6px}.sig i:nth-child(2){height:11px}.sig i:nth-child(3){height:16px}
+.sig i.on{background:var(--accent);box-shadow:none}
+.esc .cts{font-family:var(--f-mono);font-size:11.5px;font-weight:400;color:var(--muted)}
+
+/* Informes por lector */
+.para{display:grid;grid-template-columns:repeat(3,minmax(0,auto)) minmax(0,1fr);gap:8px 28px;margin:0 0 18px;padding:12px 16px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:var(--r)}
+.para div{min-width:0}
+.para dt{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.para dd{margin:2px 0 0;font-weight:600;font-size:13.5px}
+.para .q dd{font-family:var(--f-news);font-style:italic;font-weight:500;font-size:16px;line-height:1.35}
+.kick{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.vtx{margin:0;font-size:15px;line-height:1.5}
+.parte{max-width:820px;display:grid;gap:14px}
+.parte section{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+.parte h4{margin:0 0 12px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.vbig{font-size:40px;font-weight:800;letter-spacing:-.025em;line-height:1.05;margin:4px 0 6px}
+.vbig.cri{color:var(--cri-ink)} .vbig.pos{color:var(--pos-ink)}
+.ver .vtx{max-width:64ch}
+.asuntos{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.asuntos li{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;padding:13px 14px;border:1px solid var(--line);border-left:4px solid var(--neu);border-radius:10px;background:var(--surface)}
+.asuntos li.cri{border-left-color:var(--cri)} .asuntos li.pos{border-left-color:var(--pos)}
+.asuntos .n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--surface);font-weight:800;font-size:13.5px}
+.asuntos li.pos .n{background:var(--pos-soft);color:var(--pos-ink)}
+.asuntos .n .ico{width:17px;height:17px}
+.asuntos .bd{display:grid;gap:6px;min-width:0}
+.asuntos b.t{font-family:var(--f-news);font-weight:600;font-size:19px;line-height:1.28}
+.asuntos .sub{font-size:12.5px}
+.lleg{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.acc{margin:2px 0 0;padding:8px 10px;background:var(--accent-soft);border-radius:8px;font-size:14.5px;line-height:1.4}
+.acc b,.rsp b{display:inline-block;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-right:8px;color:var(--accent)}
+.acc.sm{font-size:13.5px;margin:0}
+.rsp{margin:0;font-size:13px;font-weight:600}
+.rsp b{color:var(--muted)}
+.parte .acts{display:flex;flex-wrap:wrap;gap:8px}
+.cola{list-style:none;margin:0;padding:0;display:grid}
+.grp .cola li{display:grid;gap:5px;padding:12px 0;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent}
+.grp .cola li:last-child{border-bottom:0}
+.cola li > b{font-size:16.5px;line-height:1.3}
+.grp .cola .esc,.grp .cola .esc span{color:var(--ink);font-size:12.5px}
+.grp .cola .acc b{font-size:10.5px}
+.grp h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.grp h4 .ico{width:16px;height:16px}
+.grp .empty{font-size:14px}
+.mtab td,.mtab th{padding:7px 6px 7px 0}
+.mtab .num{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.div.esd .hd,.div.esd .rw{grid-template-columns:minmax(0,1.2fr) minmax(0,1.6fr) 54px minmax(0,.9fr) minmax(0,1.4fr)}
+.div.esd .ll{display:flex;align-items:center}
+details.resp summary{cursor:pointer;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+details.resp[open] summary{margin-bottom:12px}
+.toast,.tip{background:var(--ink);color:var(--surface)}
+@media (max-width:980px){ .slogan{display:none} }
+@media (max-width:820px){
+  .navbar,.planbox,.live{display:none}
+  .top-in{gap:10px 16px;padding-block:10px}
+  .org label{display:none}
+  .para{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .para .q{grid-column:1 / -1}
+  .vbig{font-size:32px}
+  .asuntos li{grid-template-columns:26px minmax(0,1fr);gap:10px;padding:12px}
+  .asuntos .n{width:24px;height:24px;font-size:12px}
+  .asuntos b.t{font-size:17.5px}
+  .div.esd .hd{display:none}
+  .div.esd .rw{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .div.esd .rw .nm,.div.esd .rw .dbar,.div.esd .rw .ll{grid-column:1 / -1}
+}
+@media (prefers-reduced-motion: reduce){ .live .dot{animation:none} }
+
+/* Inicio: portada de diario digital */
+.dg-kick{margin:0;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+.dg-kick.cri{color:var(--cri-ink)} .dg-kick.pos{color:var(--pos-ink)}
+.dg-ed{border-bottom:3px double var(--line);padding-bottom:14px;margin-bottom:0}
+.dg-ed-row{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:baseline;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:12px}
+.dg-ed-row span:first-letter{text-transform:uppercase}
+.dg-ed-row span:last-child{margin-left:auto}
+.dg-ed h2{margin:0;font-family:var(--f-news);font-weight:600;font-size:clamp(34px,4.6vw,50px);line-height:1.02;letter-spacing:-.015em}
+.dg-ed h2:focus{outline:none}
+.dg-sum{margin:8px 0 0;font-size:16px;line-height:1.5;color:var(--ink);max-width:72ch}
+.dg-sum .c{color:var(--cri-ink)}
+.dg-ticker{display:flex;align-items:stretch;border-bottom:1px solid var(--line);margin-bottom:18px;min-width:0}
+.dg-ticker-l{display:inline-flex;align-items:center;gap:7px;flex:none;padding:10px 14px 10px 0;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--cri-ink);border-right:1px solid var(--line)}
+.dg-ticker-l .dot{width:7px;height:7px;border-radius:50%;background:var(--cri);animation:pulse 2.4s infinite}
+.dg-ticker ul{list-style:none;margin:0;padding:0;display:flex;overflow-x:auto;scrollbar-width:thin;min-width:0}
+.dg-ticker li{flex:none;display:flex;gap:8px;align-items:baseline;padding:10px 16px;border-right:1px solid var(--line);max-width:420px;font-size:13.5px}
+.dg-ticker time{white-space:nowrap;font-family:var(--f-mono);font-size:11.5px;color:var(--cri-ink);font-weight:500}
+.dg-ticker li span{font-family:var(--f-news);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.dg-ticker em{font-style:normal;color:var(--muted);font-size:12px;white-space:nowrap}
+.dg-ind{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow);margin-bottom:26px;overflow:hidden}
+.dg-ind button{all:unset;box-sizing:border-box;display:grid;gap:3px;align-content:start;padding:14px 16px;border-left:1px solid var(--line);cursor:pointer;min-width:0}
+.dg-ind button:first-child{border-left:0}
+.dg-ind button:hover{background:var(--surface-2)}
+.dg-ind button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.dg-ind .l{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dg-ind .v{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.dg-ind .v.word{font-size:24px}
+.dg-ind .v.cri{color:var(--cri-ink)} .dg-ind .v.pos{color:var(--pos-ink)}
+.dg-ind .s{font-size:12.5px;color:var(--muted)}
+.dg-ind .alerta .v{color:var(--cri-ink)}
+.dg-ind .vscale{margin:4px 0 0}
+.dg-sec{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
+.dg-sec::after{content:"";flex:1;height:2px;background:var(--ink);opacity:.85}
+.dg-portada{margin-bottom:28px}
+.dg-portada-g{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:24px}
+.dg-portada-g.solo{grid-template-columns:minmax(0,1fr)}
+.dg-lead{display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:22px;align-items:start}
+.dg-lead-tx{display:grid;gap:10px;min-width:0}
+.dg-h1{margin:0;font-family:var(--f-news);font-weight:600;font-size:clamp(26px,3.2vw,36px);line-height:1.12;letter-spacing:-.01em;text-wrap:balance}
+.dg-bajada{margin:0;font-family:var(--f-news);font-size:18px;line-height:1.45;color:var(--muted)}
+.dg-meta{margin:0;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:12.5px;color:var(--muted)}
+.dg-meta > span + span::before{content:"·";margin-right:10px;color:var(--line)}
+.dg-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.dg-ficha{display:grid;gap:8px;padding:14px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--neu)}
+.dg-lead.cri .dg-ficha{border-top-color:var(--cri)} .dg-lead.pos .dg-ficha{border-top-color:var(--pos)}
+.dg-ficha-n{font-size:44px;font-weight:800;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.dg-ficha-l{font-size:12.5px;color:var(--muted);line-height:1.4}
+.dg-ficha .esc{flex-direction:column;align-items:flex-start;gap:6px}
+.dg-col{display:grid;gap:0;align-content:start;border-left:1px solid var(--line);padding-left:22px}
+.dg-sec-s{margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dg-sec-n{display:grid;gap:6px;padding:12px 0;border-bottom:1px solid var(--line)}
+.dg-sec-n:last-of-type{border-bottom:0}
+.dg-sec-n h4{margin:0;font-family:var(--f-news);font-weight:600;font-size:18px;line-height:1.25}
+.dg-sec-n .btn{justify-self:start}
+.dg-temas{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:0;border-top:1px solid var(--line);margin-bottom:28px}
+.dg-tema{all:unset;box-sizing:border-box;display:grid;gap:8px;align-content:start;padding:14px 18px 16px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);cursor:pointer;min-width:0}
+.dg-tema:hover{background:var(--surface)}
+.dg-tema:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.dg-tema-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.dg-tema-c{white-space:nowrap;flex:none;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.dg-tema-c small{font-size:12px;font-weight:600;color:var(--cri-ink);letter-spacing:0}
+.dg-tema-t{font-family:var(--f-news);font-weight:600;font-size:17px;line-height:1.28;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.dg-tema .segbar{height:6px;margin-top:2px}
+.dg-fondo{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:14px}
+.dg-rank ol{list-style:none;margin:0;padding:0;display:grid}
+.dg-rank li{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.dg-rank li:last-child{border-bottom:0}
+.dg-rank-n{font-family:var(--f-news);font-size:28px;font-weight:600;line-height:1;color:var(--accent)}
+.dg-rank-m{display:grid;font-weight:600;min-width:0}
+.dg-rank-m small{font-weight:500;color:var(--muted);font-size:12px}
+.dg-rank-v{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+@media (max-width:1040px){ .dg-portada-g,.dg-fondo{grid-template-columns:minmax(0,1fr)} .dg-col{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:6px} }
+@media (max-width:820px){
+  .dg-ind{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dg-ind button:nth-child(3){border-left:0}
+  .dg-ind button:nth-child(n+3){border-top:1px solid var(--line)}
+  .dg-lead{grid-template-columns:minmax(0,1fr)}
+  .dg-ed-row span:last-child{margin-left:0}
+  .dg-temas{grid-template-columns:minmax(0,1fr)}
+  .dg-tema{border-right:0;padding-inline:0}
+  .dg-bajada{font-size:16.5px}
+}
+@media (prefers-reduced-motion: reduce){ .dg-ticker-l .dot{animation:none} }
+
+/* Ayuda */
+.helpbtn{display:inline-flex;align-items:center;gap:6px;background:transparent;color:var(--top-ink);border:1px solid var(--top-line);border-radius:8px;padding:6px 11px;font-size:12.5px;font-weight:600;cursor:pointer;min-height:34px}
+.helpbtn:hover{background:var(--top-line)}
+.helpbtn .ico{width:17px;height:17px}
+.hp-back{position:fixed;inset:0;z-index:45;background:rgba(8,16,28,.42)}
+.help{position:fixed;top:0;right:0;bottom:0;z-index:46;width:min(440px,100vw);background:var(--bg);color:var(--ink);border-left:1px solid var(--line);box-shadow:-12px 0 40px rgba(8,16,28,.22);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.hp-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;padding-top:calc(14px + env(safe-area-inset-top,0px));padding-right:max(18px,env(safe-area-inset-right,0px));background:var(--top);color:var(--top-ink)}
+.hp-top h2{margin:0;font-size:18px;font-weight:800;letter-spacing:-.01em}
+.hp-x{background:transparent;border:1px solid var(--top-line);color:var(--top-ink);border-radius:8px;width:36px;height:36px;display:grid;place-items:center;cursor:pointer}
+.hp-x:hover{background:var(--top-line)}
+.hp-body{overflow-y:auto;padding:18px;padding-right:max(18px,env(safe-area-inset-right,0px));display:grid;gap:22px;align-content:start;overscroll-behavior:contain}
+.hp-here{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:var(--r);padding:12px 14px}
+.hp-here h3{margin:2px 0 6px;font-size:16px;font-weight:800}
+.hp-here p{margin:0;font-size:14px;line-height:1.5}
+.hp-h{margin:0 0 10px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.hp-guia{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:g}
+.hp-guia li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:2px 10px;counter-increment:g;font-size:13.5px;line-height:1.45}
+.hp-guia li::before{content:counter(g);grid-row:1 / span 2;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:12px;font-weight:800}
+.hp-guia span{color:var(--muted)}
+.hp-q{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-height:38px;margin-bottom:10px}
+.hp-grp{margin-bottom:12px}
+.hp-grp h4{margin:0 0 4px;font-size:12px;font-weight:700;color:var(--accent)}
+.hp-grp details{border-bottom:1px solid var(--line)}
+.hp-grp summary{cursor:pointer;list-style:none;padding:10px 24px 10px 0;font-weight:600;font-size:14px;position:relative}
+.hp-grp summary::-webkit-details-marker{display:none}
+.hp-grp summary::after{content:"+";position:absolute;right:4px;top:8px;font-size:18px;color:var(--muted);font-weight:400}
+.hp-grp details[open] summary::after{content:"–"}
+.hp-grp details p{margin:0 0 12px;font-size:13.5px;line-height:1.55;color:var(--ink)}
+.hp-ask textarea{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);resize:vertical;min-height:60px;line-height:1.45}
+.hp-ans{margin-top:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);white-space:pre-wrap;font-size:14px;line-height:1.55}
+body.hp-on{overflow:hidden}
+@media (max-width:820px){ .helpbtn{margin-left:auto;padding:6px 9px} .helpbtn span{display:none} .help{width:100vw;border-left:0} }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="pat-pos" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" style="fill:var(--pos)"/></pattern></defs></svg>
+<div class="demo" role="note"><b>Prototipo</b>Noticias y cifras ficticias · catálogo de 100 medios real · enlaces a las notas originales en producción</div>
+<div class="app">
+  <header class="topbar">
+    <div class="top-in">
+      <a class="logo" href="#inicio" aria-label="PregonIA, inicio"><span class="mk" aria-hidden="true"><i></i><i></i><i></i></span><span>Pregon<b>IA</b></span></a>
+      <span class="slogan">Escucha la plaza. Decide a tiempo.</span>
+      <div class="org"><label for="org">Municipio</label><select id="org" aria-label="Municipio"></select></div>
+      <span class="live"><i class="dot" aria-hidden="true"></i><span id="fecha"></span></span>
+      <details class="planbox"><summary id="planLbl"></summary><div class="usage" id="usage"></div></details>
+      <button class="helpbtn" data-act="help" aria-haspopup="dialog" aria-controls="help"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.6M12 17.2h.01"/></svg><span>Ayuda</span></button>
+    </div>
+  </header>
+  <div class="navbar"><nav class="nav" id="nav" aria-label="Secciones"></nav></div>
+  <main class="main" id="view" tabindex="-1"></main>
+</div>
+<nav class="bnav" id="bnav" aria-label="Secciones"></nav>
+<div class="hp-back" id="helpBack" data-act="help-close" hidden></div>
+<aside class="help" id="help" role="dialog" aria-modal="true" aria-labelledby="helpT" hidden><header class="hp-top"><h2 id="helpT">Ayuda</h2><button class="hp-x" data-act="help-close" aria-label="Cerrar ayuda"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header><div class="hp-body"></div></aside>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastMsg"></span><button id="toastAct" hidden></button></div>
+<script>
+const CATALOG = [{"id":1,"n":"Meganoticias","a":"nacional","c":"","t":"TV","l":"A","m":"sitemap_noticias","e":"listo","o":"Usar news:publication_date y no la fecha de la URL"},{"id":2,"n":"BioBioChile","a":"nacional","c":"","t":"Radio","l":"A","m":"rss","e":"listo","o":"Responde como application/octet-stream; el sitemap declarado está desactualizado"},{"id":3,"n":"Emol","a":"nacional","c":"","t":"Diario","l":"A","m":"google_news","e":"restringido","o":"robots.txt bloquea bots de IA y Googlebot-News"},{"id":4,"n":"La Tercera","a":"nacional","c":"","t":"Diario","l":"A","m":"google_news","e":"restringido","o":"robots.txt bloquea unos 55 bots de IA; muro parcial"},{"id":5,"n":"T13","a":"nacional","c":"","t":"TV","l":"A","m":"portada","e":"requiere_ajuste","o":"Sin RSS ni sitemap de noticias"},{"id":6,"n":"24 Horas","a":"nacional","c":"","t":"TV","l":"A","m":"sitemap_mensual","e":"requiere_ajuste","o":"Índice de archivos .gz mensuales; filtrar por lastmod"},{"id":7,"n":"Cooperativa","a":"nacional","c":"","t":"Radio","l":"A","m":"sitemap_noticias","e":"listo","o":"Su RSS no trae pubDate"},{"id":8,"n":"CNN Chile","a":"nacional","c":"","t":"TV","l":"A","m":"sitemap_noticias","e":"listo","o":"Sin RSS"},{"id":9,"n":"CHV Noticias","a":"nacional","c":"","t":"TV","l":"A","m":"sitemap_noticias","e":"requiere_ajuste","o":"Filtrar ruta /noticias/"},{"id":10,"n":"Diario Financiero","a":"nacional","c":"","t":"Economía","l":"A","m":"sitemap_noticias","e":"listo","o":"Muro de pago; incluye notas de Capital"},{"id":11,"n":"El Mostrador","a":"nacional","c":"","t":"Nativo digital","l":"A","m":"sitemap_noticias","e":"listo","o":"Su RSS está congelado desde 2021"},{"id":12,"n":"CIPER","a":"nacional","c":"","t":"Investigación","l":"A","m":"rss","e":"listo","o":""},{"id":13,"n":"Infobae Chile","a":"nacional","c":"","t":"Internacional","l":"A","m":"rss_filtrado","e":"requiere_ajuste","o":"Mezcla notas de otros países que mencionan Chile"},{"id":14,"n":"El País Chile","a":"nacional","c":"","t":"Internacional","l":"A","m":"google_news","e":"restringido","o":"robots.txt bloquea bots de IA y lectores de feeds"},{"id":15,"n":"ADN Radio","a":"nacional","c":"","t":"Radio","l":"B","m":"rss","e":"listo","o":""},{"id":16,"n":"Radio Agricultura","a":"nacional","c":"","t":"Radio","l":"B","m":"portada","e":"requiere_ajuste","o":"Sus sitemaps están bloqueados por su robots.txt"},{"id":17,"n":"Duna","a":"nacional","c":"","t":"Radio","l":"B","m":"sitemap","e":"requiere_ajuste","o":"No es formato noticias; filtrar por lastmod"},{"id":18,"n":"Radio Universidad de Chile","a":"nacional","c":"","t":"Radio","l":"B","m":"portada","e":"requiere_ajuste","o":"robots.txt bloquea /feed/ desde el 26 de octubre de 2026"},{"id":19,"n":"Pauta","a":"nacional","c":"","t":"Radio y digital","l":"B","m":"sitemap_noticias","e":"listo","o":""},{"id":20,"n":"El Mercurio","a":"nacional","c":"","t":"Diario","l":"B","m":"google_news","e":"restringido","o":"Suscripción; bloquea bots de IA"},{"id":21,"n":"La Segunda","a":"nacional","c":"","t":"Diario","l":"B","m":"google_news","e":"restringido","o":"Bloquea bots de IA; suscripción"},{"id":22,"n":"Las Últimas Noticias","a":"nacional","c":"","t":"Diario","l":"B","m":"portada","e":"requiere_ajuste","o":"Formato e-paper; titulares sin fecha"},{"id":23,"n":"SoyChile","a":"nacional","c":"","t":"Red regional","l":"B","m":"portada","e":"requiere_ajuste","o":"Fecha en la URL"},{"id":24,"n":"La Cuarta","a":"nacional","c":"","t":"Diario","l":"B","m":"google_news","e":"restringido","o":"Mismo bloqueo que La Tercera"},{"id":25,"n":"Publimetro","a":"nacional","c":"","t":"Diario","l":"B","m":"rss","e":"restringido","o":"Bloquea bots de IA; revisar antes de usar"},{"id":26,"n":"Ex-Ante","a":"nacional","c":"","t":"Política y negocios","l":"B","m":"rss","e":"requiere_ajuste","o":"Firewall filtra lectores; 7 ítems por consulta"},{"id":27,"n":"The Clinic","a":"nacional","c":"","t":"Nativo digital","l":"B","m":"rss","e":"requiere_ajuste","o":"Firewall rechaza algunos lectores"},{"id":28,"n":"El Dínamo","a":"nacional","c":"","t":"Nativo digital","l":"B","m":"sitemap_noticias","e":"listo","o":"XML puede llegar truncado; reintentar"},{"id":29,"n":"El Ciudadano","a":"nacional","c":"","t":"Nativo digital","l":"B","m":"rss","e":"listo","o":""},{"id":30,"n":"El Desconcierto","a":"nacional","c":"","t":"Nativo digital","l":"B","m":"rss","e":"listo","o":"Respaldo: /sitemap-news.xml"},{"id":31,"n":"El Líbero","a":"nacional","c":"","t":"Nativo digital","l":"B","m":"sitemap_noticias","e":"listo","o":"RSS desactivado"},{"id":32,"n":"Diario Constitucional","a":"nacional","c":"","t":"Judicial","l":"B","m":"rss","e":"listo","o":""},{"id":33,"n":"La Red","a":"nacional","c":"","t":"TV","l":"C","m":"rss","e":"listo","o":"Predomina promoción de programación"},{"id":34,"n":"TV+","a":"nacional","c":"","t":"TV","l":"C","m":"sitemap_noticias","e":"requiere_ajuste","o":"Dominio migró a tvmas.tv"},{"id":35,"n":"Radio Nuevo Mundo","a":"nacional","c":"","t":"Radio","l":"C","m":"rss","e":"listo","o":""},{"id":36,"n":"La Nación","a":"nacional","c":"","t":"Diario digital","l":"C","m":"rss","e":"listo","o":"Filtrar por categoría"},{"id":37,"n":"El Siglo","a":"nacional","c":"","t":"Diario digital","l":"C","m":"rss","e":"listo","o":""},{"id":38,"n":"Diario Estrategia","a":"nacional","c":"","t":"Economía","l":"C","m":"sitemap_noticias","e":"requiere_ajuste","o":"Bloquea el user-agent por defecto de feedparser"},{"id":39,"n":"Chócale","a":"nacional","c":"","t":"Economía y consumo","l":"C","m":"rss","e":"listo","o":""},{"id":40,"n":"Bloomberg Línea Chile","a":"nacional","c":"","t":"Internacional","l":"C","m":"rss_filtrado","e":"requiere_ajuste","o":"Filtrar ruta /latinoamerica/chile/"},{"id":41,"n":"Interferencia","a":"nacional","c":"","t":"Investigación","l":"C","m":"rss","e":"listo","o":"Muro por cuota mensual"},{"id":42,"n":"El Periodista","a":"nacional","c":"","t":"Nativo digital","l":"C","m":"rss","e":"listo","o":""},{"id":43,"n":"Cambio21","a":"nacional","c":"","t":"Nativo digital","l":"C","m":"rss","e":"listo","o":""},{"id":44,"n":"Página 7","a":"nacional","c":"","t":"Nativo digital","l":"C","m":"sitemap_noticias","e":"listo","o":""},{"id":45,"n":"Crónica Digital","a":"nacional","c":"","t":"Nativo digital","l":"C","m":"rss","e":"listo","o":""},{"id":46,"n":"La Voz de los que Sobran","a":"nacional","c":"","t":"Nativo digital","l":"C","m":"rss","e":"listo","o":"Baja frecuencia"},{"id":47,"n":"El Clarín de Chile","a":"nacional","c":"","t":"Nativo digital","l":"C","m":"rss","e":"listo","o":""},{"id":48,"n":"Le Monde Diplomatique Chile","a":"nacional","c":"","t":"Análisis","l":"C","m":"rss","e":"listo","o":"Sobre todo columnas"},{"id":49,"n":"Fast Check","a":"nacional","c":"","t":"Verificación","l":"C","m":"rss","e":"listo","o":"Baja frecuencia"},{"id":50,"n":"Mala Espina","a":"nacional","c":"","t":"Verificación","l":"C","m":"rss","e":"listo","o":""},{"id":51,"n":"El Mercurio de Valparaíso","a":"regional","c":"","t":"Diario","l":"A","m":"google_news","e":"restringido","o":"Mayor alcance regional; robots.txt impide la lectura"},{"id":52,"n":"La Estrella de Valparaíso","a":"regional","c":"","t":"Diario","l":"B","m":"google_news","e":"restringido","o":"robots.txt impide la lectura"},{"id":53,"n":"VTV","a":"regional","c":"","t":"TV","l":"B","m":"google_news","e":"restringido","o":"robots.txt impide la lectura"},{"id":54,"n":"BioBioChile, Región de Valparaíso","a":"regional","c":"","t":"Radio nacional","l":"A","m":"rss_filtrado","e":"requiere_ajuste","o":"Filtrar por sección /lista/categorias/region-de-valparaiso"},{"id":55,"n":"SoyValparaíso","a":"regional","c":"","t":"Red regional","l":"B","m":"portada","e":"requiere_ajuste","o":"Sin RSS"},{"id":56,"n":"Puranoticia","a":"regional","c":"","t":"Portal","l":"B","m":"sitemap_noticias","e":"listo","o":""},{"id":57,"n":"Meganoticias, Región de Valparaíso","a":"regional","c":"","t":"TV nacional","l":"A","m":"sitemap_filtrado","e":"requiere_ajuste","o":"Filtrar con el tema /temas/region-de-valparaiso/"},{"id":58,"n":"24 Horas, Valparaíso","a":"regional","c":"","t":"TV","l":"A","m":"portada","e":"requiere_ajuste","o":"Sin RSS"},{"id":59,"n":"Epicentro Chile","a":"regional","c":"Viña del Mar","t":"Portal","l":"C","m":"rss","e":"listo","o":""},{"id":60,"n":"G5noticias","a":"regional","c":"","t":"Portal","l":"C","m":"rss","e":"listo","o":"Mucho comunicado institucional"},{"id":61,"n":"Radio Festival","a":"regional","c":"","t":"Radio","l":"C","m":"rss","e":"listo","o":""},{"id":62,"n":"UCV Radio","a":"regional","c":"","t":"Radio","l":"C","m":"portada","e":"requiere_ajuste","o":"RSS roto"},{"id":63,"n":"Panorama Noticioso","a":"regional","c":"Quillota","t":"Portal","l":"C","m":"rss","e":"listo","o":"Foco en Aconcagua y Petorca"},{"id":64,"n":"TuOpinas","a":"regional","c":"","t":"Portal","l":"C","m":"rss","e":"listo","o":"Foco en Quillota y Petorca"},{"id":65,"n":"Alerta Noticias Valparaíso","a":"regional","c":"","t":"Portal","l":"C","m":"rss","e":"listo","o":"robots.txt no verificado"},{"id":66,"n":"CasablancaHoy","a":"local","c":"Casablanca","t":"Portal","l":"C","m":"rss","e":"listo","o":"No identifica responsable"},{"id":67,"n":"Radio Quintay 92.7","a":"local","c":"Casablanca","t":"Radio","l":"C","m":"sitemap","e":"requiere_ajuste","o":"Sitemap sin fechas; se describe como portal de pruebas"},{"id":68,"n":"Diario Casablanca","a":"local","c":"Casablanca","t":"Diario","l":"C","m":"google_news","e":"restringido","o":"robots.txt impide la lectura"},{"id":69,"n":"La Voz de Concón","a":"local","c":"Concón","t":"Diario","l":"C","m":"rss","e":"listo","o":"Baja frecuencia"},{"id":70,"n":"Concón al Día","a":"local","c":"Concón","t":"Portal","l":"C","m":"google_news","e":"restringido","o":"robots.txt impide la lectura"},{"id":71,"n":"La Bahía on Line","a":"local","c":"Quintero;Puchuncaví;Concón","t":"Diario digital","l":"C","m":"rss","e":"listo","o":"Categorías por comuna"},{"id":72,"n":"El Martutino","a":"local","c":"Valparaíso;Viña del Mar","t":"Portal","l":"C","m":"portada","e":"requiere_ajuste","o":"Sitio con errores; actividad no verificada"},{"id":73,"n":"Gran Valparaíso","a":"local","c":"Valparaíso","t":"Portal ciudadano","l":"C","m":"google_news","e":"restringido","o":"robots.txt impide la lectura"},{"id":74,"n":"Revista Arqueoturismo","a":"local","c":"Juan Fernández","t":"Revista","l":"C","m":"rss","e":"listo","o":"Baja frecuencia"},{"id":75,"n":"moeVarua Rapa Nui","a":"local","c":"Isla de Pascua","t":"Revista cultural","l":"C","m":"rss","e":"listo","o":"Mensual"},{"id":76,"n":"Quilpué Online","a":"local","c":"Quilpué","t":"Portal","l":"C","m":"sitemap","e":"requiere_ajuste","o":"RSS no verificado"},{"id":77,"n":"Bicomunal","a":"local","c":"Villa Alemana;Quilpué","t":"Diario digital","l":"C","m":"rss","e":"listo","o":""},{"id":78,"n":"Diario Crónica","a":"local","c":"Limache;Olmué","t":"Diario digital","l":"C","m":"rss","e":"listo","o":"Baja frecuencia"},{"id":79,"n":"El Digital","a":"local","c":"Quillota;La Calera;La Cruz;Nogales;Hijuelas","t":"Diario digital","l":"C","m":"rss","e":"listo","o":"Categorías por comuna"},{"id":80,"n":"El Observador","a":"local","c":"Quillota","t":"Diario","l":"C","m":"sitemap","e":"requiere_ajuste","o":"robots.txt cierra el RSS a todos los bots"},{"id":81,"n":"Radio Quillota 101.5","a":"local","c":"Quillota","t":"Radio","l":"C","m":"rss","e":"listo","o":""},{"id":82,"n":"Radio Crystal","a":"local","c":"Quillota;La Calera;Nogales;La Ligua;Cabildo;San Felipe","t":"Radio","l":"C","m":"rss","e":"listo","o":"Categorías por provincia y comuna"},{"id":83,"n":"La Estrella de Quillota","a":"local","c":"Quillota","t":"Diario","l":"C","m":"google_news","e":"restringido","o":"robots.txt impide la lectura"},{"id":84,"n":"De Quillota","a":"local","c":"Quillota;Limache;La Cruz;La Calera","t":"Portal","l":"C","m":"google_news","e":"restringido","o":"robots.txt impide la lectura"},{"id":85,"n":"El Diario de San Antonio","a":"local","c":"San Antonio;Cartagena;El Quisco;Algarrobo;Santo Domingo;El Tabo","t":"Diario digital","l":"C","m":"rss","e":"listo","o":""},{"id":86,"n":"Canal 2 (Cablenoticias)","a":"local","c":"San Antonio","t":"TV local","l":"C","m":"rss","e":"listo","o":"Usar la categoría Ahora"},{"id":87,"n":"Radio Galactika","a":"local","c":"San Antonio;El Tabo;El Quisco;Algarrobo;Santo Domingo","t":"Radio","l":"C","m":"rss","e":"listo","o":"Baja frecuencia"},{"id":88,"n":"Santo News","a":"local","c":"Santo Domingo","t":"Portal","l":"C","m":"portada","e":"requiere_ajuste","o":"Feed y robots.txt con error"},{"id":89,"n":"TV Cartagena","a":"local","c":"Cartagena;El Tabo","t":"Portal comunitario","l":"C","m":"rss","e":"listo","o":"Avisos comunitarios"},{"id":90,"n":"El Líder de San Antonio","a":"local","c":"San Antonio","t":"Diario","l":"C","m":"google_news","e":"restringido","o":"robots.txt impide la lectura"},{"id":91,"n":"La Ligua Noticias","a":"local","c":"La Ligua;Cabildo;Petorca;Papudo;Zapallar","t":"Diario digital","l":"C","m":"rss","e":"listo","o":"Feeds por comuna en /category/provincia-de-petorca/{comuna}/feed/"},{"id":92,"n":"Diario El Trabajo","a":"local","c":"San Felipe","t":"Diario","l":"C","m":"rss","e":"requiere_ajuste","o":"robots.txt pide no leer /feed/ en la raíz; confirmar con el medio"},{"id":93,"n":"Aconcagua News","a":"local","c":"San Felipe;Los Andes;Llaillay;Panquehue;Putaendo;Santa María;Catemu;Calle Larga;Rinconada;San Esteban","t":"Portal","l":"C","m":"rss","e":"listo","o":"Categorías por comuna"},{"id":94,"n":"Aconcagua al Día","a":"local","c":"San Felipe;Los Andes;Llaillay;Panquehue;Putaendo;Santa María;Catemu;Calle Larga;Rinconada;San Esteban","t":"Portal","l":"C","m":"rss","e":"listo","o":"Categorías por comuna"},{"id":95,"n":"Preludio Radio 100.9","a":"local","c":"San Felipe","t":"Radio","l":"C","m":"rss","e":"listo","o":"Lo local en la categoría Región de Aconcagua"},{"id":96,"n":"Putaendo Uno","a":"local","c":"Putaendo","t":"Portal comunal","l":"C","m":"rss","e":"listo","o":"Baja frecuencia"},{"id":97,"n":"Catemu Noticias","a":"local","c":"Catemu","t":"Blog","l":"C","m":"rss","e":"listo","o":"Republica notas antiguas con fecha nueva"},{"id":98,"n":"Radio Orolonco 107.1","a":"local","c":"Santa María","t":"Radio","l":"C","m":"rss","e":"listo","o":"Feed dominado por notas nacionales"},{"id":99,"n":"Radio Superandina 88.5","a":"local","c":"Los Andes;Calle Larga;Rinconada;San Esteban","t":"Radio","l":"C","m":"sitemap_noticias","e":"listo","o":"Fechas sin zona horaria"},{"id":100,"n":"Andes Online","a":"local","c":"Los Andes","t":"Diario digital","l":"C","m":"portada","e":"requiere_ajuste","o":"Sin feed; portada sin fechas"}];
+const MED = Object.fromEntries(CATALOG.map(m => [m.id, m]));
+const COMUNAS = ["Casablanca","San Antonio","Cartagena","El Quisco","El Tabo","Algarrobo"];
+const PLANES = {
+  comunal:{nombre:"Comunal", temas:5, usuarios:3, menciones:1500, borradores:4, precio:149000},
+  regional:{nombre:"Regional o Político", temas:10, usuarios:5, menciones:4000, borradores:12, precio:249000}
+};
+const PESO = {A:3, B:2, C:1};
+const DAY = 864e5, NOW = Date.now();
+const norm = s => (s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = n => Number(n).toLocaleString("es-CL");
+const clp = n => "$" + fmt(n);
+
+/* Corpus ficticio: [id, medio, días atrás, hora, título, bajada, texto adicional para el análisis, tono, resumen propio, grupo] */
+const RAW = [
+ [1,66,0,"08:10","Municipalidad de Casablanca anuncia nuevo horario de atención en el CESFAM","El centro de salud atenderá hasta las 20:00 en días hábiles desde la próxima semana.","salud municipal cesfam vecinos comuna","neu","El CESFAM de Casablanca extiende su horario de atención en días hábiles."],
+ [2,54,0,"06:40","Incendio forestal en sector Lo Ovalle de Casablanca moviliza a bomberos y Senapred","Brigadas trabajan en un foco que afecta pastizales y eucaliptos cerca de viviendas.","emergencia incendio bomberos senapred vecinos","cri","Un incendio forestal en Lo Ovalle obliga a desplegar brigadas cerca de viviendas.",101],
+ [3,61,0,"07:05","Casablanca: combaten incendio forestal en Lo Ovalle","Senapred mantiene alerta en el sector y pide evitar la zona.","emergencia incendio senapred comuna","cri","Senapred mantiene la alerta por el incendio de Lo Ovalle.",101],
+ [4,66,0,"07:20","Incendio en Lo Ovalle: municipio habilita punto de apoyo para vecinos","La Municipalidad de Casablanca dispuso agua y atención en la sede vecinal.","emergencia incendio municipalidad de casablanca vecinos","neu","El municipio habilita un punto de apoyo para los vecinos afectados por el incendio.",101],
+ [5,59,0,"07:45","Bomberos de varias comunas apoyan combate de incendio en Casablanca","El fuego avanza por quebradas de difícil acceso.","incendio bomberos emergencia comuna","cri","Bomberos de otras comunas apoyan el combate del incendio en quebradas.",101],
+ [6,67,1,"10:15","Vecinos de Casablanca reclaman por cortes de agua en sector Los Maitenes","Acusan tres días con suministro intermitente y piden camiones aljibe.","agua corte de agua aljibe apr reclamo vecinos","cri","Vecinos de Los Maitenes reclaman por cortes de agua y piden camiones aljibe.",107],
+ [7,66,2,"12:30","Concejo municipal de Casablanca aprueba fondos para programa de veredas","El plan contempla reparar veredas en cuatro poblaciones durante el verano.","concejo municipal veredas calles vecinos","pos","El concejo aprueba recursos para reparar veredas en cuatro poblaciones."],
+ [8,56,3,"09:00","Casablanca: alcalde presenta avance del proyecto Polideportivo municipal","La autoridad comunal expuso el estado de la obra ante dirigentes deportivos.","polideportivo obra alcalde de casablanca deporte","neu","El alcalde informa el estado del Polideportivo ante dirigentes deportivos."],
+ [9,2,4,"18:20","Ruta 68: congestión en el sector de Casablanca por trabajos en la vía","La concesionaria anunció faenas nocturnas para reducir los tiempos de viaje.","ruta 68 congestion transito comuna","neu","Trabajos en la Ruta 68 generan congestión a la altura de Casablanca."],
+ [10,60,5,"11:00","Festival de la Vendimia de Casablanca espera más de 20 mil visitantes","La organización amplió el estacionamiento y el transporte desde la plaza.","vendimia turismo visitantes plaza fiesta comuna","pos","El Festival de la Vendimia proyecta más de 20 mil visitantes.",102],
+ [11,61,5,"12:10","Vendimia de Casablanca: confirman programa y transporte gratuito","Habrá buses desde la plaza de armas durante el fin de semana.","vendimia turismo plaza transporte comuna","pos","Confirman el programa de la Vendimia con transporte gratuito desde la plaza.",102],
+ [12,1,6,"21:00","Viñas del valle de Casablanca reportan buena temporada","Productores destacan el aumento de visitantes en las rutas del vino.","valle de casablanca vina turismo temporada agricultores","pos","Las viñas del valle reportan una buena temporada de visitantes."],
+ [13,11,8,"16:00","Película Casablanca vuelve a los cines en versión restaurada","El clásico protagonizado por Bogart se exhibirá en salas de todo el país.","pelicula bogart clasico cine","neu","Reestreno de un clásico del cine."],
+ [14,13,9,"10:30","Marruecos: puerto de Casablanca amplía terminal de contenedores","La obra duplicará la capacidad del principal puerto marroquí.","marruecos puerto contenedores","neu","Ampliación portuaria en Marruecos."],
+ [15,67,10,"09:20","Vecinos de Casablanca denuncian paralización de obras del Polideportivo","Dirigentes deportivos piden información sobre los plazos de la obra.","paralizacion obra polideportivo reclamo denuncia vecinos","cri","Dirigentes denuncian la paralización de las obras del Polideportivo y piden plazos."],
+ [16,66,12,"13:00","Municipio de Casablanca lanza campaña de reciclaje en colegios","Doce establecimientos instalarán composteras y puntos limpios.","educacion colegio reciclaje basura composteras","pos","El municipio instala composteras y puntos limpios en doce colegios."],
+ [17,65,14,"22:10","Casablanca: Carabineros intensifica patrullajes en el centro","La medida responde a la mesa comunal de seguridad.","seguridad carabineros patrullaje comuna","neu","Carabineros refuerza patrullajes en el centro tras la mesa comunal de seguridad."],
+ [18,51,18,"07:30","Plataforma logística en Casablanca: gremios piden acelerar estudios","Empresarios ven en la comuna un antepuerto natural para San Antonio.","plataforma logistica antepuerto comuna provincia","neu","Gremios piden acelerar los estudios de una plataforma logística en la comuna."],
+ [19,7,22,"08:00","Escasez hídrica en la cuenca de Casablanca preocupa a agricultores","Regantes advierten caudales bajo el promedio para la temporada.","agua sequia escasez hidrica agricultores cuenca","cri","Agricultores advierten caudales bajos en la cuenca para esta temporada."],
+ [20,60,25,"17:40","Alcalde de Casablanca participa en mesa regional de seguridad","La instancia coordinará patrullajes en rutas y zonas rurales.","seguridad region alcalde de casablanca","neu","El alcalde participa en la mesa regional de seguridad."],
+ [21,66,1,"11:45","Casablanca abre postulaciones a fondos para organizaciones vecinales","Las juntas de vecinos podrán postular proyectos hasta fin de mes.","municipalidad de casablanca vecinos fondos","pos","El municipio abre postulaciones a fondos para juntas de vecinos."],
+ [22,67,3,"10:00","Productores de Casablanca venden en feria campesina de la plaza","La feria se repetirá cada sábado durante el verano.","feria plaza agricultores comuna","pos","Productores locales venden en la feria campesina de la plaza."],
+ [23,56,6,"15:30","Alcalde de Casablanca anuncia mejoras en el transporte rural","Nuevos recorridos conectarán Lagunillas y Quintay con el centro.","transporte alcalde de casablanca sector","pos","El alcalde anuncia nuevos recorridos de transporte rural."],
+ [24,67,19,"09:50","Casablanca: reclamos por demora en atención del CESFAM","Usuarios acusan esperas de más de tres horas.","salud cesfam reclamo vecinos","cri","Usuarios reclaman por esperas de más de tres horas en el CESFAM."],
+ [25,66,27,"12:00","Concejo municipal de Casablanca aprueba ordenanza de ferias","La norma ordena permisos y horarios para ferias libres.","concejo municipal feria comuna","neu","El concejo aprueba una ordenanza que ordena permisos de ferias."],
+ [26,85,0,"09:30","Puerto de San Antonio registra récord de transferencia de carga","La empresa portuaria destacó el crecimiento del comercio exterior.","puerto carga comuna provincia","pos","El puerto registra un récord de carga transferida.",103],
+ [27,56,0,"10:40","San Antonio: puerto marca récord y proyecta nuevas inversiones","Autoridades regionales valoraron el desempeño del terminal.","puerto inversion region","pos","El puerto marca un récord y proyecta nuevas inversiones.",103],
+ [28,86,1,"19:00","San Antonio: vecinos de Llolleo critican demora en reparación de calles","Acusan baches y falta de señalética en avenidas principales.","calles reclamo critica vecinos sector","cri","Vecinos de Llolleo critican la demora en reparar calles."],
+ [29,87,2,"11:20","Municipalidad de San Antonio inaugura nueva plaza en Barrancas","El espacio incluye juegos inclusivos y máquinas de ejercicio.","municipalidad de san antonio plaza vecinos","pos","El municipio inaugura una plaza con juegos inclusivos en Barrancas.",104],
+ [30,85,2,"13:10","Barrancas estrena plaza con juegos inclusivos","Vecinos participaron en el diseño del nuevo espacio.","plaza vecinos sector municipio","pos","Vecinos participaron en el diseño de la nueva plaza.",104],
+ [31,2,3,"08:30","Proyecto Puerto Exterior de San Antonio avanza en evaluación ambiental","La iniciativa sumó nuevas observaciones ciudadanas.","puerto exterior evaluacion ambiental provincia","neu","El Puerto Exterior suma observaciones en su evaluación ambiental."],
+ [32,15,5,"23:30","Spurs de San Antonio ganan en tiempo extra","El equipo de Texas sumó su cuarta victoria seguida en la NBA.","spurs nba texas basquetbol","neu","Resultado deportivo en Estados Unidos."],
+ [33,87,7,"12:00","Concejo municipal de San Antonio discute plan de seguridad para el borde costero","Concejales pidieron más iluminación y cámaras.","concejo municipal seguridad borde costero","neu","El concejo discute un plan de seguridad para el borde costero."],
+ [34,54,11,"07:15","Marejadas afectan paseo Bellamar en San Antonio","La Armada mantiene aviso de marejadas hasta el jueves.","emergencia marejada borde costero comuna","cri","Marejadas dañan el paseo Bellamar; sigue vigente el aviso.",105],
+ [35,60,11,"08:05","Emergencia por marejadas en el litoral de San Antonio","El municipio cerró accesos al borde costero.","emergencia marejada municipio borde costero","cri","El municipio cierra accesos al borde costero por marejadas.",105],
+ [36,85,16,"18:00","Alcalde de San Antonio presenta cuenta de avance de obras","Destacó la pavimentación de cinco calles en el último semestre.","alcalde de san antonio calles obras","pos","El alcalde informa avances en pavimentación."],
+ [37,85,0,"10:05","El Quisco refuerza plan de verano con más salvavidas","El municipio sumará personal en las playas de mayor afluencia.","temporada playa municipio turismo","pos","El municipio suma salvavidas para la temporada en las playas más concurridas."],
+ [38,87,2,"14:40","Vecinos de El Quisco reclaman por microbasurales en Pinomar","Piden más frecuencia en la recolección de residuos.","basura microbasural recoleccion reclamo vecinos","cri","Vecinos de Pinomar reclaman por microbasurales y poca recolección."],
+ [39,56,6,"09:45","Plan regulador de El Quisco entra a consulta ciudadana","Las observaciones se recibirán durante 30 días.","plan regulador consulta comuna","neu","El plan regulador entra a consulta ciudadana por 30 días."],
+ [40,65,13,"20:30","Corte de agua afecta a sectores altos de El Quisco","La sanitaria informó una rotura de matriz.","agua corte de agua vecinos sector","cri","Una rotura de matriz deja sin agua a sectores altos."],
+ [41,85,1,"16:20","Algarrobo inicia trabajos de protección del humedal","El municipio instalará cercos y señalética.","humedal municipio comuna","pos","El municipio inicia obras de protección del humedal."],
+ [42,60,4,"10:00","Algarrobo recibe a deportistas en regata de verano","Más de 80 embarcaciones participarán en la competencia.","regata turismo temporada comuna","pos","Una regata reúne a más de 80 embarcaciones."],
+ [43,29,9,"11:30","Algarrobos del norte argentino: especie bajo amenaza","Investigadores alertan por la tala de bosques nativos.","argentina especie arbol bosque","neu","Nota sobre una especie arbórea en Argentina."],
+ [44,87,15,"21:00","Vecinos de Algarrobo piden más patrullajes en temporada baja","Dirigentes reportan robos en casas de veraneo.","seguridad patrullaje robo vecinos","cri","Vecinos piden más patrullajes por robos en casas de veraneo."],
+ [45,89,0,"09:10","Cartagena alista apertura de temporada en Playa Grande","El municipio pintó accesos y habilitó baños públicos.","playa grande temporada municipio turismo","pos","El municipio prepara la temporada en Playa Grande."],
+ [46,86,3,"20:15","Cartagena: reclamos por falta de iluminación en el borde costero","Vecinos acusan luminarias apagadas hace semanas.","reclamo borde costero vecinos seguridad","cri","Vecinos reclaman por luminarias apagadas en el borde costero."],
+ [47,56,8,"12:20","Municipalidad de Cartagena firma convenio para poner en valor su patrimonio cultural","Una universidad apoyará la restauración de inmuebles históricos.","municipalidad de cartagena patrimonio convenio","pos","El municipio firma un convenio para restaurar patrimonio cultural."],
+ [48,13,20,"14:00","Cartagena de Indias recibe récord de cruceros","El puerto colombiano espera una temporada histórica.","cartagena de indias colombia cruceros","neu","Temporada de cruceros en Colombia."],
+ [49,89,1,"15:30","El Tabo: incendio en pastizal obliga a cortar tránsito en Las Cruces","Bomberos controlaron el fuego tras dos horas de trabajo.","incendio emergencia las cruces bomberos transito","cri","Un incendio de pastizal obliga a cortar el tránsito en Las Cruces.",106],
+ [50,87,1,"16:10","Bomberos controlan incendio en Las Cruces, comuna de El Tabo","No se reportaron viviendas afectadas.","incendio bomberos las cruces comuna","neu","Bomberos controlan el incendio; no hay viviendas afectadas.",106],
+ [51,87,5,"12:40","Municipio de El Tabo presenta talleres para adultos mayores","La oferta incluye gimnasia, computación y huertos.","municipio adultos mayores comuna","pos","El municipio presenta talleres para personas mayores."],
+ [52,85,10,"11:10","El Tabo y Las Cruces preparan fiesta costumbrista","La celebración incluirá cocinerías y música en vivo.","las cruces fiesta turismo comuna","pos","El Tabo prepara una fiesta costumbrista en Las Cruces."],
+ [53,56,2,"08:50","Gobierno regional destina recursos para agua potable rural en el litoral central","Beneficiará a sectores de Casablanca, El Quisco y Algarrobo.","agua potable rural apr region casablanca el quisco algarrobo","pos","El gobierno regional financia agua potable rural en tres comunas del litoral."],
+ [54,1,4,"22:00","Litoral central espera alta ocupación para el fin de semana largo","Algarrobo, El Quisco y Cartagena concentran la demanda de cabañas.","turismo ocupacion temporada algarrobo el quisco cartagena","pos","Se proyecta alta ocupación en Algarrobo, El Quisco y Cartagena."],
+ [55,2,7,"19:30","Senapred declara alerta temprana preventiva por riesgo de incendios en la provincia de San Antonio y Casablanca","La medida se mantendrá mientras persistan altas temperaturas.","senapred alerta incendio provincia san antonio casablanca emergencia","neu","Senapred declara alerta temprana preventiva por riesgo de incendios."],
+ [56,56,0,"07:30","Reclamos por cortes de agua en Los Maitenes llegan al concejo de Casablanca","Concejales piden un plan de distribución con camiones aljibe mientras se repara la red.","agua corte de agua aljibe reclamo vecinos concejo","cri","Los reclamos por cortes de agua en Los Maitenes llegan al concejo municipal.",107]
+];
+function mkNota(r, i){
+  const [id,m,d,h,t,b,x,tono,res,g] = r;
+  const [hh,mm] = h.split(":").map(Number);
+  const base = new Date(NOW - d*DAY); base.setHours(hh, mm, 0, 0);
+  let ts = base.getTime(); if (ts > NOW) ts = NOW - (i%7+1)*17*60000;
+  return {id, m, ts, t, b, x, tono, res, g: g || ("n"+id), hay: norm(t+" "+b+" "+x), ht: norm(t)};
+}
+const NOTAS = RAW.map(mkNota);
+
+NOTAS.forEach(n => { n.g = String(n.g); });
+
+/* Catálogos del motor de sugerencia (forma de lectura; la comparación ignora tildes y mayúsculas) */
+const CTX = ["comuna","vecinos","vecinas","municipio","municipalidad","alcalde","alcaldesa","concejo","litoral","provincia","región","sector","plaza","temporada","playa","Senapred","Carabineros","bomberos","Cesfam","agricultores","viña","feria","calles","borde costero","paseo","humedal","regata","cuenca","Las Cruces","Pinomar","Llolleo","Barrancas","Lo Ovalle","Los Maitenes","Lagunillas","Quintay"];
+const EXC = {"Casablanca":["Marruecos","película","Bogart"],"San Antonio":["Texas","Spurs","NBA","San Antonio de Padua"],"Cartagena":["Cartagena de Indias","Colombia","Murcia"],"Algarrobo":["Argentina","especie arbórea","árbol"],"El Quisco":[],"El Tabo":[]};
+const AGENDA = {"Casablanca":["Polideportivo","Plataforma logística"],"San Antonio":["Puerto Exterior","Borde costero"],"Cartagena":["Playa Grande","Patrimonio"],"El Quisco":["Plan regulador"],"El Tabo":["Las Cruces"],"Algarrobo":["Humedal"]};
+const SENS = {
+  agua:{n:"Agua y sequía", t:["agua","sequía","escasez hídrica","corte de agua","aljibe","agua potable"]},
+  emergencias:{n:"Emergencias e incendios", t:["incendio","emergencia","Senapred","marejada","bomberos"]},
+  seguridad:{n:"Seguridad", t:["seguridad","patrullaje","Carabineros","robo"]},
+  salud:{n:"Salud municipal", t:["Cesfam","salud"]},
+  educacion:{n:"Educación municipal", t:["colegio","escuela","liceo","educación"]},
+  transito:{n:"Calles, tránsito y rutas", t:["Ruta 68","congestión","tránsito","calles","veredas","transporte"]},
+  aseo:{n:"Aseo y residuos", t:["basura","microbasural","reciclaje","recolección"]},
+  turismo:{n:"Turismo y temporada", t:["turismo","temporada","visitantes","playa","Vendimia","ocupación","fiesta"]}
+};
+const CRIT = ["incendio","emergencia","reclam","denuncia","paraliz","corte de agua","marejada","critic","robo"];
+
+const reCache = new Map();
+function termRe(t){ const k = norm(t); if (!reCache.has(k)) reCache.set(k, new RegExp("(^|[^a-z0-9])" + k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&") + "($|[^a-z0-9])")); return reCache.get(k); }
+function matchTema(tema, n){
+  const found = tema.terminos.filter(t => t && termRe(t).test(n.hay));
+  if (!found.length) return null;
+  if (tema.exclusiones.some(e => e && termRe(e).test(n.hay))) return null;
+  if (tema.contexto.length && !tema.contexto.some(c => c && termRe(c).test(n.hay))) return null;
+  return {found, enTitulo: found.some(t => termRe(t).test(n.ht))};
+}
+const uid = () => Math.random().toString(36).slice(2, 9);
+function T(nombre, origen, terminos, contexto=[], exclusiones=[], extra={}){ return {id: uid(), nombre, origen, terminos, contexto, exclusiones, activo: true, ...extra}; }
+function candidatos(perfil){
+  const c = perfil.comuna;
+  const nucleo = [
+    T("Municipalidad de " + c, "Núcleo", ["Municipalidad de " + c, "Municipio de " + c]),
+    T(perfil.autoridad ? perfil.autoridad : "Alcalde de " + c, "Núcleo", ["Alcalde de " + c, "Alcaldesa de " + c].concat(perfil.autoridad ? [perfil.autoridad] : [])),
+    T(c + " (comuna)", "Núcleo", [c], CTX.slice(), (EXC[c] || []).slice())
+  ];
+  const otros = [ T("Concejo municipal", "Candidato", ["concejo municipal","concejal","concejala","concejales"], [c]) ];
+  perfil.agenda.forEach(a => { if (a.trim()) otros.push(T(a.trim(), "Agenda", [a.trim()], norm(a).includes(norm(c)) ? [] : [c])); });
+  Object.entries(SENS).forEach(([key, s]) => otros.push(T(s.n, perfil.sens.includes(key) ? "Sensibilidad" : "Descubrimiento", s.t.slice(), [c], [], {sens: key})));
+  return {nucleo, otros};
+}
+function puntaje(tema){
+  let vol = 0, cri = 0; const seen = new Set();
+  NOTAS.forEach(n => { if (NOW - n.ts > 30*DAY) return; if (!seen.has(n.g) && matchTema(tema, n)) { seen.add(n.g); vol++; if (n.tono === "cri") cri++; } });
+  const bonus = (tema.origen === "Sensibilidad" ? 5 : 0) + (tema.origen === "Agenda" ? 3 : 0);
+  return {vol, cri, score: vol + cri*2 + bonus};
+}
+function proponer(perfil){
+  const {nucleo, otros} = candidatos(perfil);
+  const libres = Math.max(0, PLANES[perfil.plan].temas - nucleo.length);
+  nucleo.forEach(t => Object.assign(t, puntaje(t)));
+  otros.forEach(t => Object.assign(t, puntaje(t)));
+  const orden = otros.filter(t => t.score > 0).sort((a,b) => b.score - a.score);
+  return {base: nucleo.concat(orden.slice(0, libres)), sugeridos: orden.slice(libres, libres + 5)};
+}
+
+/* Estado por municipio (aislado) */
+const KEY = "pregonia-demo-v2";
+function defaults(){
+  const s = {org: "Casablanca", cuentas: {}, comunicados: [], fp: {}, resp: {}};
+  COMUNAS.forEach(c => {
+    const perfil = {tipo: "Municipio", comuna: c, autoridad: "", agenda: AGENDA[c].slice(), sens: ["agua","emergencias","seguridad"], plan: "comunal"};
+    const p = proponer(perfil);
+    s.cuentas[c] = {perfil, temas: p.base, sugeridos: p.sugeridos, borradores: 0, caracterizada: false, visto: false, onbOculto: false};
+  });
+  return s;
+}
+let S;
+try { const raw = localStorage.getItem(KEY); S = raw ? JSON.parse(raw) : defaults(); if (!S.cuentas || !S.cuentas.Casablanca) S = defaults(); } catch(e) { S = defaults(); }
+S.resp ||= {}; S.fp ||= {};
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
+const cuenta = () => S.cuentas[S.org];
+const respondida = g => !!S.resp[S.org + ":" + g];
+
+/* Menciones y métricas */
+function menciones(c = cuenta(), dias = 30){
+  const temas = c.temas.filter(t => t.activo);
+  const grupos = new Map();
+  NOTAS.forEach(n => {
+    if (NOW - n.ts > dias*DAY) return;
+    if (S.fp[S.org + ":" + n.g]) return;
+    temas.forEach(t => {
+      const r = matchTema(t, n); if (!r) return;
+      let g = grupos.get(n.g);
+      if (!g) { g = {g: n.g, notas: [], temas: new Map()}; grupos.set(n.g, g); }
+      if (!g.notas.includes(n)) g.notas.push(n);
+      const prev = g.temas.get(t.id) || {tema: t, found: new Set(), enTitulo: false};
+      r.found.forEach(f => prev.found.add(f)); prev.enTitulo = prev.enTitulo || r.enTitulo;
+      g.temas.set(t.id, prev);
+    });
+  });
+  return [...grupos.values()].map(g => {
+    g.notas.sort((a,b) => a.ts - b.ts);
+    const lead = g.notas.slice().sort((a,b) => PESO[MED[b.m].l] - PESO[MED[a.m].l] || a.ts - b.ts)[0];
+    const tonos = g.notas.map(n => n.tono);
+    const tono = tonos.includes("cri") ? "cri" : (tonos.includes("pos") ? "pos" : "neu");
+    const critico = tono === "cri" && g.notas.some(n => CRIT.some(w => n.hay.includes(w)));
+    return {...g, lead, tono, critico, first: g.notas[0].ts, last: g.notas[g.notas.length-1].ts, alcance: g.notas.reduce((s,n) => s + PESO[MED[n.m].l], 0)};
+  }).sort((a,b) => b.last - a.last);
+}
+function metricas(ms){
+  const vol = ms.length, pos = ms.filter(m => m.tono==="pos").length, cri = ms.filter(m => m.tono==="cri").length, neu = vol - pos - cri;
+  return {vol, pos, neu, cri, neto: vol ? Math.round((pos - cri) / vol * 100) : 0, alcance: ms.reduce((s,m) => s + m.alcance, 0)};
+}
+const pendientes = (c = cuenta()) => menciones(c, 7).filter(m => m.critico && !respondida(m.g));
+function genericaComuna(c){ return {id:"g-"+norm(c), nombre:c, terminos:[c, "Municipalidad de "+c], contexto: CTX, exclusiones: EXC[c]||[], activo:true}; }
+
+/* Utilidades de interfaz */
+const $ = s => document.querySelector(s);
+const ICO = {
+  inicio:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  menciones:'<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
+  reportes:'<path d="M4 20V11M10 20V5M16 20v-7M21 20H3"/>',
+  comunicados:'<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  config:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+  temas:'<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 7.5h.01"/>',
+  asistente:'<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
+  fuentes:'<path d="M4.9 19.1a10 10 0 0 1 0-14.2M19.1 4.9a10 10 0 0 1 0 14.2M7.8 16.2a6 6 0 0 1 0-8.4M16.2 7.8a6 6 0 0 1 0 8.4M12 12h.01"/>'
+};
+const icon = k => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
+const MAIN = [["inicio","Inicio"],["menciones","Menciones"],["reportes","Reportes"],["comunicados","Comunicados"]];
+const CONFIG = [["temas","Mis temas"],["asistente","Asistente de temas"],["fuentes","Fuentes"]];
+const ALIAS = {panel:"inicio", caracterizacion:"asistente"};
+const route = () => { const k = (location.hash || "#inicio").slice(1); return ALIAS[k] || k; };
+const isConfig = k => CONFIG.some(([x]) => x === k);
+let tState = {tema:"todos", tono:"todos", dias:"30", q:"", rep:"alcalde", draft:null, from:null, pieza:null, enf:null, open:{}, ctxAll:{}, refocus:null, fuente:{a:"todos", e:"todos"}};
+let toastUndo = null;
+function toast(msg, undo){
+  $("#toastMsg").textContent = msg; const b = $("#toastAct");
+  toastUndo = undo || null; b.hidden = !undo; b.textContent = "Deshacer";
+  $("#toast").hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => { $("#toast").hidden = true; toastUndo = null; }, undo ? 6000 : 3000);
+}
+$("#toastAct").addEventListener("click", () => { if (toastUndo) toastUndo(); $("#toast").hidden = true; toastUndo = null; });
+function ago(ts){ const m = Math.round((NOW - ts)/60000); if (m < 60) return "hace " + Math.max(1,m) + " min"; const h = Math.round(m/60); if (h < 24) return "hace " + h + " h"; const d = Math.round(h/24); return "hace " + d + (d===1?" día":" días"); }
+function fecha(ts){ return new Date(ts).toLocaleDateString("es-CL", {day:"numeric", month:"short"}) + ", " + new Date(ts).toLocaleTimeString("es-CL", {hour:"2-digit", minute:"2-digit"}); }
+function dia(ts){ const a = new Date(NOW); a.setHours(0,0,0,0); const d = Math.round((a - new Date(ts).setHours(0,0,0,0)) / DAY); return d <= 0 ? "Hoy" : d === 1 ? "Ayer" : d < 7 ? "Esta semana" : "Hace más de una semana"; }
+const tonoLbl = {pos:"Positivo", neu:"Neutro", cri:"Crítico"};
+const tonoPl = {pos:"Positivas", neu:"Neutras", cri:"Críticas"};
+const pillTono = t => `<span class="pill ic t-${t}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${({cri:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.4h.01"/>',pos:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.2 9.6"/>',neu:'<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>'})[t]}</svg>${tonoLbl[t]}</span>`;
+const medioN = n => MED[n.m].n + (MED[n.m].e === "restringido" ? " (vía Google News)" : "");
+const signo = n => (n > 0 ? "+" : "") + n;
+const plural = (n, s, p) => n + " " + (n === 1 ? s : p);
+/* Balance del tono: veredicto en cinco niveles. El índice (positivas − críticas) / total solo decide el nivel; el usuario ve palabras y conteos. */
+const VER = [[40,"Muy favorable","claramente más a favor que en contra","Muy a favor"],[10,"Favorable","más a favor que en contra","A favor"],[-9,"Equilibrada","lo positivo y lo crítico se compensan","Equilibrado"],[-39,"Desfavorable","más en contra que a favor","En contra"],[-101,"Muy desfavorable","claramente más en contra que a favor","Muy en contra"]];
+function veredicto(M){ if (!M.vol) return {n:"Sin noticias", f:"no hubo noticias en el período", c:"Sin datos", k:"neu", i:-1}; const i = VER.findIndex(x => M.neto >= x[0]), v = VER[i]; return {n:v[1], f:v[2], c:v[3], k: i <= 1 ? "pos" : i >= 3 ? "cri" : "neu", i}; }
+const conteo = M => `${plural(M.pos,"positiva","positivas")} · ${plural(M.neu,"neutra","neutras")} · ${plural(M.cri,"crítica","críticas")}`;
+
+function renderChrome(){
+  const k = route(), cfg = isConfig(k);
+  $("#org").innerHTML = COMUNAS.map(c => `<option ${c===S.org?"selected":""}>${c}</option>`).join("");
+  const c = cuenta(), pl = PLANES[c.perfil.plan];
+  $("#planLbl").textContent = "Plan " + pl.nombre + " · " + clp(pl.precio) + "/mes";
+  const act = c.temas.filter(t => t.activo).length, usoMenc = menciones(c).reduce((s,m) => s + m.notas.length, 0);
+  $("#usage").innerHTML = [["Temas", act, pl.temas],["Menciones del mes", usoMenc, pl.menciones],["Borradores", c.borradores||0, pl.borradores]].map(([n,v,mx]) => `<div class="row"><span>${n}</span><span class="mono">${fmt(v)} de ${fmt(mx)}</span></div><span class="bar ${v>=mx?"full":""}" aria-hidden="true"><i style="width:${Math.min(100, v/mx*100)}%"></i></span>`).join("") + (act >= pl.temas && c.sugeridos.length ? `<a href="#temas">Sumar más temas</a>` : "");
+  const pend = pendientes().length;
+  const link = ([key, name], ic, cnt) => `<a href="#${key}" ${key===k || (key==="temas" && cfg) ? 'aria-current="page"' : ""}>${icon(ic)}<span>${name}</span>${cnt ? `<span class="count" aria-label="${cnt} por revisar">${cnt}</span>` : ""}</a>`;
+  $("#nav").innerHTML = MAIN.map(x => link(x, x[0], x[0]==="menciones" ? pend : 0)).join("") + link(["temas","Ajustes"], "config", 0);
+  $("#fecha").textContent = "Monitoreando 100 medios · actualizado " + new Date(NOW - 7*60000).toLocaleTimeString("es-CL", {hour:"2-digit", minute:"2-digit", hourCycle:"h23"});
+  $("#bnav").innerHTML = MAIN.map(x => link(x, x[0], x[0]==="menciones" ? pend : 0)).join("") + link(["temas","Ajustes"], "config", 0);
+}
+
+/* Inicio */
+function onboarding(){
+  const c = cuenta(); if (c.onbOculto) return "";
+  const steps = [
+    [c.caracterizada, "Define tus temas", "Responde cinco preguntas y PregonIA propone qué seguir.", "#asistente", "Abrir asistente"],
+    [c.visto, "Revisa tus menciones", "Mira lo que se publicó y marca lo que no corresponda.", "#menciones", "Ver menciones"],
+    [S.comunicados.some(x => x.org === S.org), "Prepara una respuesta", "Convierte una mención en un borrador listo para revisar.", "#comunicados", "Preparar borrador"]
+  ];
+  if (steps.every(s => s[0])) return "";
+  return `<section class="onb" aria-label="Primeros pasos"><div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap"><h3>Primeros pasos en ${esc(S.org)}</h3><button class="btn ghost sm" data-act="onb-hide">Ocultar</button></div>
+  <ol class="steps">${steps.map(([ok, t, d, href, cta], i) => `<li class="${ok?"ok":""}"><span class="n">${ok ? "✓ Listo" : "Paso " + (i+1)}</span><b>${t}</b><span class="muted" style="font-size:12.5px">${d}</span>${ok ? "" : `<a class="btn sm" href="${href}" style="align-self:flex-start">${cta}</a>`}</li>`).join("")}</ol></section>`;
+}
+function vInicio(){
+  const c = cuenta(), ms = menciones(c), M = metricas(ms), pend = pendientes(c), v = veredicto(M);
+  const medios = {}; ms.forEach(m => m.notas.forEach(n => medios[n.m] = (medios[n.m]||0) + 1));
+  const topM = Object.entries(medios).sort((a,b) => b[1]-a[1]).slice(0,6);
+  const sem = ms.filter(m => NOW - m.last < 7*DAY);
+  const lead = pend[0] || sem.slice().sort((a,b) => b.notas.length - a.notas.length || b.last - a.last)[0] || ms[0];
+  const otras = pend.slice(1, 4);
+  const ultimas = ms.flatMap(m => m.notas).sort((a,b) => b.ts - a.ts).slice(0, 8);
+  const hhmm = ts => NOW - ts < DAY ? new Date(ts).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit",hourCycle:"h23"}) : dia(ts) === "Ayer" ? "Ayer" : new Date(ts).toLocaleDateString("es-CL",{day:"numeric",month:"short"});
+  const secciones = c.temas.filter(t => t.activo).map(t => { const sub = ms.filter(m => m.temas.has(t.id)).sort((a,b) => b.last - a.last); return {t, sub, M: metricas(sub)}; }).sort((a,b) => b.sub.length - a.sub.length);
+  const leadHtml = !lead ? `<article class="dg-lead"><p class="dg-kick">Sin noticias</p><h3 class="dg-h1">Ningún medio publicó sobre ${esc(S.org)} en los últimos 30 días.</h3></article>` : (() => { const e = escalera(lead.notas), k24 = new Set(lead.notas.filter(n => n.ts - lead.first < DAY).map(n => n.m)).size, esPend = pend.includes(lead);
+    return `<article class="dg-lead ${lead.tono}">
+      <div class="dg-lead-tx">
+        <p class="dg-kick ${lead.tono}">${esPend ? "Requiere respuesta · " : "Lo más publicado de la semana · "}${esc(temaDe(lead))}</p>
+        <h3 class="dg-h1">${esc(lead.lead.t)}</h3>
+        <p class="dg-bajada">${esc(lead.lead.res)}</p>
+        <p class="dg-meta">${pillTono(lead.tono)}<span>${esc(medioN(lead.lead))}</span><span>${ago(lead.last)}</span>${lead.notas.length > 1 ? `<span>en ${lead.notas.length} medios</span>` : ""}</p>
+        <div class="dg-acts">${esPend ? `<button class="btn primary" data-act="responder" data-g="${lead.g}" data-from="inicio">Preparar respuesta</button>` : ""}<button class="btn" data-act="goto" data-tono="todos" data-dias="7">Ver la cobertura</button></div>
+      </div>
+      <aside class="dg-ficha" aria-label="Datos de la noticia"><span class="dg-ficha-n">${k24}</span><span class="dg-ficha-l">${k24 === 1 ? "medio la publicó" : "medios la publicaron"} en 24 horas</span>${escHtml(e, true)}<span class="dg-ficha-l">${esc(ruta(e))}</span></aside>
+    </article>`; })();
+  return `${onboarding()}
+  <header class="dg-ed">
+    <div class="dg-ed-row"><span class="dg-kick">Edición ${esc(S.org)}</span><span>${new Date(NOW).toLocaleDateString("es-CL",{weekday:"long", day:"numeric", month:"long", year:"numeric"})}</span><span>Actualizado ${new Date(NOW - 7*60000).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit",hourCycle:"h23"})}</span></div>
+    <h2 tabindex="-1">${esc(S.org)}, hoy</h2>
+    <p class="dg-sum">${pend.length ? `<b class="c">${pend.length} ${pend.length===1?"noticia crítica":"noticias críticas"}</b> sin responder esta semana.` : "Sin noticias críticas pendientes esta semana."} En 30 días, ${plural(M.vol,"noticia","noticias")} sobre la comuna en ${plural(Object.keys(medios).length,"medio","medios")}; la cobertura fue <b>${v.n.toLowerCase()}</b>.</p>
+  </header>
+  ${ultimas.length ? `<section class="dg-ticker" aria-label="Lo último"><span class="dg-ticker-l"><i class="dot" aria-hidden="true"></i>Lo último</span><ul>${ultimas.map(n => `<li><time>${hhmm(n.ts)}</time><span>${esc(n.t)}</span><em>${esc(MED[n.m].n)}</em></li>`).join("")}</ul></section>` : ""}
+  <section class="dg-ind" aria-label="Indicadores">
+    <button data-act="goto" data-tono="todos" data-dias="30"><span class="l">Noticias · 30 días</span><span class="v">${M.vol}</span><span class="s">en ${plural(Object.keys(medios).length,"medio","medios")}, sin réplicas</span></button>
+    <button data-act="goto" data-tono="cri" data-dias="30"><span class="l">Tono de la cobertura</span><span class="v word ${v.k}">${v.n}</span>${escala(v.i)}</button>
+    <button data-act="goto" data-tono="todos" data-dias="30" title="Alcance ponderado: medio nacional ×3, regional ×2, local ×1"><span class="l">Alcance</span><span class="v">${fmt(M.alcance)}</span><span class="s">nacional ×3 · regional ×2 · local ×1</span></button>
+    <button data-act="goto" data-tono="cri" data-dias="7" class="${pend.length ? "alerta" : ""}"><span class="l">Por responder</span><span class="v">${pend.length}</span><span class="s">críticas de la última semana</span></button>
+  </section>
+  <section class="dg-portada" aria-labelledby="hoyT">
+    <h3 class="dg-sec" id="hoyT">Para revisar hoy</h3>
+    <div class="dg-portada-g ${otras.length ? "" : "solo"}">
+      ${leadHtml}
+      ${otras.length ? `<div class="dg-col"><p class="dg-sec-s">También requieren respuesta</p>${otras.map(m => `<article class="dg-sec-n ${m.tono}"><p class="dg-kick ${m.tono}">${esc(temaDe(m))}</p><h4>${esc(m.lead.t)}</h4><p class="dg-meta"><span>${esc(medioN(m.lead))}</span><span>${ago(m.last)}</span></p>${escHtml(escalera(m.notas))}<button class="btn sm" data-act="responder" data-g="${m.g}" data-from="inicio">Preparar respuesta</button></article>`).join("")}${pend.length > 4 ? `<a class="btn ghost sm" href="#menciones" data-act="ver-criticas">Ver las ${pend.length}</a>` : ""}</div>` : ""}
+    </div>
+    ${!pend.length ? `<div class="allgood" style="margin-top:12px">${ri("ok")} Todo al día: nada crítico sin responder en los últimos 7 días.</div>` : ""}
+  </section>
+  <section aria-labelledby="secT">
+    <h3 class="dg-sec" id="secT">Por tema</h3>
+    <div class="dg-temas">${secciones.map(x => { const m = x.sub[0]; return `<button class="dg-tema" data-act="goto-tema" data-id="${x.t.id}" aria-label="${esc(x.t.nombre)}: ${x.sub.length} noticias, ${x.M.cri} críticas">
+      <span class="dg-tema-h"><span class="dg-kick">${esc(x.t.nombre)}</span><span class="dg-tema-c">${x.sub.length}<small>${x.M.cri ? ` · ${x.M.cri} crít.` : ""}</small></span></span>
+      ${m ? `<span class="dg-tema-t">${esc(m.lead.t)}</span><span class="dg-meta">${pillTono(m.tono)}<span>${esc(MED[m.lead.m].n)} · ${ago(m.last)}</span></span>` : `<span class="dg-tema-t muted">Sin noticias en 30 días</span>`}
+      ${segbar([{l:"Críticas", v:x.M.cri, c:"var(--cri)"},{l:"Neutras", v:x.M.neu, c:"var(--neu)"},{l:"Positivas", v:x.M.pos, c:"var(--pos)"}])}</button>`; }).join("")}</div>
+  </section>
+  <div class="dg-fondo">
+    <section class="card"><h3>Noticias por día</h3><p class="hint" style="margin:-4px 0 8px">Últimos 30 días, por tono. Pasa el cursor por una barra para ver el detalle.</p>${chartDias(ms)}</section>
+    <section class="card dg-rank"><h3>Medios que más hablan de ${esc(S.org)}</h3>${topM.length ? `<ol>${topM.map(([id,n], i) => `<li><span class="dg-rank-n">${i + 1}</span><span class="dg-rank-m">${esc(MED[id].n)}<small>${NIVS[nivIdx(MED[id].a)][1]}</small></span><span class="dg-rank-v">${n}</span></li>`).join("")}</ol>` : '<p class="muted">Sin menciones.</p>'}</section>
+  </div>`;
+}
+
+/* Menciones */
+function itemHtml(m){
+  const temas = [...m.temas.values()], resp = respondida(m.g);
+  const otros = m.notas.filter(n => n !== m.lead).map(n => esc(MED[n.m].n));
+  return `<article class="item ${resp?"resp":(m.critico?"cri":"")}">
+    <div class="meta">${pillTono(m.tono)}${resp?'<span class="pill done">Respondida</span>':""}<span>${esc(medioN(m.lead))}</span><span>·</span><span title="${fecha(m.lead.ts)}">${ago(m.lead.ts)}</span>${m.notas.length>1?`<span>·</span><span>en ${m.notas.length} medios</span>`:""}</div>
+    <h4>${esc(m.lead.t)}</h4>
+    <p class="res">${esc(m.lead.res)}</p>
+    <details><summary>¿Por qué aparece?</summary><p>${temas.map(x => `Tema <b>${esc(x.tema.nombre)}</b>: contiene «${[...x.found].map(esc).join("», «")}»${x.enTitulo?" en el titular":""}.`).join(" ")}${otros.length?` También la publicaron ${otros.join(", ")}.`:""}</p></details>
+    <div class="acts">${resp ? `<button class="btn sm" data-act="responder" data-g="${m.g}" data-from="menciones">Ver respuesta</button>` : `<button class="btn ${m.critico?"primary":""} sm" data-act="responder" data-g="${m.g}" data-from="menciones">Responder</button>`}<button class="btn ghost sm" data-act="fp" data-g="${m.g}">No corresponde</button></div>
+  </article>`;
+}
+function vMenciones(){
+  const c = cuenta(); c.visto = true; save();
+  let base = menciones(c, Number(tState.dias));
+  if (tState.tema !== "todos") base = base.filter(m => m.temas.has(tState.tema));
+  if (tState.q.trim()) { const q = norm(tState.q); base = base.filter(m => m.notas.some(n => n.hay.includes(q))); }
+  const cnt = k => k === "todos" ? base.length : base.filter(m => m.tono === k).length;
+  const ms = tState.tono === "todos" ? base : base.filter(m => m.tono === tState.tono);
+  const fps = Object.keys(S.fp).filter(k => k.startsWith(S.org+":")).length;
+  const activos = (tState.tema!=="todos") + (tState.tono!=="todos") + (tState.dias!=="30") + !!tState.q.trim();
+  let html = "", last = "";
+  ms.forEach(m => { const d = dia(m.last); if (d !== last) { html += `<h3 class="day">${d}</h3>`; last = d; } html += itemHtml(m); });
+  return `<div class="head"><div><h2 tabindex="-1">Menciones</h2><p>Cada noticia aparece una vez aunque la publiquen varios medios. El resumen es propio; el texto del medio no se reproduce.</p></div></div>
+  <div class="filters">
+    <div class="seg" role="group" aria-label="Tono">${["todos","cri","neu","pos"].map(k => `<button data-act="f-tono" data-k="${k}" aria-pressed="${tState.tono===k}">${k==="todos"?"Todas":tonoPl[k]}<span class="c">${cnt(k)}</span></button>`).join("")}</div>
+    <div class="seg" role="group" aria-label="Período">${[["1","24 h"],["7","7 días"],["30","30 días"]].map(([v,l]) => `<button data-act="f-dias" data-k="${v}" aria-pressed="${tState.dias===v}">${l}</button>`).join("")}</div>
+    <select id="fTema" aria-label="Tema"><option value="todos">Todos los temas</option>${c.temas.filter(t=>t.activo).map(t => `<option value="${t.id}" ${tState.tema===t.id?"selected":""}>${esc(t.nombre)}</option>`).join("")}</select>
+    <input id="fQ" type="search" placeholder="Buscar una palabra" value="${esc(tState.q)}" aria-label="Buscar en las menciones">
+  </div>
+  <div class="active" aria-live="polite"><span>${ms.length} ${ms.length===1?"noticia":"noticias"}</span>${activos?`<button class="btn ghost sm" data-act="f-reset">Quitar filtros</button>`:""}${fps?`<span>· ${fps} marcadas como “no corresponde”</span><button class="btn ghost sm" data-act="fp-reset">Restaurar</button>`:""}</div>
+  <div class="feed">${html || `<div class="card"><b>No hay noticias con estos filtros.</b><p class="muted" style="margin:4px 0 0">Prueba con un período más largo o <button class="btn ghost sm" data-act="f-reset">quita los filtros</button>.</p></div>`}</div>`;
+}
+
+/* Configuración */
+function subtabs(){ const k = route(); return `<div class="subtabs" role="navigation" aria-label="Configuración">${CONFIG.map(([key,n]) => `<a href="#${key}" ${key===k?'aria-current="page"':""}>${n}</a>`).join("")}</div>`; }
+function chipEd(t, k, label, hint, limit){
+  const all = t[k], showAll = tState.ctxAll[t.id + k] || !limit || all.length <= limit, list = showAll ? all : all.slice(0, limit);
+  return `<div class="field"><span class="lbl" id="l-${t.id}-${k}">${label}</span>
+  <div class="chips" role="group" aria-labelledby="l-${t.id}-${k}">${list.map((v,i) => `<span class="chip ${k==="exclusiones"?"ex":""}">${esc(v)}<button data-act="chip-del" data-tema="${t.id}" data-k="${k}" data-i="${i}" aria-label="Quitar ${esc(v)}">×</button></span>`).join("")}${!showAll?`<button class="btn ghost sm" data-act="ctx-all" data-key="${t.id+k}">+${all.length - limit} más</button>`:""}<input data-chipin="${t.id}:${k}" placeholder="Escribe y presiona Enter" aria-label="Agregar a ${label}"></div>
+  <small>${hint}</small></div>`;
+}
+function vTemas(){
+  const c = cuenta(), pl = PLANES[c.perfil.plan], act = c.temas.filter(t => t.activo).length;
+  return `<div class="head"><div><h2 tabindex="-1">Mis temas</h2><p>Usas ${act} de los ${pl.temas} temas del plan ${pl.nombre}. Abre un tema para ajustar qué palabras lo activan; el conteo se actualiza al instante.</p></div><a class="btn" href="#asistente">Rehacer con el asistente</a></div>
+  ${subtabs()}
+  <div class="feed">${c.temas.map(t => { const p = puntaje(t), open = !!tState.open[t.id]; return `<div class="tema">
+    <div class="top"><div><span class="origin">${esc(t.origen)}</span><h4>${esc(t.nombre)}</h4></div><span class="cnt muted" style="font-size:12.5px"><b class="mono" style="color:var(--ink)">${p.vol}</b> noticias en 30 días${p.cri?` · <span style="color:var(--cri)">${p.cri} críticas</span>`:""}</span><button class="btn sm" data-act="tema-open" data-id="${t.id}" aria-expanded="${open}">${open?"Cerrar":"Editar"}</button></div>
+    ${open ? `<div class="body">
+      ${chipEd(t, "terminos", "Palabras que activan el tema", "Basta con que una aparezca. No distingue tildes ni mayúsculas.")}
+      ${chipEd(t, "exclusiones", "Excluir si aparece", "Úsalo para homónimos: otra ciudad, una película, un equipo.")}
+      ${chipEd(t, "contexto", "Y además debe mencionar (opcional)", "Exige al menos una de estas palabras. Vacío: no se exige nada.", 10)}
+      ${t.origen !== "Núcleo" ? `<div><button class="btn ghost sm" data-act="quitar" data-id="${t.id}">Quitar este tema</button></div>` : ""}
+    </div>` : ""}</div>`; }).join("")}</div>
+  ${c.sugeridos.length ? `<h3 style="font-family:var(--f-display);font-size:19px;margin:26px 0 4px">Temas sugeridos</h3><p class="muted" style="margin:0 0 10px">Ya aparecen en las noticias de ${esc(S.org)}. Se suman en paquetes de 5 por ${clp(49000)} al mes.</p>
+  <div class="prop">${c.sugeridos.map((t,i) => `<div class="prow sug"><span class="num">+${i+1}</span><div><b>${esc(t.nombre)}</b><div class="muted" style="font-size:12px">${t.vol} noticias en 30 días${t.cri?` · ${t.cri} críticas`:""}</div></div><button class="btn sm" data-act="addsug" data-id="${t.id}">Agregar</button></div>`).join("")}</div>` : ""}`;
+}
+let propuesta = null;
+function vAsistente(){
+  const p = cuenta().perfil;
+  return `<div class="head"><div><h2 tabindex="-1">Asistente de temas</h2><p>Cinco preguntas. Con tus respuestas y lo publicado en los últimos 30 días, PregonIA propone qué seguir. Nada cambia hasta que lo confirmes.</p></div></div>
+  ${subtabs()}
+  <form id="carForm" class="card form" novalidate>
+    <div class="field"><label for="cTipo">1. ¿Quién usará la cuenta?</label><select id="cTipo"><option ${p.tipo==="Municipio"?"selected":""}>Municipio</option><option ${p.tipo==="Autoridad electa"?"selected":""}>Autoridad electa</option></select></div>
+    <div class="field"><label for="cPlan">2. ¿Qué plan?</label><select id="cPlan">${Object.entries(PLANES).map(([k,v]) => `<option value="${k}" ${p.plan===k?"selected":""}>${v.nombre}: ${v.temas} temas, ${clp(v.precio)} al mes</option>`).join("")}</select></div>
+    <div class="field"><label for="cAut">3. Nombre de la autoridad principal <span class="muted">(opcional)</span></label><input id="cAut" value="${esc(p.autoridad)}" placeholder="Ej.: nombre y apellido del alcalde"><small>Solo personas en su rol público.</small></div>
+    <div class="field"><label for="cAg">4. Proyectos u obras con nombre propio</label><input id="cAg" value="${esc(p.agenda.join(", "))}" placeholder="Ej.: Polideportivo, Plan regulador"><small>Sepáralos con comas.</small></div>
+    <fieldset class="field span2"><legend>5. ¿Qué temas son sensibles hoy en la comuna?</legend><div class="checks">${Object.entries(SENS).map(([k,s]) => `<label><input type="checkbox" name="sens" value="${k}" ${p.sens.includes(k)?"checked":""}> ${s.n}</label>`).join("")}</div><small>Los que marques tienen prioridad; el resto entra solo si ya aparece en las noticias.</small></fieldset>
+    <div class="span2"><button class="btn primary" type="submit">Ver propuesta</button></div>
+  </form>
+  <div id="propOut" style="margin-top:16px">${propuesta ? propHtml() : ""}</div>`;
+}
+function propHtml(){
+  const pl = PLANES[propuesta.perfil.plan];
+  return `<div class="card" style="display:grid;gap:12px" tabindex="-1" id="propCard"><div><h3 style="margin:0;font-family:var(--f-display);font-size:19px">Propuesta: ${pl.temas} temas para ${esc(propuesta.perfil.comuna)}</h3><p class="muted" style="margin:4px 0 0">Los tres primeros son fijos. El resto se ordena por cuánto aparecen, cuántas noticias críticas tienen y lo que marcaste como sensible.</p></div>
+  <div class="prop">${propuesta.base.map((t,i) => `<div class="prow"><span class="num">${i+1}</span><div><b>${esc(t.nombre)}</b><div class="muted" style="font-size:12px"><span class="origin">${esc(t.origen)}</span> · ${t.vol} noticias en 30 días${t.cri?` · ${t.cri} críticas`:""}</div></div></div>`).join("")}</div>
+  ${propuesta.sugeridos.length ? `<p class="muted" style="margin:0;font-size:12.5px">Quedan como sugeridos para más adelante: ${propuesta.sugeridos.map(t => esc(t.nombre)).join(", ")}.</p>` : ""}
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="activar">Usar estos temas</button><button class="btn" data-act="descartar">Descartar</button></div></div>`;
+}
+function vFuentes(){
+  const f = tState.fuente, rows = CATALOG.filter(m => (f.a==="todos"||m.a===f.a) && (f.e==="todos"||m.e===f.e));
+  const cnt = k => CATALOG.filter(m => m.e===k).length;
+  const lbl = {listo:"Listo", requiere_ajuste:"Requiere ajuste", restringido:"Restringido"};
+  const met = {rss:"RSS", sitemap_noticias:"Sitemap de noticias", sitemap:"Sitemap", sitemap_mensual:"Sitemap mensual", portada:"Portada", google_news:"Google News", rss_filtrado:"RSS filtrado", sitemap_filtrado:"Sitemap filtrado"};
+  return `<div class="head"><div><h2 tabindex="-1">Fuentes</h2><p>Los 100 medios que PregonIA lee y cómo se lee cada uno (verificado el 3 de noviembre de 2026). Los restringidos se consultan solo vía Google News.</p></div></div>
+  ${subtabs()}
+  <div class="filters">
+    <div class="seg" role="group" aria-label="Estado">${[["todos","Todos",CATALOG.length],["listo","Listos",cnt("listo")],["requiere_ajuste","Requieren ajuste",cnt("requiere_ajuste")],["restringido","Restringidos",cnt("restringido")]].map(([v,l,n]) => `<button data-act="f-est" data-k="${v}" aria-pressed="${f.e===v}">${l}<span class="c">${n}</span></button>`).join("")}</div>
+    <div class="seg" role="group" aria-label="Ámbito">${[["todos","Todos"],["nacional","Nacional"],["regional","Regional"],["local","Local"]].map(([v,l]) => `<button data-act="f-amb" data-k="${v}" aria-pressed="${f.a===v}">${l}</button>`).join("")}</div>
+  </div>
+  <div class="card scroll" style="padding:0"><table><thead><tr><th>Medio</th><th>Ámbito</th><th>Comuna</th><th>Lectura</th><th>Estado</th></tr></thead><tbody>${rows.map(m => `<tr><td><b>${esc(m.n)}</b>${m.o?`<div class="muted" style="font-size:12px">${esc(m.o)}</div>`:""}</td><td>${m.a}</td><td>${esc((m.c||"").replace(/;/g, ", ")) || '<span class="muted">—</span>'}</td><td>${met[m.m]||m.m}</td><td><span class="pill e-${m.e}">${lbl[m.e]}</span></td></tr>`).join("")}</tbody></table></div>`;
+}
+
+/* Reportes: cada resultado se lee como gráfico y como cifra */
+const RI = {
+  cri:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.4h.01"/>',
+  pos:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.2 9.6"/>',
+  neu:'<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>',
+  noticias:'<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2M8 9h5M8 12.5h5M8 16h3"/>',
+  clima:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>',
+  alcance:'<path d="M4.9 19.1a10 10 0 0 1 0-14.2M19.1 4.9a10 10 0 0 1 0 14.2M7.8 16.2a6 6 0 0 1 0-8.4M16.2 7.8a6 6 0 0 1 0 8.4"/><circle cx="12" cy="12" r="1.5"/>',
+  propaga:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 10.9l7.6-3.8M8.2 13.1l7.6 3.8"/>',
+  reloj:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  pin:'<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  rank:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/>',
+  cal:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  up:'<path d="M12 19V5M6 11l6-6 6 6"/>', down:'<path d="M12 5v14M6 13l6 6 6-6"/>', flat:'<path d="M5 12h14"/>',
+  ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.2 9.6"/>', espera:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
+};
+const ri = (k, cls="") => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true">${RI[k]}</svg>`;
+const tonoCol = {cri:"var(--cri)", neu:"var(--neu)", pos:"var(--pos)"};
+const AMB = [["nacional","Nacional","var(--amb-n)"],["regional","Regional","var(--amb-r)"],["local","Local","var(--amb-l)"]];
+const ambCol = a => (AMB.find(x => x[0] === a) || AMB[2])[2];
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+
+const tipAttr = s => `data-tip="${esc(s)}"`;
+function tile({icon, tone="", label, value, unit="", delta="", sub="", viz=""}){
+  return `<div class="tile"><div class="top"><span class="chipi ${tone}">${ri(icon)}</span><span class="lb">${label}</span></div><div class="big">${value}${unit?`<small>${unit}</small>`:""}</div>${delta}${viz}${sub?`<div class="sub">${sub}</div>`:""}</div>`;
+}
+function deltaHtml(cur, prev, upGood, period="vs. 15 días anteriores"){
+  if (!prev && !cur) return `<span class="delta">${ri("flat")} Sin variación ${period}</span>`;
+  const d = cur - prev, cls = d === 0 ? "" : ((d > 0) === upGood ? "up-good" : (upGood === null ? "" : "up-bad"));
+  const txt = prev ? (d > 0 ? "+" : "") + Math.round(d / prev * 100) + "%" : (d > 0 ? "+" + d : String(d));
+  return `<span class="delta ${cls}">${ri(d > 0 ? "up" : d < 0 ? "down" : "flat")} ${d === 0 ? "Igual" : txt} ${period}</span>`;
+}
+function deltaVer(Mr, Ma){ const a = veredicto(Mr), b = veredicto(Ma); if (a.i < 0 || b.i < 0) return `<span class="delta">${ri("flat")} Sin datos para comparar quincenas</span>`; if (a.i === b.i) return `<span class="delta">${ri("flat")} Igual que la quincena anterior</span>`; const mejor = a.i < b.i; return `<span class="delta">${ri(mejor ? "up" : "down")} ${mejor ? "Mejoró" : "Empeoró"} desde ${b.n.toLowerCase()}</span>`; }
+function deltaPts(cur, prev){ const d = cur - prev; return `<span class="delta ${d>0?"up-good":d<0?"up-bad":""}">${ri(d > 0 ? "up" : d < 0 ? "down" : "flat")} ${d === 0 ? "Igual" : (d > 0 ? "+" : "−") + Math.abs(d) + " pts"} vs. quincena anterior</span>`; }
+function serieDias(ms, n = 30){ const a = Array(n).fill(0); ms.forEach(m => { const d = Math.floor((NOW - m.last) / DAY); if (d < n) a[n-1-d]++; }); return a; }
+function sparkline(vals){
+  const W = 200, H = 40, max = Math.max(1, ...vals), x = i => 2 + i * (W - 6) / (vals.length - 1), y = v => H - 4 - (H - 10) * v / max;
+  const pts = vals.map((v,i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const li = vals.length - 1;
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Tendencia de 30 días"><polygon points="2,${H-4} ${pts} ${x(li)},${H-4}" fill="var(--accent)" fill-opacity=".1"/><polyline points="${pts}" fill="none" stroke="var(--neu-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/><circle cx="${x(li)}" cy="${y(vals[li])}" r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function escala(i){ const n = ["Muy desfavorable","Desfavorable","Equilibrada","Favorable","Muy favorable"]; return `<div class="vscale" role="img" aria-label="Nivel: ${i < 0 ? "sin datos" : VER[i][1]}">${n.map((x,j) => `<span class="${4 - j === i ? "on" : ""}" ${tipAttr(x)}></span>`).join("")}</div><div class="scale"><span>En contra</span><span>Equilibrada</span><span>A favor</span></div>`; }
+function segbar(parts, tall){ const tot = parts.reduce((s,p) => s + p.v, 0) || 1; return `<div class="segbar ${tall?"tall":""}" role="img" aria-label="${esc(parts.map(p => p.l + ": " + p.v).join(", "))}">${parts.filter(p => p.v).map(p => `<span style="flex:${p.v};background:${p.c}" ${tipAttr(p.l + ": " + p.v + " (" + pct(p.v, tot) + "%)")}></span>`).join("")}</div>`; }
+function keys(parts){ return `<div class="keys">${parts.map(p => `<span><i style="background:${p.c}"></i>${p.l} <b>${p.v}</b></span>`).join("")}</div>`; }
+function climaHtml(M){ const v = veredicto(M), k = v.k === "pos" ? "up" : v.k === "cri" ? "down" : "flat"; return `<span class="clima">${ri(k)}${v.c}</span>`; }
+function ambitos(ms){ const r = {nacional:0, regional:0, local:0}; ms.forEach(m => m.notas.forEach(n => r[MED[n.m].a] = (r[MED[n.m].a]||0) + 1)); return r; }
+
+function chartDias(ms, n = 30){
+  const W = 720, H = 200, L = 30, B = 26, top = 10;
+  const days = Array.from({length:n}, (_,i) => ({pos:0, neu:0, cri:0, d: n-1-i}));
+  ms.forEach(m => { const d = Math.floor((NOW - m.last)/DAY); if (d < n) days[n-1-d][m.tono]++; });
+  const max = Math.max(3, ...days.map(x => x.pos+x.neu+x.cri)), step = Math.ceil(max/3), ymax = step*3, slot = (W-L-8)/n, bw = Math.min(16, slot - 4);
+  const y = v => top + (H-top-B) * (1 - v/ymax);
+  let g = "";
+  for (let v = 0; v <= ymax; v += step) g += `<line x1="${L}" x2="${W-4}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">${v}</text>`;
+  days.forEach((x,i) => {
+    const X = L + 4 + i*slot + (slot - bw)/2, dt = new Date(NOW - x.d*DAY), lbl = dt.toLocaleDateString("es-CL", {weekday:"short", day:"numeric", month:"short"});
+    const tot = x.pos + x.neu + x.cri; let acc = 0; const segs = [["neu","var(--neu)"],["pos","url(#pat-pos)"],["cri","var(--cri)"]].filter(([k]) => x[k]);
+    segs.forEach(([k,col], j) => { const y1 = y(acc + x[k]) + (j ? 0 : 0), y0 = y(acc) - (acc ? 2 : 0), h = Math.max(1, y0 - y1), last = j === segs.length - 1;
+      g += last ? `<path d="M${X},${y0} V${y1+4} Q${X},${y1} ${X+4},${y1} H${X+bw-4} Q${X+bw},${y1} ${X+bw},${y1+4} V${y0} Z" fill="${col}"/>` : `<rect x="${X}" y="${y1}" width="${bw}" height="${h}" fill="${col}"/>`; acc += x[k]; });
+    if (i % 5 === 4 || i === n-1) g += `<text x="${X + bw/2}" y="${H-8}" text-anchor="middle">${dt.getDate()}/${dt.getMonth()+1}</text>`;
+    g += `<rect class="hit" x="${L + 4 + i*slot}" y="${top}" width="${slot}" height="${H-top-B}" ${tipAttr(`${lbl}: ${tot ? [x.cri && plural(x.cri,"crítica","críticas"), x.neu && plural(x.neu,"neutra","neutras"), x.pos && plural(x.pos,"positiva","positivas")].filter(Boolean).join(", ") : "sin noticias"}`)}/>`;
+  });
+  return `<div class="scroll"><svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" style="min-width:420px" role="img" aria-label="Noticias por día y tono, últimos ${n} días">${g}</svg></div><div class="legend"><span><i style="background:var(--cri)"></i>Críticas</span><span><i style="background:var(--neu)"></i>Neutras</span><span><i style="background:var(--pos)"></i>Positivas</span></div>`;
+}
+
+/* Informes por lector. El nivel del medio (comunal, regional, nacional) no es un informe:
+   es un dato de cada asunto, "hasta dónde llegó". */
+const REPS = [
+  ["alcalde","Parte del alcalde",{para:"Alcalde", cuando:"Lunes, 8:00 · semanal", lectura:"2 minutos, en el celular", responde:"¿Cómo me trató la prensa, qué se puede complicar y qué hago?"}],
+  ["mesa","Mesa de comunicaciones",{para:"Encargado(a) de comunicaciones", cuando:"Todos los días, 8:30", lectura:"10 a 15 minutos", responde:"¿Qué respondo hoy, qué está escalando y qué difundo?"}],
+  ["gestion","Informe de gestión",{para:"Alcalde y equipo directivo", cuando:"Primer lunes del mes", lectura:"15 minutos, en reunión de equipo", responde:"¿Cómo se percibe la gestión, por tema, y cómo estamos frente a las comunas vecinas?"}],
+  ["crisis","Episodio crítico",{para:"Alcalde y comunicaciones", cuando:"Se activa solo ante una noticia crítica", lectura:"5 minutos", responde:"¿Cómo se propagó y qué hacemos ahora?"}]
+];
+function vReportes(){
+  if (!REPS.some(r => r[0] === tState.rep)) tState.rep = "alcalde";
+  const cur = REPS.find(r => r[0] === tState.rep), p = cur[2];
+  return `<div class="head"><div><h2 tabindex="-1">Reportes</h2><p>Un informe por lector. Cada uno responde una sola pregunta, con el nivel de detalle que esa persona necesita.</p></div></div>
+  <div class="tabs" role="tablist">${REPS.map(([k,n]) => `<button role="tab" aria-selected="${tState.rep===k}" data-act="rep" data-k="${k}">${n}</button>`).join("")}</div>
+  <dl class="para"><div><dt>Para</dt><dd>${p.para}</dd></div><div><dt>Cuándo</dt><dd>${p.cuando}</dd></div><div><dt>Lectura</dt><dd>${p.lectura}</dd></div><div class="q"><dt>Responde</dt><dd>${p.responde}</dd></div></dl>
+  ${({alcalde:repAlcalde, mesa:repMesa, gestion:repGestion, crisis:repCrisis})[tState.rep]()}`;
+}
+const muestra = n => n < 20 ? `<p class="note" style="margin-top:14px">Muestra pequeña (${plural(n,"noticia","noticias")}): las proporciones pueden cambiar mucho con pocas notas nuevas.</p>` : "";
+
+/* Hasta dónde llegó: comunal → regional → nacional */
+const NIVS = [["local","Comunal"],["regional","Regional"],["nacional","Nacional"]];
+const nivIdx = a => a === "nacional" ? 2 : a === "regional" ? 1 : 0;
+function escalera(notas){
+  const ord = notas.slice().sort((a,b) => a.ts - b.ts), r = NIVS.map(([k,l]) => ({k, l, n:0, first:null}));
+  ord.forEach(n => { const x = r[nivIdx(MED[n.m].a)]; x.n++; if (x.first === null) x.first = n.ts; });
+  const max = r.reduce((s,x,i) => x.n ? i : s, -1), inicio = ord.length ? nivIdx(MED[ord[0].m].a) : -1;
+  return {r, max, inicio, subio: max > inicio};
+}
+const llego = e => e.max < 0 ? "Sin noticias" : ["Solo prensa comunal","Llegó a prensa regional","Llegó a prensa nacional"][e.max];
+const hora = ts => new Date(ts).toLocaleString("es-CL", {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit", hourCycle:"h23"});
+function escHtml(e, big){
+  const tip = e.r.map(x => x.l + ": " + (x.n ? plural(x.n,"nota","notas") + " desde " + hora(x.first) : "sin notas")).join(" · ");
+  return `<span class="esc" role="img" aria-label="${esc(llego(e) + ". " + tip)}" ${tipAttr(tip)}><span class="sig" aria-hidden="true">${e.r.map((x,i) => `<i class="${i <= e.max ? "on" : ""}"></i>`).join("")}</span><span>${llego(e)}</span>${big ? `<span class="cts">${e.r.map(x => x.l + " " + x.n).join(" · ")}</span>` : ""}</span>`;
+}
+const ruta = e => e.r.filter(x => x.n).sort((a,b) => a.first - b.first).map(x => x.l + " " + hora(x.first)).join(" → ");
+
+/* Quién se hace cargo */
+const AREAS = [[["incendio","emergencia","senapred","bomberos","marejada","temporal"],"Emergencias"],[["agua","sequia","hidric","apr","aljibe","pozo","estero"],"Operaciones"],[["cesfam","salud","consultorio","hospital"],"Salud"],[["colegio","escuela","liceo","educacion","daem","matricula"],"Educación"],[["robo","delito","seguridad","carabineros","delincuencia"],"Seguridad pública"],[["obra","calle","vereda","bache","pavimento","plan regulador","permiso","polideportivo","construccion"],"Obras y Secplan"],[["turismo","feria","fiesta","temporada","vino","vina","vendimia","ocupacion","costumbrista"],"Fomento y turismo"],[["basura","residuos","aseo","microbasural"],"Aseo y ornato"],[["adultos mayores","talleres","subsidio","vivienda"],"Dideco"]];
+function areaDe(m){ const h = m.notas.map(n => n.hay).join(" "); const a = AREAS.find(([ks]) => ks.some(k => h.includes(k))); return a ? a[1] : null; }
+const temaDe = m => [...m.temas.values()].map(x => x.tema.nombre).filter(n => !/\(comuna\)$/.test(n))[0] || "General";
+function riesgo(m){ const e = escalera(m.notas); return (m.tono === "cri" ? 10 : m.tono === "neu" ? 2 : 0) * (1 + e.max) + m.notas.length + (respondida(m.g) ? -6 : 0) + (NOW - m.last < 2*DAY ? 2 : 0); }
+function accion(m){
+  const e = escalera(m.notas), area = areaDe(m); let a, r;
+  if (m.tono === "cri") {
+    if (respondida(m.g)) { a = "La respuesta ya está aprobada. Seguir el tema y avisar si aparece en otro medio."; r = ["Comunicaciones"]; }
+    else if (e.max === 2) { a = "Vocería del alcalde hoy, con datos oficiales y una sola versión."; r = ["Alcalde","Comunicaciones",area]; }
+    else if (e.max === 1) { a = "Declaración institucional antes de que el tema llegue a medios nacionales."; r = ["Comunicaciones",area]; }
+    else { a = "Responder en el medio comunal y contactar a los vecinos afectados."; r = [area || "Dirección del área","Comunicaciones"]; }
+  } else if (m.tono === "neu") { a = "Preparar información para los vecinos en los canales municipales, por si el tema crece."; r = ["Comunicaciones",area]; }
+  else { a = e.max === 0 ? "Llevarla a medios regionales: hasta ahora solo la publicó la prensa comunal." : "Difundirla en redes municipales y usarla en la próxima vocería."; r = ["Comunicaciones",area]; }
+  return {a, r: [...new Set(r.filter(Boolean))].join(" · ")};
+}
+const enMedios = m => { const k = new Set(m.notas.map(n => n.m)).size; return esc(MED[m.lead.m].n) + (k > 1 ? ` y ${k - 1} ${k === 2 ? "medio más" : "medios más"}` : ""); };
+const rango = (d0, d1) => new Date(d0).toLocaleDateString("es-CL",{day:"numeric", month:"short"}) + " al " + new Date(d1).toLocaleDateString("es-CL",{day:"numeric", month:"short", year:"numeric"});
+
+/* 1. Parte del alcalde: semanal, una pantalla */
+function parteData(){
+  const all = menciones(cuenta(), 14), sem = all.filter(m => NOW - m.last < 7*DAY), ant = all.filter(m => NOW - m.last >= 7*DAY);
+  const M = metricas(sem), Ma = metricas(ant), v = veredicto(M), va = veredicto(Ma);
+  const cand = sem.filter(m => m.tono !== "pos").sort((a,b) => riesgo(b) - riesgo(a)), asuntos = [], vistos = new Set();
+  cand.forEach(m => { if (asuntos.length < 3 && riesgo(m) >= 4 && (m.tono === "cri" || (areaDe(m) && riesgo(m) >= 6)) && !vistos.has(temaDe(m))) { asuntos.push(m); vistos.add(temaDe(m)); } });
+  cand.forEach(m => { if (asuntos.length < 3 && !asuntos.includes(m) && riesgo(m) >= 12) asuntos.push(m); });
+  const buena = sem.filter(m => m.tono === "pos").sort((a,b) => escalera(b.notas).max - escalera(a.notas).max || b.notas.length - a.notas.length)[0];
+  const comp = va.i < 0 ? "No hay datos de la semana anterior para comparar." : va.i === v.i ? `Igual que la semana anterior.` : `La semana anterior fue ${va.n.toLowerCase()}: ${v.i < va.i ? "mejoró" : "empeoró"}.`;
+  return {sem, M, v, comp, asuntos, buena, per: rango(NOW - 6*DAY, NOW)};
+}
+function repAlcalde(){
+  const d = parteData();
+  if (!d.sem.length) return `<div class="allgood">${ri("ok")} Ningún medio publicó sobre ${esc(S.org)} en los últimos 7 días.</div>`;
+  const item = (m, i) => { const e = escalera(m.notas), ac = accion(m); return `<li class="${m.tono}"><span class="n">${i + 1}</span><div class="bd"><span class="kick">${esc(temaDe(m))} · ${tonoLbl[m.tono]}${respondida(m.g) ? " · respondida" : ""}</span><b class="t">${esc(m.lead.res)}</b><span class="sub">${enMedios(m)} · ${ago(m.last)}</span><div class="lleg">${escHtml(e)}</div><p class="acc"><b>Qué hacer</b>${ac.a}</p><p class="rsp"><b>Responsable</b>${ac.r}</p></div></li>`; };
+  return `<div class="rhead"><h3>${esc(S.org)} · parte semanal</h3><span class="per">${ri("cal")} ${d.per}</span></div>
+  <div class="parte">
+    <section class="ver"><span class="kick">Cómo lo trató la prensa esta semana</span><p class="vbig ${d.v.k}">${d.v.n}</p><p class="vtx">${d.v.f.charAt(0).toUpperCase() + d.v.f.slice(1)}: ${conteo(d.M)}. ${d.comp}</p>${escala(d.v.i)}</section>
+    <section><h4>Lo que se puede complicar</h4>${d.asuntos.length ? `<ol class="asuntos">${d.asuntos.map(item).join("")}</ol>` : `<p class="vtx">Ningún asunto de riesgo esta semana.</p>`}</section>
+    ${d.buena ? `<section class="cap"><h4>Para aprovechar</h4><ol class="asuntos">${item(d.buena, -1).replace('<span class="n">0</span>', `<span class="n">${ri("pos")}</span>`)}</ol></section>` : ""}
+    <div class="acts"><button class="btn primary" data-act="copiar-parte">Copiar para WhatsApp</button><button class="btn" data-act="goto" data-tono="todos" data-dias="7">Ver las noticias de la semana</button></div>
+  </div>
+  ${muestra(d.M.vol)}`;
+}
+function parteTexto(){
+  const d = parteData(), L = [`*PregonIA · Parte semanal · ${S.org}*`, d.per, "", `*Prensa de la semana: ${d.v.n.toLowerCase()}.* ${conteo(d.M)}. ${d.comp}`, ""];
+  if (d.asuntos.length) { L.push("*Lo que se puede complicar*"); d.asuntos.forEach((m, i) => { const ac = accion(m); L.push(`${i + 1}. ${m.lead.res} (${llego(escalera(m.notas)).toLowerCase()})`, `   Qué hacer: ${ac.a}`, `   Responsable: ${ac.r}`); }); L.push(""); }
+  if (d.buena) { const ac = accion(d.buena); L.push("*Para aprovechar*", `${d.buena.lead.res}`, `   ${ac.a}`); }
+  return L.join("\n");
+}
+
+/* 2. Mesa de comunicaciones: diaria, para operar */
+function repMesa(){
+  const c = cuenta(), m30 = menciones(c), m7 = m30.filter(m => NOW - m.last < 7*DAY), hoy = m30.filter(m => NOW - m.last < DAY);
+  const porResp = m7.filter(m => m.tono === "cri" && !respondida(m.g)).sort((a,b) => escalera(b.notas).max - escalera(a.notas).max || b.last - a.last);
+  const subiendo = m7.filter(m => escalera(m.notas).subio).sort((a,b) => b.last - a.last);
+  const difundir = m30.filter(m => m.tono === "pos" && NOW - m.last < 14*DAY && escalera(m.notas).max < 2 && !respondida(m.g)).sort((a,b) => escalera(a.notas).max - escalera(b.notas).max || b.last - a.last);
+  const md = {}; m30.forEach(m => m.notas.forEach(n => { const x = md[n.m] ||= {n:0, cri:0, pos:0}; x.n++; if (n.tono === "cri") x.cri++; if (n.tono === "pos") x.pos++; }));
+  const medios = Object.entries(md).sort((a,b) => nivIdx(MED[a[0]].a) - nivIdx(MED[b[0]].a) || b[1].n - a[1].n).slice(0, 10);
+  const li = (m, btn, extra = "") => `<li><span class="kick">${esc(temaDe(m))} · ${tonoLbl[m.tono]}</span><b>${esc(m.lead.res)}</b><span class="sub">${enMedios(m)} · ${ago(m.last)}</span>${escHtml(escalera(m.notas))}${extra}${btn ? `<button class="btn sm" style="justify-self:start" data-act="responder" data-g="${m.g}" data-from="reportes">${btn}</button>` : ""}</li>`;
+  const vacio = t => `<p class="empty">${t}</p>`;
+  return `<div class="rhead"><h3>${esc(S.org)} · mesa de comunicaciones</h3><span class="per">${ri("cal")} ${new Date(NOW).toLocaleDateString("es-CL",{weekday:"long", day:"numeric", month:"long"})}</span></div>
+  <div class="rgrid r4">
+    ${tile({icon:"cri", tone: porResp.length ? "cri" : "", label:"Por responder", value: porResp.length, sub:"críticas de los últimos 7 días sin respuesta aprobada"})}
+    ${tile({icon:"propaga", label:"Subiendo de nivel", value: subiendo.length, sub:"empezaron en un medio menor y ya llegaron a otro mayor"})}
+    ${tile({icon:"pos", tone:"pos", label:"Para difundir", value: difundir.length, sub:"buenas noticias que aún no llegan a la prensa nacional"})}
+    ${tile({icon:"noticias", label:"Publicadas en 24 horas", value: hoy.reduce((s,m) => s + m.notas.filter(n => NOW - n.ts < DAY).length, 0), sub:"notas nuevas sobre los temas monitoreados"})}
+  </div>
+  <div class="rgrid r21" style="margin-top:14px">
+    <section class="card grp"><h4>${ri("cri")} Por responder hoy<span class="c">${porResp.length}</span></h4>${porResp.length ? `<ul class="cola">${porResp.map(m => li(m, "Preparar respuesta", `<p class="acc sm"><b>Sugerido</b>${accion(m).a}</p>`)).join("")}</ul>` : vacio("No hay críticas pendientes de respuesta.")}</section>
+    <section class="card grp"><h4>${ri("up")} Subiendo de nivel<span class="c">${subiendo.length}</span></h4>${subiendo.length ? `<ul class="cola">${subiendo.map(m => li(m, null, `<span class="sub">Recorrido: ${ruta(escalera(m.notas))}</span>`)).join("")}</ul>` : vacio("Ningún tema pasó de la prensa comunal a la regional o nacional esta semana.")}
+      <p class="hint" style="margin:10px 0 0">Mientras un tema está en la prensa comunal todavía se puede contener con una respuesta directa.</p></section>
+  </div>
+  <div class="rgrid r21" style="margin-top:14px">
+    <section class="card grp"><h4>${ri("pos")} Buenas noticias para difundir<span class="c">${difundir.length}</span></h4>${difundir.length ? `<ul class="cola">${difundir.slice(0,4).map(m => li(m, "Preparar comunicado")).join("")}</ul>${difundir.length > 4 ? `<button class="btn ghost sm" data-act="goto" data-tono="pos" data-dias="30">Ver las ${difundir.length} en Menciones</button>` : ""}` : vacio("No hay buenas noticias pendientes de difusión en las últimas dos semanas.")}</section>
+    <section class="card"><h3>A quién llamar</h3><p class="hint" style="margin:0 0 8px">Medios que publicaron sobre ${esc(S.org)} en 30 días. Los comunales primero: son los que se pueden contactar directamente.</p>
+      <table class="mtab"><thead><tr><th>Medio</th><th>Nivel</th><th class="num">Notas</th><th class="num">Crít.</th></tr></thead><tbody>${medios.map(([id,x]) => `<tr><td>${esc(MED[id].n)}</td><td>${NIVS[nivIdx(MED[id].a)][1]}</td><td class="num">${x.n}</td><td class="num">${x.cri}</td></tr>`).join("")}</tbody></table>
+      <p class="hint" style="margin:10px 0 0">En producción se agrega la firma de cada nota, para saber qué periodista cubre la comuna.</p></section>
+  </div>`;
+}
+
+/* 3. Informe de gestión: mensual, para el alcalde y su equipo */
+let lecturaTxt = {};
+function repGestion(){
+  const c = cuenta(), ms = menciones(c), M = metricas(ms);
+  if (!ms.length) return `<div class="allgood">Ningún medio publicó sobre ${esc(S.org)} en los últimos 30 días.</div>`;
+  const rec = ms.filter(m => NOW - m.last < 15*DAY), ant = ms.filter(m => NOW - m.last >= 15*DAY), Mr = metricas(rec), Ma = metricas(ant);
+  const porTema = c.temas.filter(t => t.activo).map(t => { const sub = ms.filter(m => m.temas.has(t.id)); return {t, ...metricas(sub), e: escalera(sub.flatMap(m => m.notas))}; }).sort((a,b) => b.vol - a.vol);
+  const esp = porTema.filter(x => !/\(comuna\)$/.test(x.t.nombre)), conDatos = esp.filter(x => x.vol);
+  const topCri = esp.slice().sort((a,b) => b.cri - a.cri)[0], topPos = esp.slice().sort((a,b) => b.pos - a.pos)[0], nac = conDatos.filter(x => x.e.max === 2);
+  const finds = [
+    [veredicto(M).k, `La cobertura del mes fue <b>${veredicto(M).n.toLowerCase()}</b>: ${veredicto(M).f}, con ${conteo(M)}.`],
+    topCri && topCri.cri ? ["cri", `<b>${esc(topCri.t.nombre)}</b> concentró las críticas: ${topCri.cri} de ${M.cri}.`] : null,
+    nac.length ? ["neu", `${nac.length === 1 ? "Un tema llegó" : nac.length + " temas llegaron"} a la prensa nacional: <b>${nac.map(x => esc(x.t.nombre)).join(", ")}</b>.`] : ["pos", "Ningún tema específico llegó a la prensa nacional este mes."],
+    topPos && topPos.pos ? ["pos", `<b>${esc(topPos.t.nombre)}</b> aportó la mayor cobertura positiva (${plural(topPos.pos,"noticia","noticias")}).`] : null
+  ].filter(Boolean);
+  const maxSide = Math.max(1, ...porTema.map(x => Math.max(x.cri + x.neu/2, x.pos + x.neu/2))), w = v => (v / maxSide * 100).toFixed(2) + "%";
+  const notas = ms.flatMap(m => m.notas.map(n => ({n, tono: n.tono}))).sort((a,b) => b.n.ts - a.n.ts);
+  return `<div class="rhead"><h3>${esc(S.org)} · informe de gestión</h3><span class="per">${ri("cal")} ${rango(NOW - 29*DAY, NOW)}</span></div>
+  <div class="card" style="margin-bottom:14px"><h3>Lo principal</h3><ul class="find">${finds.map(([k, t]) => `<li><span class="chipi ${k}">${ri(k)}</span><p>${t}</p></li>`).join("")}</ul></div>
+  <div class="rgrid r4">
+    ${tile({icon:"noticias", label:"Noticias", value:M.vol, delta: deltaHtml(Mr.vol, Ma.vol, null), viz: sparkline(serieDias(ms)), sub:"sin contar réplicas de la misma noticia"})}
+    ${tile({icon:"clima", tone: veredicto(M).k === "neu" ? "" : veredicto(M).k, label:"Tono de la cobertura", value:`<span class="word">${veredicto(M).n}</span>`, delta: deltaVer(Mr, Ma), viz: escala(veredicto(M).i), sub: conteo(M)})}
+    ${tile({icon:"alcance", label:"Temas en prensa nacional", value: nac.length, unit:"de " + conDatos.length, sub:"temas con noticias este mes que llegaron a medios nacionales"})}
+    ${tile({icon:"cri", tone:"cri", label:"Noticias críticas", value: M.cri, unit: pct(M.cri, M.vol) + "% del total", delta: deltaHtml(Mr.cri, Ma.cri, false), viz:`<div class="meter" ${tipAttr(M.cri + " de " + M.vol + " noticias")}><i style="width:${pct(M.cri, M.vol)}%"></i></div>`})}
+  </div>
+  <div class="card" style="margin-top:14px"><h3>Tono y alcance por tema</h3>
+    <div class="div esd" role="table" aria-label="Tono y alcance por tema">
+      <div class="hd" role="row"><span role="columnheader">Tema</span><span class="ax" role="columnheader"><span>← Críticas</span><span>Positivas →</span></span><span class="num" role="columnheader">Notic.</span><span class="num" role="columnheader">Balance</span><span role="columnheader">Hasta dónde llegó</span></div>
+      ${porTema.map(x => `<div class="rw" role="row" tabindex="0" data-act="goto-tema" data-id="${x.t.id}" aria-label="${esc(x.t.nombre)}: ${x.vol} noticias, ${x.cri} críticas, ${x.pos} positivas, ${llego(x.e).toLowerCase()}">
+        <span class="nm" role="cell">${esc(x.t.nombre)}</span>
+        <span class="dbar" role="cell"><span class="L">${x.cri?`<span style="width:${w(x.cri)};background:var(--cri)" ${tipAttr(x.t.nombre + ": " + plural(x.cri,"crítica","críticas"))}></span>`:""}${x.neu?`<span style="width:${w(x.neu/2)};background:var(--neu)" ${tipAttr(x.t.nombre + ": " + plural(x.neu,"neutra","neutras"))}></span>`:""}</span><span class="R">${x.neu?`<span style="width:${w(x.neu/2)};background:var(--neu)" ${tipAttr(x.t.nombre + ": " + plural(x.neu,"neutra","neutras"))}></span>`:""}${x.pos?`<span style="width:${w(x.pos)};background:var(--pos)" ${tipAttr(x.t.nombre + ": " + plural(x.pos,"positiva","positivas"))}></span>`:""}</span></span>
+        <span class="num" role="cell" data-l="Noticias">${x.vol}</span><span class="num" role="cell" data-l="Balance">${climaHtml(x)}</span><span role="cell" class="ll">${x.vol ? escHtml(x.e) : '<span class="sub">Sin noticias</span>'}</span></div>`).join("")}
+    </div>
+    <div class="legend" style="margin-top:10px"><span><i style="background:var(--cri)"></i>Críticas, a la izquierda</span><span><i style="background:var(--neu)"></i>Neutras, al centro</span><span><i style="background:var(--pos)"></i>Positivas, a la derecha</span><span><span class="sig" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></span>Hasta dónde llegó: comunal, regional, nacional</span></div>
+  </div>
+  <div class="rgrid r21" style="margin-top:14px">
+    <div class="card"><h3>Noticias por día</h3>${chartDias(ms)}</div>
+    ${paresCard()}
+  </div>
+  <div class="card" style="margin-top:14px;display:grid;gap:10px"><h3 style="margin:0">Lectura del analista</h3><p class="hint" style="margin:0">Redactada por IA con las cifras y los resúmenes del mes. Revísala antes de usarla.</p>
+    <div id="lectura" class="draft" style="min-height:90px">${esc(lecturaTxt.gestion || lecturaBase(M, porTema))}</div>
+    <div><button class="btn primary" data-act="lectura">Redactar con IA</button></div></div>
+  <details class="card resp" style="margin-top:14px"><summary>Respaldo: las ${notas.length} notas del mes</summary>
+    <div class="scroll"><table><thead><tr><th>Fecha</th><th>Medio</th><th>Nivel</th><th>Tono</th><th>Titular</th></tr></thead><tbody>${notas.map(({n}) => `<tr><td class="mono">${hora(n.ts)}</td><td>${esc(MED[n.m].n)}</td><td>${NIVS[nivIdx(MED[n.m].a)][1]}</td><td>${tonoLbl[n.tono]}</td><td>${esc(n.t)}</td></tr>`).join("")}</tbody></table></div>
+    <p class="hint" style="margin:10px 0 0">En producción cada fila enlaza a la nota original en el sitio del medio.</p></details>
+  ${muestra(M.vol)}`;
+}
+function lecturaBase(M, porTema){
+  const esp = porTema.filter(x => !/\(comuna\)$/.test(x.t.nombre)), top = esp.slice().sort((a,b) => b.vol - a.vol)[0], crit = esp.slice().sort((a,b) => b.cri - a.cri)[0];
+  return `${S.org} sumó ${M.vol} noticias en 30 días, con una cobertura ${veredicto(M).n.toLowerCase()} (${conteo(M)}). El tema con más presencia fue ${top?top.t.nombre:"—"} y el que concentró más notas críticas fue ${crit&&crit.cri?crit.t.nombre + " (" + llego(crit.e).toLowerCase() + ")":"ninguno"}. Usa el botón para una lectura interpretativa con recomendaciones para el equipo.`;
+}
+function paresCard(){
+  const rows = COMUNAS.map(c => ({c, ...metricas(menciones({temas:[genericaComuna(c)]}))})).map(r => ({...r, pc: pct(r.cri, r.vol)}));
+  const tot = rows.reduce((s,r) => s + r.vol, 0) || 1, maxV = Math.max(1, ...rows.map(r => r.vol)), me = rows.find(r => r.c === S.org);
+  const pos = rows.slice().sort((a,b) => b.vol - a.vol).indexOf(me) + 1, promPc = Math.round(rows.reduce((s,r) => s + r.pc, 0) / rows.length);
+  return `<div class="card"><h3>Frente a las comunas vecinas</h3>
+    <p class="vtx" style="margin:0 0 10px">${esc(S.org)} es la <b>${pos}.ª</b> comuna del litoral con más noticias. ${me.pc}% de sus noticias fueron críticas; el promedio de las seis es ${promPc}%.</p>
+    <ul class="hbars">${rows.slice().sort((a,b) => b.vol - a.vol).map(r => `<li><span class="t"><i style="background:${r.c===S.org?"var(--accent)":"var(--amb-l)"}"></i><span>${r.c===S.org?"<b>"+esc(r.c)+"</b>":esc(r.c)}</span></span><span class="b" ${tipAttr(r.c + ": " + plural(r.vol,"noticia","noticias") + " · " + r.pc + "% críticas")}><i style="width:${r.vol/maxV*100}%;background:${r.c===S.org?"var(--accent)":"var(--amb-l)"}"></i></span><span class="v">${pct(r.vol,tot)}%</span></li>`).join("")}</ul>
+    <p class="hint" style="margin:10px 0 0">Uso interno. Se calcula solo con noticias públicas de cada comuna.</p></div>`;
+}
+
+function propagacion(m){
+  const W = 720, H = 220, L = 40, R = 20, B = 30, top = 30;
+  const t0 = m.first, span = Math.max(1, (m.notas[m.notas.length-1].ts - t0) / 36e5), xmax = Math.max(1, Math.ceil(span));
+  const x = h => L + (W - L - R) * h / xmax, ymax = Math.max(2, m.notas.length), y = v => top + (H - top - B) * (1 - v / ymax);
+  let g = "", path = `M${x(0)},${y(0)}`;
+  for (let v = 0; v <= ymax; v++) g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-8}" y="${y(v)+3}" text-anchor="end">${v}</text>`;
+  const stepH = xmax <= 6 ? 1 : Math.ceil(xmax / 6);
+  for (let h = 0; h <= xmax; h += stepH) g += `<text x="${x(h)}" y="${H-10}" text-anchor="middle">${h === 0 ? "inicio" : "+" + h + " h"}</text>`;
+  m.notas.forEach((n, i) => { const h = (n.ts - t0) / 36e5; path += ` H${x(h)} V${y(i+1)}`; });
+  path += ` H${x(xmax)}`;
+  g += `<path d="${path}" fill="none" stroke="var(--cri)" stroke-width="2" stroke-linejoin="round"/>`;
+  m.notas.forEach((n, i) => { const h = (n.ts - t0) / 36e5, cx = x(h), cy = y(i+1), md = MED[n.m];
+    g += `<circle cx="${cx}" cy="${cy}" r="6" fill="${ambCol(md.a)}" stroke="var(--surface)" stroke-width="2"/><circle cx="${cx}" cy="${cy}" r="14" fill="transparent" ${tipAttr(`${md.n} (${md.a}) · ${new Date(n.ts).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"})} · ${n.res}`)}/>`;
+    if (i === 0 || i === m.notas.length - 1) { const last = i && i === m.notas.length - 1; g += `<text x="${cx + (last ? -12 : 12)}" y="${last ? cy + 20 : cy - 12}" text-anchor="${last ? "end" : "start"}" style="font-family:var(--f-body);font-size:11.5px;fill:var(--ink)">${esc(md.n.split(",")[0])}</text>`; } });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Medios acumulados que publicaron la noticia, por hora">${g}</svg><div class="legend">${AMB.map(([k,l,c]) => `<span><i style="background:${c};border-radius:50%"></i>Medio ${l.toLowerCase()}</span>`).join("")}<span><i style="background:var(--cri);height:2px;width:14px;border-radius:0"></i>Medios acumulados</span></div>`;
+}
+function repCrisis(){
+  const ms = menciones(cuenta(), 7).filter(m => m.tono === "cri").sort((a,b) => b.notas.length - a.notas.length || b.last - a.last);
+  if (!ms.length) return `<div class="allgood">${ri("ok")} No hubo episodios críticos en los últimos 7 días.</div>`;
+  const m = ms[0], medios = new Set(m.notas.filter(n => n.ts - m.first < DAY).map(n => n.m)).size, resp = respondida(m.g);
+  const hrs = Math.max(0, Math.round((m.last - m.first) / 36e5)), ambN = {nacional:0, regional:0, local:0}; m.notas.forEach(n => ambN[MED[n.m].a]++);
+  const ambP = AMB.map(([k,l,c]) => ({l, v: ambN[k], c}));
+  return `<div class="rhead"><h3 style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="pill ic t-cri">${ri("cri")} Episodio crítico</span>${resp?`<span class="pill ic done">${ri("ok")} Respondida</span>`:""}</h3><span class="per">${ri("cal")} ${fecha(m.first)}</span></div>
+  <div class="card" style="margin-bottom:14px"><b style="font-size:17px;line-height:1.35;display:block">${esc(m.lead.t)}</b><p class="muted" style="margin:6px 0 0">${esc(m.lead.res)}</p></div>
+  <div class="rgrid r4">
+    ${tile({icon:"propaga", tone:"cri", label:"Medios en 24 horas", value: medios, sub: "publicaron la misma noticia"})}
+    ${tile({icon:"reloj", label:"Duración de la propagación", value: hrs, unit: hrs === 1 ? "hora" : "horas", sub:"entre la primera y la última nota"})}
+    ${tile({icon:"alcance", label:"Hasta dónde llegó", value:`<span class="word">${["Comunal","Regional","Nacional"][escalera(m.notas).max]}</span>`, viz: escHtml(escalera(m.notas), true), sub: ruta(escalera(m.notas))})}
+    ${tile({icon: resp ? "ok" : "espera", tone: resp ? "pos" : "cri", label:"Respuesta del municipio", value: resp ? "Lista" : "Pendiente", sub: resp ? "borrador aprobado" : "aún sin respuesta aprobada"})}
+  </div>
+  <div class="card" style="margin-top:14px"><h3>Cómo se propagó</h3>${propagacion(m)}</div>
+  <div class="rgrid r21" style="margin-top:14px">
+    <div class="card"><h3>Cronología</h3><ol class="timeline">${m.notas.map(n => `<li><b>${fecha(n.ts)}</b> · ${esc(medioN(n))}<br><span class="muted">${esc(n.res)}</span></li>`).join("")}</ol></div>
+    <div class="card" style="display:grid;gap:12px;align-content:start"><h3 style="margin:0">Qué hacer</h3><p class="note">Informa medidas concretas en las próximas horas, con una sola vocería y datos oficiales.</p><button class="btn primary" data-act="responder" data-g="${m.g}" data-from="reportes">${resp?"Ver respuesta":"Preparar respuesta"}</button>${ms.length>1?`<p class="hint" style="margin:0">Otros episodios de la semana: ${ms.slice(1,4).map(x => esc(x.lead.t)).join(" · ")}</p>`:""}</div>
+  </div>`;
+}
+/* Tooltips compartidos */
+(function(){
+  const tip = document.getElementById("tip");
+  const show = (el, x, y) => { tip.textContent = el.getAttribute("data-tip"); tip.hidden = false; const r = tip.getBoundingClientRect(); let L = x + 14, T = y + 14; if (L + r.width > innerWidth - 8) L = x - r.width - 14; if (T + r.height > innerHeight - 8) T = y - r.height - 14; tip.style.left = Math.max(8, L) + "px"; tip.style.top = Math.max(8, T) + "px"; };
+  document.addEventListener("pointermove", e => { const el = e.target.closest && e.target.closest("[data-tip]"); if (el) show(el, e.clientX, e.clientY); else tip.hidden = true; });
+  document.addEventListener("pointerleave", () => tip.hidden = true);
+  document.addEventListener("scroll", () => tip.hidden = true, {passive: true});
+})();
+
+/* Comunicados */
+const PIEZAS = {
+  declaracion:["Declaración breve","2 a 4 frases para responder rápido","Declaración breve de 2 a 4 frases"],
+  comunicado:["Comunicado de prensa","Titular, bajada y cuerpo","Comunicado de prensa (titular, bajada, cuerpo de 3 a 5 párrafos, datos de respaldo y contacto de prensa)"],
+  aclaracion:["Aclaración al medio","Carta al director (Ley 19.733)","Carta al director solicitando aclaración o rectificación conforme a la Ley 19.733"],
+  mensajes:["Mensajes clave","3 ideas para el vocero","Tres mensajes clave para el vocero, con dato de respaldo cada uno y frases a evitar"],
+  preguntas:["Preguntas probables","Para una entrevista","Cinco preguntas probables de la prensa con respuestas sugeridas"],
+  minuta:["Minuta interna","Una página para la autoridad","Minuta de una página para la autoridad: situación, cobertura, riesgos y opciones"]
+};
+const ENFOQUES = {datos:"Responder con datos", aclarar:"Aclarar los hechos", contextualizar:"Contextualizar", reconocer:"Reconocer y corregir", anunciar:"Anunciar un logro"};
+const recPieza = m => !m ? "comunicado" : m.tono === "cri" ? "declaracion" : "comunicado";
+const recEnf = m => !m ? "anunciar" : m.tono === "cri" ? "datos" : m.tono === "pos" ? "anunciar" : "contextualizar";
+const baseConocimiento = () => `[Ejemplo] Teléfono de emergencias municipales: 800 000 000 (ficticio).\n[Ejemplo] El municipio dispone de 2 camiones aljibe propios.\n[Ejemplo] Vocero autorizado: encargado(a) de comunicaciones.\n[Completar] Agrega cifras oficiales, documentos y decisiones del municipio.`;
+function vComunicados(){
+  const c = cuenta(), ms = menciones(c), m = tState.draft && ms.find(x => x.g === tState.draft), pl = PLANES[c.perfil.plan];
+  const pieza = tState.pieza || recPieza(m), enf = tState.enf || recEnf(m), rp = recPieza(m), re = recEnf(m);
+  const draft = (c.drafts||{})[tState.draft || "_"] || "";
+  const back = tState.from ? `<a class="back" href="#${tState.from}">← Volver a ${({inicio:"Inicio", menciones:"Menciones", reportes:"Reportes"})[tState.from]}</a>` : "";
+  const aprob = S.comunicados.filter(x => x.org===S.org);
+  return `${back}<div class="head"><div><h2 tabindex="-1">Preparar una respuesta</h2><p>Tres decisiones y un borrador. Solo usa datos del municipio y de la noticia; lo que falte queda marcado para que lo completes. Nada se publica sin tu aprobación.</p></div><span class="muted mono" style="font-size:12.5px">${c.borradores||0} de ${pl.borradores} borradores del mes</span></div>
+  <div class="grid two">
+    <form id="comForm" class="card stepper" novalidate>
+      <section><h3><span class="n">1</span>¿A qué respondes?</h3>
+        <select id="kMen" aria-label="Noticia de origen" class="field" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-height:36px"><option value="">Nada: es un anuncio propio</option>${ms.map(x => `<option value="${x.g}" ${m&&m.g===x.g?"selected":""}>${tonoLbl[x.tono]} · ${esc(x.lead.t.slice(0,80))}${x.lead.t.length>80?"…":""}</option>`).join("")}</select>
+        ${m ? `<div class="mini"><div class="meta" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted)">${pillTono(m.tono)}<span>${esc(medioN(m.lead))} · ${ago(m.lead.ts)}</span></div><b>${esc(m.lead.t)}</b><span class="muted" style="font-size:12.5px">${esc(m.lead.res)}</span></div>` : ""}
+      </section>
+      <section><h3><span class="n">2</span>¿Qué necesitas?</h3>
+        <div class="opts" role="radiogroup" aria-label="Pieza">${Object.entries(PIEZAS).map(([k,[n,d]]) => `<label class="opt"><input type="radio" name="pieza" value="${k}" ${pieza===k?"checked":""}>${k===rp?'<span class="rec">Sugerido</span>':""}<b>${n}</b><span>${d}</span></label>`).join("")}</div>
+      </section>
+      <section><h3><span class="n">3</span>¿Con qué enfoque?</h3>
+        <div class="checks" role="radiogroup" aria-label="Enfoque">${Object.entries(ENFOQUES).map(([k,v]) => `<label><input type="radio" name="enf" value="${k}" ${enf===k?"checked":""}> ${v}${k===re?' <span class="muted">(sugerido)</span>':""}</label>`).join("")}</div>
+      </section>
+      <details class="kb"><summary>Datos del municipio que puede usar la IA</summary><div class="field" style="margin-top:8px"><textarea id="kBase" aria-label="Datos del municipio">${esc(c.base || baseConocimiento())}</textarea><small>Los datos del ejemplo son ficticios. En producción se cargan cifras y documentos oficiales.</small></div></details>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit" id="btnGen">Generar borrador</button><button class="btn" type="button" data-act="stop" id="btnStop" hidden>Detener</button></div>
+    </form>
+    <div class="card" style="display:grid;gap:10px;align-content:start"><h3 style="margin:0">Borrador</h3>
+      <textarea id="kOut" class="draft" aria-label="Borrador" placeholder="El borrador aparecerá aquí. También puedes escribirlo tú.">${esc(draft)}</textarea>
+      <p class="note" id="kNote">Antes de aprobar, completa lo marcado [completar] y valida las citas con el vocero.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="aprobar" id="btnAprob" ${draft.trim()?"":"disabled"}>Aprobar</button><button class="btn" data-act="copiar" id="btnCopy" ${draft.trim()?"":"disabled"}>Copiar</button></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px"><h3>Aprobados</h3>${aprob.length ? `<div class="scroll"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Responde a</th><th>Estado</th></tr></thead><tbody>${aprob.map(x => `<tr><td class="mono">${fecha(x.ts)}</td><td>${esc(x.pieza)}</td><td>${esc(x.origen)}</td><td><span class="pill done">Aprobado</span></td></tr>`).join("")}</tbody></table></div>` : '<p class="muted" style="margin:0">Todavía no apruebas ninguno en esta cuenta.</p>'}</div>`;
+}
+
+/* Render y navegación */
+const VIEWFN = {inicio:vInicio, menciones:vMenciones, reportes:vReportes, comunicados:vComunicados, temas:vTemas, asistente:vAsistente, fuentes:vFuentes};
+function render(focus){
+  renderChrome(); $("#view").innerHTML = (VIEWFN[route()] || vInicio)();
+  if (focus) { const h = $("#view h2"); if (h) h.focus({preventScroll:true}); }
+  if (tState.refocus) { const el = document.querySelector(`[data-chipin="${tState.refocus}"]`); if (el) el.focus(); tState.refocus = null; }
+}
+window.addEventListener("hashchange", () => { render(true); window.scrollTo(0,0); });
+$("#org").addEventListener("change", e => { S.org = e.target.value; tState = {...tState, tema:"todos", draft:null, from:null, pieza:null, enf:null, open:{}}; propuesta = null; lecturaTxt = {}; save(); render(true); toast("Ahora ves " + S.org + ". Cada municipio ve solo sus datos."); });
+function goMenciones(patch){ Object.assign(tState, {tema:"todos", tono:"todos", dias:"30", q:""}, patch); if (route() === "menciones") render(true); else location.hash = "menciones"; }
+
+document.addEventListener("change", e => {
+  const id = e.target.id;
+  if (id === "fTema") { tState.tema = e.target.value; render(); }
+  if (id === "kBase") { cuenta().base = e.target.value; save(); }
+  if (id === "kMen") { tState.draft = e.target.value || null; tState.pieza = null; tState.enf = null; render(); }
+  if (e.target.name === "pieza") tState.pieza = e.target.value;
+  if (e.target.name === "enf") tState.enf = e.target.value;
+});
+let qTimer;
+document.addEventListener("input", e => {
+  if (e.target.id === "fQ") { clearTimeout(qTimer); const v = e.target.value; qTimer = setTimeout(() => { tState.q = v; render(); const el = $("#fQ"); if (el) { el.focus(); el.setSelectionRange(v.length, v.length); } }, 250); }
+  if (e.target.id === "kOut") { const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = e.target.value; save(); const has = !!e.target.value.trim(); $("#btnAprob").disabled = !has; $("#btnCopy").disabled = !has; }
+});
+function chipAdd(el){
+  const v = el.value.replace(/,/g, "").trim(); if (!v) return;
+  const [id, k] = el.dataset.chipin.split(":"), t = cuenta().temas.find(x => x.id === id); if (!t) return;
+  if (!t[k].some(x => norm(x) === norm(v))) t[k].push(v);
+  el.value = ""; save(); tState.refocus = el.dataset.chipin; render();
+}
+document.addEventListener("keydown", e => {
+  const el = e.target;
+  if (el.dataset && el.dataset.chipin) {
+    if (e.key === "Enter" || e.key === ",") { e.preventDefault(); chipAdd(el); }
+    if (e.key === "Backspace" && !el.value) { const [id, k] = el.dataset.chipin.split(":"), t = cuenta().temas.find(x => x.id === id); if (t && t[k].length) { t[k].pop(); save(); tState.refocus = el.dataset.chipin; render(); } }
+  }
+  if ((e.key === "Enter" || e.key === " ") && el.matches && el.matches("tr.click, .div .rw")) { e.preventDefault(); el.click(); }
+});
+document.addEventListener("focusout", e => { const el = e.target; if (el.dataset && el.dataset.chipin && el.value.trim()) chipAdd(el); });
+
+document.addEventListener("submit", e => {
+  e.preventDefault();
+  if (e.target.id === "carForm") {
+    const perfil = {tipo: $("#cTipo").value, comuna: S.org, autoridad: $("#cAut").value.trim(), agenda: $("#cAg").value.split(",").map(s => s.trim()).filter(Boolean), sens: [...document.querySelectorAll('input[name="sens"]:checked')].map(x => x.value), plan: $("#cPlan").value};
+    propuesta = {perfil, ...proponer(perfil)};
+    $("#propOut").innerHTML = propHtml(); const pc = $("#propCard"); pc.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"}); pc.focus({preventScroll:true});
+  }
+  if (e.target.id === "comForm") generar();
+});
+
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const act = b.dataset.act, c = cuenta();
+  if (act === "responder") { e.preventDefault(); tState.draft = b.dataset.g; tState.from = b.dataset.from || null; tState.pieza = null; tState.enf = null; if (route() === "comunicados") render(true); else location.hash = "comunicados"; }
+  if (act === "goto") goMenciones({tono: b.dataset.tono, dias: b.dataset.dias});
+  if (act === "goto-tema") goMenciones({tema: b.dataset.id});
+  if (act === "ver-criticas") { e.preventDefault(); goMenciones({tono:"cri", dias:"7"}); }
+  if (act === "f-tono") { tState.tono = b.dataset.k; render(); }
+  if (act === "f-dias") { tState.dias = b.dataset.k; render(); }
+  if (act === "f-reset") { Object.assign(tState, {tema:"todos", tono:"todos", dias:"30", q:""}); render(); }
+  if (act === "f-est") { tState.fuente.e = b.dataset.k; render(); }
+  if (act === "f-amb") { tState.fuente.a = b.dataset.k; render(); }
+  if (act === "fp") { const key = S.org + ":" + b.dataset.g; S.fp[key] = true; save(); render(); toast("Marcada como “no corresponde”. Servirá para afinar las exclusiones.", () => { delete S.fp[key]; save(); render(); }); }
+  if (act === "fp-reset") { Object.keys(S.fp).filter(k => k.startsWith(S.org+":")).forEach(k => delete S.fp[k]); save(); render(); }
+  if (act === "onb-hide") { c.onbOculto = true; save(); render(); toast("Primeros pasos ocultos.", () => { c.onbOculto = false; save(); render(); }); }
+  if (act === "tema-open") { tState.open[b.dataset.id] = !tState.open[b.dataset.id]; render(); }
+  if (act === "ctx-all") { tState.ctxAll[b.dataset.key] = true; render(); }
+  if (act === "chip-del") { const t = c.temas.find(x => x.id === b.dataset.tema); if (t) { const k = b.dataset.k, i = Number(b.dataset.i), v = t[k][i]; t[k].splice(i, 1); save(); render(); toast(`Quitaste «${v}».`, () => { t[k].splice(i, 0, v); save(); render(); }); } }
+  if (act === "quitar") { const i = c.temas.findIndex(t => t.id === b.dataset.id); if (i >= 0) { const t = c.temas.splice(i,1)[0]; c.sugeridos.unshift(t); save(); render(); toast(`Quitaste el tema ${t.nombre}.`, () => { c.sugeridos.splice(c.sugeridos.indexOf(t),1); c.temas.splice(i,0,t); save(); render(); }); } }
+  if (act === "addsug") { const i = c.sugeridos.findIndex(t => t.id === b.dataset.id); if (i >= 0) { const t = c.sugeridos.splice(i,1)[0], pl = PLANES[c.perfil.plan], lleno = c.temas.filter(x => x.activo).length >= pl.temas; if (lleno) t.origen = "Paquete adicional"; c.temas.push(t); save(); render(); toast(lleno ? `${t.nombre} agregado. Supera el plan: en producción se suma el paquete de 5 temas.` : `${t.nombre} agregado.`, () => { c.temas.splice(c.temas.indexOf(t),1); c.sugeridos.splice(i,0,t); save(); render(); }); } }
+  if (act === "activar" && propuesta) { const prev = {perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos}; c.perfil = propuesta.perfil; c.temas = propuesta.base; c.sugeridos = propuesta.sugeridos; c.caracterizada = true; propuesta = null; save(); location.hash = "temas"; toast("Listo: " + c.temas.length + " temas activos en " + S.org + ".", () => { Object.assign(c, prev); save(); render(); }); }
+  if (act === "descartar") { propuesta = null; $("#propOut").innerHTML = ""; }
+  if (act === "rep") { tState.rep = b.dataset.k; render(); }
+  if (act === "copiar-parte") { const txt = parteTexto(); try { await navigator.clipboard.writeText(txt); toast("Parte copiado. Pégalo en WhatsApp o en un correo."); } catch(err) { const ta = document.createElement("textarea"); ta.value = txt; ta.className = "draft"; ta.style.marginTop = "12px"; b.closest(".acts").after(ta); ta.focus(); ta.select(); toast("Texto seleccionado: cópialo con el teclado."); } }
+  if (act === "lectura") lectura(b);
+  if (act === "stop") ctl?.abort();
+  if (act === "aprobar") {
+    const txt = $("#kOut").value.trim(); if (!txt) return;
+    const m = tState.draft && menciones().find(x => x.g === tState.draft);
+    const pz = document.querySelector('input[name="pieza"]:checked')?.value || "comunicado";
+    S.comunicados.unshift({org: S.org, ts: Date.now(), pieza: PIEZAS[pz][0], origen: m ? m.lead.t.slice(0,70) : "Anuncio propio", texto: txt});
+    if (m) S.resp[S.org + ":" + m.g] = true;
+    save(); render(); toast(m ? "Aprobado. La noticia quedó como respondida." : "Aprobado y guardado.");
+  }
+  if (act === "copiar") { const el = $("#kOut"); try { await navigator.clipboard.writeText(el.value); toast("Borrador copiado."); } catch(err) { el.focus(); el.select(); toast("Texto seleccionado: cópialo con el teclado."); } }
+});
+
+/* IA desde la página (usa la cuenta de Claude de quien la abre) */
+let samplePromise = (window.claude && window.claude.use) ? window.claude.use("sample").catch(() => null) : Promise.resolve(null);
+let ctl = null;
+function prompt(m, pieza, enfoque, base){
+  return `Eres el asistente de comunicaciones de PregonIA para la Municipalidad de ${S.org}, en Chile. Redacta en español de Chile: ${PIEZAS[pieza][2]}. Enfoque: ${ENFOQUES[enfoque]}.
+
+Reglas obligatorias:
+1. Usa solo datos que estén en los DATOS DEL MUNICIPIO o en la NOTICIA. Si falta un dato necesario, escribe [completar: qué dato falta]. No inventes cifras, fechas, nombres ni compromisos.
+2. Toda cita textual va marcada así: [cita propuesta, validar con el vocero].
+3. No copies frases del medio; describe la noticia con palabras propias y nombra el medio.
+4. Tono institucional, sobrio y respetuoso. Sin promoción personal ni partidaria de ninguna autoridad.
+5. Devuelve solo el texto de la pieza, sin explicaciones previas.
+
+NOTICIA:
+${m ? `Medio: ${MED[m.lead.m].n}. Titular: ${m.lead.t}. Resumen: ${m.lead.res}. Tono detectado: ${tonoLbl[m.tono]}. Otros medios que la publicaron: ${m.notas.length-1}.` : "No hay noticia: es un anuncio propio."}
+
+DATOS DEL MUNICIPIO:
+${base}`;
+}
+function plantilla(m, pieza){
+  return `${PIEZAS[pieza][0]} · Municipalidad de ${S.org}\n\n[Plantilla: la IA no está disponible en esta vista]\n\nEn relación con ${m ? "lo informado por " + MED[m.lead.m].n + " (" + m.lead.res.replace(/\.$/,"") + ")" : "[completar: anuncio]"}, la Municipalidad de ${S.org} informa:\n\n1. [completar: hechos verificados]\n2. [completar: medidas adoptadas y plazos]\n3. [completar: canal de contacto para vecinos]\n\n[cita propuesta, validar con el vocero]: «[completar]»\n\nContacto de prensa: [completar]`;
+}
+function setDraft(txt){ const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = txt; const has = !!txt.trim(); const a = $("#btnAprob"), k = $("#btnCopy"); if (a) a.disabled = !has; if (k) k.disabled = !has; }
+async function generar(){
+  const c = cuenta(), pl = PLANES[c.perfil.plan];
+  const m = tState.draft && menciones().find(x => x.g === tState.draft);
+  const pieza = document.querySelector('input[name="pieza"]:checked')?.value || "comunicado", enfoque = document.querySelector('input[name="enf"]:checked')?.value || "datos", base = $("#kBase").value;
+  c.base = base;
+  const out = $("#kOut"), btn = $("#btnGen"), stop = $("#btnStop"), note = $("#kNote");
+  const sample = await samplePromise;
+  if (!sample) { out.value = plantilla(m, pieza); setDraft(out.value); c.borradores = (c.borradores||0) + 1; save(); renderChrome(); note.textContent = "La IA no está disponible en esta vista, así que usamos una plantilla. Abre la página en Claude para redactar con IA."; return; }
+  ctl = new AbortController(); btn.disabled = true; stop.hidden = false; out.value = "Redactando…";
+  try {
+    const {text} = await sample(prompt(m, pieza, enfoque, base), {signal: ctl.signal, cache: false, onText: ({text}) => { out.value = text; }});
+    out.value = text; setDraft(text); c.borradores = (c.borradores||0) + 1; save(); renderChrome();
+    note.textContent = (c.borradores > pl.borradores ? "Superaste los borradores de tu plan; en producción se suma un paquete. " : "") + "Revisa lo marcado [completar] y las citas propuestas antes de aprobar.";
+  } catch(err) {
+    out.value = err && err.text ? err.text : "";
+    if (err && (err.code === "not_granted" || err.code === "sampling_disabled")) { out.value = plantilla(m, pieza); note.textContent = "No se autorizó el uso de Claude en esta vista; usamos una plantilla."; }
+    else if (err && err.code === "cancelled") note.textContent = "Redacción detenida. Puedes editar lo que alcanzó a escribir.";
+    else if (err && err.code === "rate_limited") note.textContent = "Llegaste al límite de uso por ahora. Intenta más tarde.";
+    else note.textContent = "No se pudo terminar el borrador. Intenta de nuevo en un momento.";
+    setDraft(out.value); save();
+  } finally { btn.disabled = false; stop.hidden = true; }
+}
+async function lectura(btn){
+  const c = cuenta(), ms = menciones(c), M = metricas(ms), el = $("#lectura");
+  const sample = await samplePromise;
+  if (!sample) { el.textContent = "La IA no está disponible en esta vista. Abre la página en Claude para redactar la lectura."; return; }
+  btn.disabled = true; el.textContent = "Redactando…";
+  const datos = ms.slice(0, 25).map(m => `- [${tonoLbl[m.tono]}] ${m.lead.res} (${m.notas.length} medio(s); ${llego(escalera(m.notas)).toLowerCase()})`).join("\n");
+  const temas = c.temas.filter(t=>t.activo).map(t => { const sub = ms.filter(m => m.temas.has(t.id)), x = metricas(sub); return `${t.nombre}: ${x.vol} noticias, ${x.cri} críticas, ${llego(escalera(sub.flatMap(m => m.notas))).toLowerCase()}`; }).join("; ");
+  try {
+    const {text} = await sample(`Eres analista de reputación de PregonIA. Escribe en español de Chile la "lectura del analista" del informe de gestión mensual de la Municipalidad de ${S.org}. Lo leen el alcalde y su equipo directivo en reunión. Dos párrafos breves: qué temas de gestión marcaron la percepción y por qué, qué temas escalaron de la prensa comunal a la regional o nacional, y dos recomendaciones accionables con el área municipal responsable. Usa solo estos datos, no inventes cifras ni hechos, habla de gestión y servicios, no de la figura del alcalde, y no promuevas a ninguna autoridad ni partido.\n\nCifras del mes: ${M.vol} noticias, tono de la cobertura ${veredicto(M).n.toLowerCase()} (${conteo(M)}).\nPor tema: ${temas}\nResúmenes:\n${datos}`, {onText: ({text}) => { el.textContent = text; }});
+    lecturaTxt.gestion = text; el.textContent = text;
+  } catch(err) {
+    el.textContent = err && err.text ? err.text : (err && err.code === "not_granted" ? "No se autorizó el uso de Claude en esta vista." : "No se pudo redactar la lectura. Intenta de nuevo en un momento.");
+  } finally { btn.disabled = false; }
+}
+
+
+/* Ayuda: cómo se usa y preguntas frecuentes */
+const AYUDA_VISTA = {
+  inicio:["Inicio", "La portada del día. Arriba ves cuántas noticias críticas faltan por responder, lo último que se publicó y cuatro indicadores. \"Para revisar hoy\" pone primero la noticia crítica más importante; \"Por tema\" muestra cada tema con su última nota. Toca un indicador o un tema para ver sus noticias."],
+  menciones:["Menciones", "Todas las noticias que calzaron con tus temas. Cada noticia aparece una vez aunque la publiquen varios medios. Filtra por tono, período, tema o palabra. \"¿Por qué aparece?\" muestra qué término calzó; \"No corresponde\" la descarta y ayuda a afinar las exclusiones."],
+  comunicados:["Comunicados", "Prepara una respuesta en tres decisiones: a qué respondes, qué pieza necesitas y con qué enfoque. La IA redacta solo con la noticia y los datos del municipio; lo que falta queda marcado [completar]. Nada se publica: tú apruebas, copias y difundes."],
+  temas:["Mis temas", "Los temas que PregonIA vigila. Cada tema tiene términos (lo que se busca), contexto (palabras que deben acompañar) y exclusiones (lo que descarta). Tu plan define cuántos temas activos puedes tener."],
+  asistente:["Asistente de temas", "Responde cinco preguntas sobre el municipio y PregonIA propone los temas base de tu plan, más sugerencias para sumar. Revisa la propuesta antes de activarla."],
+  fuentes:["Fuentes", "Los 100 medios del catálogo: 50 nacionales y 50 de la Región de Valparaíso. Cada uno muestra cómo se lee y su estado: listo, requiere ajuste o restringido (se lee vía Google News)."],
+  rep_alcalde:["Reportes · Parte del alcalde", "Para el alcalde, cada lunes, en dos minutos. Dice cómo lo trató la prensa en la semana, hasta tres asuntos que se pueden complicar con qué hacer y quién se encarga, y una buena noticia para aprovechar. \"Copiar para WhatsApp\" lo deja listo para enviar."],
+  rep_mesa:["Reportes · Mesa de comunicaciones", "Para el encargado de comunicaciones, cada mañana. Críticas sin respuesta, temas que están subiendo de la prensa comunal a la regional o nacional, buenas noticias por difundir y los medios a los que conviene llamar."],
+  rep_gestion:["Reportes · Informe de gestión", "Para el alcalde y su equipo, una vez al mes. Tendencia, tono y alcance por tema, comparación interna con las comunas vecinas, lectura del analista y el respaldo con todas las notas."],
+  rep_crisis:["Reportes · Episodio crítico", "Se activa solo cuando una noticia crítica se propaga. Muestra cuántos medios la publicaron, hasta dónde llegó, la cronología y si ya hay respuesta aprobada."]
+};
+const GUIA = [
+  ["Elige el municipio", "Usa el selector de la barra superior. Cada municipio ve solo sus datos."],
+  ["Define qué vigilar", "En Ajustes, el asistente propone los temas según el perfil del municipio. Puedes ajustar términos, contexto y exclusiones."],
+  ["Revisa lo publicado", "En Menciones y en Inicio ves cada noticia con su tono, el medio y hasta dónde llegó: prensa comunal, regional o nacional."],
+  ["Responde a tiempo", "\"Preparar respuesta\" abre un borrador hecho con datos del municipio. Lo revisas, completas lo marcado y lo apruebas."],
+  ["Informa a quien decide", "En Reportes hay un informe por lector: parte semanal del alcalde, mesa diaria de comunicaciones, informe de gestión mensual y episodio crítico."]
+];
+const FAQ = [
+  ["Monitoreo", [
+    ["¿Qué medios revisa PregonIA?", "100 medios digitales: 50 nacionales y 50 de la Región de Valparaíso, incluidos los medios comunales del litoral central. La lista completa, con el estado de cada uno, está en Ajustes › Fuentes."],
+    ["¿Cada cuánto se actualiza?", "Cada 15 minutos. La barra superior muestra la hora de la última actualización. En este prototipo las noticias son ficticias."],
+    ["¿Por qué no aparece una noticia que vi?", "Puede que el medio no esté en el catálogo, que sea un medio restringido (se lee vía Google News y llega con retraso) o que la nota no calce con los términos del tema. Revisa términos, variantes y exclusiones en Ajustes › Mis temas."],
+    ["¿Por qué aparece una noticia que no tiene que ver?", "Suele ser una coincidencia de nombre, como Casablanca la película o San Antonio de Texas. Márcala como \"No corresponde\" y agrega esa palabra a las exclusiones del tema."],
+    ["¿PregonIA copia las noticias de los medios?", "No. Muestra el título, el medio, la fecha, un resumen propio de una línea y el enlace a la nota original. No reproduce el texto, respeta las reglas de cada sitio y no salta muros de pago."],
+    ["¿Revisa redes sociales?", "No. Esta versión cubre medios digitales. Las redes sociales quedan para una etapa posterior."]
+  ]],
+  ["Lectura de los resultados", [
+    ["¿Cómo se decide si una noticia es crítica, neutra o positiva?", "Una IA clasifica el tono de cada noticia respecto del tema vigilado, no del medio en general. Si no estás de acuerdo, puedes marcarlo; esas correcciones sirven para mejorar la clasificación."],
+    ["¿Qué significa \"favorable\" o \"desfavorable\"?", "Es el veredicto del período en cinco niveles, de muy desfavorable a muy favorable. Compara las noticias positivas con las críticas sobre el total: si se compensan, la cobertura es equilibrada. Siempre va con los conteos para que veas de dónde sale."],
+    ["¿Qué es \"hasta dónde llegó\"?", "Las tres barras muestran el nivel de prensa más alto que alcanzó una noticia o un tema: comunal, regional o nacional. Un tema que nace en un medio comunal y aparece después en uno regional es una señal temprana de riesgo: todavía se puede contener."],
+    ["¿Qué es el alcance?", "Un puntaje que pesa más una nota en un medio nacional que en uno local: nacional vale 3, regional 2 y local 1."],
+    ["¿Por qué dice \"muestra pequeña\"?", "Cuando hay menos de 20 noticias, unas pocas notas nuevas pueden cambiar mucho las proporciones. Úsalas como orientación, no como tendencia."],
+    ["¿Cómo se eligen los asuntos del parte del alcalde?", "Por riesgo: pesan el tono, el nivel de prensa alcanzado, cuántos medios lo publicaron, si es reciente y si ya tiene respuesta. Se muestran tres como máximo, de temas distintos."],
+    ["¿Quién define el responsable sugerido?", "PregonIA lo asigna según las palabras de la noticia (emergencias, agua, salud, obras, entre otras). Es una sugerencia: cada municipio puede ajustar ese mapa a su organigrama."]
+  ]],
+  ["Comunicados e IA", [
+    ["¿La IA publica algo por su cuenta?", "No. Solo prepara borradores. Una persona los revisa, completa y aprueba; publicar o enviar es siempre una decisión del municipio."],
+    ["¿De dónde saca los datos la IA?", "Solo de la noticia y de los datos que el municipio carga (cifras, documentos, decisiones). Si falta un dato, lo marca [completar] en vez de inventarlo, y las citas quedan marcadas para validarlas con el vocero."],
+    ["¿Qué es una aclaración por Ley 19.733?", "La ley de prensa da derecho a quien fue aludido por información inexacta o injuriosa a que el medio publique su aclaración o rectificación, dentro de los plazos que fija la ley. PregonIA prepara el borrador de la carta; conviene que lo revise el área jurídica antes de enviarlo."],
+    ["¿Puede la IA escribir sobre el alcalde?", "Puede redactar comunicados institucionales, pero evita la promoción personal o partidaria. En cuentas municipales advierte cuando un borrador se acerca a eso, por las reglas sobre uso de recursos públicos."]
+  ]],
+  ["Plan y cuenta", [
+    ["¿Qué pasa si llego al límite del plan?", "PregonIA avisa al 80% y al 100% del límite de temas, menciones o borradores. Antes de sumar un paquete conviene ajustar exclusiones; si hace falta, se suma un paquete de 5 temas."],
+    ["¿Otros municipios ven mis datos?", "No. Cada cuenta ve solo lo suyo. La comparación con las comunas vecinas usa solo noticias públicas, nunca la configuración ni los datos de otra cuenta."],
+    ["¿Cuántas personas pueden usarlo?", "El plan Comunal incluye 3 usuarios y el Regional o Político, 5."],
+    ["¿Cómo comparto el parte con el alcalde?", "En Reportes › Parte del alcalde, el botón \"Copiar para WhatsApp\" deja el texto listo para pegar en un mensaje o un correo."]
+  ]]
+];
+let helpOpen = false, helpQ = "", helpReturn = null, helpCtl = null;
+function ayudaVista(){ const k = route(); return k === "reportes" ? AYUDA_VISTA["rep_" + tState.rep] || AYUDA_VISTA.rep_alcalde : AYUDA_VISTA[k] || AYUDA_VISTA.inicio; }
+function faqHtml(){
+  const q = norm(helpQ.trim()), grupos = FAQ.map(([g, items]) => [g, items.filter(([p, r]) => !q || norm(p + " " + r).includes(q))]).filter(([, it]) => it.length), n = grupos.reduce((s, [, it]) => s + it.length, 0);
+  if (!n) return `<p class="hint">Ninguna pregunta frecuente coincide con «${esc(helpQ)}». Pregúntale a PregonIA más abajo.</p>`;
+  return (q ? `<p class="hint">${plural(n, "pregunta coincide", "preguntas coinciden")}.</p>` : "") + grupos.map(([g, items]) => `<div class="hp-grp"><h4>${g}</h4>${items.map(([p, r]) => `<details ${q ? "open" : ""}><summary>${esc(p)}</summary><p>${esc(r)}</p></details>`).join("")}</div>`).join("");
+}
+function renderHelp(){
+  const el = $("#help"); if (!el) return;
+  const [t, d] = ayudaVista();
+  el.querySelector(".hp-body").innerHTML = `
+    <section class="hp-here"><span class="kick">Estás en</span><h3>${esc(t)}</h3><p>${esc(d)}</p></section>
+    <section><h3 class="hp-h">Cómo se usa, en cinco pasos</h3><ol class="hp-guia">${GUIA.map(([a, b]) => `<li><b>${a}</b><span>${b}</span></li>`).join("")}</ol></section>
+    <section><h3 class="hp-h">Preguntas frecuentes</h3><input id="helpQ" class="hp-q" type="search" placeholder="Busca, por ejemplo: tono, WhatsApp, límite" aria-label="Buscar en las preguntas frecuentes" value="${esc(helpQ)}"><div id="faqOut">${faqHtml()}</div></section>
+    <section class="hp-ask"><h3 class="hp-h">¿No encuentras la respuesta?</h3><p class="hint" style="margin:0 0 8px">Pregúntale a PregonIA. Responde con la guía y las preguntas frecuentes de este sistema.</p>
+      <form id="helpForm"><textarea id="helpAsk" rows="2" placeholder="Por ejemplo: ¿cómo agrego un tema nuevo?" aria-label="Tu pregunta"></textarea><div style="display:flex;gap:8px;margin-top:8px"><button class="btn primary sm" type="submit" id="helpBtn">Preguntar</button><button class="btn sm" type="button" data-act="help-stop" id="helpStop" hidden>Detener</button></div></form>
+      <div id="helpAns" class="hp-ans" aria-live="polite" hidden></div></section>`;
+}
+function abrirAyuda(){
+  helpReturn = document.activeElement; helpOpen = true; renderHelp();
+  $("#help").hidden = false; $("#helpBack").hidden = false; document.body.classList.add("hp-on");
+  $("#help .hp-x").focus();
+}
+function cerrarAyuda(){
+  helpCtl?.abort(); helpOpen = false; $("#help").hidden = true; $("#helpBack").hidden = true; document.body.classList.remove("hp-on");
+  if (helpReturn && helpReturn.focus) helpReturn.focus();
+}
+async function preguntarAyuda(){
+  const q = $("#helpAsk").value.trim(), out = $("#helpAns"), btn = $("#helpBtn"), stop = $("#helpStop"); if (!q) return;
+  out.hidden = false;
+  const sample = await samplePromise;
+  if (!sample) { out.textContent = "La IA no está disponible en esta vista. Abre la página en Claude para preguntarle a PregonIA, o revisa las preguntas frecuentes."; return; }
+  const [t, d] = ayudaVista();
+  const base = `PANTALLA ACTUAL: ${t}. ${d}\n\nGUÍA:\n${GUIA.map(([a, b], i) => `${i + 1}. ${a}: ${b}`).join("\n")}\n\nPREGUNTAS FRECUENTES:\n${FAQ.flatMap(([g, it]) => it.map(([p, r]) => `[${g}] ${p} ${r}`)).join("\n")}\n\nPANTALLAS: ${Object.values(AYUDA_VISTA).map(([a, b]) => a + ": " + b).join(" | ")}`;
+  helpCtl = new AbortController(); btn.disabled = true; stop.hidden = false; out.textContent = "Pensando…";
+  try {
+    const {text} = await sample(`Eres la ayuda de PregonIA, un sistema que monitorea noticias sobre municipios en medios digitales chilenos. Responde en español de Chile, en tono cordial y directo, en máximo 120 palabras, la pregunta del usuario. Usa solo la información de abajo. Si la respuesta no está, dilo con claridad y sugiere escribir al equipo de ALTkimia; no inventes funciones, cifras ni plazos. Cuando ayude, indica dónde está la opción (por ejemplo: Ajustes › Mis temas).\n\n${base}\n\nPREGUNTA: ${q}`, {signal: helpCtl.signal, cache: false, modelTier: "quick", onText: ({text}) => { out.textContent = text; }});
+    out.textContent = text;
+  } catch(err) {
+    out.textContent = err && err.text ? err.text : err && err.code === "cancelled" ? "Respuesta detenida." : err && err.code === "not_granted" ? "No se autorizó el uso de Claude en esta vista. Revisa las preguntas frecuentes." : err && err.code === "rate_limited" ? "Llegaste al límite de uso por ahora. Intenta más tarde." : "No se pudo responder ahora. Intenta de nuevo en un momento.";
+  } finally { btn.disabled = false; stop.hidden = true; }
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  if (b.dataset.act === "help") { helpOpen ? cerrarAyuda() : abrirAyuda(); }
+  if (b.dataset.act === "help-close") cerrarAyuda();
+  if (b.dataset.act === "help-stop") helpCtl?.abort();
+});
+document.addEventListener("input", e => { if (e.target.id === "helpQ") { helpQ = e.target.value; $("#faqOut").innerHTML = faqHtml(); } });
+document.addEventListener("submit", e => { if (e.target.id === "helpForm") { e.preventDefault(); preguntarAyuda(); } });
+document.addEventListener("keydown", e => {
+  if (!helpOpen) return;
+  if (e.key === "Escape") { e.preventDefault(); cerrarAyuda(); }
+  if (e.key === "Enter" && !e.shiftKey && e.target.id === "helpAsk") { e.preventDefault(); preguntarAyuda(); }
+  if (e.key === "Tab") { const f = [...$("#help").querySelectorAll('button:not([hidden]):not(:disabled),input,textarea,summary,a[href]')].filter(x => x.offsetParent); if (!f.length) return; const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); } }
+});
+window.addEventListener("hashchange", () => { if (helpOpen) renderHelp(); });
+
+render();
+
+</script>
