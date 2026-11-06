@@ -802,13 +802,13 @@ async function pdfBlob(d){
 }
 const movil = () => matchMedia("(pointer: coarse)").matches;
 const pdfCache = {};
-/* PDF del informe diario con la gráfica del sistema: fondo ALTKimia, tarjetas de indicadores, barras y clipping por mención con enlaces. */
+/* PDF del informe diario con la gráfica del sistema en versión clara (sin fondo, apta para imprimir): tarjetas de indicadores, barras y clipping por mención con enlaces. */
 async function pdfDiario(){
   const {jsPDF} = await cargarJsPDF(), doc = new jsPDF({unit: "mm", format: "a4"}), W = 210, H = 297, M = 15, AN = W - 2 * M, PIE = H - 13;
-  const d = diarioData(), C = {bg: "#080B12", card: "#111827", line: "#1E2D4A", text: "#F0F4FF", muted: "#8B9DC3", blue: "#2196F3", blueL: "#42A5F5", track: "#1A2540",
-    cri: "#E0604A", pos: "#20A493", neu: "#8A97A8", cris: "#3A1C16", poss: "#0F2E2B", neus: "#1A2433"};
+  const d = diarioData(), C = {card: "#FFFFFF", line: "#D8D4CC", text: "#111827", muted: "#56627A", blue: "#1976D2", blueL: "#1565C0", track: "#ECEAE4",
+    cri: "#C8412C", pos: "#00897B", neu: "#6B7785", cris: "#FBE7E2", poss: "#DCF1EE", neus: "#EDF0F4"};
   const T = s => pdfTxt(String(s ?? "")), tc = k => C[k] || C.neu, tsoft = k => C[k + "s"] || C.neus;
-  const fondo = () => { doc.setFillColor(C.bg); doc.rect(0, 0, W, H, "F"); doc.setFillColor("#0E1A2E"); for (let y = 6; y < H; y += 8) for (let x = 6; x < W; x += 8) doc.circle(x, y, 0.16, "F"); };
+  const fondo = () => {}; // página blanca, sin color de fondo
   const fuente = (size, bold, font = "helvetica") => { doc.setFont(font, bold ? "bold" : "normal"); doc.setFontSize(size); };
   const txt = (s, x, y, o = {}) => { fuente(o.size || 9, o.bold, o.font); doc.setTextColor(o.color || C.text); if (doc.setCharSpace) doc.setCharSpace(o.cs || 0); doc.text(T(s), x, y, {align: o.align || "left"}); if (doc.setCharSpace) doc.setCharSpace(0); };
   const lineas = (s, w, size, bold) => { fuente(size, bold); return doc.splitTextToSize(T(s), w); };
@@ -816,8 +816,8 @@ async function pdfDiario(){
   const recorta = (s, w, size, bold) => { let x = T(s); if (ancho(x, size, bold) <= w) return x; while (x.length > 3 && ancho(x + "…", size, bold) > w) x = x.slice(0, -1); return x.trim() + "…"; };
   const tarjeta = (x, y, w, h) => { doc.setFillColor(C.card); doc.setDrawColor(C.line); doc.setLineWidth(0.25); doc.roundedRect(x, y, w, h, 2, 2, "FD"); };
   const ceja = (s, x, y, color = C.blueL) => txt(String(s).toUpperCase(), x, y, {size: 6.8, bold: true, color, cs: 0.35});
-  const marca = (x, yb, s) => { doc.setFillColor(C.blue); [0.42, 0.7, 1].forEach((h, i) => doc.roundedRect(x + i * s * 0.55, yb - s * h, s * 0.38, s * h, s * 0.07, s * 0.07, "F")); return x + s * 1.6; };
-  const logo = (x, y, size) => { const x2 = marca(x, y, size * 0.33) + 0.6; txt("Pregon", x2, y, {size, bold: true}); txt("IA", x2 + ancho("Pregon", size, true), y, {size, bold: true, color: C.blue}); };
+  const marca = (x, yb, s) => { doc.setFillColor("#2196F3"); [0.42, 0.7, 1].forEach((h, i) => doc.roundedRect(x + i * s * 0.55, yb - s * h, s * 0.38, s * h, s * 0.07, s * 0.07, "F")); return x + s * 1.6; };
+  const logo = (x, y, size) => { const x2 = marca(x, y, size * 0.33) + 0.6; txt("Pregon", x2, y, {size, bold: true}); txt("IA", x2 + ancho("Pregon", size, true), y, {size, bold: true, color: "#2196F3"}); };
   const barra = (x, y, w, frac, color = C.blue) => { doc.setFillColor(C.track); doc.roundedRect(x, y, w, 1.8, 0.9, 0.9, "F"); if (frac > 0) { doc.setFillColor(color); doc.roundedRect(x, y, Math.max(1.8, w * frac), 1.8, 0.9, 0.9, "F"); } };
   const senal = (x, yb, nivel, color) => [1.4, 2.3, 3.2].forEach((h, i) => { doc.setFillColor(i <= nivel ? color : C.track); doc.roundedRect(x + i * 1.6, yb - h, 1.1, h, 0.3, 0.3, "F"); });
   const cabeceraCorta = () => { logo(M, 12, 10); txt(`Informe diario · ${S.org} · ${d.etiqueta}`, W - M, 11.5, {size: 7.5, color: C.muted, align: "right"}); doc.setDrawColor(C.line); doc.setLineWidth(0.3); doc.line(M, 16, W - M, 16); return 22; };
