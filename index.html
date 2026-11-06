@@ -185,6 +185,11 @@ body.vid-on{overflow:hidden}
 .clip-p .nolink{font-family:var(--f-ui);font-size:11.5px;color:var(--muted)}
 .clip-a{display:flex;gap:8px}
 @media (max-width:820px){ .clip-p li{grid-template-columns:44px minmax(0,1fr)} .clip-p .niv{grid-column:2} .clip-p .md,.clip-p .tt{grid-column:1 / -1} .clip-p .niv{justify-self:start} }
+.dlg{width:min(480px,100%)}
+.cta-info{display:grid;gap:2px;padding:8px 12px 10px;border-bottom:1px solid var(--line);margin-bottom:4px;font-size:12.5px;color:var(--muted)}
+.cta-info b{color:var(--ink);font-size:13.5px}
+.solo-lect{font-size:11.5px;font-weight:600;border:1px solid currentColor;border-radius:var(--r-btn);padding:3px 8px}
+#org:disabled{opacity:1;cursor:default}
 .shr-pop{position:fixed;z-index:60;display:grid;min-width:240px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(15,23,42,.18)}
 .shr-pop button{all:unset;box-sizing:border-box;padding:10px 12px;border-radius:7px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;min-height:40px;display:flex;align-items:center}
 .shr-pop button:hover,.shr-pop button:focus-visible{background:var(--accent-soft);color:var(--accent)}
@@ -1106,7 +1111,7 @@ function renderChrome(){
   const pend = pendientes().length;
   const link = ([key, name], ic, cnt) => `<a href="#${key}" ${key===k || (key==="temas" && cfg) ? 'aria-current="page"' : ""}>${icon(ic)}<span>${name}</span>${cnt ? `<span class="count" aria-label="${cnt} por revisar">${cnt}</span>` : ""}</a>`;
   $("#nav").innerHTML = MAIN.map(x => link(x, x[0], x[0]==="menciones" ? pend : 0)).join("") + link(["temas","Ajustes"], "config", 0);
-  $("#fecha").textContent = "Monitoreando 100 medios · actualizado " + new Date(NOW - 7*60000).toLocaleTimeString("es-CL", {hour:"2-digit", minute:"2-digit", hourCycle:"h23"});
+  $("#fecha").textContent = PILOTO && PILOTO.activo ? (PILOTO.lectura ? "Lectura de medios cada 30 min · última " + horaCorta(PILOTO.lectura.fin) : "Lectura de medios cada 30 min") : "Monitoreando 100 medios · actualizado " + new Date(NOW - 7*60000).toLocaleTimeString("es-CL", {hour:"2-digit", minute:"2-digit", hourCycle:"h23"});
   $("#bnav").innerHTML = MAIN.map(x => link(x, x[0], x[0]==="menciones" ? pend : 0)).join("") + link(["temas","Ajustes"], "config", 0);
 }
 
@@ -1511,7 +1516,7 @@ function repDiario(){
     <ol class="clip-l">${d.grupos.map(item).join("")}</ol>
   </section>
   <div class="parte-sh">${shareBar("diario")}</div>
-  <p class="note" style="margin-top:12px">${MODO.tipo === "real" ? "Hecho con noticias reales leídas de los medios del catálogo." : "En la demostración las notas no tienen enlace; con Noticias reales cada titular lleva a su fuente."} En el piloto, este informe llega solo cada mañana a las 8:00 por correo o WhatsApp.</p>`;
+  <p class="note" style="margin-top:12px">${MODO.tipo !== "demo" ? "Hecho con noticias reales leídas de los medios del catálogo." : "En la demostración las notas no tienen enlace; con Noticias reales cada titular lleva a su fuente."} En el piloto, este informe llega solo cada mañana a las 8:00 por correo o WhatsApp.</p>`;
 }
 function diarioTexto(){
   const d = diarioData(), L = [`*PregonIA · Informe diario · ${S.org}*`, d.etiqueta, ""];
@@ -1848,7 +1853,7 @@ async function pdfDiario(){
       y += h + 4;
     }
   }
-  const nota = MODO.tipo === "real" ? "Noticias reales leídas de los medios del catálogo de PregonIA. Los resúmenes son propios; el texto de los medios no se reproduce." : "Demostración con noticias ficticias: las notas no tienen enlace. Con Noticias reales cada publicación lleva a su fuente.";
+  const nota = MODO.tipo !== "demo" ? "Noticias reales leídas de los medios del catálogo de PregonIA. Los resúmenes son propios; el texto de los medios no se reproduce." : "Demostración con noticias ficticias: las notas no tienen enlace. Con Noticias reales cada publicación lleva a su fuente.";
   const n = doc.getNumberOfPages();
   for (let p = 1; p <= n; p++) { doc.setPage(p); doc.setDrawColor(C.line); doc.setLineWidth(0.3); doc.line(M, PIE, W - M, PIE); txt("PregonIA · Un producto de ALTKimia", M, PIE + 5, {size: 7, color: C.muted}); txt(`Página ${p} de ${n}`, W - M, PIE + 5, {size: 7, color: C.muted, align: "right"}); if (p === n) lineas(nota, AN, 6.5).slice(0, 2).forEach((l, k) => txt(l, M, PIE - 5.5 + k * 3, {size: 6.5, color: C.muted})); }
   return doc.output("blob");
@@ -1883,7 +1888,7 @@ function ubicarMenu(){
   m.style.top = (r.bottom + 6 + h > innerHeight && r.top - 6 - h > 0 ? r.top - 6 - h : r.bottom + 6) + "px";
 }
 function cerrarMenu(){ const m = $("#shrPop"); if (!m) return; m._origen?.setAttribute("aria-expanded", "false"); m.remove(); }
-document.addEventListener("click", e => { if ($("#shrPop") && !e.target.closest("#shrPop") && !e.target.closest('[data-via="mail"]')) cerrarMenu(); }, true);
+document.addEventListener("click", e => { if ($("#shrPop") && !e.target.closest("#shrPop") && !e.target.closest('[data-via="mail"]') && !e.target.closest('[data-act="cuenta"]')) cerrarMenu(); }, true);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#shrPop")) { const o = $("#shrPop")._origen; cerrarMenu(); o?.focus(); } });
 addEventListener("scroll", ubicarMenu, {passive: true, capture: true}); addEventListener("resize", ubicarMenu);
 async function compartir(b){
@@ -2005,7 +2010,7 @@ document.addEventListener("click", async e => {
     const txt = $("#kOut").value.trim(); if (!txt) return;
     const m = tState.draft && menciones().find(x => x.g === tState.draft);
     const pz = document.querySelector('input[name="pieza"]:checked')?.value || "comunicado";
-    S.comunicados.unshift({org: S.org, ts: Date.now(), pieza: PIEZAS[pz][0], origen: m ? m.lead.t.slice(0,70) : "Anuncio propio", texto: txt});
+    S.comunicados.unshift({org: S.org, ts: Date.now(), pieza: PIEZAS[pz][0], origen: m ? m.lead.t.slice(0,70) : "Anuncio propio", texto: txt, g: m ? m.g : null});
     if (m) S.resp[S.org + ":" + m.g] = true;
     save(); render(); toast(m ? "Aprobado. La noticia quedó como respondida." : "Aprobado y guardado.");
   }
@@ -2206,12 +2211,14 @@ document.addEventListener("keydown", e => {
 window.addEventListener("hashchange", () => { if (helpOpen) renderHelp(); });
 
 
+var PILOTO; // estado del modo piloto (src/piloto.js); var para que exista antes de que ese módulo se cargue
 /* Noticias reales (etapa 1): /api/noticias lee los medios del catálogo y la demostración queda a un clic. */
 const NOTAS_DEMO = NOTAS.slice(), MODO_KEY = "pregonia-modo";
 let MODO = {tipo: "demo", info: null, cargando: false, disponible: false};
 const horaCorta = iso => new Date(iso).toLocaleTimeString("es-CL", {hour: "2-digit", minute: "2-digit", hourCycle: "h23"});
 function pintarModo(){
   const el = $("#demo"); if (!el) return;
+  if (PILOTO && PILOTO.activo) return pintarPiloto();
   const real = MODO.tipo === "real" && MODO.info, i = MODO.info;
   // Selector siempre visible con las dos opciones; en claude.ai (sin servidor) "Reales" lleva al sitio publicado.
   const sw = MODO.disponible || MODO.cargando
@@ -2222,11 +2229,12 @@ function pintarModo(){
   el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">Noticias y cifras ficticias · catálogo de 100 medios real</span><span class="solo-movil">Datos ficticios</span></span>${sw}`;
 }
 async function cargarReales(force){
+  if (PILOTO && PILOTO.activo) return;
   if (MODO.cargando || (MODO.tipo === "real" && MODO.info && MODO.info.comuna === S.org && !force)) return; MODO.cargando = true; pintarModo();
   const org = S.org;
   try {
     const r = await fetch("/api/noticias?comuna=" + encodeURIComponent(org)); if (!r.ok) throw new Error("HTTP " + r.status);
-    const j = await r.json(); if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
+    const j = await r.json(); if (PILOTO && PILOTO.activo) { MODO.cargando = false; return; } if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
     const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + org + " comuna"), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna
     refrescarNotas(nuevas); MODO = {...MODO, tipo: "real", info: {...j, notas: nuevas}, cargando: false};
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
@@ -2399,6 +2407,215 @@ document.addEventListener("keydown", e => {
 });
 
 
+/* Modo piloto (etapa 2): inicio de sesión con Supabase y datos compartidos por municipio.
+   Las noticias vienen de la base (lectura programada cada 30 minutos); temas, marcas, respuestas aprobadas y publicaciones
+   agregadas se guardan en la base y las ve todo el equipo. La base registra sola quién hizo qué (tabla actividad).
+   Sin sesión, la aplicación sigue siendo la demostración de siempre. */
+PILOTO = {activo: false, disponible: false, sb: null, user: null, perfil: null, muni: null, editor: false, snap: null, timer: null, sinc: false, pendiente: false, estado: "", lectura: null};
+const ROLES = {admin: "Administración", comunicaciones: "Comunicaciones", alcalde: "Alcalde", directivo: "Equipo directivo", lector: "Solo lectura"};
+const cargarSupabase = () => cargarScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js", "supabase");
+const ICO_USR = '<circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-3.6 4.4-5.4 8-5.4s6.5 1.8 8 5.4"/>';
+
+/* Acceso en la barra superior */
+function pintarAcceso(){
+  const tools = $(".tools"); if (!tools || !PILOTO.disponible) return;
+  let b = $("#cuentaBtn");
+  if (!b) { b = document.createElement("button"); b.id = "cuentaBtn"; b.type = "button"; b.className = "helpbtn"; tools.insertBefore(b, tools.firstChild); }
+  if (PILOTO.activo) { const n = PILOTO.perfil.nombre || PILOTO.user.email; b.dataset.act = "cuenta"; b.setAttribute("aria-haspopup", "menu"); b.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO_USR}</svg><span>${esc(n.split(" ")[0])}</span>`; b.title = `${n} · ${ROLES[PILOTO.perfil.rol] || PILOTO.perfil.rol}`; }
+  else { b.dataset.act = "login"; b.removeAttribute("aria-haspopup"); b.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO_USR}</svg><span>Ingresar</span>`; b.title = "Ingresar al piloto"; }
+}
+function pintarPiloto(){
+  const el = $("#demo"), p = PILOTO, l = p.lectura, n = NOTAS.length;
+  el.className = "demo real";
+  el.innerHTML = `<span class="demo-txt"><b>Piloto</b>${esc(p.muni.nombre)}<span class="demo-mas"> · ${plural(n, "nota", "notas")} en 30 días${l ? ` · última lectura de medios ${horaCorta(l.fin)} (${l.fuentes_ok} de ${l.fuentes_total} fuentes)` : " · aún sin lecturas de medios"}${p.estado ? " · " + p.estado : ""}</span></span>${p.editor ? "" : `<span class="solo-lect">Solo lectura</span>`}`;
+}
+
+/* Diálogos: ingreso, nueva contraseña y cuenta sin municipio */
+function dialogo(id, titulo, sub, cuerpo){
+  cerrarDialogo();
+  const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "dlgBack";
+  ov.innerHTML = `<section class="vid cap dlg" role="dialog" aria-modal="true" aria-labelledby="${id}T"><header class="vid-h"><div><h2 id="${id}T">${titulo}</h2><p>${sub}</p></div><button class="btn ghost" type="button" data-act="dlg-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>${cuerpo}</section>`;
+  dialogo.origen = document.activeElement; document.body.appendChild(ov); document.body.classList.add("vid-on");
+  const f = ov.querySelector("input, button.btn:not(.ghost)"); if (f) f.focus();
+}
+function cerrarDialogo(){ const o = $("#dlgBack"); if (!o) return; o.remove(); document.body.classList.remove("vid-on"); if (dialogo.origen && dialogo.origen.isConnected) dialogo.origen.focus(); }
+function abrirLogin(){
+  dialogo("login", "Ingresar a PregonIA", "Para los equipos municipales del piloto. Si aún no tienes cuenta, pide una invitación a ALTKimia.", `
+    <form class="cap-f" id="loginForm" novalidate>
+      <label class="cap-l">Correo<input id="lgCorreo" type="email" autocomplete="username" inputmode="email" required></label>
+      <label class="cap-l">Contraseña<input id="lgClave" type="password" autocomplete="current-password" required></label>
+      <p class="cap-err" id="lgErr" role="alert" hidden></p>
+      <div class="cap-acts"><button class="btn alt" type="submit" id="lgOk">Ingresar</button><button class="btn" type="button" data-act="dlg-close">Cancelar</button><button class="btn ghost" type="button" data-act="olvide">Olvidé mi contraseña</button></div>
+    </form>`);
+}
+function pedirClave(tipo){
+  dialogo("clave", tipo === "invite" ? "Crea tu contraseña" : "Nueva contraseña", "Mínimo 10 caracteres. Úsala junto a tu correo para ingresar desde cualquier equipo.", `
+    <form class="cap-f" id="claveForm" novalidate>
+      <label class="cap-l">Contraseña<input id="ckA" type="password" autocomplete="new-password" minlength="10" required></label>
+      <label class="cap-l">Repítela<input id="ckB" type="password" autocomplete="new-password" minlength="10" required></label>
+      <p class="cap-err" id="ckErr" role="alert" hidden></p>
+      <div class="cap-acts"><button class="btn alt" type="submit">Guardar contraseña</button></div>
+    </form>`);
+}
+function errorEn(id, msg, foco){ const e = $(id); e.textContent = msg; e.hidden = false; if (foco) $(foco).focus(); }
+async function ingresar(e){
+  e.preventDefault();
+  const correo = $("#lgCorreo").value.trim(), clave = $("#lgClave").value, ok = $("#lgOk");
+  if (!/^\S+@\S+\.\S+$/.test(correo)) return errorEn("#lgErr", "Escribe tu correo.", "#lgCorreo");
+  if (!clave) return errorEn("#lgErr", "Escribe tu contraseña.", "#lgClave");
+  ok.disabled = true; ok.textContent = "Ingresando…";
+  const {data, error} = await PILOTO.sb.auth.signInWithPassword({email: correo, password: clave});
+  if (error) { ok.disabled = false; ok.textContent = "Ingresar"; return errorEn("#lgErr", /invalid/i.test(error.message) ? "Correo o contraseña incorrectos." : "No se pudo ingresar: " + error.message, "#lgClave"); }
+  cerrarDialogo(); await entrarPiloto(data.user);
+}
+async function guardarClave(e){
+  e.preventDefault();
+  const a = $("#ckA").value, b = $("#ckB").value;
+  if (a.length < 10) return errorEn("#ckErr", "Usa al menos 10 caracteres.", "#ckA");
+  if (a !== b) return errorEn("#ckErr", "Las contraseñas no coinciden.", "#ckB");
+  const {error} = await PILOTO.sb.auth.updateUser({password: a});
+  if (error) return errorEn("#ckErr", "No se pudo guardar: " + error.message);
+  cerrarDialogo(); toast("Contraseña guardada.");
+}
+async function olvide(){
+  const correo = ($("#lgCorreo") && $("#lgCorreo").value.trim()) || "";
+  if (!/^\S+@\S+\.\S+$/.test(correo)) return errorEn("#lgErr", "Escribe tu correo y vuelve a tocar «Olvidé mi contraseña».", "#lgCorreo");
+  const {error} = await PILOTO.sb.auth.resetPasswordForEmail(correo, {redirectTo: location.origin + "/"});
+  if (error) return errorEn("#lgErr", "No se pudo enviar el correo: " + error.message);
+  cerrarDialogo(); toast("Te enviamos un correo para crear una nueva contraseña.");
+}
+function menuCuenta(b){
+  if ($("#shrPop")) { cerrarMenu(); return; }
+  const p = PILOTO, m = document.createElement("div"); m.className = "shr-pop"; m.id = "shrPop"; m.setAttribute("role", "menu");
+  m.innerHTML = `<div class="cta-info"><b>${esc(p.perfil.nombre || p.user.email)}</b><span>${esc(p.user.email)}</span><span>${esc(ROLES[p.perfil.rol] || p.perfil.rol)} · ${esc(p.muni.nombre)}</span></div><button type="button" role="menuitem" data-act="recargar-piloto">Actualizar datos</button><button type="button" role="menuitem" data-act="salir">Salir</button>`;
+  document.body.appendChild(m); m._origen = b; ubicarMenu(); m.querySelector("button").focus({preventScroll: true});
+}
+
+/* Sesión */
+async function entrarPiloto(user){
+  const sb = PILOTO.sb;
+  const {data: perfil, error} = await sb.from("perfiles").select("nombre, rol, municipio_id, municipios(id, comuna, nombre, plan)").eq("id", user.id).maybeSingle();
+  if (error || !perfil || !perfil.municipios) {
+    dialogo("sinmuni", "Tu cuenta aún no tiene municipio", "Ingresaste bien, pero falta asignarte un municipio y un rol. Pídeselo a ALTKimia o al administrador del piloto.", `<div class="cap-f"><p class="hint" style="margin:0">${esc(user.email)}</p><div class="cap-acts"><button class="btn" type="button" data-act="salir">Salir</button></div></div>`);
+    return;
+  }
+  Object.assign(PILOTO, {activo: true, user, perfil, muni: perfil.municipios, editor: ["admin", "comunicaciones"].includes(perfil.rol)});
+  if (COMUNAS.includes(PILOTO.muni.comuna)) S.org = PILOTO.muni.comuna;
+  $("#org").disabled = true; $("#org").title = "En el piloto ves solo tu municipio";
+  pintarAcceso();
+  try { await cargarDatosPiloto(); toast(`Hola, ${(perfil.nombre || "").split(" ")[0] || "bienvenido"}. Estás en el piloto de ${PILOTO.muni.nombre}.`); }
+  catch(e) { toast("No se pudieron cargar los datos del piloto: " + (e.message || e)); }
+}
+const capAFila = x => ({id: x.id, municipio_id: PILOTO.muni.id, medio_id: MED[x.m] && x.m < FB_ID0 ? x.m : null, medio_nombre: MED[x.m] ? MED[x.m].n : "Página de Facebook", medio_ambito: MED[x.m] ? MED[x.m].a : "local",
+  url: x.url || null, titulo: x.t, resumen: x.res, palabras: x.x, tono: x.tono, grupo: x.g, publicado: new Date(x.ts).toISOString(), indice: norm(x.t + " " + x.res + " " + x.x).slice(0, 1000)});
+function paginaFB(nombre, ambito){
+  let p = S.fbPaginas.find(z => norm(z.n) === norm(nombre));
+  if (!p) { p = {id: FB_ID0 + S.fbPaginas.length + 1, n: nombre, a: ambito || "local", c: ambito === "local" ? S.org : ""}; S.fbPaginas.push(p); registrarPagina(p); }
+  return p.id;
+}
+const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null});
+async function cargarDatosPiloto(){
+  const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 32 * DAY).toISOString();
+  const pide = q => q.then(r => { if (r.error) throw new Error(r.error.message); return r.data; });
+  const [men, mar, com, cap, lec, mun] = await Promise.all([
+    pide(sb.from("menciones").select("tono, resumen, palabras, grupo, notas!inner(id, medio_id, url, titulo, publicado)").eq("municipio_id", mid).eq("rel", true).gte("notas.publicado", desde).limit(5000)),
+    pide(sb.from("marcas").select("grupo, tipo").eq("municipio_id", mid)),
+    pide(sb.from("comunicados").select("id, grupo, pieza, origen, texto, creado").eq("municipio_id", mid).order("creado", {ascending: false}).limit(300)),
+    pide(sb.from("capturas").select("*").eq("municipio_id", mid).gte("publicado", desde)),
+    pide(sb.from("lecturas").select("fin, fuentes_ok, fuentes_total").not("fin", "is", null).order("id", {ascending: false}).limit(1)),
+    pide(sb.from("municipios").select("config").eq("id", mid).single())
+  ]);
+  const c = cuenta();
+  if (mun.config && mun.config.temas) Object.assign(c, mun.config);
+  else if (PILOTO.editor) await pide(sb.from("municipios").update({config: configDe(c)}).eq("id", mid).select("id"));  // primera vez: se sube la caracterización actual
+  const notas = men.filter(r => MED[r.notas.medio_id]).map(r => { const n = r.notas, t = n.titulo, res = r.resumen || t, x = r.palabras || "";
+    return {id: n.id, m: n.medio_id, ts: Date.parse(n.publicado), t, b: "", x, tono: r.tono || "neu", res, g: String(r.grupo || n.id), url: n.url, hay: norm(t + " " + res + " " + x + " " + org + " comuna"), ht: norm(t), real: true}; });
+  Object.keys(S.fp).forEach(k => { if (k.startsWith(org + ":")) delete S.fp[k]; });
+  Object.keys(S.resp).forEach(k => { if (k.startsWith(org + ":")) delete S.resp[k]; });
+  mar.forEach(m => { (m.tipo === "respondida" ? S.resp : S.fp)[org + ":" + m.grupo] = true; });
+  S.comunicados = S.comunicados.filter(x => x.org !== org).concat(com.map(x => ({org, ts: Date.parse(x.creado), pieza: x.pieza, origen: x.origen || "", texto: x.texto, g: x.grupo, dbid: x.id})));
+  S.capturas = S.capturas.filter(x => x.org !== org).concat(cap.map(x => ({id: x.id, org, m: x.medio_id && MED[x.medio_id] ? x.medio_id : paginaFB(x.medio_nombre, x.medio_ambito), via: "facebook", ts: Date.parse(x.publicado), t: x.titulo, res: x.resumen || x.titulo, x: x.palabras || "", tono: x.tono || "neu", g: x.grupo || x.id, url: x.url || "", hay: (x.indice || "") + " " + norm(org) + " comuna"})));
+  PILOTO.lectura = lec[0] || null; PILOTO.estado = "";
+  MODO = {...MODO, tipo: "piloto", info: null, cargando: false};
+  guardarLocal(); refrescarNotas(notas); PILOTO.snap = serializar();
+  pintarModo(); render();
+}
+
+/* Sincronización: cada vez que la aplicación guarda, se comparan los datos con la última versión de la base y se envían solo los cambios. */
+function serializar(){
+  const org = S.org, lista = o => Object.keys(o).filter(k => k.startsWith(org + ":") && o[k]).map(k => k.slice(org.length + 1)).sort();
+  return {fp: lista(S.fp), resp: lista(S.resp), cap: S.capturas.filter(x => x.org === org).map(x => x.id), com: S.comunicados.filter(x => x.org === org && !x.dbid).length, config: JSON.stringify(configDe(cuenta()))};
+}
+const guardarLocal = save;
+save = function(){ guardarLocal(); if (PILOTO.activo) { clearTimeout(PILOTO.timer); PILOTO.timer = setTimeout(sincronizar, 400); } };
+async function sincronizar(){
+  if (!PILOTO.activo || !PILOTO.snap) return;
+  if (PILOTO.sinc) { PILOTO.pendiente = true; return; }
+  const ahora = serializar(), antes = PILOTO.snap, dif = (a, b) => a.filter(x => !b.includes(x));
+  const hay = dif(ahora.fp, antes.fp).length || dif(antes.fp, ahora.fp).length || dif(ahora.resp, antes.resp).length || dif(antes.resp, ahora.resp).length || ahora.com || dif(ahora.cap, antes.cap).length || dif(antes.cap, ahora.cap).length || ahora.config !== antes.config;
+  if (!hay) return;
+  if (!PILOTO.editor) { toast("Tu perfil es de solo lectura: ese cambio no se guarda."); return cargarDatosPiloto().catch(() => {}); }
+  PILOTO.sinc = true; PILOTO.estado = "guardando…"; pintarModo();
+  const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, ops = [];
+  const pide = q => Promise.resolve(q).then(r => { if (r && r.error) throw new Error(r.error.message); return r && r.data; });
+  try {
+    for (const [k, tipo] of [["fp", "no_corresponde"], ["resp", "respondida"]]) {
+      const add = dif(ahora[k], antes[k]), del = dif(antes[k], ahora[k]);
+      if (add.length) ops.push(pide(sb.from("marcas").upsert(add.map(grupo => ({municipio_id: mid, grupo, tipo})), {onConflict: "municipio_id,grupo,tipo", ignoreDuplicates: true})));
+      if (del.length) ops.push(pide(sb.from("marcas").delete().eq("municipio_id", mid).eq("tipo", tipo).in("grupo", del)));
+    }
+    S.comunicados.filter(x => x.org === org && !x.dbid).forEach(x => ops.push(pide(sb.from("comunicados").insert({municipio_id: mid, grupo: x.g || null, pieza: x.pieza, origen: x.origen || null, texto: x.texto}).select("id").single()).then(d => { x.dbid = d.id; })));
+    const capAdd = dif(ahora.cap, antes.cap), capDel = dif(antes.cap, ahora.cap);
+    if (capAdd.length) ops.push(pide(sb.from("capturas").upsert(S.capturas.filter(x => x.org === org && capAdd.includes(x.id)).map(capAFila), {onConflict: "id", ignoreDuplicates: true})));
+    if (capDel.length) ops.push(pide(sb.from("capturas").delete().eq("municipio_id", mid).in("id", capDel)));
+    if (ahora.config !== antes.config) ops.push(pide(sb.from("municipios").update({config: JSON.parse(ahora.config), actualizado: new Date().toISOString()}).eq("id", mid)));
+    await Promise.all(ops);
+    guardarLocal(); PILOTO.snap = serializar(); PILOTO.estado = "cambios guardados " + horaHM(Date.now());
+  } catch(e) {
+    PILOTO.estado = ""; toast("No se pudo guardar en la base (" + (e.message || e) + "). Recargamos los datos del equipo.");
+    await cargarDatosPiloto().catch(() => {});
+  } finally {
+    PILOTO.sinc = false; pintarModo();
+    if (PILOTO.pendiente) { PILOTO.pendiente = false; sincronizar(); }
+  }
+}
+async function salir(){
+  try { await PILOTO.sb.auth.signOut(); } catch(e) {}
+  try { localStorage.removeItem(KEY); localStorage.setItem(MODO_KEY, "demo"); } catch(e) {}  // en equipos compartidos no queda copia de los datos del municipio
+  location.hash = "inicio"; location.reload();
+}
+
+/* Eventos */
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return; const a = b.dataset.act;
+  if (a === "login") abrirLogin();
+  if (a === "dlg-close") cerrarDialogo();
+  if (a === "olvide") olvide();
+  if (a === "cuenta") menuCuenta(b);
+  if (a === "salir") { cerrarMenu(); salir(); }
+  if (a === "recargar-piloto") { cerrarMenu(); cargarDatosPiloto().then(() => toast("Datos actualizados.")).catch(er => toast("No se pudieron actualizar: " + er.message)); }
+});
+document.addEventListener("click", e => { if (e.target.id === "dlgBack") cerrarDialogo(); });
+document.addEventListener("submit", e => { if (e.target.id === "loginForm") ingresar(e); if (e.target.id === "claveForm") guardarClave(e); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#dlgBack")) { e.preventDefault(); cerrarDialogo(); } });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && PILOTO.activo && !PILOTO.sinc && !PILOTO.timer) cargarDatosPiloto().catch(() => {}); });
+setInterval(() => { if (PILOTO.activo && document.visibilityState === "visible" && !PILOTO.sinc) cargarDatosPiloto().catch(() => {}); }, 5 * 60000);
+
+(async function iniciarPiloto(){
+  if (!/^https?:$/.test(location.protocol)) return;
+  let cfg; try { cfg = await (await fetch("/api/config", {cache: "no-store"})).json(); } catch(e) { return; }
+  if (!cfg || !cfg.supabase) return;
+  const tipoEnlace = new URLSearchParams(location.hash.slice(1)).get("type");  // invite o recovery cuando se llega desde un correo de Supabase
+  const lib = await cargarSupabase().catch(() => null); if (!lib) return;
+  PILOTO.sb = lib.createClient(cfg.supabase.url, cfg.supabase.key, {auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: true}});
+  PILOTO.disponible = true; pintarAcceso();
+  PILOTO.sb.auth.onAuthStateChange(ev => { if (ev === "PASSWORD_RECOVERY") pedirClave("recovery"); });
+  const {data: {session}} = await PILOTO.sb.auth.getSession();
+  if (/access_token=|type=/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search + "#inicio");
+  if (session) { await entrarPiloto(session.user); if (tipoEnlace === "invite" || tipoEnlace === "recovery") pedirClave(tipoEnlace); }
+})();
+
+
 /* Video resumen del parte del alcalde.
    Escenas dibujadas en canvas a partir de parteData(); se exporta a MP4 con WebCodecs + mp4-muxer
    (más rápido que tiempo real) y, si el navegador no lo permite, se graba con MediaRecorder. Todo en el navegador. */
@@ -2540,7 +2757,7 @@ function vcabecera(ctx, plan){
   vfont(ctx, 700, 40, VF.h); ctx.textAlign = "left"; ctx.fillStyle = VC.text; ctx.fillText("Pregon", 60, 140); const w = ctx.measureText("Pregon").width; ctx.fillStyle = VC.blue; ctx.fillText("IA", 60 + w, 140);
   vfont(ctx, 500, 30, VF.b); ctx.textAlign = "right"; ctx.fillStyle = VC.muted; ctx.fillText(plan.org + " · " + plan.per, VW - 60, 138);
 }
-function vpie(ctx){ vfont(ctx, 400, 26, VF.b); ctx.textAlign = "center"; ctx.fillStyle = "rgba(139,157,195,.8)"; ctx.fillText(typeof MODO !== "undefined" && MODO.tipo === "real" ? "PregonIA · Noticias reales de medios digitales" : "PregonIA · Prototipo con noticias ficticias", VW / 2, VH - 60); }
+function vpie(ctx){ vfont(ctx, 400, 26, VF.b); ctx.textAlign = "center"; ctx.fillStyle = "rgba(139,157,195,.8)"; ctx.fillText(typeof MODO !== "undefined" && MODO.tipo !== "demo" ? "PregonIA · Noticias reales de medios digitales" : "PregonIA · Prototipo con noticias ficticias", VW / 2, VH - 60); }
 function vkicker(ctx, txt, y, color, a){ return vtexto(ctx, txt.toUpperCase(), 90, y, {px: 32, w: 700, fam: VF.h, color, a, ls: 5}); }
 
 /* Escenas */
@@ -2721,7 +2938,7 @@ function videoAbrir(){
         <button class="btn alt" type="button" data-act="vid-make" id="vidMake">Preparar video MP4</button>
         <div class="vid-prog" id="vidProg" hidden><span class="bar"><i style="width:0%"></i></span><span class="mono" id="vidPct">0%</span><button class="btn sm" type="button" data-act="vid-stop">Cancelar</button></div>
         <div class="vid-out" id="vidOut" hidden><button class="btn b-wa" type="button" data-act="vid-wa"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="vid-dl"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar</button></div>
-        <p class="note" id="vidNote">Uso interno del alcalde y su equipo. ${MODO.tipo === "real" ? "Hecho con noticias reales; los medios se citan por su nombre" : "Es un prototipo con noticias ficticias"}; no usa fotos ni logos de los medios.</p>
+        <p class="note" id="vidNote">Uso interno del alcalde y su equipo. ${MODO.tipo !== "demo" ? "Hecho con noticias reales; los medios se citan por su nombre" : "Es un prototipo con noticias ficticias"}; no usa fotos ni logos de los medios.</p>
       </div>
     </div></section>`;
   document.body.appendChild(ov); document.body.classList.add("vid-on");

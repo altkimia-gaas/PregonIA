@@ -156,7 +156,7 @@ function renderChrome(){
   const pend = pendientes().length;
   const link = ([key, name], ic, cnt) => `<a href="#${key}" ${key===k || (key==="temas" && cfg) ? 'aria-current="page"' : ""}>${icon(ic)}<span>${name}</span>${cnt ? `<span class="count" aria-label="${cnt} por revisar">${cnt}</span>` : ""}</a>`;
   $("#nav").innerHTML = MAIN.map(x => link(x, x[0], x[0]==="menciones" ? pend : 0)).join("") + link(["temas","Ajustes"], "config", 0);
-  $("#fecha").textContent = "Monitoreando 100 medios · actualizado " + new Date(NOW - 7*60000).toLocaleTimeString("es-CL", {hour:"2-digit", minute:"2-digit", hourCycle:"h23"});
+  $("#fecha").textContent = PILOTO && PILOTO.activo ? (PILOTO.lectura ? "Lectura de medios cada 30 min · última " + horaCorta(PILOTO.lectura.fin) : "Lectura de medios cada 30 min") : "Monitoreando 100 medios · actualizado " + new Date(NOW - 7*60000).toLocaleTimeString("es-CL", {hour:"2-digit", minute:"2-digit", hourCycle:"h23"});
   $("#bnav").innerHTML = MAIN.map(x => link(x, x[0], x[0]==="menciones" ? pend : 0)).join("") + link(["temas","Ajustes"], "config", 0);
 }
 
@@ -561,7 +561,7 @@ function repDiario(){
     <ol class="clip-l">${d.grupos.map(item).join("")}</ol>
   </section>
   <div class="parte-sh">${shareBar("diario")}</div>
-  <p class="note" style="margin-top:12px">${MODO.tipo === "real" ? "Hecho con noticias reales leídas de los medios del catálogo." : "En la demostración las notas no tienen enlace; con Noticias reales cada titular lleva a su fuente."} En el piloto, este informe llega solo cada mañana a las 8:00 por correo o WhatsApp.</p>`;
+  <p class="note" style="margin-top:12px">${MODO.tipo !== "demo" ? "Hecho con noticias reales leídas de los medios del catálogo." : "En la demostración las notas no tienen enlace; con Noticias reales cada titular lleva a su fuente."} En el piloto, este informe llega solo cada mañana a las 8:00 por correo o WhatsApp.</p>`;
 }
 function diarioTexto(){
   const d = diarioData(), L = [`*PregonIA · Informe diario · ${S.org}*`, d.etiqueta, ""];
@@ -898,7 +898,7 @@ async function pdfDiario(){
       y += h + 4;
     }
   }
-  const nota = MODO.tipo === "real" ? "Noticias reales leídas de los medios del catálogo de PregonIA. Los resúmenes son propios; el texto de los medios no se reproduce." : "Demostración con noticias ficticias: las notas no tienen enlace. Con Noticias reales cada publicación lleva a su fuente.";
+  const nota = MODO.tipo !== "demo" ? "Noticias reales leídas de los medios del catálogo de PregonIA. Los resúmenes son propios; el texto de los medios no se reproduce." : "Demostración con noticias ficticias: las notas no tienen enlace. Con Noticias reales cada publicación lleva a su fuente.";
   const n = doc.getNumberOfPages();
   for (let p = 1; p <= n; p++) { doc.setPage(p); doc.setDrawColor(C.line); doc.setLineWidth(0.3); doc.line(M, PIE, W - M, PIE); txt("PregonIA · Un producto de ALTKimia", M, PIE + 5, {size: 7, color: C.muted}); txt(`Página ${p} de ${n}`, W - M, PIE + 5, {size: 7, color: C.muted, align: "right"}); if (p === n) lineas(nota, AN, 6.5).slice(0, 2).forEach((l, k) => txt(l, M, PIE - 5.5 + k * 3, {size: 6.5, color: C.muted})); }
   return doc.output("blob");
@@ -933,7 +933,7 @@ function ubicarMenu(){
   m.style.top = (r.bottom + 6 + h > innerHeight && r.top - 6 - h > 0 ? r.top - 6 - h : r.bottom + 6) + "px";
 }
 function cerrarMenu(){ const m = $("#shrPop"); if (!m) return; m._origen?.setAttribute("aria-expanded", "false"); m.remove(); }
-document.addEventListener("click", e => { if ($("#shrPop") && !e.target.closest("#shrPop") && !e.target.closest('[data-via="mail"]')) cerrarMenu(); }, true);
+document.addEventListener("click", e => { if ($("#shrPop") && !e.target.closest("#shrPop") && !e.target.closest('[data-via="mail"]') && !e.target.closest('[data-act="cuenta"]')) cerrarMenu(); }, true);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#shrPop")) { const o = $("#shrPop")._origen; cerrarMenu(); o?.focus(); } });
 addEventListener("scroll", ubicarMenu, {passive: true, capture: true}); addEventListener("resize", ubicarMenu);
 async function compartir(b){
@@ -1055,7 +1055,7 @@ document.addEventListener("click", async e => {
     const txt = $("#kOut").value.trim(); if (!txt) return;
     const m = tState.draft && menciones().find(x => x.g === tState.draft);
     const pz = document.querySelector('input[name="pieza"]:checked')?.value || "comunicado";
-    S.comunicados.unshift({org: S.org, ts: Date.now(), pieza: PIEZAS[pz][0], origen: m ? m.lead.t.slice(0,70) : "Anuncio propio", texto: txt});
+    S.comunicados.unshift({org: S.org, ts: Date.now(), pieza: PIEZAS[pz][0], origen: m ? m.lead.t.slice(0,70) : "Anuncio propio", texto: txt, g: m ? m.g : null});
     if (m) S.resp[S.org + ":" + m.g] = true;
     save(); render(); toast(m ? "Aprobado. La noticia quedó como respondida." : "Aprobado y guardado.");
   }
@@ -1256,12 +1256,14 @@ document.addEventListener("keydown", e => {
 window.addEventListener("hashchange", () => { if (helpOpen) renderHelp(); });
 
 
+var PILOTO; // estado del modo piloto (src/piloto.js); var para que exista antes de que ese módulo se cargue
 /* Noticias reales (etapa 1): /api/noticias lee los medios del catálogo y la demostración queda a un clic. */
 const NOTAS_DEMO = NOTAS.slice(), MODO_KEY = "pregonia-modo";
 let MODO = {tipo: "demo", info: null, cargando: false, disponible: false};
 const horaCorta = iso => new Date(iso).toLocaleTimeString("es-CL", {hour: "2-digit", minute: "2-digit", hourCycle: "h23"});
 function pintarModo(){
   const el = $("#demo"); if (!el) return;
+  if (PILOTO && PILOTO.activo) return pintarPiloto();
   const real = MODO.tipo === "real" && MODO.info, i = MODO.info;
   // Selector siempre visible con las dos opciones; en claude.ai (sin servidor) "Reales" lleva al sitio publicado.
   const sw = MODO.disponible || MODO.cargando
@@ -1272,11 +1274,12 @@ function pintarModo(){
   el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">Noticias y cifras ficticias · catálogo de 100 medios real</span><span class="solo-movil">Datos ficticios</span></span>${sw}`;
 }
 async function cargarReales(force){
+  if (PILOTO && PILOTO.activo) return;
   if (MODO.cargando || (MODO.tipo === "real" && MODO.info && MODO.info.comuna === S.org && !force)) return; MODO.cargando = true; pintarModo();
   const org = S.org;
   try {
     const r = await fetch("/api/noticias?comuna=" + encodeURIComponent(org)); if (!r.ok) throw new Error("HTTP " + r.status);
-    const j = await r.json(); if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
+    const j = await r.json(); if (PILOTO && PILOTO.activo) { MODO.cargando = false; return; } if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
     const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + org + " comuna"), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna
     refrescarNotas(nuevas); MODO = {...MODO, tipo: "real", info: {...j, notas: nuevas}, cargando: false};
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}

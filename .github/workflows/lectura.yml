@@ -1,0 +1,22 @@
+# Lectura programada de medios: cada 30 minutos llama a /api/ingesta en Vercel.
+# Requiere el secreto CRON_SECRET en GitHub (Settings › Secrets and variables › Actions) con el mismo valor que en Vercel.
+name: Lectura de medios
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch: {}
+concurrency:
+  group: lectura
+  cancel-in-progress: false
+jobs:
+  leer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Leer medios y guardar notas nuevas
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          codigo=$(curl -sS -m 100 -o salida.json -w "%{http_code}" -H "Authorization: Bearer $CRON_SECRET" https://pregonia.vercel.app/api/ingesta)
+          cat salida.json; echo
+          test "$codigo" = "200"

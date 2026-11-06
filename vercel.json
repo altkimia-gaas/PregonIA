@@ -1,5 +1,10 @@
 {
   "functions": {
-    "api/noticias.js": { "maxDuration": 60 }
+    "api/noticias.js": {
+      "maxDuration": 60
+    },
+    "api/ingesta.js": {
+      "maxDuration": 60
+    }
   }
 }

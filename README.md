@@ -66,3 +66,30 @@ La función solo acepta pedidos desde el propio sitio, limita el largo del texto
 3. Clasificación de tono y resumen propio con evaluación sobre 300 menciones etiquetadas.
 4. Alertas por Telegram, correo y WhatsApp Business; PDF del informe de gestión.
 5. Ver el plan completo y los requisitos en `docs/especificacion.md`.
+
+
+## Piloto con base de datos (etapa 2)
+
+Con sesión iniciada, la aplicación trabaja con datos compartidos por municipio: noticias leídas cada 30 minutos, temas, marcas,
+respuestas aprobadas y publicaciones agregadas a mano. Sin sesión sigue siendo la demostración.
+
+Piezas:
+
+- `supabase/esquema.sql`: tablas, reglas por municipio y rol (Row Level Security) y registro automático de actividad.
+- `supabase/semilla.sql`: catálogo de medios (lo genera `scripts/build.py`).
+- `supabase/alta_usuario.sql`: plantilla para asignar municipio y rol a una persona invitada.
+- `api/ingesta.js`: lectura programada; guarda solo notas nuevas, clasifica solo lo nuevo y agrupa con hechos de días anteriores.
+- `api/_lectura.js`: lectura y clasificación compartidas con `api/noticias.js`.
+- `api/config.js`: entrega al navegador la URL y la clave publicable de Supabase (públicas por diseño).
+- `src/piloto.js`: ingreso, carga desde la base y sincronización de cambios.
+- `.github/workflows/lectura.yml`: llama a `/api/ingesta` cada 30 minutos.
+
+Puesta en marcha:
+
+1. Crear el proyecto en Supabase (región São Paulo) y ejecutar en SQL Editor `supabase/esquema.sql` y luego `supabase/semilla.sql`.
+2. En Supabase › Authentication › URL Configuration, dejar `https://pregonia.vercel.app` como Site URL.
+3. En Vercel, variables `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` y `CRON_SECRET` (una contraseña larga inventada).
+4. En GitHub › Settings › Secrets and variables › Actions, el secreto `CRON_SECRET` con el mismo valor.
+5. Invitar a cada persona en Supabase › Authentication › Users y asignarle municipio y rol con `supabase/alta_usuario.sql`.
+
+Roles: `admin` y `comunicaciones` editan; `alcalde`, `directivo` y `lector` solo leen. Cada persona ve solo su municipio.
