@@ -390,6 +390,7 @@ function chartDias(ms, n = 30){
    es un dato de cada asunto, "hasta dónde llegó". */
 const REPS = [
   ["alcalde","Parte del alcalde",{para:"Alcalde", cuando:"Lunes, 8:00 · semanal", lectura:"2 minutos, en el celular", responde:"¿Cómo me trató la prensa, qué se puede complicar y qué hago?"}],
+  ["diario","Informe diario",{para:"Alcalde, equipo directivo y comunicaciones", cuando:"Todos los días, 8:00", lectura:"3 minutos los indicadores; el clipping, como respaldo", responde:"¿Qué se publicó sobre la comuna, con qué tono y dónde está cada nota?"}],
   ["mesa","Mesa de comunicaciones",{para:"Encargado(a) de comunicaciones", cuando:"Todos los días, 8:30", lectura:"10 a 15 minutos", responde:"¿Qué respondo hoy, qué está escalando y qué difundo?"}],
   ["gestion","Informe de gestión",{para:"Alcalde y equipo directivo", cuando:"Primer lunes del mes", lectura:"15 minutos, en reunión de equipo", responde:"¿Cómo se percibe la gestión, por tema, y cómo estamos frente a las comunas vecinas?"}],
   ["crisis","Episodio crítico",{para:"Alcalde y comunicaciones", cuando:"Se activa solo ante una noticia crítica", lectura:"5 minutos", responde:"¿Cómo se propagó y qué hacemos ahora?"}]
@@ -400,7 +401,7 @@ function vReportes(){
   return `<div class="head"><div><h2 tabindex="-1">Reportes</h2><p>Un informe por lector. Cada uno responde una sola pregunta, con el nivel de detalle que esa persona necesita.</p></div></div>
   <div class="tabs" role="tablist">${REPS.map(([k,n]) => `<button role="tab" aria-selected="${tState.rep===k}" data-act="rep" data-k="${k}">${n}</button>`).join("")}</div>
   <dl class="para"><div><dt>Para</dt><dd>${p.para}</dd></div><div><dt>Cuándo</dt><dd>${p.cuando}</dd></div><div><dt>Lectura</dt><dd>${p.lectura}</dd></div><div class="q"><dt>Responde</dt><dd>${p.responde}</dd></div></dl>
-  ${({alcalde:repAlcalde, mesa:repMesa, gestion:repGestion, crisis:repCrisis})[tState.rep]()}`;
+  ${({alcalde:repAlcalde, diario:repDiario, mesa:repMesa, gestion:repGestion, crisis:repCrisis})[tState.rep]()}`;
 }
 const muestra = n => n < 20 ? `<p class="note" style="margin-top:14px">Muestra pequeña (${plural(n,"noticia","noticias")}): las proporciones pueden cambiar mucho con pocas notas nuevas.</p>` : "";
 
@@ -500,6 +501,74 @@ function repMesa(){
       <table class="mtab"><thead><tr><th>Medio</th><th>Nivel</th><th class="num">Notas</th><th class="num">Crít.</th></tr></thead><tbody>${medios.map(([id,x]) => `<tr><td>${esc(MED[id].n)}</td><td>${NIVS[nivIdx(MED[id].a)][1]}</td><td class="num">${x.n}</td><td class="num">${x.cri}</td></tr>`).join("")}</tbody></table>
       <p class="hint" style="margin:10px 0 0">En producción se agrega la firma de cada nota, para saber qué periodista cubre la comuna.</p></section>
   </div>`;
+}
+
+/* 2b. Informe diario: indicadores del período y clipping agrupado por mención, con el enlace a cada publicación (trazabilidad) */
+const PERIODOS = [["24h","Últimas 24 h"],["hoy","Hoy"],["ayer","Ayer"]];
+const fechaLarga = ts => new Date(ts).toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long"});
+const horaHM = ts => new Date(ts).toLocaleTimeString("es-CL", {hour: "2-digit", minute: "2-digit", hourCycle: "h23"});
+const NIVLBL = {local: "Comunal", regional: "Regional", nacional: "Nacional"};
+function rangoDiario(k){
+  const h = new Date(NOW); h.setHours(0, 0, 0, 0); const hoy = h.getTime();
+  if (k === "hoy") return [hoy, NOW + 1, "Hoy, " + fechaLarga(NOW) + ", hasta las " + horaHM(NOW)];
+  if (k === "ayer") return [hoy - DAY, hoy, "Ayer, " + fechaLarga(hoy - DAY)];
+  return [NOW - DAY, NOW + 1, "Últimas 24 horas, hasta las " + horaHM(NOW) + " del " + fechaLarga(NOW)];
+}
+function diarioData(){
+  const k = tState.dia || "24h", [d0, d1, etiqueta] = rangoDiario(k), largo = d1 - d0, en = (n, a, b) => n.ts >= a && n.ts < b;
+  const todas = menciones(cuenta(), 32);
+  const grupos = todas.map(m => ({m, pubs: m.notas.filter(n => en(n, d0, d1)).sort((x, y) => x.ts - y.ts)})).filter(x => x.pubs.length);
+  const prev = todas.reduce((s, m) => s + m.notas.filter(n => en(n, d0 - largo, d0)).length, 0);
+  const pubs = grupos.flatMap(x => x.pubs), M = metricas(grupos.map(x => x.m)), niv = {local: 0, regional: 0, nacional: 0}, medios = {}, temas = {};
+  pubs.forEach(n => { niv[MED[n.m].a] = (niv[MED[n.m].a] || 0) + 1; medios[n.m] = (medios[n.m] || 0) + 1; });
+  grupos.forEach(({m, pubs}) => { const x = temas[temaDe(m)] ||= {n: 0, cri: 0, pos: 0}; x.n += pubs.length; if (m.tono !== "neu") x[m.tono] += pubs.length; });
+  const orden = {cri: 0, neu: 1, pos: 2};
+  grupos.sort((a, b) => orden[a.m.tono] - orden[b.m.tono] || riesgo(b.m) - riesgo(a.m) || b.pubs.length - a.pubs.length);
+  const f = new Date(d1 - 1), base = String(f.getDate()).padStart(2, "0") + String(f.getMonth() + 1).padStart(2, "0");
+  grupos.forEach((x, i) => { x.ref = `D-${base}-${String(i + 1).padStart(2, "0")}`; x.antes = x.m.first < d0; });
+  return {k, d0, d1, etiqueta, grupos, pubs, prev, M, v: veredicto(M), niv, medios: Object.entries(medios).sort((a, b) => b[1] - a[1]), temas: Object.entries(temas).sort((a, b) => b[1].n - a[1].n), sinResp: grupos.filter(x => x.m.tono === "cri" && !respondida(x.m.g)).length};
+}
+const difTxt = (cur, prev, flecha = true) => cur === prev ? "igual que el período anterior" : `${flecha ? (cur > prev ? "▲ " : "▼ ") : ""}${Math.abs(cur - prev)} ${cur > prev ? "más" : "menos"} que el período anterior`;
+function repDiario(){
+  const d = diarioData();
+  const per = `<div class="seg" role="group" aria-label="Período del informe">${PERIODOS.map(([k, l]) => `<button data-act="dia" data-k="${k}" aria-pressed="${d.k === k}">${l}</button>`).join("")}</div>`;
+  const head = `<div class="rhead"><h3>${esc(S.org)} · informe diario</h3><span class="per">${ri("cal")} ${esc(d.etiqueta)}</span></div><div class="diario-per">${per}</div>`;
+  if (!d.pubs.length) return head + `<div class="allgood">${ri("ok")} Ningún medio publicó sobre ${esc(S.org)} en este período. ${d.prev ? `En el período anterior hubo ${plural(d.prev, "publicación", "publicaciones")}.` : ""}</div>`;
+  const nMed = d.medios.length, maxT = Math.max(...d.temas.map(([, x]) => x.n)), maxN = Math.max(1, ...Object.values(d.niv));
+  const barra = (n, max, cls = "") => `<span class="bar ${cls}" aria-hidden="true"><i style="width:${Math.round(n / max * 100)}%"></i></span>`;
+  const pub = n => `<li><span class="mono hh">${horaHM(n.ts)}</span><span class="niv">${NIVLBL[MED[n.m].a] || ""}</span><span class="md">${esc(medioN(n))}</span><span class="tt">${n.url ? `<a class="ext" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.t)}<span class="sr"> (abre la fuente)</span></a>` : `${esc(n.t)}<span class="nolink"> · nota de demostración, sin enlace</span>`}</span></li>`;
+  const item = x => { const m = x.m, resp = respondida(m.g); return `<li class="clip-i ${m.tono}" id="clip-${esc(x.ref)}">
+      <div class="clip-h"><span class="ref mono">${x.ref}</span>${pillTono(m.tono)}<span class="kick">${esc(temaDe(m))}</span>${resp ? '<span class="pill done">Respondida</span>' : ""}</div>
+      <b class="clip-t">${esc(m.lead.res)}</b>
+      <div class="clip-m">${escHtml(escalera(m.notas))}<span>${plural(x.pubs.length, "publicación", "publicaciones")} en el período${x.antes ? ` · viene desde el ${hora(m.first)}, en ${esc(MED[m.notas[0].m].n)}` : ""}</span></div>
+      <ul class="clip-p">${x.pubs.map(pub).join("")}</ul>
+      ${m.tono === "cri" && !resp ? `<div class="clip-a"><button class="btn sm primary" data-act="responder" data-g="${m.g}" data-from="reportes">Preparar respuesta</button></div>` : ""}
+    </li>`; };
+  return head + `
+  <div class="rgrid r4 dk">
+    ${tile({icon: "noticias", label: "Publicaciones", value: d.pubs.length, sub: difTxt(d.pubs.length, d.prev)})}
+    ${tile({icon: "alcance", label: "Noticias distintas", value: d.grupos.length, sub: `publicadas por ${plural(nMed, "medio", "medios")}`})}
+    ${tile({icon: d.v.k, tone: d.v.k, label: "Tono del período", value: `<span class="word ${d.v.k}">${d.v.n}</span>`, sub: conteo(d.M)})}
+    ${tile({icon: "cri", tone: d.sinResp ? "cri" : "", label: "Críticas sin respuesta", value: d.sinResp, sub: "noticias críticas del período sin respuesta aprobada"})}
+  </div>
+  <div class="rgrid r3" style="margin-top:14px">
+    <section class="card"><h3>Hasta dónde llegó</h3><table class="mtab dtab"><tbody>${["local", "regional", "nacional"].map(k => `<tr><td>Prensa ${NIVLBL[k].toLowerCase()}</td><td class="bc">${barra(d.niv[k] || 0, maxN)}</td><td class="num">${d.niv[k] || 0}</td></tr>`).join("")}</tbody></table><p class="hint" style="margin:8px 0 0">Publicaciones del período según el alcance del medio.</p></section>
+    <section class="card"><h3>Temas</h3><table class="mtab dtab"><tbody>${d.temas.slice(0, 6).map(([n, x]) => `<tr><td>${esc(n)}${x.cri ? ` <span class="cri-n">${x.cri} crít.</span>` : ""}</td><td class="bc">${barra(x.n, maxT)}</td><td class="num">${x.n}</td></tr>`).join("")}</tbody></table></section>
+    <section class="card"><h3>Medios que más publicaron</h3><table class="mtab dtab"><tbody>${d.medios.slice(0, 6).map(([id, n]) => `<tr><td>${esc(MED[id].n)} <span class="muted">· ${NIVLBL[MED[id].a] || ""}</span></td><td class="num">${n}</td></tr>`).join("")}</tbody></table></section>
+  </div>
+  <section class="card clip" style="margin-top:14px"><h3>Clipping · ${plural(d.grupos.length, "mención", "menciones")} · ${plural(d.pubs.length, "publicación", "publicaciones")}</h3>
+    <p class="hint" style="margin:0 0 10px">Cada mención agrupa las publicaciones del mismo hecho. El código sirve para citarla; el titular lleva a la nota original. Primero lo crítico.</p>
+    <ol class="clip-l">${d.grupos.map(item).join("")}</ol>
+  </section>
+  <div class="parte-sh">${shareBar("diario")}</div>
+  <p class="note" style="margin-top:12px">${MODO.tipo === "real" ? "Hecho con noticias reales leídas de los medios del catálogo." : "En la demostración las notas no tienen enlace; con Noticias reales cada titular lleva a su fuente."} En el piloto, este informe llega solo cada mañana a las 8:00 por correo o WhatsApp.</p>`;
+}
+function diarioTexto(){
+  const d = diarioData(), L = [`*PregonIA · Informe diario · ${S.org}*`, d.etiqueta, ""];
+  if (!d.pubs.length) return L.concat([`Ningún medio publicó sobre ${S.org} en este período.`]).join("\n");
+  L.push("*Indicadores*", `Publicaciones: ${d.pubs.length} (${difTxt(d.pubs.length, d.prev, false)})`, `Noticias distintas: ${d.grupos.length}, en ${plural(d.medios.length, "medio", "medios")}`, `Tono: ${d.v.n} (${conteo(d.M)})`, `Críticas sin respuesta: ${d.sinResp}`, `Alcance: comunal ${d.niv.local || 0} · regional ${d.niv.regional || 0} · nacional ${d.niv.nacional || 0}`, `Temas: ${d.temas.slice(0, 5).map(([n, x]) => `${n} (${x.n})`).join(", ")}`, "", "*Clipping*");
+  d.grupos.forEach(x => { const m = x.m; L.push("", `*${x.ref} · ${tonoLbl[m.tono]} · ${temaDe(m)}*`, m.lead.res, `${llego(escalera(m.notas))}${respondida(m.g) ? " · respondida" : ""}`); x.pubs.forEach(n => { L.push(`  • ${horaHM(n.ts)} · ${medioN(n)} (${(NIVLBL[MED[n.m].a] || "").toLowerCase()}): ${n.t}`); if (n.url) L.push(`    ${n.url}`); }); });
+  return L.join("\n");
 }
 
 /* 3. Informe de gestión: mensual, para el alcalde y su equipo */
@@ -669,6 +738,7 @@ function shareDoc(src, i){
     const pz = document.querySelector('input[name="pieza"]:checked')?.value || "comunicado", m = tState.draft && menciones().find(x => x.g === tState.draft), t = ($("#kOut")?.value || "").trim();
     return {titulo: PIEZAS[pz][0], sub: m ? "Responde a: " + m.lead.t : "Anuncio propio", texto: t, cuerpo: t, borrador: true};
   }
+  if (src === "diario") { const t = diarioTexto(), d = diarioData(); return {titulo: "Informe diario de prensa", sub: d.etiqueta, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "parte") { const t = parteTexto(); return {titulo: "Parte semanal del alcalde", sub: "Semana del " + parteData().per, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "aprob") { const x = S.comunicados.filter(y => y.org === S.org)[i]; return x && x.texto ? {titulo: x.pieza, sub: "Responde a: " + x.origen + " · aprobado el " + fecha(x.ts), texto: x.texto, cuerpo: x.texto} : null; }
   return null;
@@ -715,6 +785,12 @@ async function pdfBlob(d){
   doc.setTextColor(21, 27, 36); doc.setFontSize(11);
   for (const bruta of d.cuerpo.split("\n")) {
     if (!bruta.trim()) { y += 2.6; continue; }
+    if (/^\s*https?:\/\/\S+\s*$/.test(bruta)) {
+      const url = bruta.trim(), ver = url.replace(/^https?:\/\/(www\.)?/, ""), sang = Math.min(12, (bruta.match(/^ */)[0].length) * 1.4);
+      salto(5.2); doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(21, 101, 192);
+      doc.textWithLink(pdfTxt(ver.length > 88 ? ver.slice(0, 86) + "…" : ver), M + sang, y, {url});
+      doc.setFontSize(11); doc.setTextColor(21, 27, 36); y += 6; continue;
+    }
     const negrita = /^\s*\*[^*]+\*\s*$/.test(bruta), sangria = Math.min(12, (bruta.match(/^ */)[0].length) * 1.4), txt = pdfTxt(plano(bruta).trim());
     doc.setFont("helvetica", negrita ? "bold" : "normal");
     for (const l of doc.splitTextToSize(txt, AN - sangria)) { salto(5.6); doc.text(l, M + sangria, y); y += 5.6; }
@@ -869,6 +945,7 @@ document.addEventListener("click", async e => {
   if (act === "activar" && propuesta) { const prev = {perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos}; c.perfil = propuesta.perfil; c.temas = propuesta.base; c.sugeridos = propuesta.sugeridos; c.caracterizada = true; propuesta = null; save(); location.hash = "temas"; toast("Listo: " + c.temas.length + " temas activos en " + S.org + ".", () => { Object.assign(c, prev); save(); render(); }); }
   if (act === "descartar") { propuesta = null; $("#propOut").innerHTML = ""; }
   if (act === "rep") { tState.rep = b.dataset.k; render(); }
+  if (act === "dia") { tState.dia = b.dataset.k; render(); }
   if (act === "copiar-parte") { const txt = parteTexto(); try { await navigator.clipboard.writeText(txt); toast("Parte copiado. Pégalo en WhatsApp o en un correo."); } catch(err) { const ta = document.createElement("textarea"); ta.value = txt; ta.className = "draft"; ta.style.marginTop = "12px"; b.closest(".acts").after(ta); ta.focus(); ta.select(); toast("Texto seleccionado: cópialo con el teclado."); } }
   if (act === "share") compartir(b);
   if (act === "lectura") lectura(b);
@@ -970,6 +1047,7 @@ const AYUDA_VISTA = {
   asistente:["Asistente de temas", "Responde cinco preguntas sobre el municipio y PregonIA propone los temas base de tu plan, más sugerencias para sumar. Revisa la propuesta antes de activarla."],
   fuentes:["Fuentes", "Los 100 medios del catálogo: 50 nacionales y 50 de la Región de Valparaíso. Cada uno muestra cómo se lee y su estado: listo, requiere ajuste o restringido (se lee vía Google News)."],
   rep_alcalde:["Reportes · Parte del alcalde", "Para el alcalde, cada lunes, en dos minutos. Dice cómo lo trató la prensa en la semana, hasta tres asuntos que se pueden complicar con qué hacer y quién se encarga, y una buena noticia para aprovechar. Se envía en PDF por WhatsApp, por correo o se guarda en PDF, y el botón Video resumen lo convierte en un video corto para el celular."],
+  rep_diario:["Reportes · Informe diario", "Indicadores del período (publicaciones, noticias distintas, tono, críticas sin respuesta, alcance, temas y medios) y el clipping: cada mención agrupa las publicaciones del mismo hecho, con un código para citarla y el enlace a cada nota original. Elige últimas 24 horas, hoy o ayer, y compártelo en PDF por WhatsApp o correo."],
   rep_mesa:["Reportes · Mesa de comunicaciones", "Para el encargado de comunicaciones, cada mañana. Críticas sin respuesta, temas que están subiendo de la prensa comunal a la regional o nacional, buenas noticias por difundir y los medios a los que conviene llamar."],
   rep_gestion:["Reportes · Informe de gestión", "Para el alcalde y su equipo, una vez al mes. Tendencia, tono y alcance por tema, comparación interna con las comunas vecinas, lectura del analista y el respaldo con todas las notas."],
   rep_crisis:["Reportes · Episodio crítico", "Se activa solo cuando una noticia crítica se propaga. Muestra cuántos medios la publicaron, hasta dónde llegó, la cronología y si ya hay respuesta aprobada."]
@@ -1011,6 +1089,7 @@ const FAQ = [
     ["¿Cuántas personas pueden usarlo?", "El plan Comunal incluye 3 usuarios y el Regional o Político, 5."],
     ["¿Cómo comparto el parte con el alcalde?", "En Reportes › Parte del alcalde, la barra Compartir lo envía en PDF por WhatsApp o por correo, o lo guarda en PDF en tu computador."],
     ["¿Cómo agrego publicaciones de Facebook?", "En Menciones, el botón Agregar publicación: indicas la página o medio, pegas el enlace y el texto del post, y PregonIA lo analiza como cualquier noticia (tono, resumen, tema, si es el mismo hecho que ya publicó otro medio). Sirve para medios locales que publican solo en Facebook. PregonIA guarda un resumen propio, no el texto del post, y no lee Facebook por su cuenta."],
+    ["¿Dónde está el informe diario con el clipping?", "En Reportes › Informe diario. Arriba van los indicadores del período; abajo, el clipping agrupado por mención, con un código para cada una (por ejemplo D-0611-01) y el enlace a cada publicación. Con Noticias reales cada titular abre la nota en el medio. El PDF conserva los enlaces."],
     ["¿Qué es el video resumen?", "En Reportes › Parte del alcalde, el botón Video resumen arma un video vertical de menos de un minuto con el resultado de la semana, los temas con más publicaciones, hasta tres asuntos que se pueden complicar (en qué medios salió, hasta dónde llegó, qué hacer y quién responde) y la buena noticia. Se ve en la pantalla, se prepara en MP4 y se envía por WhatsApp o se descarga. Es para uso interno: no usa fotos ni logos de los medios."],
     ["¿Cómo envío o guardo una respuesta?", "Bajo el borrador está la barra Compartir. En el celular, WhatsApp y Correo abren la hoja de compartir con el PDF adjunto: eliges la app y el contacto. En el computador, WhatsApp abre el chat y guarda el PDF para que lo adjuntes con el clip; Correo te deja elegir Gmail, Outlook o el programa de correo del equipo, con asunto y texto listos. Nada se envía solo: tú eliges a quién."]
   ]]
