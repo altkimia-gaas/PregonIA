@@ -738,7 +738,7 @@ function shareDoc(src, i){
     const pz = document.querySelector('input[name="pieza"]:checked')?.value || "comunicado", m = tState.draft && menciones().find(x => x.g === tState.draft), t = ($("#kOut")?.value || "").trim();
     return {titulo: PIEZAS[pz][0], sub: m ? "Responde a: " + m.lead.t : "Anuncio propio", texto: t, cuerpo: t, borrador: true};
   }
-  if (src === "diario") { const t = diarioTexto(), d = diarioData(); return {titulo: "Informe diario de prensa", sub: d.etiqueta, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
+  if (src === "diario") { const t = diarioTexto(), d = diarioData(); return {titulo: "Informe diario de prensa", sub: d.etiqueta, sinFecha: true, tipo: "diario", texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "parte") { const t = parteTexto(); return {titulo: "Parte semanal del alcalde", sub: "Semana del " + parteData().per, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "aprob") { const x = S.comunicados.filter(y => y.org === S.org)[i]; return x && x.texto ? {titulo: x.pieza, sub: "Responde a: " + x.origen + " · aprobado el " + fecha(x.ts), texto: x.texto, cuerpo: x.texto} : null; }
   return null;
@@ -802,7 +802,108 @@ async function pdfBlob(d){
 }
 const movil = () => matchMedia("(pointer: coarse)").matches;
 const pdfCache = {};
-async function pdfDe(d){ const k = d.titulo + "\u0001" + d.sub + "\u0001" + d.cuerpo; return pdfCache[k] ||= new File([await pdfBlob(d)], nombreArchivo(d, "pdf"), {type: "application/pdf"}); }
+/* PDF del informe diario con la gráfica del sistema: fondo ALTKimia, tarjetas de indicadores, barras y clipping por mención con enlaces. */
+async function pdfDiario(){
+  const {jsPDF} = await cargarJsPDF(), doc = new jsPDF({unit: "mm", format: "a4"}), W = 210, H = 297, M = 15, AN = W - 2 * M, PIE = H - 13;
+  const d = diarioData(), C = {bg: "#080B12", card: "#111827", line: "#1E2D4A", text: "#F0F4FF", muted: "#8B9DC3", blue: "#2196F3", blueL: "#42A5F5", track: "#1A2540",
+    cri: "#E0604A", pos: "#20A493", neu: "#8A97A8", cris: "#3A1C16", poss: "#0F2E2B", neus: "#1A2433"};
+  const T = s => pdfTxt(String(s ?? "")), tc = k => C[k] || C.neu, tsoft = k => C[k + "s"] || C.neus;
+  const fondo = () => { doc.setFillColor(C.bg); doc.rect(0, 0, W, H, "F"); doc.setFillColor("#0E1A2E"); for (let y = 6; y < H; y += 8) for (let x = 6; x < W; x += 8) doc.circle(x, y, 0.16, "F"); };
+  const fuente = (size, bold, font = "helvetica") => { doc.setFont(font, bold ? "bold" : "normal"); doc.setFontSize(size); };
+  const txt = (s, x, y, o = {}) => { fuente(o.size || 9, o.bold, o.font); doc.setTextColor(o.color || C.text); if (doc.setCharSpace) doc.setCharSpace(o.cs || 0); doc.text(T(s), x, y, {align: o.align || "left"}); if (doc.setCharSpace) doc.setCharSpace(0); };
+  const lineas = (s, w, size, bold) => { fuente(size, bold); return doc.splitTextToSize(T(s), w); };
+  const ancho = (s, size, bold, font) => { fuente(size, bold, font); return doc.getTextWidth(T(s)); };
+  const recorta = (s, w, size, bold) => { let x = T(s); if (ancho(x, size, bold) <= w) return x; while (x.length > 3 && ancho(x + "…", size, bold) > w) x = x.slice(0, -1); return x.trim() + "…"; };
+  const tarjeta = (x, y, w, h) => { doc.setFillColor(C.card); doc.setDrawColor(C.line); doc.setLineWidth(0.25); doc.roundedRect(x, y, w, h, 2, 2, "FD"); };
+  const ceja = (s, x, y, color = C.blueL) => txt(String(s).toUpperCase(), x, y, {size: 6.8, bold: true, color, cs: 0.35});
+  const marca = (x, yb, s) => { doc.setFillColor(C.blue); [0.42, 0.7, 1].forEach((h, i) => doc.roundedRect(x + i * s * 0.55, yb - s * h, s * 0.38, s * h, s * 0.07, s * 0.07, "F")); return x + s * 1.6; };
+  const logo = (x, y, size) => { const x2 = marca(x, y, size * 0.33) + 0.6; txt("Pregon", x2, y, {size, bold: true}); txt("IA", x2 + ancho("Pregon", size, true), y, {size, bold: true, color: C.blue}); };
+  const barra = (x, y, w, frac, color = C.blue) => { doc.setFillColor(C.track); doc.roundedRect(x, y, w, 1.8, 0.9, 0.9, "F"); if (frac > 0) { doc.setFillColor(color); doc.roundedRect(x, y, Math.max(1.8, w * frac), 1.8, 0.9, 0.9, "F"); } };
+  const senal = (x, yb, nivel, color) => [1.4, 2.3, 3.2].forEach((h, i) => { doc.setFillColor(i <= nivel ? color : C.track); doc.roundedRect(x + i * 1.6, yb - h, 1.1, h, 0.3, 0.3, "F"); });
+  const cabeceraCorta = () => { logo(M, 12, 10); txt(`Informe diario · ${S.org} · ${d.etiqueta}`, W - M, 11.5, {size: 7.5, color: C.muted, align: "right"}); doc.setDrawColor(C.line); doc.setLineWidth(0.3); doc.line(M, 16, W - M, 16); return 22; };
+  doc.setProperties({title: T(`Informe diario de prensa · ${S.org}`), author: "PregonIA", creator: "PregonIA · ALTKimia"});
+  fondo();
+  // Encabezado
+  logo(M, 17, 15); txt("INFORME DIARIO DE PRENSA", W - M, 14, {size: 6.8, bold: true, color: C.muted, align: "right"});
+  txt("Municipalidad de " + S.org, M, 29, {size: 19, bold: true});
+  txt(d.etiqueta, M, 36, {size: 9.5, color: C.blueL});
+  doc.setDrawColor(C.line); doc.setLineWidth(0.3); doc.line(M, 40, W - M, 40);
+  let y = 45;
+  if (!d.pubs.length) {
+    tarjeta(M, y, AN, 22); txt(`Ningún medio publicó sobre ${S.org} en este período.`, M + 6, y + 10, {size: 11, bold: true});
+    txt(d.prev ? `En el período anterior hubo ${plural(d.prev, "publicación", "publicaciones")}.` : "Tampoco hubo publicaciones en el período anterior.", M + 6, y + 16, {size: 8.5, color: C.muted});
+  } else {
+    // Indicadores
+    const tw = (AN - 3 * 4) / 4, th = 27;
+    [["Publicaciones", String(d.pubs.length), C.text, difTxt(d.pubs.length, d.prev, false)],
+     ["Noticias distintas", String(d.grupos.length), C.text, `publicadas por ${plural(d.medios.length, "medio", "medios")}`],
+     ["Tono del período", d.v.n, tc(d.v.k), conteo(d.M)],
+     ["Críticas pendientes", String(d.sinResp), d.sinResp ? C.cri : C.text, "noticias críticas sin respuesta aprobada"]
+    ].forEach(([lb, val, col, sub], i) => {
+      const x = M + i * (tw + 4); tarjeta(x, y, tw, th); txt(recorta(lb.toUpperCase(), tw - 10, 6.8, true), x + 4, y + 6, {size: 6.8, bold: true, color: C.muted, cs: 0.25});
+      let size = 20; while (size > 11 && ancho(val, size, true) > tw - 8) size -= 1;
+      txt(val, x + 4, y + 16, {size, bold: true, color: col});
+      lineas(sub, tw - 8, 6.8).slice(0, 2).forEach((l, k) => txt(l, x + 4, y + 21 + k * 3, {size: 6.8, color: C.muted}));
+    });
+    y += th + 4;
+    // Alcance, temas y medios
+    const cw = (AN - 8) / 3, ch = 42;
+    const c1 = M, c2 = M + cw + 4, c3 = M + 2 * (cw + 4);
+    tarjeta(c1, y, cw, ch); ceja("Hasta dónde llegó", c1 + 4, y + 6);
+    const maxN = Math.max(1, ...Object.values(d.niv));
+    [["local", "Comunal"], ["regional", "Regional"], ["nacional", "Nacional"]].forEach(([k, l], i) => { const yy = y + 14 + i * 8; txt(l, c1 + 4, yy, {size: 8, color: C.muted}); barra(c1 + 21, yy - 1.6, cw - 33, (d.niv[k] || 0) / maxN); txt(String(d.niv[k] || 0), c1 + cw - 4, yy, {size: 8.5, bold: true, align: "right"}); });
+    txt("Publicaciones según el alcance del medio", c1 + 4, y + ch - 4, {size: 6.5, color: C.muted});
+    tarjeta(c2, y, cw, ch); ceja("Temas", c2 + 4, y + 6);
+    const maxT = Math.max(1, ...d.temas.map(([, x]) => x.n));
+    d.temas.slice(0, 4).forEach(([n, x], i) => { const yy = y + 12.5 + i * 7.4; const extra = x.cri ? ` · ${x.cri} crít.` : ""; txt(recorta(n, cw - 20, 7.8, true), c2 + 4, yy, {size: 7.8, bold: true}); if (extra) txt(extra.trim().replace(/^· /, ""), c2 + cw - 10, yy, {size: 6.5, color: C.cri, align: "right"}); txt(String(x.n), c2 + cw - 4, yy, {size: 8.5, bold: true, align: "right"}); barra(c2 + 4, yy + 1.6, cw - 8, x.n / maxT, x.cri ? C.cri : C.blue); });
+    tarjeta(c3, y, cw, ch); ceja("Medios que más publicaron", c3 + 4, y + 6);
+    d.medios.slice(0, 5).forEach(([id, n], i) => { const yy = y + 13 + i * 6; txt(recorta(MED[id].n, cw - 30, 7.8, true), c3 + 4, yy, {size: 7.8, bold: true}); txt((NIVLBL[MED[id].a] || "").toUpperCase(), c3 + cw - 11, yy, {size: 5.8, color: C.muted, align: "right", cs: 0.2}); txt(String(n), c3 + cw - 4, yy, {size: 8.5, bold: true, align: "right"}); });
+    y += ch + 8;
+    // Clipping
+    ceja(`Clipping · ${plural(d.grupos.length, "mención", "menciones")} · ${plural(d.pubs.length, "publicación", "publicaciones")}`, M, y);
+    txt("Cada mención agrupa las publicaciones del mismo hecho. El código sirve para citarla y cada enlace abre la nota original. Primero lo crítico.", M, y + 4.5, {size: 7, color: C.muted});
+    y += 9;
+    for (const g of d.grupos) {
+      const m = g.m, xi = M + 6, wi = AN - 10, resp = respondida(m.g), e = escalera(m.notas), col = tc(m.tono);
+      const res = lineas(m.lead.res, wi, 10, true);
+      const pubs = g.pubs.slice(0, 10).map(n => ({n, tl: lineas(n.t, wi - 16, 8.6).slice(0, 3)}));
+      const hPubs = pubs.reduce((s, p) => s + 4.4 + p.tl.length * 3.9 + (p.n.url ? 3.8 : 0) + 1.6, 0) + (g.pubs.length > pubs.length ? 4 : 0);
+      const h = 7 + 3 + res.length * 4.6 + 6.5 + 3 + hPubs + 3;
+      if (y + h > PIE - 10) { doc.addPage(); fondo(); y = cabeceraCorta(); }
+      tarjeta(M, y, AN, h); doc.setFillColor(col); doc.roundedRect(M, y, 1.8, h, 0.9, 0.9, "F");
+      // cabecera de la mención
+      let x = xi, yy = y + 6.2;
+      fuente(7.5, true, "courier"); const rw = doc.getTextWidth(g.ref) + 3.4; doc.setDrawColor(C.line); doc.roundedRect(x, yy - 3.6, rw, 5, 1, 1, "S"); txt(g.ref, x + 1.7, yy, {size: 7.5, bold: true, font: "courier", color: C.blueL}); x += rw + 2.5;
+      const pl = tonoLbl[m.tono], pw = ancho(pl, 7, true) + 5; doc.setFillColor(tsoft(m.tono)); doc.roundedRect(x, yy - 3.6, pw, 5, 2.5, 2.5, "F"); txt(pl, x + 2.5, yy, {size: 7, bold: true, color: col}); x += pw + 2.5;
+      if (resp) { const rw2 = ancho("Respondida", 7, true) + 5; doc.setFillColor(C.poss); doc.roundedRect(x, yy - 3.6, rw2, 5, 2.5, 2.5, "F"); txt("Respondida", x + 2.5, yy, {size: 7, bold: true, color: C.pos}); x += rw2 + 2.5; }
+      txt(recorta(temaDe(m).toUpperCase(), M + AN - 4 - x, 6.8, true), x, yy, {size: 6.8, bold: true, color: C.muted, cs: 0.3});
+      yy = y + 7 + 4.6;
+      res.forEach(l => { txt(l, xi, yy, {size: 10, bold: true}); yy += 4.6; });
+      senal(xi, yy + 1.4, e.max, col); txt(llego(e), xi + 6.5, yy + 1.2, {size: 7.8, bold: true, color: col});
+      const metaX = xi + 7.5 + ancho(llego(e), 7.8, true) + 3;
+      txt(`${plural(g.pubs.length, "publicación", "publicaciones")} en el período${g.antes ? ` · viene desde el ${hora(m.first)}` : ""}`, metaX, yy + 1.2, {size: 7.2, color: C.muted});
+      yy += 5.5;
+      doc.setDrawColor(C.line); doc.setLineWidth(0.25); if (doc.setLineDashPattern) doc.setLineDashPattern([0.8, 0.8], 0); doc.line(xi, yy, M + AN - 4, yy); if (doc.setLineDashPattern) doc.setLineDashPattern([], 0);
+      yy += 4.2;
+      pubs.forEach(({n, tl}) => {
+        txt(horaHM(n.ts), xi, yy, {size: 7.5, font: "courier", color: C.muted});
+        txt((NIVLBL[MED[n.m].a] || "").toUpperCase(), xi + 12, yy, {size: 5.8, color: C.muted, cs: 0.25});
+        txt(recorta(medioN(n), wi - 30, 8.4, true), xi + 28, yy, {size: 8.4, bold: true});
+        yy += 4.2;
+        tl.forEach(l => { txt(l, xi + 12, yy, {size: 8.6}); yy += 3.9; });
+        if (n.url) { const ver = n.url.replace(/^https?:\/\/(www\.)?/, ""), vis = recorta(ver, wi - 16, 7, false); fuente(7, false); doc.setTextColor(C.blueL); doc.textWithLink(vis, xi + 12, yy, {url: n.url}); yy += 3.8; }
+        yy += 1.6;
+      });
+      if (g.pubs.length > pubs.length) txt(`y ${plural(g.pubs.length - pubs.length, "publicación más", "publicaciones más")} en el sistema`, xi + 12, yy, {size: 7, color: C.muted});
+      y += h + 4;
+    }
+  }
+  const nota = MODO.tipo === "real" ? "Noticias reales leídas de los medios del catálogo de PregonIA. Los resúmenes son propios; el texto de los medios no se reproduce." : "Demostración con noticias ficticias: las notas no tienen enlace. Con Noticias reales cada publicación lleva a su fuente.";
+  const n = doc.getNumberOfPages();
+  for (let p = 1; p <= n; p++) { doc.setPage(p); doc.setDrawColor(C.line); doc.setLineWidth(0.3); doc.line(M, PIE, W - M, PIE); txt("PregonIA · Un producto de ALTKimia", M, PIE + 5, {size: 7, color: C.muted}); txt(`Página ${p} de ${n}`, W - M, PIE + 5, {size: 7, color: C.muted, align: "right"}); if (p === n) lineas(nota, AN, 6.5).slice(0, 2).forEach((l, k) => txt(l, M, PIE - 5.5 + k * 3, {size: 6.5, color: C.muted})); }
+  return doc.output("blob");
+}
+async function pdfDe(d){ const k = d.titulo + "\u0001" + d.sub + "\u0001" + d.cuerpo; return pdfCache[k] ||= new File([await (d.tipo === "diario" ? pdfDiario() : pdfBlob(d))], nombreArchivo(d, "pdf"), {type: "application/pdf"}); }
 /* En el celular: hoja de compartir del sistema con el PDF adjunto (WhatsApp, Gmail, Outlook…). */
 async function compartirArchivo(d, destino){
   if (!navigator.canShare || !movil()) return false;
