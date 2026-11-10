@@ -17,6 +17,14 @@ jobs:
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::notice::Falta el secreto CRON_SECRET; la lectura se omite hasta configurarlo."
+            exit 0
+          fi
           codigo=$(curl -sS -m 100 -o salida.json -w "%{http_code}" -H "Authorization: Bearer $CRON_SECRET" https://pregonia.vercel.app/api/ingesta)
           cat salida.json; echo
+          if [ "$codigo" = "503" ]; then
+            echo "::notice::La base de datos aún no está configurada en Vercel; la lectura se omite."
+            exit 0
+          fi
           test "$codigo" = "200"
