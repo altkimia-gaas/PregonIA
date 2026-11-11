@@ -56,7 +56,8 @@ async function procesarComuna(muni, items, desde, ahora){
 
 async function manejar(req){
   const secreto = process.env.CRON_SECRET;
-  if (!secreto || req.headers.get("authorization") !== "Bearer " + secreto) return json({error: "No autorizado"}, 401);
+  if (!secreto) return json({error: "Falta configurar CRON_SECRET en el servidor"}, 503);
+  if (req.headers.get("authorization") !== "Bearer " + secreto) return json({error: "No autorizado"}, 401);
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SECRET_KEY) return json({error: "Falta configurar Supabase en el servidor"}, 503);
   DIAG.length = 0;
   const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
