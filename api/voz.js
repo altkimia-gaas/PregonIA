@@ -2,7 +2,7 @@
 // Convierte un texto corto en audio MP3 con ElevenLabs. La clave vive solo aquí, en ELEVENLABS_API_KEY.
 // Variables opcionales: ELEVENLABS_VOICE_ID (por defecto "Felipe", voz chilena), ELEVENLABS_MODEL,
 // ALLOWED_ORIGINS (otros dominios permitidos, separados por coma), VOZ_LIMITE (peticiones por IP cada 10 minutos, por defecto 60).
-export const config = { runtime: "edge" };
+// Función de Node con hasta 60 s (vercel.json): la de Edge cortaba las respuestas largas cerca de los 10 s.
 
 const VOZ_POR_DEFECTO = "M1BTnEdXPMEslfxGUtu1"; // Felipe · español de Chile, tono neutro para narración
 const MODELO_POR_DEFECTO = "eleven_multilingual_v2";
@@ -21,7 +21,7 @@ function excedido(ip) {
   return lista.length > limite;
 }
 
-export default async function handler(req) {
+async function handler(req) {
   const clave = process.env.ELEVENLABS_API_KEY;
   if (req.method === "GET") return json({ ok: Boolean(clave) });
   if (req.method !== "POST") return json({ error: "Método no permitido" }, 405);
@@ -62,3 +62,4 @@ export default async function handler(req) {
   }
   return new Response(r.body, { headers: { "content-type": "audio/mpeg", "cache-control": "no-store" } });
 }
+export const GET = handler, POST = handler;

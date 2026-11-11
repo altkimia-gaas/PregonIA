@@ -1,7 +1,7 @@
 /* Kit de vocería exprés: «Me llaman de la radio». En segundos, una hoja para el vocero con lo que pasó, qué hacer,
    tres mensajes con su dato de respaldo, frases a evitar y cinco preguntas probables con su respuesta.
    La parte que no necesita IA aparece al instante; los mensajes los redacta la IA solo con datos del municipio y de la noticia. */
-const VOC = {sel: "", libre: "", kits: {}, cargando: false, ctl: null, aviso: ""};
+const VOC = {sel: "", libre: "", kits: {}, cargando: false, ctl: null, aviso: "", snap: {}};
 function vocOpciones(){
   const c = cuenta(), pend = pendientes(c), sem = menciones(c, 7).filter(m => !pend.includes(m)).sort((a, b) => riesgo(b) - riesgo(a)).slice(0, 10);
   const hs = hitosOrdenados(c).filter(x => x.o.curso || x.o.dias <= 60);
@@ -9,7 +9,8 @@ function vocOpciones(){
 }
 function vocContexto(){
   const [t, id] = [VOC.sel.slice(0, 1), VOC.sel.slice(2)];
-  if (t === "g") { const m = menciones(cuenta(), 30).find(x => x.g === id); if (m) return {tipo: "g", m, tema: m.lead.t}; }
+  // Copia de la noticia: si las noticias se recargan con el kit abierto, el kit no pierde el tema elegido.
+  if (t === "g") { const m = menciones(cuenta(), 30).find(x => x.g === id) || VOC.snap[id]; if (m) { VOC.snap[id] = m; return {tipo: "g", m, tema: m.lead.t}; } }
   if (t === "h") { const h = hitosDe().find(x => x.id === id); if (h) return {tipo: "h", h, o: ocurrencia(h), tema: h.nombre}; }
   return {tipo: "libre", tema: VOC.libre.trim()};
 }

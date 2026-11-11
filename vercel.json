@@ -5,6 +5,12 @@
     },
     "api/ingesta.js": {
       "maxDuration": 60
+    },
+    "api/ia.js": {
+      "maxDuration": 60
+    },
+    "api/voz.js": {
+      "maxDuration": 60
     }
   },
   "rewrites": [

@@ -1,8 +1,8 @@
-// Función de servidor para la IA de PregonIA en Vercel (Edge).
+// Función de servidor para la IA de PregonIA en Vercel.
 // La clave vive solo aquí, en la variable de entorno ANTHROPIC_API_KEY; nunca llega al navegador.
 // Variables opcionales: ANTHROPIC_MODEL (fuerza un modelo), ALLOWED_ORIGINS (otros dominios permitidos, separados por coma),
 // IA_LIMITE (peticiones por IP cada 10 minutos, por defecto 20).
-export const config = { runtime: "edge" };
+// Función de Node con hasta 60 s (vercel.json): la de Edge cortaba las respuestas largas cerca de los 10 s.
 
 const MODELOS = { quick: "claude-haiku-5-5", default: "claude-sonnet-5-5" };
 const VENTANA_MS = 10 * 60 * 1000;
@@ -31,7 +31,7 @@ function excedido(ip) {
   return lista.length > limite;
 }
 
-export default async function handler(req) {
+async function handler(req) {
   const clave = process.env.ANTHROPIC_API_KEY;
   if (req.method === "GET") return json({ ok: Boolean(clave) });
   if (req.method !== "POST") return json({ error: "Método no permitido" }, 405);
@@ -92,3 +92,4 @@ export default async function handler(req) {
   });
   return new Response(flujo, { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" } });
 }
+export const GET = handler, POST = handler;
