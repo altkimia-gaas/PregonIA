@@ -2522,13 +2522,13 @@ async function cargarReales(force, silencioso){
     const r = await fetch("/api/noticias?comuna=" + encodeURIComponent(org)); if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json(); if (PILOTO && PILOTO.activo) { MODO.cargando = false; return; } if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
     const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + org + " comuna"), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna
-    refrescarNotas(nuevas); MODO = {...MODO, tipo: "real", info: {...j, notas: nuevas}, cargando: false};
+    MODO = {...MODO, tipo: "real", info: {...j, notas: nuevas}, cargando: false}; refrescarNotas(nuevas);  // el modo primero: los avisos se guardan por modo
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
     pintarModo(); render();
     if (!silencioso) toast(nuevas.length ? `Listo: ${plural(nuevas.length, "nota real", "notas reales")} de ${org}. Ábrelas en Menciones.` : `Los medios leídos no publicaron sobre ${org} en los últimos ${j.ventana_dias} días.`);
   } catch(e) { MODO.cargando = false; pintarModo(); if (!silencioso) toast("No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
 }
-function usarDemo(){ if (MODO.tipo === "demo") return; refrescarNotas(NOTAS_DEMO); MODO = {...MODO, tipo: "demo", info: null}; try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
+function usarDemo(){ if (MODO.tipo === "demo") return; MODO = {...MODO, tipo: "demo", info: null}; refrescarNotas(NOTAS_DEMO); try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
 document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; if (b.dataset.act === "modo-real") cargarReales(); if (b.dataset.act === "modo-demo") usarDemo(); });
 $("#org").addEventListener("change", () => { if (MODO.tipo === "real") cargarReales(true); });
 (async () => {
@@ -3025,7 +3025,10 @@ const AV_NIV = [["urgente", "Solo lo urgente", "Críticas que llegaron a prensa 
 fetch("/api/config").then(r => r.ok ? r.json() : {}).then(j => { AV.cfg = j.avisos || null; if (AV.abierto) avPintar(); }).catch(() => {});
 const avRol = () => typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo && PILOTO.perfil ? PILOTO.perfil.rol : "";
 function avPref(){ return S.avisos.pref || {nivel: ["alcalde", "directivo"].includes(avRol()) ? "urgente" : "importante", silencio: true, correo: true}; }
-const avEstado = (org = S.org) => S.avisos.porOrg[org] ||= {vistos: {}, lista: [], init: false};
+/* Un estado por municipio y por modo: los avisos de la demostración no se mezclan con los de noticias reales ni con los del piloto,
+   y la primera carga de cada modo solo arma la lista (no notifica lo que ya estaba). */
+const avModo = () => typeof MODO !== "undefined" && MODO && MODO.tipo ? MODO.tipo : "demo";
+const avEstado = (org = S.org) => S.avisos.porOrg[org + "|" + avModo()] ||= {vistos: {}, lista: [], init: false};
 const avSoporte = () => "Notification" in window && "serviceWorker" in navigator && !(window.claude && window.claude.use);
 const avPermiso = () => avSoporte() ? Notification.permission : "no";
 const avPushServidor = () => typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo && !!(AV.cfg && AV.cfg.push);
@@ -3044,7 +3047,7 @@ function revisarAlertas(){
     alertas.forEach(a => nuevas.push({...a, id: S.org + ":" + a.clave, creada: ahora, leida: !st.init ? a.nivel !== "urgente" : propia}));
   }
   const g = Object.keys(st.vistos); if (g.length > 800) g.slice(0, g.length - 800).forEach(k => delete st.vistos[k]);
-  if (!nuevas.length) { if (!st.init) { st.init = true; save(); } return; }
+  if (!nuevas.length) { if (!st.init) { st.init = true; save(); } avBadge(); return; }
   const primera = !st.init; st.init = true;
   st.lista = nuevas.sort((a, b) => (AV_ORD(b) - AV_ORD(a)) || b.ts - a.ts).concat(st.lista).slice(0, 60);
   save(); avBadge();

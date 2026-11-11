@@ -13,7 +13,10 @@ const AV_NIV = [["urgente", "Solo lo urgente", "Críticas que llegaron a prensa 
 fetch("/api/config").then(r => r.ok ? r.json() : {}).then(j => { AV.cfg = j.avisos || null; if (AV.abierto) avPintar(); }).catch(() => {});
 const avRol = () => typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo && PILOTO.perfil ? PILOTO.perfil.rol : "";
 function avPref(){ return S.avisos.pref || {nivel: ["alcalde", "directivo"].includes(avRol()) ? "urgente" : "importante", silencio: true, correo: true}; }
-const avEstado = (org = S.org) => S.avisos.porOrg[org] ||= {vistos: {}, lista: [], init: false};
+/* Un estado por municipio y por modo: los avisos de la demostración no se mezclan con los de noticias reales ni con los del piloto,
+   y la primera carga de cada modo solo arma la lista (no notifica lo que ya estaba). */
+const avModo = () => typeof MODO !== "undefined" && MODO && MODO.tipo ? MODO.tipo : "demo";
+const avEstado = (org = S.org) => S.avisos.porOrg[org + "|" + avModo()] ||= {vistos: {}, lista: [], init: false};
 const avSoporte = () => "Notification" in window && "serviceWorker" in navigator && !(window.claude && window.claude.use);
 const avPermiso = () => avSoporte() ? Notification.permission : "no";
 const avPushServidor = () => typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo && !!(AV.cfg && AV.cfg.push);
@@ -32,7 +35,7 @@ function revisarAlertas(){
     alertas.forEach(a => nuevas.push({...a, id: S.org + ":" + a.clave, creada: ahora, leida: !st.init ? a.nivel !== "urgente" : propia}));
   }
   const g = Object.keys(st.vistos); if (g.length > 800) g.slice(0, g.length - 800).forEach(k => delete st.vistos[k]);
-  if (!nuevas.length) { if (!st.init) { st.init = true; save(); } return; }
+  if (!nuevas.length) { if (!st.init) { st.init = true; save(); } avBadge(); return; }
   const primera = !st.init; st.init = true;
   st.lista = nuevas.sort((a, b) => (AV_ORD(b) - AV_ORD(a)) || b.ts - a.ts).concat(st.lista).slice(0, 60);
   save(); avBadge();
