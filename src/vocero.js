@@ -17,7 +17,7 @@ function vocContexto(){
 const vocClave = x => x.tipo === "libre" ? "l:" + norm(x.tema) : VOC.sel;
 /* Datos del municipio: primero las líneas que tocan el tema. */
 function vocDatos(x){
-  const lineas = (cuenta().base || baseConocimiento()).split("\n").map(l => l.trim()).filter(l => l && !/^\[completar\]/i.test(l));
+  const lineas = (cuenta().base || (esAut() ? baseAutoridad(cuenta().perfil) : baseConocimiento())).split("\n").map(l => l.trim()).filter(l => l && !/^\[completar\]/i.test(l));
   const kw = x.tipo === "g" ? norm(x.m.notas.map(n => n.hay).join(" ")).split(/\s+/).filter(w => w.length > 4) : x.tipo === "h" ? x.h.kw.map(norm) : norm(x.tema).split(/\s+/).filter(w => w.length > 3);
   const toca = l => kw.some(k => kwRe(k).test(norm(l)));
   const rel = lineas.filter(toca);
@@ -37,17 +37,17 @@ function vocPrompt(x){
     ? `NOTICIA: ${x.m.lead.t}. Resumen: ${x.m.lead.res}. Medio: ${MED[x.m.lead.m].n}. La publicaron ${x.m.notas.length} medio(s); ${llego(escalera(x.m.notas)).toLowerCase()}. Tono: ${tonoLbl[x.m.tono]}.${respondida(x.m.g) ? " El municipio ya aprobó una respuesta: " + ((S.comunicados.find(y => y.org === S.org && y.g === x.m.g) || {}).texto || "").slice(0, 600) : ""}`
     : x.tipo === "h" ? `FECHA DEL CALENDARIO: ${x.h.nombre} (${fechaHito(x.h.desde)} al ${fechaHito(x.h.hasta)}). Qué suele pasar: ${x.h.que || "sin descripción"}. Preparación prevista: ${x.h.prep.join("; ") || "ninguna"}. Noticias recientes del tema: ${hitoMenciones(x.h, menciones(c, 30)).slice(0, 4).map(m => m.lead.t).join(" | ") || "ninguna"}.`
     : `TEMA: ${x.tema}. Noticias recientes de la comuna: ${menciones(c, 7).slice(0, 5).map(m => m.lead.t).join(" | ") || "ninguna"}.`;
-  return `Eres el asesor de vocería de PregonIA para la Municipalidad de ${S.org}, Chile. El vocero va a una entrevista de radio en minutos y necesita una hoja breve para responder sobre este tema.
+  return `Eres el asesor de vocería de PregonIA para ${esAut() ? "el equipo de " + inst() : inst()}, Chile. El vocero va a una entrevista de radio en minutos y necesita una hoja breve para responder sobre este tema.
 
 ${tema}
 
-DATOS DEL MUNICIPIO (los únicos que puedes usar como cifras o hechos):
+${datosLbl()} (los únicos que puedes usar como cifras o hechos):
 ${[...d.rel, ...d.resto].join("\n") || "(no hay datos cargados)"}
 
 Reglas obligatorias:
 1. Usa solo hechos de la noticia o de los DATOS DEL MUNICIPIO. Si falta un dato, escribe [completar: qué dato]. No inventes cifras, fechas, nombres ni compromisos. Los datos marcados [Ejemplo] son ficticios: puedes usarlos, pero mantén la marca [Ejemplo].
 2. Frases cortas para decir en voz alta, de máximo 25 palabras, en español de Chile, tono institucional y cercano.
-3. Sin promoción personal ni partidaria de ninguna autoridad.
+3. ${esAut() ? "Tono propio del cargo, sin ataques personales ni descalificaciones a otras autoridades o partidos." : "Sin promoción personal ni partidaria de ninguna autoridad."}
 
 Devuelve solo un objeto JSON con:
 - "mensajes": exactamente 3 objetos {"idea": lo que hay que decir, "dato": la cifra o hecho que lo respalda o [completar: …]}.
@@ -151,7 +151,7 @@ function vocAbrir(sel){
 function vocCerrar(){ VOC.ctl?.abort(); $("#vocBack")?.remove(); document.body.classList.remove("vid-on"); const o = vocAbrir.origen; if (o && o.isConnected) o.focus(); }
 function vocTexto(){
   const x = vocContexto(), k = VOC.kits[vocClave(x)]; if (!k) return "";
-  const d = vocDatos(x), L = [`*Kit de vocería · Municipalidad de ${S.org}*`, `Tema: ${x.tema}`];
+  const d = vocDatos(x), L = [`*Kit de vocería · ${inst()}*`, `Tema: ${x.tema}`];
   if (x.tipo === "g") { const a = accion(x.m); L.push(`Medio: ${MED[x.m.lead.m].n}${x.m.notas.length > 1 ? ` y ${x.m.notas.length - 1} más` : ""} · ${llego(escalera(x.m.notas))}`, x.m.lead.url || "", "", "*Lo que pasó*", x.m.lead.res, "", "*Qué hacer*", a.a + " (" + a.r + ")"); }
   if (x.tipo === "h") L.push(`${fechaHito(x.h.desde)} al ${fechaHito(x.h.hasta)}`, "", "*Qué suele pasar*", x.h.que || "");
   L.push("", "*Tres mensajes*"); k.mensajes.forEach((m, i) => L.push(`${i + 1}. ${m.idea}`, `   Dato: ${m.dato}`));

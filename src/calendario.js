@@ -58,7 +58,7 @@ const HITOS = [
 ];
 const MES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const fechaHito = ([m, d]) => d + " " + MES[m - 1];
-function hitosDe(c = cuenta()){ return HITOS.filter(h => h.comunas === "*" || h.comunas.includes(S.org)).concat((c.hitos || []).map(h => ({...h, propio: true}))); }
+function hitosDe(c = cuenta()){ return HITOS.filter(h => h.comunas === "*" || territorio(c).some(x => h.comunas.includes(x))).concat((c.hitos || []).map(h => ({...h, propio: true}))); }
 /* La próxima vez que ocurre (o la actual, si está en curso). */
 function ocurrencia(h, ahora = NOW){
   const vuelta = h.hasta[0] < h.desde[0] || (h.hasta[0] === h.desde[0] && h.hasta[1] < h.desde[1]), y = new Date(ahora).getFullYear();

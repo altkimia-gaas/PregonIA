@@ -91,7 +91,24 @@ Para cada nota devuelve un objeto con:
 
 Responde solo con un arreglo JSON compacto, en una sola línea, sin bloque de código ni texto adicional.`;
 }
+/* Autoridades: la relevancia y el tono se juzgan respecto de la persona, no de una comuna. */
+const esSujeto = x => x && typeof x === "object";
+function promptLoteAut(a, notas, base){
+  return `Eres analista de prensa de PregonIA para el equipo de ${a.cargo} ${a.nombre} (${a.zona}, Región de Valparaíso, Chile). Revisa estas notas de prensa:
+
+${notas.map((n, k) => linea(n, base + k)).join("\n")}
+
+Para cada nota devuelve un objeto con:
+- "i": su número.
+- "rel": true solo si la nota nombra a ${a.nombre} como ${a.cargo.toLowerCase()} o trata directamente de su labor; false si es otra persona con un nombre parecido o si no la nombra.
+- "tono": "cri" si es negativa o riesgosa para la imagen o el trabajo de ${a.nombre} (críticas, cuestionamientos, polémicas, denuncias), "pos" si la favorece (iniciativas, logros, reconocimientos), "neu" si es informativa o solo la cita.
+- "res": un resumen propio de una frase, de máximo 20 palabras, en español de Chile, sin copiar frases del medio.
+- "x": entre 3 y 6 palabras clave en minúsculas separadas por espacios (temas, lugares, instituciones).
+
+Responde solo con un arreglo JSON compacto, en una sola línea, sin bloque de código ni texto adicional.`;
+}
 function promptGrupos(comuna, notas, existentes = []){
+  if (esSujeto(comuna)) comuna = comuna.nombre;
   return `Estas son notas de prensa sobre ${comuna}, Chile:
 
 ${notas.map((n, i) => `${i}. ${n.titulo} (${n.medio})`).join("\n")}
@@ -104,7 +121,8 @@ Agrupa las notas que cuentan el mismo hecho, aunque sean de medios distintos. Si
 async function clasificar(comuna, notas, existentes = []){
   if (!process.env.ANTHROPIC_API_KEY || !notas.length) return {porI: new Map(), ok: false};
   const lotes = []; for (let k = 0; k < notas.length; k += LOTE) lotes.push(k);
-  const lote = async k => (await llamar(promptLote(comuna, notas.slice(k, k + LOTE), k), 4000)) || (await llamar(promptLote(comuna, notas.slice(k, k + LOTE), k), 4000)); // un reintento
+  const pl = esSujeto(comuna) ? promptLoteAut : promptLote;
+  const lote = async k => (await llamar(pl(comuna, notas.slice(k, k + LOTE), k), 4000)) || (await llamar(pl(comuna, notas.slice(k, k + LOTE), k), 4000)); // un reintento
   const [grupos, ...partes] = await Promise.all([llamar(promptGrupos(comuna, notas, existentes), 4000), ...lotes.map(lote)]);
   const porI = new Map();
   partes.forEach(p => (p || []).forEach(c => { if (Number.isInteger(Number(c.i))) porI.set(Number(c.i), {...c}); }));
@@ -123,12 +141,29 @@ export async function leerCatalogo(){
 }
 const porDominio = new Map(), porNombre = new Map();
 CATALOGO.forEach(m => { const d = dominio(m.url); if (d) porDominio.set(d, m); porNombre.set(norm(m.nombre), m); });
-export async function leerGoogleNews(comuna, dias = VENTANA_DIAS){
-  const gq = `"${comuna}" ${CONTEXTO} when:${dias}d`, gn = `https://news.google.com/rss/search?q=${encodeURIComponent(gq)}&hl=es-419&gl=CL&ceid=CL:es-419`;
-  return parsear(await leer(gn, 10000)).map(x => {
+export async function leerGoogleNews(comuna, dias = VENTANA_DIAS){ return leerGoogleNewsConsulta(`"${comuna}" ${CONTEXTO}`, dias); }
+/* Google News con una consulta cualquiera. Con catalogo = true solo quedan los medios del catálogo; con false, todo lo que encuentre (para contar). */
+export async function leerGoogleNewsConsulta(q, dias = VENTANA_DIAS, catalogo = true){
+  const gq = `${q} when:${dias}d`, gn = `https://news.google.com/rss/search?q=${encodeURIComponent(gq)}&hl=es-419&gl=CL&ceid=CL:es-419`;
+  const items = parsear(await leer(gn, 10000));
+  if (!catalogo) return items;
+  return items.map(x => {
     const m = porDominio.get(dominio(x.fuenteUrl)) || porNombre.get(norm(x.fuente)); if (!m) return null;
     return { ...x, titulo: x.titulo.replace(new RegExp("\\s+-\\s+" + x.fuente.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"), ""), desc: "", m, via: "google_news" };
   }).filter(Boolean);
+}
+/* Lo que nombra a una autoridad (por cualquiera de sus variantes de nombre) en la ventana, sin duplicados. */
+export function candidatasPorNombre(variantes, items, desde, ahora = Date.now()){
+  const re = new RegExp(`(^|[^a-z])(${variantes.map(v => norm(v).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})([^a-z]|$)`);
+  const vistos = new Set(), out = [];
+  for (const x of items) {
+    if (!Number.isFinite(x.fecha) || x.fecha < desde || x.fecha > ahora + 36e5) continue;
+    if (!re.test(norm(x.titulo + " " + x.desc))) continue;
+    const k1 = x.url, k2 = x.m.id + "|" + norm(x.titulo);
+    if (vistos.has(k1) || vistos.has(k2)) continue; vistos.add(k1); vistos.add(k2);
+    out.push({ id: "r" + hash(x.url), m: x.m.id, medio: x.m.nombre, ambito: x.m.ambito, titulo: x.titulo, desc: x.desc, url: x.url, ts: Math.min(x.fecha, ahora), via: x.via || "lectura" });
+  }
+  return out.sort((a, b) => b.ts - a.ts);
 }
 /* Lo que menciona la comuna en la ventana, sin duplicados (mismo enlace o mismo titular en el mismo medio), del más reciente al más antiguo. */
 export function candidatasDe(comuna, items, desde, ahora = Date.now()){

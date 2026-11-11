@@ -18,7 +18,7 @@ refrescarNotas(); render();
 
 const ahoraLocal = () => { const d = new Date(Date.now() - new Date().getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); };
 function capAbrir(pre = {}){
-  const nombres = [...new Set([...S.fbPaginas.filter(p => !p.c || p.c === S.org).map(p => p.n), ...CATALOG.filter(m => m.a === "local" && (m.c || "").split(";").includes(S.org)).sort((x, y) => (y.m === "facebook") - (x.m === "facebook")).map(m => m.n)])];
+  const nombres = [...new Set([...S.fbPaginas.filter(p => !p.c || p.c === S.org).map(p => p.n), ...CATALOG.filter(m => m.a === "local" && (m.c || "").split(";").some(x => territorio().includes(x))).sort((x, y) => (y.m === "facebook") - (x.m === "facebook")).map(m => m.n)])];
   const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "capBack";
   ov.innerHTML = `<section class="vid cap" role="dialog" aria-modal="true" aria-labelledby="capT">
     <header class="vid-h"><div><h2 id="capT">Agregar publicación</h2><p>${pre.compartida ? "Llegó desde Compartir. Revisa los datos y agrégala." : `Para medios que publican en Facebook, grupos vecinales u otras redes. PregonIA la analiza como cualquier noticia de ${esc(S.org)}.`}</p></div><button class="btn ghost" type="button" data-act="cap-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
@@ -70,7 +70,7 @@ async function capAnalizar(texto, medio, img){
   const recientes = menciones(cuenta(), 14).slice(0, 25), sample = await samplePromise;
   if (!sample) return null;
   if (img) { const puede = typeof sample.limits === "function" ? !!(await sample.limits().catch(() => ({}))).images : !!sample.imagenes; if (!puede) { if (texto.length < 20) throw {code: "sin_imagen"}; img = null; } }
-  const p = `Eres analista de prensa de PregonIA para la Municipalidad de ${S.org}, Región de Valparaíso, Chile. Analiza esta publicación ${medio ? `de la página "${medio}"` : "de una página"} en Facebook o redes sociales.${img ? " La publicación viene en la captura de pantalla adjunta: lee su texto (y la página que la publicó, si se ve)." : ""}
+  const p = `Eres analista de prensa de PregonIA para ${esAut() ? "el equipo de " + inst() + " (" + cuenta().perfil.zonaNombre + ")" : inst()}, Región de Valparaíso, Chile. Analiza esta publicación ${medio ? `de la página "${medio}"` : "de una página"} en Facebook o redes sociales.${img ? " La publicación viene en la captura de pantalla adjunta: lee su texto (y la página que la publicó, si se ve)." : ""}
 
 """${texto.slice(0, 3000) || "(sin texto pegado: usa la captura)"}"""
 
@@ -80,10 +80,10 @@ ${recientes.map(m => `${m.g} | ${m.lead.t}`).join("\n") || "(ninguna)"}
 Devuelve solo un objeto JSON con:
 - "titular": un titular propio, informativo, de máximo 14 palabras, sin copiar frases de la publicación.
 - "res": un resumen propio de una frase, de máximo 22 palabras.
-- "tono": "cri" si es negativa o riesgosa para la gestión o la imagen del municipio o la comuna (reclamos, emergencias, conflictos, críticas), "pos" si la favorece, "neu" si es informativa.
+- "tono": "cri" si es negativa o riesgosa para ${esAut() ? "la imagen o el trabajo de la autoridad, o un problema en su territorio" : "la gestión o la imagen del municipio o la comuna"} (reclamos, emergencias, conflictos, críticas), "pos" si la favorece, "neu" si es informativa.
 - "x": entre 3 y 8 palabras clave en minúsculas separadas por espacios (temas, lugares, instituciones).
 - "g": el código de la noticia ya registrada que cuenta el mismo hecho, o "nuevo" si ninguna.
-- "rel": true si trata de ${S.org} o de su municipio; false si no.${img ? `
+- "rel": true si ${esAut() ? `nombra a ${cuenta().perfil.nombre} o trata de un hecho en su territorio (${cuenta().perfil.zonaNombre})` : `trata de ${S.org} o de su municipio`}; false si no.${img ? `
 - "medio": el nombre de la página o medio que la publicó según la captura, o "" si no se ve.
 - "legible": false si la captura no permite leer la publicación.` : ""}`;
   const {text} = await sample(p, img ? {modelTier: "quick", cache: false, images: [img]} : {modelTier: "quick", cache: false});
@@ -115,7 +115,7 @@ async function capGuardar(e){
   const res = r && r.res ? String(r.res).slice(0, 220) : primera;
   const x = r && r.x ? String(r.x).slice(0, 120) : "";
   const c = {id, org: S.org, m: m.id, via, ts: Math.min(Number.isFinite(fecha) ? fecha : Date.now(), Date.now()), t, res, x, tono, g, url,
-    hay: norm(t + " " + res + " " + x + " " + texto.slice(0, 600) + " " + S.org + " comuna")};
+    hay: norm(t + " " + res + " " + x + " " + texto.slice(0, 600) + " " + (esAut() ? cuenta().perfil.variantes[0] : S.org + " comuna"))};
   capImgBlob = null;
   S.capturas.push(c); save(); refrescarNotas(); capCerrar();
   tState.tono = "todos"; tState.dias = "30"; tState.tema = "todos"; tState.q = "";

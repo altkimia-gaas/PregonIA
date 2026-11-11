@@ -155,6 +155,28 @@ body.vid-on{overflow:hidden}
 .cap-inst.ios{display:block;color:var(--muted)}
 .dg-acts2{display:flex;gap:6px;flex-wrap:wrap}
 .btn .ico{flex:none}
+/* Entrada por rol, zona y nombre */
+.ent-back{z-index:120}
+.ent{width:min(760px,100%)}
+.ent-f{display:grid;gap:16px;padding:16px 18px 18px}
+.ent-paso{border:0;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+.ent-paso legend{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;padding:0;margin-bottom:8px}
+.ent-paso legend .n{width:22px;height:22px;border-radius:50%;background:var(--accent-bg);color:var(--accent-ink);display:grid;place-items:center;font-size:12px;font-weight:800}
+.ent-roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,132px),1fr));gap:8px}
+.ent-rol,.ent-n{position:relative;display:grid;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);cursor:pointer}
+.ent-rol input,.ent-n input{position:absolute;opacity:0;pointer-events:none}
+.ent-rol b,.ent-n b{font-size:13.5px;line-height:1.3}
+.ent-rol small,.ent-n small{font-size:11.5px;color:var(--muted);line-height:1.35}
+.ent-rol.on,.ent-n.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent) inset}
+.ent-rol:has(input:focus-visible),.ent-n:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.ent-ns{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:8px;max-height:min(40vh,320px);overflow:auto;padding:2px}
+.ent-paso select,.ent-libre{font:inherit;font-size:14px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-btn);padding:9px 10px;min-height:42px;width:100%}
+.ent-com{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.ent-gen{display:flex;gap:16px;flex-wrap:wrap;font-size:13.5px}
+.ent-gen label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.ent-acts{display:flex;justify-content:flex-end}
+.ent-acts .btn{min-width:140px}
+@media (max-width:560px){ .ent-f{padding:14px} .ent-acts .btn{width:100%} }
 /* Kit de vocería */
 .voc{width:min(980px,100%)}
 .voc-b{display:grid;gap:16px;padding:16px 18px}
@@ -960,7 +982,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
     <div class="top-in">
       <a class="logo" href="#portada" aria-label="PregonIA, portada"><span class="mk" aria-hidden="true"><i></i><i></i><i></i></span><span>Pregon<b>IA</b></span></a>
       <span class="slogan">Escucha la plaza. Decide a tiempo.</span>
-      <div class="org"><label for="org">Municipio</label><select id="org" aria-label="Municipio"></select></div>
+      <div class="org"><label for="org">Cuenta</label><select id="org" aria-label="Cuenta"></select></div>
       <span class="live"><i class="dot" aria-hidden="true"></i><span id="fecha"></span></span>
       <details class="planbox"><summary id="planLbl"></summary><div class="usage" id="usage"></div></details>
       <div class="tools"><button class="themebtn" type="button" data-act="tema" id="temaBtn" aria-label="Cambiar a modo claro" title="Modo claro"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" id="temaIco"></svg></button>

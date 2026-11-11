@@ -1,20 +1,54 @@
 // Noticias reales para PregonIA (etapa 1, sin base de datos): lee los medios al vuelo para una comuna, clasifica con Claude Haiku
 // y devuelve titular, enlace, medio, fecha y resumen propio. La respuesta queda 15 minutos en la caché de Vercel.
 // La lectura y la clasificación viven en _lectura.js, compartido con la lectura programada (/api/ingesta).
-import { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, candidatasDe } from "./_lectura.js";
+import { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre } from "./_lectura.js";
+import { AUTORIDADES, CARGOS, cargoDe, zonaDe, variantesNombre } from "./_autoridades.js";
 
-export async function GET(req){
-  const u = new URL(req.url); DIAG.length = 0;
-  if (u.searchParams.has("ping")) return json({ ok: true, ia: Boolean(process.env.ANTHROPIC_API_KEY) }, 200, { "cache-control": "no-store" });
-  const comuna = u.searchParams.get("comuna") || "Casablanca";
-  if (!COMUNAS[comuna]) return json({ error: "Comuna no disponible" }, 400);
-  const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
-  const [cat, gn] = await Promise.all([leerCatalogo(), leerGoogleNews(comuna).catch(() => null)]);
+/* Autoridades: la consulta va por nombre y cargo, con palabras de contexto que descartan homónimos lejanos. */
+const CONTEXTO_ROL = {
+  diputado: '(diputado OR diputada OR Cámara OR Congreso OR Valparaíso OR Chile)',
+  senador: '(senador OR senadora OR Senado OR Congreso OR Valparaíso OR Chile)',
+  core: '(consejero OR consejera OR core OR "gobierno regional" OR Valparaíso)',
+  concejal: '(concejal OR concejala OR concejo OR municipalidad OR comuna)'
+};
+const limpio = (s, n = 80) => String(s || "").replace(/[\u0000-\u001f"<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
+function sujetoDe(u){
+  const id = u.searchParams.get("autoridad");
+  if (id) { const a = AUTORIDADES.find(x => x.id === id); return a ? {...a, nomina: true} : null; }
+  const rol = u.searchParams.get("rol"), zona = u.searchParams.get("zona"), n = limpio(u.searchParams.get("nombre"));
+  if (!CARGOS[rol] || rol === "municipio" || !zonaDe(rol, zona) || n.split(" ").length < 2) return null;
+  return {id: null, rol, zona, n, c: n, p: "", g: u.searchParams.get("g") === "F" ? "F" : "M", nomina: false};
+}
+const consulta = (a, z) => `(${variantesNombre(a).map(v => `"${v}"`).join(" OR ")}) ${a.rol === "concejal" ? `("${z.n}" OR ${CONTEXTO_ROL.concejal})` : CONTEXTO_ROL[a.rol]}`;
+/* Presencia en prensa de los pares (mismo cargo y zona en la nómina): cuántas notas los nombran en la ventana, en cualquier medio que indexe Google News. */
+async function paresDe(a, z, desde){
+  const lista = AUTORIDADES.filter(x => x.rol === a.rol && x.zona === a.zona && x.id !== a.id).concat([a]);
+  if (lista.length < 2) return [];
+  return Promise.all(lista.map(async x => {
+    let n = 0; try {
+      const re = new RegExp(variantesNombre(x).map(v => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"));
+      n = (await leerGoogleNewsConsulta(consulta(x, z), VENTANA_DIAS, false)).filter(i => Number.isFinite(i.fecha) && i.fecha >= desde && re.test(norm(i.titulo + " " + i.desc))).length;
+    } catch(e) { n = null; }
+    return {n_: x.n, p: x.p, n, yo: x === a};
+  })).then(r => r.filter(x => x.n !== null));
+}
+async function deAutoridad(u){
+  const a = sujetoDe(u); if (!a) return json({ error: "Autoridad no disponible" }, 400);
+  const z = zonaDe(a.rol, a.zona), cargo = cargoDe(a.rol, a.g), ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
+  const [cat, gn, pares] = await Promise.all([leerCatalogo(), leerGoogleNewsConsulta(consulta(a, z)).catch(() => null), a.nomina ? paresDe(a, z, desde).catch(() => []) : []]);
   const errores = cat.errores.concat(gn ? [] : ["Google News"]);
-  const candidatas = candidatasDe(comuna, cat.items.concat(gn || []), desde, ahora), lote = candidatas.slice(0, MAX_IA);
-
-  let clas = {porI: new Map(), ok: false}; try { clas = await clasificar(comuna, lote); } catch(e) { console.error("clasificar", e); }
-  const porI = clas.porI, notas = [], grupos = new Map();
+  const candidatas = candidatasPorNombre(variantesNombre(a), cat.items.concat(gn || []), desde, ahora), lote = candidatas.slice(0, MAX_IA);
+  let clas = {porI: new Map(), ok: false}; try { clas = await clasificar({nombre: a.n, cargo, zona: z.n}, lote); } catch(e) { console.error("clasificar", e); }
+  const notas = armar(lote, clas.porI);
+  return json({
+    autoridad: {id: a.id, nombre: a.n, cargo, zona: z.n}, generado: new Date(ahora).toISOString(), ventana_dias: VENTANA_DIAS, ia: clas.ok, ia_parcial: !clas.ok && clas.porI.size > 0,
+    fuentes: { leidas: cat.total + 1 - errores.length, total: cat.total + 1, con_error: errores.slice(0, 40) },
+    candidatas: candidatas.length, pares, ...(DIAG.length ? {ia_diagnostico: DIAG.slice(0, 6)} : {}), notas
+  }, 200, { "cache-control": clas.ok ? "public, max-age=0, s-maxage=900, stale-while-revalidate=3600" : "public, max-age=0, s-maxage=60" });
+}
+/* Notas clasificadas: descarta lo que la IA marcó como ajeno y agrupa por hecho. */
+function armar(lote, porI){
+  const notas = [], grupos = new Map();
   lote.forEach((n, i) => {
     const c = porI.get(i);
     if (c && c.rel === false) return;
@@ -24,6 +58,22 @@ export async function GET(req){
   // Grupo estable: el id de la nota más antigua del mismo hecho, para que "respondida" o "no corresponde" sobrevivan a una nueva lectura.
   notas.slice().sort((a, b) => a.ts - b.ts).forEach(n => { if (!grupos.has(n.etiqueta)) grupos.set(n.etiqueta, n.id); });
   notas.forEach(n => { n.g = grupos.get(n.etiqueta); delete n.etiqueta; });
+  return notas;
+}
+
+export async function GET(req){
+  const u = new URL(req.url); DIAG.length = 0;
+  if (u.searchParams.has("ping")) return json({ ok: true, ia: Boolean(process.env.ANTHROPIC_API_KEY) }, 200, { "cache-control": "no-store" });
+  if (u.searchParams.has("autoridad") || u.searchParams.has("rol")) return deAutoridad(u);
+  const comuna = u.searchParams.get("comuna") || "Casablanca";
+  if (!COMUNAS[comuna]) return json({ error: "Comuna no disponible" }, 400);
+  const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
+  const [cat, gn] = await Promise.all([leerCatalogo(), leerGoogleNews(comuna).catch(() => null)]);
+  const errores = cat.errores.concat(gn ? [] : ["Google News"]);
+  const candidatas = candidatasDe(comuna, cat.items.concat(gn || []), desde, ahora), lote = candidatas.slice(0, MAX_IA);
+
+  let clas = {porI: new Map(), ok: false}; try { clas = await clasificar(comuna, lote); } catch(e) { console.error("clasificar", e); }
+  const notas = armar(lote, clas.porI);
 
   return json({
     comuna, generado: new Date(ahora).toISOString(), ventana_dias: VENTANA_DIAS, ia: clas.ok, ia_parcial: !clas.ok && clas.porI.size > 0,

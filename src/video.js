@@ -34,7 +34,7 @@ function videoPlan(){
   if (d.buena) S0.push({k: "buena", dur: 8, f: ficha(d.buena)});
   S0.push({k: "cierre", dur: 5.5});
   S0.forEach(s => { s.base = s.dur; });
-  const plan = {d, scenes: S0, total: 0, org: S.org, per: d.per, sig: d.asuntos[0] ? ficha(d.asuntos[0]) : null, temas};
+  const plan = {d, scenes: S0, total: 0, org: S.org, inst: inst(), per: d.per, sig: d.asuntos[0] ? ficha(d.asuntos[0]) : null, temas};
   return retimar(plan);
 }
 
@@ -56,7 +56,7 @@ const minus = t => t.charAt(0).toLowerCase() + t.slice(1);
 function guionBase(plan){
   const {M, v, comp} = plan.d, frase = t => t.trim().replace(/([^.!?])$/, "$1.");
   return plan.scenes.map(s => {
-    if (s.k === "intro") return `Parte de prensa de la Municipalidad de ${plan.org}, del ${fechaHablada(NOW - 6 * DAY)} al ${fechaHablada(NOW)}.`;
+    if (s.k === "intro") return `Parte de prensa de ${plan.inst}, del ${fechaHablada(NOW - 6 * DAY)} al ${fechaHablada(NOW)}.`;
     if (s.k === "veredicto") return `La prensa fue ${v.n.toLowerCase()} esta semana: ${plural(M.vol, "noticia", "noticias")}, ${M.pos} positivas, ${M.neu} neutras y ${M.cri} críticas. ${comp}`;
     if (s.k === "temas") { const t = s.temas.filter(x => !x.otros).slice(0, 2); return t.length ? `Los temas con más publicaciones fueron ${t.map((x, i) => `${x.nombre.toLowerCase()}, con ${i ? x.n : plural(x.n, "publicación", "publicaciones")}`).join(", y ")}.` : "La cobertura de la semana no se concentró en un tema en particular."; }
     if (s.k === "asunto") { const f = s.f; return `${ORD[s.i]} asunto: ${frase(minus(f.m.lead.res))} Salió en ${plural(f.medios.length, "medio", "medios")} y ${llego(f.e).toLowerCase().replace(/^solo/, "se quedó solo en la")}. Recomendación: ${frase(minus(f.ac.a))} Responsable: ${resp(f.ac.r)}.`; }
@@ -148,7 +148,7 @@ const VESC = {
   intro(ctx, s, l, plan){
     vlogo(ctx, VW / 2, 860, 150, vin(l, 0.1, 0.8));
     vtexto(ctx, "Parte semanal del alcalde", VW / 2, 1000, {px: 50, w: 500, fam: VF.h, color: VC.muted, a: vin(l, 0.5), align: "center"});
-    vtexto(ctx, "Municipalidad de " + plan.org, VW / 2, 1090, {px: 62, w: 700, fam: VF.h, a: vin(l, 0.75), align: "center"});
+    vtexto(ctx, plan.inst, VW / 2, 1090, {px: 62, w: 700, fam: VF.h, a: vin(l, 0.75), align: "center"});
     vtexto(ctx, plan.per, VW / 2, 1175, {px: 42, w: 500, color: VC.blue, a: vin(l, 1), align: "center"});
   },
   veredicto(ctx, s, l, plan){
@@ -374,7 +374,7 @@ async function videoPreparar(){
 }
 async function videoWhatsApp(){
   if (!VID || !VID.blob) return;
-  const f = new File([VID.blob], videoNombre(), {type: VID.blob.type}), titulo = "Video del parte semanal · Municipalidad de " + S.org;
+  const f = new File([VID.blob], videoNombre(), {type: VID.blob.type}), titulo = "Video del parte semanal · " + inst();
   if (navigator.canShare && movil() && navigator.canShare({files: [f]})) {
     try { await navigator.share({files: [f], title: titulo, text: titulo}); return; }
     catch(err) { if (err && err.name === "AbortError") return; if (err && err.name === "NotAllowedError") { toast("El video está listo: toca WhatsApp otra vez."); return; } }

@@ -168,6 +168,28 @@ body.vid-on{overflow:hidden}
 .cap-inst.ios{display:block;color:var(--muted)}
 .dg-acts2{display:flex;gap:6px;flex-wrap:wrap}
 .btn .ico{flex:none}
+/* Entrada por rol, zona y nombre */
+.ent-back{z-index:120}
+.ent{width:min(760px,100%)}
+.ent-f{display:grid;gap:16px;padding:16px 18px 18px}
+.ent-paso{border:0;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+.ent-paso legend{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;padding:0;margin-bottom:8px}
+.ent-paso legend .n{width:22px;height:22px;border-radius:50%;background:var(--accent-bg);color:var(--accent-ink);display:grid;place-items:center;font-size:12px;font-weight:800}
+.ent-roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,132px),1fr));gap:8px}
+.ent-rol,.ent-n{position:relative;display:grid;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);cursor:pointer}
+.ent-rol input,.ent-n input{position:absolute;opacity:0;pointer-events:none}
+.ent-rol b,.ent-n b{font-size:13.5px;line-height:1.3}
+.ent-rol small,.ent-n small{font-size:11.5px;color:var(--muted);line-height:1.35}
+.ent-rol.on,.ent-n.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent) inset}
+.ent-rol:has(input:focus-visible),.ent-n:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.ent-ns{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:8px;max-height:min(40vh,320px);overflow:auto;padding:2px}
+.ent-paso select,.ent-libre{font:inherit;font-size:14px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-btn);padding:9px 10px;min-height:42px;width:100%}
+.ent-com{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.ent-gen{display:flex;gap:16px;flex-wrap:wrap;font-size:13.5px}
+.ent-gen label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.ent-acts{display:flex;justify-content:flex-end}
+.ent-acts .btn{min-width:140px}
+@media (max-width:560px){ .ent-f{padding:14px} .ent-acts .btn{width:100%} }
 /* Kit de vocería */
 .voc{width:min(980px,100%)}
 .voc-b{display:grid;gap:16px;padding:16px 18px}
@@ -973,7 +995,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
     <div class="top-in">
       <a class="logo" href="#portada" aria-label="PregonIA, portada"><span class="mk" aria-hidden="true"><i></i><i></i><i></i></span><span>Pregon<b>IA</b></span></a>
       <span class="slogan">Escucha la plaza. Decide a tiempo.</span>
-      <div class="org"><label for="org">Municipio</label><select id="org" aria-label="Municipio"></select></div>
+      <div class="org"><label for="org">Cuenta</label><select id="org" aria-label="Cuenta"></select></div>
       <span class="live"><i class="dot" aria-hidden="true"></i><span id="fecha"></span></span>
       <details class="planbox"><summary id="planLbl"></summary><div class="usage" id="usage"></div></details>
       <div class="tools"><button class="themebtn" type="button" data-act="tema" id="temaBtn" aria-label="Cambiar a modo claro" title="Modo claro"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" id="temaIco"></svg></button>
@@ -1131,7 +1153,7 @@ const HITOS = [
 ];
 const MES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const fechaHito = ([m, d]) => d + " " + MES[m - 1];
-function hitosDe(c = cuenta()){ return HITOS.filter(h => h.comunas === "*" || h.comunas.includes(S.org)).concat((c.hitos || []).map(h => ({...h, propio: true}))); }
+function hitosDe(c = cuenta()){ return HITOS.filter(h => h.comunas === "*" || territorio(c).some(x => h.comunas.includes(x))).concat((c.hitos || []).map(h => ({...h, propio: true}))); }
 /* La próxima vez que ocurre (o la actual, si está en curso). */
 function ocurrencia(h, ahora = NOW){
   const vuelta = h.hasta[0] < h.desde[0] || (h.hasta[0] === h.desde[0] && h.hasta[1] < h.desde[1]), y = new Date(ahora).getFullYear();
@@ -1219,6 +1241,241 @@ document.addEventListener("click", e => {
   if (a === "cal-com") { const h = hitosDe().find(x => x.id === b.dataset.h); tState.draft = null; tState.from = "reportes"; tState.pieza = "comunicado"; tState.enf = h && h.tipo === "oportunidad" ? "anunciar" : "contextualizar"; location.hash = "comunicados"; }
 });
 
+/* Autoridades electas de la Región de Valparaíso: zonas electorales y nómina vigente.
+   Lo usan la aplicación (entrada por rol, zona y nombre) y el servidor (lectura de noticias por autoridad):
+   scripts/build.py copia este archivo a api/_autoridades.js.
+   Nómina al inicio de cada período; verificar cambios posteriores (reemplazos, renuncias) antes de usarla con un cliente.
+   Fuentes: diputados 2026-2030 (Mala Espina Check, 17 nov 2025, distritos 6 y 7); senadores 2026-2034 (Meganoticias y T13, 11 mar 2026);
+   consejeros regionales 2025-2029 (Radio Universidad de Valparaíso, enero 2025). */
+const NOMINA_CORTE = "11 de noviembre de 2026";
+const PROVINCIAS = {
+  "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández"],
+  "Marga Marga": ["Quilpué", "Villa Alemana", "Limache", "Olmué"],
+  "Quillota": ["Quillota", "La Calera", "La Cruz", "Hijuelas", "Nogales"],
+  "San Antonio": ["San Antonio", "Cartagena", "El Tabo", "El Quisco", "Algarrobo", "Santo Domingo"],
+  "San Felipe de Aconcagua": ["San Felipe", "Llaillay", "Putaendo", "Santa María", "Catemu", "Panquehue"],
+  "Los Andes": ["Los Andes", "Calle Larga", "Rinconada", "San Esteban"],
+  "Petorca": ["La Ligua", "Petorca", "Cabildo", "Papudo", "Zapallar"],
+  "Isla de Pascua": ["Isla de Pascua"]
+};
+const COMUNAS_V = Object.values(PROVINCIAS).flat().sort((a, b) => a.localeCompare(b, "es"));
+const D6 = ["Cabildo", "Calle Larga", "Catemu", "Hijuelas", "La Calera", "La Cruz", "La Ligua", "Limache", "Llaillay", "Los Andes", "Nogales", "Olmué", "Panquehue", "Papudo", "Petorca", "Puchuncaví", "Putaendo", "Quillota", "Quilpué", "Quintero", "Rinconada", "San Esteban", "San Felipe", "Santa María", "Villa Alemana", "Zapallar"];
+const D7 = ["Algarrobo", "Cartagena", "Casablanca", "Concón", "El Quisco", "El Tabo", "Isla de Pascua", "Juan Fernández", "San Antonio", "Santo Domingo", "Valparaíso", "Viña del Mar"];
+/* Roles: cómo se nombra el cargo (femenino y masculino), qué zona lo define y su órgano. */
+const CARGOS = {
+  municipio: {n: "Municipio", f: "Municipio", m: "Municipio", zona: "Comuna", organo: "Municipalidad"},
+  diputado: {n: "Diputado o diputada", f: "Diputada", m: "Diputado", zona: "Distrito", organo: "Cámara de Diputadas y Diputados"},
+  senador: {n: "Senador o senadora", f: "Senadora", m: "Senador", zona: "Circunscripción", organo: "Senado"},
+  core: {n: "Consejero o consejera regional", f: "Consejera regional", m: "Consejero regional", zona: "Circunscripción provincial", organo: "Consejo Regional de Valparaíso"},
+  concejal: {n: "Concejal o concejala", f: "Concejala", m: "Concejal", zona: "Comuna", organo: "Concejo Municipal"}
+};
+const ZONAS = {
+  diputado: [{id: "D6", n: "Distrito 6", comunas: D6}, {id: "D7", n: "Distrito 7", comunas: D7}],
+  senador: [{id: "C6", n: "Circunscripción 6 · Región de Valparaíso", comunas: COMUNAS_V}],
+  core: [
+    {id: "V1N", n: "Valparaíso I Norte", comunas: ["Viña del Mar", "Concón", "Quintero", "Puchuncaví"]},
+    {id: "V2S", n: "Valparaíso II Sur", comunas: ["Valparaíso", "Casablanca", "Juan Fernández"]},
+    {id: "MM", n: "Marga Marga", comunas: PROVINCIAS["Marga Marga"]},
+    {id: "QUI", n: "Quillota", comunas: PROVINCIAS["Quillota"]},
+    {id: "SA", n: "San Antonio", comunas: PROVINCIAS["San Antonio"]},
+    {id: "SF", n: "San Felipe de Aconcagua", comunas: PROVINCIAS["San Felipe de Aconcagua"]},
+    {id: "LA", n: "Los Andes", comunas: PROVINCIAS["Los Andes"]},
+    {id: "PET", n: "Petorca", comunas: PROVINCIAS["Petorca"]},
+    {id: "IP", n: "Isla de Pascua", comunas: PROVINCIAS["Isla de Pascua"]}
+  ],
+  concejal: COMUNAS_V.map(c => ({id: c, n: c, comunas: [c]}))
+};
+/* n: nombre con que se le conoce; c: nombre completo; p: partido o pacto al momento de la elección; g: F o M. */
+const nuevaAut = (rol, zona, n, c, p, g) => ({id: rol.slice(0, 3) + "-" + n.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-"), rol, zona, n, c, p, g});
+const AUTORIDADES = [
+  nuevaAut("diputado", "D6", "Francisca Bello", "Francisca Bello Campos", "FA", "F"),
+  nuevaAut("diputado", "D6", "Nelson Venegas", "Nelson Venegas Salazar", "PS", "M"),
+  nuevaAut("diputado", "D6", "Sofía González", "Sofía González Cortés", "PC", "F"),
+  nuevaAut("diputado", "D6", "Cristian Mella", "Cristian Mella Andaur", "DC", "M"),
+  nuevaAut("diputado", "D6", "Javier Olivares", "Javier Olivares Avedaño", "PDG", "M"),
+  nuevaAut("diputado", "D6", "Luis Pardo", "Luis Pardo Sainz", "RN", "M"),
+  nuevaAut("diputado", "D6", "Chiara Barchiesi", "Chiara Barchiesi Chávez", "Republicanos", "F"),
+  nuevaAut("diputado", "D6", "Benjamín Lorca", "Benjamín Lorca Inzunza", "Republicanos", "M"),
+  nuevaAut("diputado", "D7", "Jorge Brito", "Jorge Brito Hasbún", "FA", "M"),
+  nuevaAut("diputado", "D7", "Jaime Bassa", "Jaime Bassa Mercado", "FA", "M"),
+  nuevaAut("diputado", "D7", "Luis Cuello", "Luis Cuello Peña y Lillo", "PC", "M"),
+  nuevaAut("diputado", "D7", "Juan Marcelo Valenzuela", "Juan Marcelo Valenzuela", "PDG", "M"),
+  nuevaAut("diputado", "D7", "Andrés Celis", "Andrés Celis Montt", "RN", "M"),
+  nuevaAut("diputado", "D7", "Hotuiti Teao", "Hotuiti Teao Drago", "Ind.-UDI", "M"),
+  nuevaAut("diputado", "D7", "Luis Sánchez", "Luis Sánchez Ossa", "Republicanos", "M"),
+  nuevaAut("diputado", "D7", "Sebastián Zamora", "Sebastián Zamora Soto", "Ind.-Republicanos", "M"),
+  nuevaAut("senador", "C6", "Karol Cariola", "Karol Cariola Oliva", "PC", "F"),
+  nuevaAut("senador", "C6", "Andrés Longton", "Andrés Longton Herrera", "RN", "M"),
+  nuevaAut("senador", "C6", "Arturo Squella", "Arturo Squella Ovalle", "Republicanos", "M"),
+  nuevaAut("senador", "C6", "Diego Ibáñez", "Diego Ibáñez Cotroneo", "FA", "M"),
+  nuevaAut("senador", "C6", "Camila Flores", "Camila Flores Oporto", "RN", "F"),
+  nuevaAut("core", "V1N", "Catalina Thauby", "Catalina María Thauby Krebs", "Republicanos", "F"),
+  nuevaAut("core", "V1N", "Javier Venegas", "Javier Ignacio Venegas Muñoz", "Republicanos", "M"),
+  nuevaAut("core", "V1N", "Osvaldo Urrutia", "Osvaldo Urrutia Soto", "UDI", "M"),
+  nuevaAut("core", "V1N", "Marcela Varas", "Marcela Alicia Varas Fuentes", "PPD", "F"),
+  nuevaAut("core", "V1N", "Tania Valenzuela", "Tania Estefanía Valenzuela Rossi", "FA", "F"),
+  nuevaAut("core", "V2S", "José Luis Miranda", "José Luis Miranda Muñoz", "Republicanos", "M"),
+  nuevaAut("core", "V2S", "Paulina Yáñez", "Paulina Yáñez Gula", "Republicanos", "F"),
+  nuevaAut("core", "V2S", "Omar Valdivia", "Omar Gabriel Valdivia Álvarez", "PPD", "M"),
+  nuevaAut("core", "V2S", "Paula Rosso", "Paula Rosso Montenegro", "FA", "F"),
+  nuevaAut("core", "MM", "Cristián Fuentes", "Cristián Humberto Fuentes Duque", "Republicanos", "M"),
+  nuevaAut("core", "MM", "Elsa Bueno", "Elsa Graciela Bueno Cortés", "Republicanos", "F"),
+  nuevaAut("core", "MM", "Emmanuel Olfos", "Emmanuel José Olfos Vargas", "Ind.-RN", "M"),
+  nuevaAut("core", "MM", "María Elena Rubilar", "María Elena Rubilar Muñoz", "FA", "F"),
+  nuevaAut("core", "QUI", "Felipe Córdoba", "Felipe Ignacio Sebastián Córdoba Araya", "Republicanos", "M"),
+  nuevaAut("core", "QUI", "Lautaro Correa", "Lautaro Correa Castillo", "PS", "M"),
+  nuevaAut("core", "QUI", "Giselle Ahumada", "Giselle Makarena Ahumada Espina", "Ind.-PC", "F"),
+  nuevaAut("core", "SA", "Mauricio López", "Mauricio Alejandro López Castillo", "Republicanos", "M"),
+  nuevaAut("core", "SA", "Paola Zamorano", "Paola Emilia Zamorano Arratia", "RN", "F"),
+  nuevaAut("core", "SA", "Romy Farías", "Romy Jesús Farías Caballero", "DC", "F"),
+  nuevaAut("core", "SF", "Fernando Astorga", "Fernando Marcelo Astorga Terraza", "Republicanos", "M"),
+  nuevaAut("core", "SF", "Rodolfo Silva", "Rodolfo Ignacio Silva González", "Ind.-RN", "M"),
+  nuevaAut("core", "SF", "Maricel Martínez", "Maricel Alejandra Martínez Vicencio", "PPD", "F"),
+  nuevaAut("core", "LA", "Edith Quiroz", "Edith Clarisa de las Nieves Quiroz Ortiz", "RN", "F"),
+  nuevaAut("core", "LA", "María Victoria Rodríguez", "María Victoria Rodríguez Herrera", "Ind.-FRVS", "F"),
+  nuevaAut("core", "PET", "Cristián Pinilla", "Cristián René Pinilla Ibacache", "Republicanos", "M"),
+  nuevaAut("core", "PET", "Juan Bautista Ibacache", "Juan Bautista Ibacache Ibacache", "RN", "M"),
+  nuevaAut("core", "IP", "Sabrina Tuki", "Sabrina Tuki Pont", "Ind.-Evópoli", "F"),
+  nuevaAut("core", "IP", "Francisco Haoa", "Francisco Haoa Hotus", "Ind.-PS", "M")
+];
+const zonaDe = (rol, id) => (ZONAS[rol] || []).find(z => z.id === id) || null;
+const cargoDe = (rol, g) => CARGOS[rol] ? (g === "F" ? CARGOS[rol].f : CARGOS[rol].m) : "";
+/* Formas en que la prensa nombra a una autoridad: nombre conocido, nombre completo y cargo + primer apellido. */
+function variantesNombre(a){
+  const sin = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const partes = a.n.split(" "), ap = partes[partes.length - 1], cargo = sin(cargoDe(a.rol, a.g));
+  const out = new Set([sin(a.n), sin(a.c)]);
+  out.add(cargo + " " + sin(ap));
+  if (a.rol === "core") out.add("core " + sin(ap));
+  return [...out].filter(x => x.split(" ").length >= 2);
+}
+
+/* Cuentas: municipios y autoridades electas (diputados, senadores, consejeros regionales y concejales).
+   Una cuenta de autoridad funciona con la misma lógica que la de un municipio: temas, menciones, reportes, respuestas y avisos,
+   pero sus temas base son la persona y su territorio, y sus piezas y reportes están pensados para su cargo y su equipo.
+   La entrada al sistema se elige por rol, zona y nombre. Nunca se inventan noticias sobre personas reales:
+   las menciones de una autoridad salen solo de medios reales. */
+const esAut = (c = cuenta()) => !!(c && c.perfil && c.perfil.tipo === "Autoridad");
+const cargoCuenta = (c = cuenta()) => esAut(c) ? cargoDe(c.perfil.rol, c.perfil.g) : "";
+function inst(c = cuenta()){ return esAut(c) ? `${cargoCuenta(c)} ${c.perfil.nombre}` : "Municipalidad de " + S.org; }
+const territorio = (c = cuenta()) => esAut(c) ? c.perfil.comunas : [S.org];
+const datosLbl = () => esAut() ? "DATOS DE LA OFICINA" : "DATOS DEL MUNICIPIO";
+const baseAutoridad = p => `[Completar] Comisiones o espacios que integra ${p.nombre}.\n[Completar] Proyectos, mociones o iniciativas que impulsa, con su estado.\n[Completar] Gestiones recientes en ${p.zonaNombre}, con fecha y resultado.\n[Completar] Vocería autorizada y contacto de prensa.`;
+
+/* Temas base de una autoridad: la persona (por todas las formas en que la nombra la prensa) y su territorio. */
+function candidatosAut(p){
+  const cargo = cargoDe(p.rol, p.g), ctxTerr = ["comuna", "vecinos", "region de valparaiso", "municipio", "municipalidad", "alcalde", "alcaldesa", "gobierno regional", "core", "diputado", "diputada", "senador", "senadora"];
+  const nucleo = [
+    T(p.nombre, "Núcleo", p.variantes.slice(), [], [], {persona: true}),
+    T(`${p.zonaNombre} (territorio)`, "Núcleo", p.comunas.slice(0, 40), p.comunas.length > 6 ? ctxTerr : [], ["marruecos", "colombia", "texas", "cartagena de indias"])
+  ];
+  const otros = [T(CARGOS[p.rol].organo, "Candidato", [norm(CARGOS[p.rol].organo), cargo.toLowerCase()], p.comunas.length > 6 ? ["valparaiso"] : p.comunas.slice())];
+  (p.agenda || []).forEach(a => { if (a.trim()) otros.push(T(a.trim(), "Agenda", [a.trim()])); });
+  Object.entries(SENS).forEach(([key, s]) => otros.push(T(s.n, (p.sens || []).includes(key) ? "Sensibilidad" : "Descubrimiento", s.t.slice(), p.comunas.slice(0, 40), [], {sens: key})));
+  return {nucleo, otros};
+}
+function crearCuentaAutoridad({rol, zona, a, nombre, g}){
+  const z = zonaDe(rol, zona); if (!z) return null;
+  const persona = a || {rol, zona, n: nombre.trim(), c: nombre.trim(), p: "", g};
+  const perfil = {tipo: "Autoridad", rol, g: persona.g, zona, zonaNombre: rol === "concejal" ? "Comuna de " + z.n : z.n, comunas: z.comunas.slice(), autoridadId: a ? a.id : null,
+    nombre: persona.n, completo: persona.c, partido: persona.p, variantes: variantesNombre(persona), plan: "regional", agenda: [], sens: [], comuna: null};
+  let key = persona.n; if (COMUNAS.includes(key) || (S.cuentas[key] && !esAut(S.cuentas[key]))) key += " (" + cargoDe(rol, persona.g) + ")";
+  if (!S.cuentas[key]) { const pr = proponer(perfil); S.cuentas[key] = {perfil, temas: pr.base, sugeridos: pr.sugeridos, borradores: 0, caracterizada: true, visto: false, onbOculto: false, base: baseAutoridad(perfil)}; }
+  return key;
+}
+/* Selector del encabezado: municipios, autoridades ya agregadas y la opción de entrar con otra cuenta. */
+function opcionesCuenta(){
+  const auts = Object.keys(S.cuentas).filter(k => esAut(S.cuentas[k]));
+  return `<optgroup label="Municipios">${COMUNAS.map(c => `<option value="${esc(c)}" ${c === S.org ? "selected" : ""}>${esc(c)}</option>`).join("")}</optgroup>`
+    + (auts.length ? `<optgroup label="Autoridades">${auts.map(k => `<option value="${esc(k)}" ${k === S.org ? "selected" : ""}>${esc(k)} · ${esc(cargoCuenta(S.cuentas[k]))}</option>`).join("")}</optgroup>` : "")
+    + `<option value="__entrar">Entrar con otra cuenta…</option>`;
+}
+function cambiarCuenta(key){
+  if (!S.cuentas[key]) return;
+  S.org = key; save();
+  const sel = $("#org"); sel.innerHTML = opcionesCuenta(); sel.value = key;  // el cambio lee el valor del selector: primero debe existir la opción
+  sel.dispatchEvent(new Event("change"));
+}
+
+/* Entrada por rol, zona y nombre */
+const ENT = {rol: "municipio", zona: "Casablanca", sel: "", libre: "", g: "F", enPortada: false};
+function entNombres(){ return AUTORIDADES.filter(a => a.rol === ENT.rol && a.zona === ENT.zona); }
+function entZonas(){ return ENT.rol === "municipio" ? COMUNAS.map(c => ({id: c, n: c, comunas: [c]})) : ZONAS[ENT.rol]; }
+function entCuerpo(){
+  const zs = entZonas(), z = zs.find(x => x.id === ENT.zona) || zs[0]; ENT.zona = z.id;
+  const ns = entNombres(), lista = ENT.rol !== "municipio" && ENT.rol !== "concejal";
+  if (lista && ENT.sel !== "__otra" && !ns.some(a => a.id === ENT.sel)) ENT.sel = ns[0] ? ns[0].id : "__otra";
+  const lbl = CARGOS[ENT.rol].zona, gen = `<div class="ent-gen" role="radiogroup" aria-label="Cargo"><label><input type="radio" name="entG" value="F" ${ENT.g === "F" ? "checked" : ""}> ${cargoDe(ENT.rol, "F")}</label><label><input type="radio" name="entG" value="M" ${ENT.g === "M" ? "checked" : ""}> ${cargoDe(ENT.rol, "M")}</label></div>`;
+  return `<fieldset class="ent-paso"><legend><span class="n">1</span>Rol</legend>
+      <div class="ent-roles" role="radiogroup" aria-label="Rol">${Object.entries(CARGOS).map(([k, r]) => `<label class="ent-rol ${ENT.rol === k ? "on" : ""}"><input type="radio" name="entRol" value="${k}" ${ENT.rol === k ? "checked" : ""}><b>${k === "municipio" ? "Municipio" : r.n.replace(" o ", " / ")}</b><small>${r.organo}</small></label>`).join("")}</div></fieldset>
+    <fieldset class="ent-paso"><legend><span class="n">2</span>${lbl}</legend>
+      <select id="entZona" aria-label="${lbl}">${zs.map(x => `<option value="${esc(x.id)}" ${x.id === z.id ? "selected" : ""}>${esc(x.n)}</option>`).join("")}</select>
+      ${z.comunas.length > 1 ? `<p class="ent-com">${z.comunas.length === COMUNAS_V.length ? `Las ${z.comunas.length} comunas de la Región de Valparaíso.` : `${z.comunas.length} comunas: ${z.comunas.map(esc).join(", ")}.`}</p>` : ENT.rol === "municipio" ? `<p class="ent-com">Comunas del piloto del litoral central.</p>` : ""}</fieldset>
+    ${ENT.rol === "municipio" ? "" : `<fieldset class="ent-paso"><legend><span class="n">3</span>Nombre</legend>
+      ${lista ? `<div class="ent-ns" role="radiogroup" aria-label="Nombre">${ns.map(a => `<label class="ent-n ${ENT.sel === a.id ? "on" : ""}"><input type="radio" name="entN" value="${a.id}" ${ENT.sel === a.id ? "checked" : ""}><b>${esc(a.n)}</b><small>${esc(cargoDe(a.rol, a.g))}${a.p ? " · " + esc(a.p) : ""}</small></label>`).join("")}<label class="ent-n ${ENT.sel === "__otra" ? "on" : ""}"><input type="radio" name="entN" value="__otra" ${ENT.sel === "__otra" ? "checked" : ""}><b>Otra persona</b><small>Si hubo un reemplazo o no aparece</small></label></div>` : ""}
+      ${!lista || ENT.sel === "__otra" ? `<input id="entLibre" class="ent-libre" value="${esc(ENT.libre)}" placeholder="Nombre y apellido" autocomplete="off" aria-label="Nombre y apellido">${gen}` : ""}
+      ${lista ? `<p class="ent-com">Nómina al inicio del período. Corte: ${NOMINA_CORTE}.</p>` : ""}</fieldset>`}
+    <p class="cap-err" id="entErr" role="alert" hidden></p>`;
+}
+function entPintar(){ const b = $("#entBody"); if (!b) return; const foco = document.activeElement && (document.activeElement.name || document.activeElement.id); b.innerHTML = entCuerpo(); const el = foco && (document.getElementById(foco) || document.querySelector(`[name="${foco}"]:checked`)); if (el) el.focus(); }
+function entAbrir(enPortada){
+  ENT.enPortada = !!enPortada;
+  const c = cuenta(); if (c && esAut(c)) Object.assign(ENT, {rol: c.perfil.rol, zona: c.perfil.zona, sel: c.perfil.autoridadId || "__otra", libre: c.perfil.autoridadId ? "" : c.perfil.nombre, g: c.perfil.g}); else Object.assign(ENT, {rol: "municipio", zona: S.org});
+  $("#entBack")?.remove();
+  const ov = document.createElement("div"); ov.className = "vid-back ent-back"; ov.id = "entBack";
+  ov.innerHTML = `<section class="vid ent" role="dialog" aria-modal="true" aria-labelledby="entT">
+    <header class="vid-h"><div><h2 id="entT">¿Para quién es PregonIA?</h2><p>Elige el rol, la zona y el nombre. Cada cuenta sigue la prensa de esa persona o institución y de su territorio.</p></div><button class="btn ghost" type="button" data-act="ent-cerrar" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+    <form class="ent-f" id="entForm" novalidate><div id="entBody"></div><div class="ent-acts"><button class="btn alt" type="submit">Entrar</button></div></form></section>`;
+  document.body.appendChild(ov); document.body.classList.add("vid-on"); entAbrir.vuelta = document.activeElement;
+  entPintar(); setTimeout(() => document.querySelector('#entBack input[name="entRol"]:checked')?.focus(), 30);
+}
+function entCerrar(){ $("#entBack")?.remove(); document.body.classList.remove("vid-on"); const o = entAbrir.vuelta; if (o && o.isConnected && !ENT.enPortada) o.focus(); }
+function entEntrar(e){
+  e.preventDefault();
+  const err = $("#entErr"); let key;
+  if (ENT.rol === "municipio") key = ENT.zona;
+  else {
+    const a = ENT.sel && ENT.sel !== "__otra" ? AUTORIDADES.find(x => x.id === ENT.sel) : null, libre = ENT.libre.trim().replace(/\s+/g, " ");
+    if (!a && (libre.length < 5 || libre.split(" ").length < 2)) { err.textContent = "Escribe nombre y apellido."; err.hidden = false; $("#entLibre")?.focus(); return; }
+    key = crearCuentaAutoridad({rol: ENT.rol, zona: ENT.zona, a, nombre: libre, g: ENT.g});
+  }
+  const portada = ENT.enPortada; entCerrar();
+  if (portada) { mostrarPortada(false); if (!location.hash || location.hash === "#portada") location.hash = "inicio"; }
+  if (key !== S.org) cambiarCuenta(key); else render(true);
+  if (esAut()) toast(`Entraste como ${inst()}. ${typeof MODO !== "undefined" && MODO.disponible ? "Buscando sus menciones en medios reales…" : "Sus menciones se leen de medios reales en pregonia.vercel.app."}`);
+}
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.name === "entRol") { ENT.rol = t.value; ENT.zona = ""; ENT.sel = ""; ENT.libre = ""; entPintar(); }
+  if (t.id === "entZona") { ENT.zona = t.value; ENT.sel = ""; entPintar(); }
+  if (t.name === "entN") { ENT.sel = t.value; entPintar(); if (t.value === "__otra") $("#entLibre")?.focus(); }
+  if (t.name === "entG") ENT.g = t.value;
+});
+document.addEventListener("input", e => { if (e.target.id === "entLibre") ENT.libre = e.target.value; });
+document.addEventListener("submit", e => { if (e.target.id === "entForm") entEntrar(e); });
+document.addEventListener("click", e => {
+  if (e.target.id === "entBack" && !ENT.enPortada) return entCerrar();
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  if (b.dataset.act === "ent-cerrar") entCerrar();
+  if (b.dataset.act === "ent-abrir") entAbrir(false);
+});
+document.addEventListener("keydown", e => {
+  if (!$("#entBack")) return;
+  if (e.key === "Escape") { e.preventDefault(); entCerrar(); return; }
+  if (e.key === "Tab") { const f = [...document.querySelectorAll("#entBack input:checked, #entBack input:not([type=radio]), #entBack select, #entBack button")].filter(x => x.offsetParent); if (!f.length) return; const i = f.indexOf(document.activeElement); if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); } }
+});
+
+/* Frente a sus pares: presencia en prensa de las autoridades del mismo cargo y zona (solo con noticias reales). */
+function paresAutCard(){
+  const p = cuenta().perfil, pares = MODO && MODO.tipo === "real" && MODO.info && MODO.info.pares;
+  if (!pares || !pares.length) return `<div class="card"><h3>Frente a sus pares</h3><p class="muted" style="margin:0">${p.autoridadId ? `Con noticias reales, aquí se compara la presencia en prensa de ${esc(p.nombre)} con la de ${CARGOS[p.rol].n.split(" o ")[0].toLowerCase()}s de ${esc(p.zonaNombre)} en los últimos 14 días.` : "La comparación con pares está disponible para las autoridades de la nómina."}</p></div>`;
+  const filas = pares.slice().sort((a, b) => b.n - a.n), max = Math.max(1, ...filas.map(r => r.n)), yo = filas.findIndex(r => r.yo) + 1, tot = filas.reduce((s, r) => s + r.n, 0) || 1, mio = filas.find(r => r.yo) || {n: 0};
+  return `<div class="card"><h3>Frente a sus pares</h3>
+    <p class="vtx" style="margin:0 0 10px">${esc(p.nombre)} es ${yo}.° de ${filas.length} en presencia en prensa de ${esc(p.zonaNombre)} en 14 días, con ${plural(mio.n, "nota", "notas")} (${pct(mio.n, tot)}% del total del grupo).</p>
+    <ul class="hbars">${filas.map(r => `<li><span class="t"><i style="background:${r.yo ? "var(--accent)" : "var(--amb-l)"}"></i><span>${r.yo ? "<b>" + esc(r.n_) + "</b>" : esc(r.n_)}${r.p ? ` <small class="muted">${esc(r.p)}</small>` : ""}</span></span><span class="b" ${tipAttr(r.n + " notas")}><i style="width:${(r.n / max * 100).toFixed(1)}%;background:${r.yo ? "var(--accent)" : "var(--amb-l)"}"></i></span><span class="v mono">${r.n}</span></li>`).join("")}</ul>
+    <p class="hint" style="margin:10px 0 0">Cuenta notas con el nombre en el titular o el resumen, en medios chilenos, según Google News. No mide tono. Uso interno.</p></div>`;
+}
+
 
 NOTAS.forEach(n => { n.g = String(n.g); });
 
@@ -1250,6 +1507,7 @@ function matchTema(tema, n){
 const uid = () => Math.random().toString(36).slice(2, 9);
 function T(nombre, origen, terminos, contexto=[], exclusiones=[], extra={}){ return {id: uid(), nombre, origen, terminos, contexto, exclusiones, activo: true, ...extra}; }
 function candidatos(perfil){
+  if (perfil.tipo === "Autoridad") return candidatosAut(perfil);
   const c = perfil.comuna;
   const nucleo = [
     T("Municipalidad de " + c, "Núcleo", ["Municipalidad de " + c, "Municipio de " + c]),
@@ -1273,6 +1531,7 @@ function proponer(perfil){
   nucleo.forEach(t => Object.assign(t, puntaje(t)));
   otros.forEach(t => Object.assign(t, puntaje(t)));
   const orden = otros.filter(t => t.score > 0).sort((a,b) => b.score - a.score);
+  if (perfil.tipo === "Autoridad") orden.push(...otros.filter(t => !(t.score > 0)));  // una autoridad sigue su agenda aunque hoy no haya notas
   return {base: nucleo.concat(orden.slice(0, libres)), sugeridos: orden.slice(libres, libres + 5)};
 }
 
@@ -1369,7 +1628,7 @@ const conteo = M => `${plural(M.pos,"positiva","positivas")} · ${plural(M.neu,"
 
 function renderChrome(){
   const k = route(), cfg = isConfig(k);
-  $("#org").innerHTML = COMUNAS.map(c => `<option ${c===S.org?"selected":""}>${c}</option>`).join("");
+  $("#org").innerHTML = opcionesCuenta();
   const c = cuenta(), pl = PLANES[c.perfil.plan];
   $("#planLbl").textContent = "Plan " + pl.nombre + " · " + clp(pl.precio) + "/mes";
   const act = c.temas.filter(t => t.activo).length, usoMenc = menciones(c).reduce((s,m) => s + m.notas.length, 0);
@@ -1418,7 +1677,7 @@ function vInicio(){
   <header class="dg-ed">
     <div class="dg-ed-row"><span class="dg-kick">Edición ${esc(S.org)}</span><span>${new Date(NOW).toLocaleDateString("es-CL",{weekday:"long", day:"numeric", month:"long", year:"numeric"})}</span><span>Actualizado ${new Date(NOW - 7*60000).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit",hourCycle:"h23"})}</span></div>
     <h2 tabindex="-1">${esc(S.org)}, hoy</h2>
-    <p class="dg-sum">${pend.length ? `<b class="c">${pend.length} ${pend.length===1?"noticia crítica":"noticias críticas"}</b> sin responder esta semana.` : "Sin noticias críticas pendientes esta semana."} En 30 días, ${plural(M.vol,"noticia","noticias")} sobre la comuna en ${plural(Object.keys(medios).length,"medio","medios")}; la cobertura fue <b>${v.n.toLowerCase()}</b>.</p>
+    <p class="dg-sum">${pend.length ? `<b class="c">${pend.length} ${pend.length===1?"noticia crítica":"noticias críticas"}</b> sin responder esta semana.` : "Sin noticias críticas pendientes esta semana."} En 30 días, ${plural(M.vol,"noticia","noticias")} sobre ${esAut() ? esc(cuenta().perfil.nombre) + " y su territorio" : "la comuna"} en ${plural(Object.keys(medios).length,"medio","medios")}; la cobertura fue <b>${v.n.toLowerCase()}</b>.</p>
   </header>
   ${ultimas.length ? `<section class="dg-ticker" aria-label="Lo último"><span class="dg-ticker-l"><i class="dot" aria-hidden="true"></i>Lo último</span><ul>${ultimas.map(n => `<li><time>${hhmm(n.ts)}</time><span>${esc(n.t)}</span><em>${esc(MED[n.m].n)}</em></li>`).join("")}</ul></section>` : ""}
   <section class="dg-ind" aria-label="Indicadores">
@@ -1512,11 +1771,11 @@ function vAsistente(){
   return `<div class="head"><div><h2 tabindex="-1">Asistente de temas</h2><p>Cinco preguntas. Con tus respuestas y lo publicado en los últimos 30 días, PregonIA propone qué seguir. Nada cambia hasta que lo confirmes.</p></div></div>
   ${subtabs()}
   <form id="carForm" class="card form" novalidate>
-    <div class="field"><label for="cTipo">1. ¿Quién usará la cuenta?</label><select id="cTipo"><option ${p.tipo==="Municipio"?"selected":""}>Municipio</option><option ${p.tipo==="Autoridad electa"?"selected":""}>Autoridad electa</option></select></div>
+    ${esAut() ? `<div class="field span2"><label>1. Cuenta</label><p style="margin:0"><b>${esc(inst())}</b> · ${esc(p.zonaNombre)}${p.partido ? " · " + esc(p.partido) : ""}</p><small>Para cambiar de autoridad usa «Entrar con otra cuenta» en el encabezado.</small></div>` : `<div class="field"><label for="cTipo">1. ¿Quién usará la cuenta?</label><select id="cTipo"><option ${p.tipo==="Municipio"?"selected":""}>Municipio</option><option ${p.tipo==="Autoridad electa"?"selected":""}>Autoridad electa</option></select></div>`}
     <div class="field"><label for="cPlan">2. ¿Qué plan?</label><select id="cPlan">${Object.entries(PLANES).map(([k,v]) => `<option value="${k}" ${p.plan===k?"selected":""}>${v.nombre}: ${v.temas} temas, ${clp(v.precio)} al mes</option>`).join("")}</select></div>
-    <div class="field"><label for="cAut">3. Nombre de la autoridad principal <span class="muted">(opcional)</span></label><input id="cAut" value="${esc(p.autoridad)}" placeholder="Ej.: nombre y apellido del alcalde"><small>Solo personas en su rol público.</small></div>
-    <div class="field"><label for="cAg">4. Proyectos u obras con nombre propio</label><input id="cAg" value="${esc(p.agenda.join(", "))}" placeholder="Ej.: Polideportivo, Plan regulador"><small>Sepáralos con comas.</small></div>
-    <fieldset class="field span2"><legend>5. ¿Qué temas son sensibles hoy en la comuna?</legend><div class="checks">${Object.entries(SENS).map(([k,s]) => `<label><input type="checkbox" name="sens" value="${k}" ${p.sens.includes(k)?"checked":""}> ${s.n}</label>`).join("")}</div><small>Los que marques tienen prioridad; el resto entra solo si ya aparece en las noticias.</small></fieldset>
+    ${esAut() ? "" : `<div class="field"><label for="cAut">3. Nombre de la autoridad principal <span class="muted">(opcional)</span></label><input id="cAut" value="${esc(p.autoridad)}" placeholder="Ej.: nombre y apellido del alcalde"><small>Solo personas en su rol público.</small></div>`}
+    <div class="field"><label for="cAg">${esAut() ? "3. Proyectos, comisiones o causas que impulsa" : "4. Proyectos u obras con nombre propio"}</label><input id="cAg" value="${esc(p.agenda.join(", "))}" placeholder="${esAut() ? "Ej.: ley de humedales, comisión de Salud, Ruta 68" : "Ej.: Polideportivo, Plan regulador"}"><small>Sepáralos con comas.</small></div>
+    <fieldset class="field span2"><legend>${esAut() ? "4. ¿Qué temas son sensibles hoy en su territorio?" : "5. ¿Qué temas son sensibles hoy en la comuna?"}</legend><div class="checks">${Object.entries(SENS).map(([k,s]) => `<label><input type="checkbox" name="sens" value="${k}" ${p.sens.includes(k)?"checked":""}> ${s.n}</label>`).join("")}</div><small>Los que marques tienen prioridad; el resto entra solo si ya aparece en las noticias.</small></fieldset>
     <div class="span2"><button class="btn primary" type="submit">Ver propuesta</button></div>
   </form>
   <div id="propOut" style="margin-top:16px">${propuesta ? propHtml() : ""}</div>`;
@@ -1621,11 +1880,17 @@ const REPS = [
 ];
 function vReportes(){
   if (!REPS.some(r => r[0] === tState.rep)) tState.rep = "alcalde";
-  const cur = REPS.find(r => r[0] === tState.rep), p = cur[2];
+  const cur = REPS.find(r => r[0] === tState.rep), p = repMeta(cur[0], cur[2]);
   return `<div class="head"><div><h2 tabindex="-1">Reportes</h2><p>Un informe por lector. Cada uno responde una sola pregunta, con el nivel de detalle que esa persona necesita.</p></div></div>
-  <div class="tabs" role="tablist">${REPS.map(([k,n]) => `<button role="tab" aria-selected="${tState.rep===k}" data-act="rep" data-k="${k}">${n}</button>`).join("")}</div>
+  <div class="tabs" role="tablist">${REPS.map(([k,n]) => `<button role="tab" aria-selected="${tState.rep===k}" data-act="rep" data-k="${k}">${esAut() && k === "alcalde" ? "Parte semanal" : n}</button>`).join("")}</div>
   <dl class="para"><div><dt>Para</dt><dd>${p.para}</dd></div><div><dt>Cuándo</dt><dd>${p.cuando}</dd></div><div><dt>Lectura</dt><dd>${p.lectura}</dd></div><div class="q"><dt>Responde</dt><dd>${p.responde}</dd></div></dl>
   ${({alcalde:repAlcalde, diario:repDiario, mesa:repMesa, gestion:repGestion, crisis:repCrisis, calendario:repCalendario})[tState.rep]()}`;
+}
+/* Para una autoridad, los lectores de cada informe son la autoridad y su equipo, no el alcalde. */
+function repMeta(k, p){
+  if (!esAut()) return p;
+  const c = cargoCuenta(), m = {alcalde: {para: c}, diario: {para: c + " y su equipo de prensa"}, mesa: {para: "Jefatura de prensa", responde: "¿Qué respondo hoy, qué está escalando y qué difundo?"}, gestion: {para: c + " y su equipo", responde: "¿Cómo se percibe su trabajo, por tema, y cómo está frente a sus pares?"}, crisis: {para: c + " y jefatura de prensa"}, calendario: {para: c + " y su equipo"}}[k] || {};
+  return {...p, ...m, responde: (m.responde || p.responde).replace("¿Cómo me trató la prensa", "¿Cómo le trató la prensa")};
 }
 const muestra = n => n < 20 ? `<p class="note" style="margin-top:14px">Muestra pequeña (${plural(n,"noticia","noticias")}): las proporciones pueden cambiar mucho con pocas notas nuevas.</p>` : "";
 
@@ -1652,6 +1917,7 @@ function areaDe(m){ const h = m.notas.map(n => n.hay).join(" "); const a = AREAS
 const temaDe = m => [...m.temas.values()].map(x => x.tema.nombre).filter(n => !/\(comuna\)$/.test(n))[0] || "General";
 function riesgo(m){ const e = escalera(m.notas); return (m.tono === "cri" ? 10 : m.tono === "neu" ? 2 : 0) * (1 + e.max) + m.notas.length + (respondida(m.g) ? -6 : 0) + (NOW - m.last < 2*DAY ? 2 : 0); }
 function accion(m){
+  if (esAut()) return accionAut(m);
   const e = escalera(m.notas), area = areaDe(m); let a, r;
   if (m.tono === "cri") {
     if (respondida(m.g)) { a = "La respuesta ya está aprobada. Seguir el tema y avisar si aparece en otro medio."; r = ["Comunicaciones"]; }
@@ -1660,6 +1926,19 @@ function accion(m){
     else { a = "Responder en el medio comunal y contactar a los vecinos afectados."; r = [area || "Dirección del área","Comunicaciones"]; }
   } else if (m.tono === "neu") { a = "Preparar información para los vecinos en los canales municipales, por si el tema crece."; r = ["Comunicaciones",area]; }
   else { a = e.max === 0 ? "Llevarla a medios regionales: hasta ahora solo la publicó la prensa comunal." : "Difundirla en redes municipales y usarla en la próxima vocería."; r = ["Comunicaciones",area]; }
+  return {a, r: [...new Set(r.filter(Boolean))].join(" · ")};
+}
+/* Para una autoridad, la acción depende de si la noticia la nombra o solo ocurre en su territorio. */
+function accionAut(m){
+  const e = escalera(m.notas), propia = [...m.temas.values()].some(x => x.tema.persona); let a, r;
+  if (m.tono === "cri") {
+    if (respondida(m.g)) { a = "La respuesta ya está aprobada. Seguir el tema y avisar si aparece en otro medio."; r = ["Prensa"]; }
+    else if (!propia) { a = "Ocurre en su territorio y no la nombra: gestionar con el municipio o el servicio a cargo y, si hay avance, comunicar la gestión."; r = ["Equipo territorial", "Prensa"]; }
+    else if (e.max === 2) { a = "Vocería hoy, con una sola versión y datos, antes de que otros fijen la lectura."; r = [cargoCuenta(), "Jefatura de prensa"]; }
+    else if (e.max === 1) { a = "Declaración breve y publicación en redes antes de que el tema llegue a medios nacionales."; r = ["Prensa", cargoCuenta()]; }
+    else { a = "Responder en el mismo medio y conversar con quienes reclaman en el territorio."; r = ["Equipo territorial", "Prensa"]; }
+  } else if (m.tono === "neu") { a = propia ? "Seguir el tema y tener una posición lista por si le consultan." : "Seguir el tema: puede convertirse en una gestión o una consulta de vecinos."; r = ["Prensa", "Equipo territorial"]; }
+  else { a = propia ? (e.max === 0 ? "Llevarla a medios regionales y amplificarla en redes." : "Amplificarla en redes y usarla en la próxima entrevista.") : "Sumarse con un reconocimiento si corresponde a su agenda."; r = ["Prensa"]; }
   return {a, r: [...new Set(r.filter(Boolean))].join(" · ")};
 }
 const enMedios = m => { const k = new Set(m.notas.map(n => n.m)).size; return esc(MED[m.lead.m].n) + (k > 1 ? ` y ${k - 1} ${k === 2 ? "medio más" : "medios más"}` : ""); };
@@ -1682,7 +1961,7 @@ function repAlcalde(){
   const item = (m, i) => { const e = escalera(m.notas), ac = accion(m); return `<li class="${m.tono}"><span class="n">${i + 1}</span><div class="bd"><span class="kick">${esc(temaDe(m))} · ${tonoLbl[m.tono]}${respondida(m.g) ? " · respondida" : ""}</span><b class="t">${esc(m.lead.res)}</b><span class="sub">${enMedios(m)} · ${ago(m.last)}</span><div class="lleg">${escHtml(e)}</div><p class="acc"><b>Qué hacer</b>${ac.a}</p><p class="rsp"><b>Responsable</b>${ac.r}</p></div></li>`; };
   return `<div class="rhead"><h3>${esc(S.org)} · parte semanal</h3><span class="per">${ri("cal")} ${d.per}</span></div>
   <div class="parte">
-    <section class="ver"><span class="kick">Cómo lo trató la prensa esta semana</span><p class="vbig ${d.v.k}">${d.v.n}</p><p class="vtx">${d.v.f.charAt(0).toUpperCase() + d.v.f.slice(1)}: ${conteo(d.M)}. ${d.comp}</p>${escala(d.v.i)}</section>
+    <section class="ver"><span class="kick">Cómo ${esAut() && cuenta().perfil.g === "F" ? "la" : "lo"} trató la prensa esta semana</span><p class="vbig ${d.v.k}">${d.v.n}</p><p class="vtx">${d.v.f.charAt(0).toUpperCase() + d.v.f.slice(1)}: ${conteo(d.M)}. ${d.comp}</p>${escala(d.v.i)}</section>
     <section><h4>Lo que se puede complicar</h4>${d.asuntos.length ? `<ol class="asuntos">${d.asuntos.map(item).join("")}</ol>` : `<p class="vtx">Ningún asunto de riesgo esta semana.</p>`}</section>
     ${d.buena ? `<section class="cap"><h4>Para aprovechar</h4><ol class="asuntos">${item(d.buena, -1).replace('<span class="n">0</span>', `<span class="n">${ri("pos")}</span>`)}</ol></section>` : ""}
     <div class="acts"><button class="btn alt" data-act="vid-open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l4.8-2.8z"/></svg>Video resumen</button><button class="btn primary" data-act="copiar-parte">Copiar texto</button><button class="btn" data-act="goto" data-tono="todos" data-dias="7">Ver las noticias de la semana</button></div>
@@ -1832,7 +2111,7 @@ function repGestion(){
   </div>
   <div class="rgrid r21" style="margin-top:14px">
     <div class="card"><h3>Noticias por día</h3>${chartDias(ms)}</div>
-    ${paresCard()}
+    ${esAut() ? paresAutCard() : paresCard()}
   </div>
   <div class="card" style="margin-top:14px;display:grid;gap:10px"><h3 style="margin:0">Lectura del analista</h3><p class="hint" style="margin:0">Redactada por IA con las cifras y los resúmenes del mes. Revísala antes de usarla.</p>
     <div id="lectura" class="draft" style="min-height:90px">${esc(lecturaTxt.gestion || lecturaBase(M, porTema))}</div>
@@ -1844,7 +2123,7 @@ function repGestion(){
 }
 function lecturaBase(M, porTema){
   const esp = porTema.filter(x => !/\(comuna\)$/.test(x.t.nombre)), top = esp.slice().sort((a,b) => b.vol - a.vol)[0], crit = esp.slice().sort((a,b) => b.cri - a.cri)[0];
-  return `${S.org} sumó ${M.vol} noticias en 30 días, con una cobertura ${veredicto(M).n.toLowerCase()} (${conteo(M)}). El tema con más presencia fue ${top?top.t.nombre:"—"} y el que concentró más notas críticas fue ${crit&&crit.cri?crit.t.nombre + " (" + llego(crit.e).toLowerCase() + ")":"ninguno"}. Usa el botón para una lectura interpretativa con recomendaciones para el equipo.`;
+  return `${S.org} sumó ${plural(M.vol, "noticia", "noticias")} en 30 días, con una cobertura ${veredicto(M).n.toLowerCase()} (${conteo(M)}). El tema con más presencia fue ${top?top.t.nombre:"—"} y el que concentró más notas críticas fue ${crit&&crit.cri?crit.t.nombre + " (" + llego(crit.e).toLowerCase() + ")":"ninguno"}. Usa el botón para una lectura interpretativa con recomendaciones para el equipo.`;
 }
 function paresCard(){
   const rows = COMUNAS.map(c => ({c, ...metricas(menciones({temas:[genericaComuna(c)]}))})).map(r => ({...r, pc: pct(r.cri, r.vol)}));
@@ -1908,8 +2187,13 @@ const PIEZAS = {
   aclaracion:["Aclaración al medio","Carta al director (Ley 19.733)","Carta al director solicitando aclaración o rectificación conforme a la Ley 19.733"],
   mensajes:["Mensajes clave","3 ideas para el vocero","Tres mensajes clave para el vocero, con dato de respaldo cada uno y frases a evitar"],
   preguntas:["Preguntas probables","Para una entrevista","Cinco preguntas probables de la prensa con respuestas sugeridas"],
+  redes:["Publicación para redes","Texto breve para X, Instagram o Facebook","Publicación para redes sociales de la autoridad: un texto de máximo 600 caracteres, con una idea central, un dato y un llamado o compromiso concreto, sin hashtags innecesarios"],
+  columna:["Columna de opinión","Para un medio regional","Columna de opinión de 450 a 600 palabras para un medio regional, firmada por la autoridad, con título, una tesis clara, dos o tres argumentos con datos y un cierre"],
+  intervencion:["Minuta de intervención","Para sala, comisión o sesión","Minuta de intervención de 2 a 3 minutos para la sala, una comisión o una sesión: contexto, posición, dos argumentos con datos, propuesta o petición concreta y frase de cierre"],
   minuta:["Minuta interna","Una página para la autoridad","Minuta de una página para la autoridad: situación, cobertura, riesgos y opciones"]
 };
+const PIEZAS_MUNI = ["declaracion", "comunicado", "aclaracion", "mensajes", "preguntas", "minuta"], PIEZAS_AUT = ["declaracion", "redes", "columna", "intervencion", "comunicado", "aclaracion", "mensajes", "preguntas"];
+const piezasDe = () => esAut() ? PIEZAS_AUT : PIEZAS_MUNI;
 const ENFOQUES = {datos:"Responder con datos", aclarar:"Aclarar los hechos", contextualizar:"Contextualizar", reconocer:"Reconocer y corregir", anunciar:"Anunciar un logro"};
 const recPieza = m => !m ? "comunicado" : m.tono === "cri" ? "declaracion" : "comunicado";
 const recEnf = m => !m ? "anunciar" : m.tono === "cri" ? "datos" : m.tono === "pos" ? "anunciar" : "contextualizar";
@@ -1928,12 +2212,12 @@ function vComunicados(){
         ${m ? `<div class="mini"><div class="meta" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted)">${pillTono(m.tono)}<span>${esc(medioN(m.lead))} · ${ago(m.lead.ts)}</span></div><b>${esc(m.lead.t)}</b><span class="muted" style="font-size:12.5px">${esc(m.lead.res)}</span></div>` : ""}
       </section>
       <section><h3><span class="n">2</span>¿Qué necesitas?</h3>
-        <div class="opts" role="radiogroup" aria-label="Pieza">${Object.entries(PIEZAS).map(([k,[n,d]]) => `<label class="opt"><input type="radio" name="pieza" value="${k}" ${pieza===k?"checked":""}>${k===rp?'<span class="rec">Sugerido</span>':""}<b>${n}</b><span>${d}</span></label>`).join("")}</div>
+        <div class="opts" role="radiogroup" aria-label="Pieza">${piezasDe().filter(k => PIEZAS[k]).map(k => [k, PIEZAS[k]]).map(([k,[n,d]]) => `<label class="opt"><input type="radio" name="pieza" value="${k}" ${pieza===k?"checked":""}>${k===rp?'<span class="rec">Sugerido</span>':""}<b>${n}</b><span>${d}</span></label>`).join("")}</div>
       </section>
       <section><h3><span class="n">3</span>¿Con qué enfoque?</h3>
         <div class="checks" role="radiogroup" aria-label="Enfoque">${Object.entries(ENFOQUES).map(([k,v]) => `<label><input type="radio" name="enf" value="${k}" ${enf===k?"checked":""}> ${v}${k===re?' <span class="muted">(sugerido)</span>':""}</label>`).join("")}</div>
       </section>
-      <details class="kb"><summary>Datos del municipio que puede usar la IA</summary><div class="field" style="margin-top:8px"><textarea id="kBase" aria-label="Datos del municipio">${esc(c.base || baseConocimiento())}</textarea><small>Los datos del ejemplo son ficticios. En producción se cargan cifras y documentos oficiales.</small></div></details>
+      <details class="kb"><summary>${esAut() ? "Datos de la oficina que puede usar la IA" : "Datos del municipio que puede usar la IA"}</summary><div class="field" style="margin-top:8px"><textarea id="kBase" aria-label="Datos del municipio">${esc(c.base || (esAut() ? baseAutoridad(c.perfil) : baseConocimiento()))}</textarea><small>Los datos del ejemplo son ficticios. En producción se cargan cifras y documentos oficiales.</small></div></details>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit" id="btnGen">Generar borrador</button><button class="btn" type="button" data-act="stop" id="btnStop" hidden>Detener</button></div>
     </form>
     <div class="card" style="display:grid;gap:10px;align-content:start"><h3 style="margin:0">Borrador</h3>
@@ -1964,7 +2248,7 @@ function shareDoc(src, i){
   }
   if (src === "vocero") return vocDoc();
   if (src === "diario") { const t = diarioTexto(), d = diarioData(); return {titulo: "Informe diario de prensa", sub: d.etiqueta, sinFecha: true, tipo: "diario", texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
-  if (src === "parte") { const t = parteTexto(); return {titulo: "Parte semanal del alcalde", sub: "Semana del " + parteData().per, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
+  if (src === "parte") { const t = parteTexto(); return {titulo: esAut() ? "Parte semanal · " + inst() : "Parte semanal del alcalde", sub: "Semana del " + parteData().per, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "aprob") { const x = S.comunicados.filter(y => y.org === S.org)[i]; return x && x.texto ? {titulo: x.pieza, sub: "Responde a: " + x.origen + " · aprobado el " + fecha(x.ts), texto: x.texto, cuerpo: x.texto} : null; }
   return null;
 }
@@ -2001,7 +2285,7 @@ async function pdfBlob(d){
   doc.setProperties({title: pdfTxt(d.titulo + " · " + S.org), author: "PregonIA", creator: "PregonIA"});
   let y = M;
   const salto = h => { if (y + h > PIE - 6) { doc.addPage(); y = M; } };
-  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(30, 77, 140); doc.text(pdfTxt("PregonIA · Municipalidad de " + S.org), M, y); y += 8;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(30, 77, 140); doc.text(pdfTxt("PregonIA · " + inst()), M, y); y += 8;
   doc.setFont("helvetica", "bold"); doc.setFontSize(17); doc.setTextColor(21, 27, 36);
   doc.splitTextToSize(pdfTxt(d.titulo), AN).forEach(l => { doc.text(l, M, y); y += 7; });
   doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(91, 101, 115);
@@ -2050,7 +2334,7 @@ async function pdfDiario(){
   fondo();
   // Encabezado
   logo(M, 17, 15); txt("INFORME DIARIO DE PRENSA", W - M, 14, {size: 6.8, bold: true, color: C.muted, align: "right"});
-  txt("Municipalidad de " + S.org, M, 29, {size: 19, bold: true});
+  txt(inst(), M, 29, {size: 19, bold: true});
   txt(d.etiqueta, M, 36, {size: 9.5, color: C.blueL});
   doc.setDrawColor(C.line); doc.setLineWidth(0.3); doc.line(M, 40, W - M, 40);
   let y = 45;
@@ -2134,7 +2418,7 @@ async function compartirArchivo(d, destino){
   if (!navigator.canShare || !movil()) return false;
   let f; try { f = await pdfDe(d); } catch(err) { return false; }
   if (!navigator.canShare({files: [f]})) return false;
-  try { await navigator.share({files: [f], title: d.titulo + " · " + S.org, text: d.titulo + " · Municipalidad de " + S.org}); }
+  try { await navigator.share({files: [f], title: d.titulo + " · " + S.org, text: d.titulo + " · " + inst()}); }
   catch(err) {
     if (err && err.name === "AbortError") return true;
     if (err && err.name === "NotAllowedError") { toast(`El PDF está listo: toca ${destino} otra vez para enviarlo.`); return true; }
@@ -2165,7 +2449,7 @@ async function compartir(b){
   const via = b.dataset.via, d = shareDoc(b.dataset.src, Number(b.dataset.i));
   if (!d || !d.texto) { cerrarMenu(); toast("No hay texto para compartir todavía."); return; }
   const aviso = d.borrador && /\[completar/i.test(d.texto) ? " Ojo: aún hay partes marcadas [completar]." : "";
-  const asunto = d.titulo + " · Municipalidad de " + S.org, cuerpo = plano(d.texto);
+  const asunto = d.titulo + " · " + inst(), cuerpo = plano(d.texto);
   if (via === "wa") {
     if (await compartirArchivo(d, "WhatsApp")) return;
     // Computador: WhatsApp Web no recibe archivos por enlace. Se abre el chat y se guarda el PDF para adjuntarlo.
@@ -2206,7 +2490,7 @@ function render(focus){
   if (tState.refocus) { const el = document.querySelector(`[data-chipin="${tState.refocus}"]`); if (el) el.focus(); tState.refocus = null; }
 }
 window.addEventListener("hashchange", () => { render(true); window.scrollTo(0,0); });
-$("#org").addEventListener("change", e => { S.org = e.target.value; tState = {...tState, tema:"todos", draft:null, from:null, pieza:null, enf:null, open:{}}; propuesta = null; lecturaTxt = {}; save(); render(true); toast("Ahora ves " + S.org + ". Cada municipio ve solo sus datos."); });
+$("#org").addEventListener("change", e => { if (e.target.value === "__entrar") { e.target.value = S.org; entAbrir(false); return; } S.org = e.target.value; tState = {...tState, tema:"todos", draft:null, from:null, pieza:null, enf:null, open:{}}; propuesta = null; lecturaTxt = {}; save(); render(true); toast(esAut() ? "Ahora ves la cuenta de " + inst() + ". Cada cuenta ve solo sus datos." : "Ahora ves " + S.org + ". Cada municipio ve solo sus datos."); });
 function goMenciones(patch){ Object.assign(tState, {tema:"todos", tono:"todos", dias:"30", q:""}, patch); if (route() === "menciones") render(true); else location.hash = "menciones"; }
 
 document.addEventListener("change", e => {
@@ -2241,7 +2525,7 @@ document.addEventListener("focusout", e => { const el = e.target; if (el.dataset
 document.addEventListener("submit", e => {
   e.preventDefault();
   if (e.target.id === "carForm") {
-    const perfil = {tipo: $("#cTipo").value, comuna: S.org, autoridad: $("#cAut").value.trim(), agenda: $("#cAg").value.split(",").map(s => s.trim()).filter(Boolean), sens: [...document.querySelectorAll('input[name="sens"]:checked')].map(x => x.value), plan: $("#cPlan").value};
+    const perfil = {...(esAut() ? cuenta().perfil : {tipo: $("#cTipo").value, comuna: S.org, autoridad: $("#cAut").value.trim()}), agenda: $("#cAg").value.split(",").map(s => s.trim()).filter(Boolean), sens: [...document.querySelectorAll('input[name="sens"]:checked')].map(x => x.value), plan: $("#cPlan").value};
     propuesta = {perfil, ...proponer(perfil)};
     $("#propOut").innerHTML = propHtml(); const pc = $("#propCard"); pc.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"}); pc.focus({preventScroll:true});
   }
@@ -2308,23 +2592,23 @@ async function iaServidor(){
 let samplePromise = ((window.claude && window.claude.use) ? window.claude.use("sample").catch(() => null) : Promise.resolve(null)).then(s => s || iaServidor());
 let ctl = null;
 function prompt(m, pieza, enfoque, base){
-  return `Eres el asistente de comunicaciones de PregonIA para la Municipalidad de ${S.org}, en Chile. Redacta en español de Chile: ${PIEZAS[pieza][2]}. Enfoque: ${ENFOQUES[enfoque]}.
+  return `Eres el asistente de comunicaciones de PregonIA para ${esAut() ? "el equipo de " + inst() + " (" + cuenta().perfil.zonaNombre + ", Región de Valparaíso)" : inst()}, en Chile. Redacta en español de Chile: ${PIEZAS[pieza][2]}. Enfoque: ${ENFOQUES[enfoque]}.
 
 Reglas obligatorias:
-1. Usa solo datos que estén en los DATOS DEL MUNICIPIO o en la NOTICIA. Si falta un dato necesario, escribe [completar: qué dato falta]. No inventes cifras, fechas, nombres ni compromisos.
+1. Usa solo datos que estén en los ${datosLbl()} o en la NOTICIA. Si falta un dato necesario, escribe [completar: qué dato falta]. No inventes cifras, fechas, nombres ni compromisos.
 2. Toda cita textual va marcada así: [cita propuesta, validar con el vocero].
 3. No copies frases del medio; describe la noticia con palabras propias y nombra el medio.
-4. Tono institucional, sobrio y respetuoso. Sin promoción personal ni partidaria de ninguna autoridad.
+4. ${esAut() ? "Tono propio del cargo: sobrio, cercano y respetuoso. Sin ataques personales ni descalificaciones a otras autoridades o partidos. Si falta la posición de la autoridad sobre el tema, escribe [completar: posición]." : "Tono institucional, sobrio y respetuoso. Sin promoción personal ni partidaria de ninguna autoridad."}
 5. Devuelve solo el texto de la pieza, sin explicaciones previas.
 
 NOTICIA:
 ${m ? `Medio: ${MED[m.lead.m].n}. Titular: ${m.lead.t}. Resumen: ${m.lead.res}. Tono detectado: ${tonoLbl[m.tono]}. Otros medios que la publicaron: ${m.notas.length-1}.` : "No hay noticia: es un anuncio propio."}
 
-DATOS DEL MUNICIPIO:
+${datosLbl()}:
 ${base}`;
 }
 function plantilla(m, pieza){
-  return `${PIEZAS[pieza][0]} · Municipalidad de ${S.org}\n\n[Plantilla: la IA no está disponible en esta vista]\n\nEn relación con ${m ? "lo informado por " + MED[m.lead.m].n + " (" + m.lead.res.replace(/\.$/,"") + ")" : "[completar: anuncio]"}, la Municipalidad de ${S.org} informa:\n\n1. [completar: hechos verificados]\n2. [completar: medidas adoptadas y plazos]\n3. [completar: canal de contacto para vecinos]\n\n[cita propuesta, validar con el vocero]: «[completar]»\n\nContacto de prensa: [completar]`;
+  return `${PIEZAS[pieza][0]} · ${inst()}\n\n[Plantilla: la IA no está disponible en esta vista]\n\nEn relación con ${m ? "lo informado por " + MED[m.lead.m].n + " (" + m.lead.res.replace(/\.$/,"") + ")" : "[completar: anuncio]"}, la Municipalidad de ${S.org} informa:\n\n1. [completar: hechos verificados]\n2. [completar: medidas adoptadas y plazos]\n3. [completar: canal de contacto para vecinos]\n\n[cita propuesta, validar con el vocero]: «[completar]»\n\nContacto de prensa: [completar]`;
 }
 function setDraft(txt){ const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = txt; const has = !!txt.trim(); const a = $("#btnAprob"), k = $("#btnCopy"); if (a) a.disabled = !has; if (k) k.disabled = !has; document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
 async function generar(){
@@ -2357,7 +2641,7 @@ async function lectura(btn){
   const datos = ms.slice(0, 25).map(m => `- [${tonoLbl[m.tono]}] ${m.lead.res} (${m.notas.length} medio(s); ${llego(escalera(m.notas)).toLowerCase()})`).join("\n");
   const temas = c.temas.filter(t=>t.activo).map(t => { const sub = ms.filter(m => m.temas.has(t.id)), x = metricas(sub); return `${t.nombre}: ${x.vol} noticias, ${x.cri} críticas, ${llego(escalera(sub.flatMap(m => m.notas))).toLowerCase()}`; }).join("; ");
   try {
-    const {text} = await sample(`Eres analista de reputación de PregonIA. Escribe en español de Chile la "lectura del analista" del informe de gestión mensual de la Municipalidad de ${S.org}. Lo leen el alcalde y su equipo directivo en reunión. Dos párrafos breves: qué temas de gestión marcaron la percepción y por qué, qué temas escalaron de la prensa comunal a la regional o nacional, y dos recomendaciones accionables con el área municipal responsable. Usa solo estos datos, no inventes cifras ni hechos, habla de gestión y servicios, no de la figura del alcalde, y no promuevas a ninguna autoridad ni partido.\n\nCifras del mes: ${M.vol} noticias, tono de la cobertura ${veredicto(M).n.toLowerCase()} (${conteo(M)}).\nPor tema: ${temas}\nResúmenes:\n${datos}`, {onText: ({text}) => { el.textContent = text; }});
+    const {text} = await sample(`Eres analista de reputación de PregonIA. Escribe en español de Chile la "lectura del analista" del informe de gestión mensual de ${inst()}. Lo leen el alcalde y su equipo directivo en reunión. Dos párrafos breves: qué temas de gestión marcaron la percepción y por qué, qué temas escalaron de la prensa comunal a la regional o nacional, y dos recomendaciones accionables con el área municipal responsable. Usa solo estos datos, no inventes cifras ni hechos, habla de gestión y servicios, no de la figura del alcalde, y no promuevas a ninguna autoridad ni partido.\n\nCifras del mes: ${M.vol} noticias, tono de la cobertura ${veredicto(M).n.toLowerCase()} (${conteo(M)}).\nPor tema: ${temas}\nResúmenes:\n${datos}`, {onText: ({text}) => { el.textContent = text; }});
     lecturaTxt.gestion = text; el.textContent = text;
   } catch(err) {
     el.textContent = err && err.text ? err.text : (err && err.code === "not_granted" ? "No se autorizó el uso de Claude en esta vista." : "No se pudo redactar la lectura. Intenta de nuevo en un momento.");
@@ -2433,6 +2717,14 @@ const FAQ = [
     ["¿Dónde está el informe diario con el clipping?", "En Reportes › Informe diario. Arriba van los indicadores del período; abajo, el clipping agrupado por mención, con un código para cada una (por ejemplo D-0611-01) y el enlace a cada publicación. Con Noticias reales cada titular abre la nota en el medio. El PDF conserva los enlaces."],
     ["¿Qué es el video resumen?", "En Reportes › Parte del alcalde, el botón Video resumen arma un video vertical de menos de un minuto con el resultado de la semana, los temas con más publicaciones, hasta tres asuntos que se pueden complicar (en qué medios salió, hasta dónde llegó, qué hacer y quién responde) y la buena noticia. Se ve en la pantalla, se prepara en MP4 y se envía por WhatsApp o se descarga. Es para uso interno: no usa fotos ni logos de los medios."],
     ["¿Cómo envío o guardo una respuesta?", "Bajo el borrador está la barra Compartir. En el celular, WhatsApp y Correo abren la hoja de compartir con el PDF adjunto: eliges la app y el contacto. En el computador, WhatsApp abre el chat y guarda el PDF para que lo adjuntes con el clip; Correo te deja elegir Gmail, Outlook o el programa de correo del equipo, con asunto y texto listos. Nada se envía solo: tú eliges a quién."]
+  ]],
+  ["Autoridades", [
+    ["¿Para quién es la versión de autoridades?", "Para diputadas y diputados, senadoras y senadores, consejeras y consejeros regionales y concejales de la Región de Valparaíso, y sus equipos de prensa. Se entra eligiendo el cargo, la zona (distrito, circunscripción o comuna) y el nombre."],
+    ["¿De dónde sale la lista de nombres?", "Parlamentarios y consejeros regionales vienen precargados según la nómina vigente al " + NOMINA_CORTE + ". Si falta alguien o cambió, elige «Otra persona» y escribe el nombre. Los concejales escriben el suyo."],
+    ["¿Qué noticias ve una autoridad?", "Con «Noticias reales», las que la nombran en los medios leídos y en Google News de los últimos 14 días; la IA descarta homónimos y mide el tono respecto de su imagen y su trabajo. En la demostración solo hay noticias ficticias del territorio."],
+    ["¿Qué es «Frente a sus pares»?", "Cuántas notas nombraron a cada autoridad del mismo cargo y zona en los últimos 14 días. Mide presencia, no aprobación: una polémica también suma."],
+    ["¿Las piezas cambian para una autoridad?", "Sí. Además de declaración, comunicado y aclaración, hay publicación para redes, columna de opinión y minuta de intervención para sala, comisión o pleno. Los textos usan el tono del cargo y nunca inventan cifras ni posiciones: lo que falta queda marcado para completar."],
+    ["¿Funciona el piloto con usuarios para autoridades?", "Todavía no: el piloto con usuarios y lectura programada está habilitado para municipios. Las cuentas de autoridad funcionan en este navegador, con noticias reales al vuelo."]
   ]]
 ];
 let helpOpen = false, helpQ = "", helpReturn = null, helpCtl = null;
@@ -2512,17 +2804,21 @@ function pintarModo(){
     : (/^https?:$/.test(location.protocol) ? "" : `<a class="modo-link" href="https://pregonia.vercel.app/" target="_blank" rel="noopener">Noticias reales en pregonia.vercel.app</a>`);
   if (MODO.cargando) { el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Leyendo medios</b>Buscando noticias de ${esc(S.org)}<span class="demo-mas"> en unas 70 fuentes; puede tardar hasta un minuto</span>…</span>${sw}`; return; }
   if (real) { el.className = "demo real"; el.innerHTML = `<span class="demo-txt"><b>Datos reales</b>${plural(i.notas.length, "nota", "notas")}<span class="demo-mas"> de ${esc(i.comuna)} en ${i.ventana_dias} días · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : i.ia_parcial ? " · tono clasificado en parte" : " · tono sin clasificar"}</span></span>${sw}`; return; }
-  el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">Noticias y cifras ficticias · catálogo de 100 medios real</span><span class="solo-movil">Datos ficticios</span></span>${sw}`;
+  el.className = "demo"; el.innerHTML = esAut()
+    ? `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">Noticias ficticias del territorio, ninguna nombra a ${esc(cuenta().perfil.nombre)} · con «Noticias reales» se leen las que sí</span><span class="solo-movil">Datos ficticios</span></span>${sw}`
+    : `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">Noticias y cifras ficticias · catálogo de 100 medios real</span><span class="solo-movil">Datos ficticios</span></span>${sw}`;
 }
 async function cargarReales(force, silencioso){
   if (PILOTO && PILOTO.activo) return;
   if (MODO.cargando || (MODO.tipo === "real" && MODO.info && MODO.info.comuna === S.org && !force)) return; MODO.cargando = true; pintarModo();
   const org = S.org;
   try {
-    const r = await fetch("/api/noticias?comuna=" + encodeURIComponent(org)); if (!r.ok) throw new Error("HTTP " + r.status);
+    const pa = esAut() ? cuenta().perfil : null;
+    const q = !pa ? "comuna=" + encodeURIComponent(org) : pa.autoridadId ? "autoridad=" + encodeURIComponent(pa.autoridadId) : "rol=" + encodeURIComponent(pa.rol) + "&zona=" + encodeURIComponent(pa.zona) + "&nombre=" + encodeURIComponent(pa.nombre) + "&g=" + pa.g;
+    const r = await fetch("/api/noticias?" + q); if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json(); if (PILOTO && PILOTO.activo) { MODO.cargando = false; return; } if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
-    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + org + " comuna"), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna
-    MODO = {...MODO, tipo: "real", info: {...j, notas: nuevas}, cargando: false}; refrescarNotas(nuevas);  // el modo primero: los avisos se guardan por modo
+    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? pa.variantes[0] : org + " comuna")), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna
+    MODO = {...MODO, tipo: "real", info: {...j, comuna: org, notas: nuevas}, cargando: false}; refrescarNotas(nuevas);  // el modo primero: los avisos se guardan por modo
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
     pintarModo(); render();
     if (!silencioso) toast(nuevas.length ? `Listo: ${plural(nuevas.length, "nota real", "notas reales")} de ${org}. Ábrelas en Menciones.` : `Los medios leídos no publicaron sobre ${org} en los últimos ${j.ventana_dias} días.`);
@@ -2530,7 +2826,7 @@ async function cargarReales(force, silencioso){
 }
 function usarDemo(){ if (MODO.tipo === "demo") return; MODO = {...MODO, tipo: "demo", info: null}; refrescarNotas(NOTAS_DEMO); try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
 document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; if (b.dataset.act === "modo-real") cargarReales(); if (b.dataset.act === "modo-demo") usarDemo(); });
-$("#org").addEventListener("change", () => { if (MODO.tipo === "real") cargarReales(true); });
+$("#org").addEventListener("change", () => { if ($("#entBack")) return; if (MODO.tipo === "real" || (esAut() && MODO.disponible)) cargarReales(true); });  // con el selector de cuentas abierto no hay cambio todavía
 (async () => {
   pintarModo();
   if (!/^https?:$/.test(location.protocol)) return;
@@ -2577,9 +2873,7 @@ function mostrarPortada(on){
 }
 document.addEventListener("click", e => {
   if (!e.target.closest("#ptGo")) return;
-  mostrarPortada(false);
-  const k = location.hash.slice(1);
-  if (!k || k === "portada") location.hash = "inicio"; else render(true);
+  entAbrir(true);  // la entrada se elige por rol, zona y nombre
 });
 window.addEventListener("hashchange", () => { if (location.hash === "#portada") mostrarPortada(true); });
 
@@ -2606,7 +2900,7 @@ refrescarNotas(); render();
 
 const ahoraLocal = () => { const d = new Date(Date.now() - new Date().getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); };
 function capAbrir(pre = {}){
-  const nombres = [...new Set([...S.fbPaginas.filter(p => !p.c || p.c === S.org).map(p => p.n), ...CATALOG.filter(m => m.a === "local" && (m.c || "").split(";").includes(S.org)).sort((x, y) => (y.m === "facebook") - (x.m === "facebook")).map(m => m.n)])];
+  const nombres = [...new Set([...S.fbPaginas.filter(p => !p.c || p.c === S.org).map(p => p.n), ...CATALOG.filter(m => m.a === "local" && (m.c || "").split(";").some(x => territorio().includes(x))).sort((x, y) => (y.m === "facebook") - (x.m === "facebook")).map(m => m.n)])];
   const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "capBack";
   ov.innerHTML = `<section class="vid cap" role="dialog" aria-modal="true" aria-labelledby="capT">
     <header class="vid-h"><div><h2 id="capT">Agregar publicación</h2><p>${pre.compartida ? "Llegó desde Compartir. Revisa los datos y agrégala." : `Para medios que publican en Facebook, grupos vecinales u otras redes. PregonIA la analiza como cualquier noticia de ${esc(S.org)}.`}</p></div><button class="btn ghost" type="button" data-act="cap-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
@@ -2658,7 +2952,7 @@ async function capAnalizar(texto, medio, img){
   const recientes = menciones(cuenta(), 14).slice(0, 25), sample = await samplePromise;
   if (!sample) return null;
   if (img) { const puede = typeof sample.limits === "function" ? !!(await sample.limits().catch(() => ({}))).images : !!sample.imagenes; if (!puede) { if (texto.length < 20) throw {code: "sin_imagen"}; img = null; } }
-  const p = `Eres analista de prensa de PregonIA para la Municipalidad de ${S.org}, Región de Valparaíso, Chile. Analiza esta publicación ${medio ? `de la página "${medio}"` : "de una página"} en Facebook o redes sociales.${img ? " La publicación viene en la captura de pantalla adjunta: lee su texto (y la página que la publicó, si se ve)." : ""}
+  const p = `Eres analista de prensa de PregonIA para ${esAut() ? "el equipo de " + inst() + " (" + cuenta().perfil.zonaNombre + ")" : inst()}, Región de Valparaíso, Chile. Analiza esta publicación ${medio ? `de la página "${medio}"` : "de una página"} en Facebook o redes sociales.${img ? " La publicación viene en la captura de pantalla adjunta: lee su texto (y la página que la publicó, si se ve)." : ""}
 
 """${texto.slice(0, 3000) || "(sin texto pegado: usa la captura)"}"""
 
@@ -2668,10 +2962,10 @@ ${recientes.map(m => `${m.g} | ${m.lead.t}`).join("\n") || "(ninguna)"}
 Devuelve solo un objeto JSON con:
 - "titular": un titular propio, informativo, de máximo 14 palabras, sin copiar frases de la publicación.
 - "res": un resumen propio de una frase, de máximo 22 palabras.
-- "tono": "cri" si es negativa o riesgosa para la gestión o la imagen del municipio o la comuna (reclamos, emergencias, conflictos, críticas), "pos" si la favorece, "neu" si es informativa.
+- "tono": "cri" si es negativa o riesgosa para ${esAut() ? "la imagen o el trabajo de la autoridad, o un problema en su territorio" : "la gestión o la imagen del municipio o la comuna"} (reclamos, emergencias, conflictos, críticas), "pos" si la favorece, "neu" si es informativa.
 - "x": entre 3 y 8 palabras clave en minúsculas separadas por espacios (temas, lugares, instituciones).
 - "g": el código de la noticia ya registrada que cuenta el mismo hecho, o "nuevo" si ninguna.
-- "rel": true si trata de ${S.org} o de su municipio; false si no.${img ? `
+- "rel": true si ${esAut() ? `nombra a ${cuenta().perfil.nombre} o trata de un hecho en su territorio (${cuenta().perfil.zonaNombre})` : `trata de ${S.org} o de su municipio`}; false si no.${img ? `
 - "medio": el nombre de la página o medio que la publicó según la captura, o "" si no se ve.
 - "legible": false si la captura no permite leer la publicación.` : ""}`;
   const {text} = await sample(p, img ? {modelTier: "quick", cache: false, images: [img]} : {modelTier: "quick", cache: false});
@@ -2703,7 +2997,7 @@ async function capGuardar(e){
   const res = r && r.res ? String(r.res).slice(0, 220) : primera;
   const x = r && r.x ? String(r.x).slice(0, 120) : "";
   const c = {id, org: S.org, m: m.id, via, ts: Math.min(Number.isFinite(fecha) ? fecha : Date.now(), Date.now()), t, res, x, tono, g, url,
-    hay: norm(t + " " + res + " " + x + " " + texto.slice(0, 600) + " " + S.org + " comuna")};
+    hay: norm(t + " " + res + " " + x + " " + texto.slice(0, 600) + " " + (esAut() ? cuenta().perfil.variantes[0] : S.org + " comuna"))};
   capImgBlob = null;
   S.capturas.push(c); save(); refrescarNotas(); capCerrar();
   tState.tono = "todos"; tState.dias = "30"; tState.tema = "todos"; tState.q = "";
@@ -2747,7 +3041,7 @@ function vocContexto(){
 const vocClave = x => x.tipo === "libre" ? "l:" + norm(x.tema) : VOC.sel;
 /* Datos del municipio: primero las líneas que tocan el tema. */
 function vocDatos(x){
-  const lineas = (cuenta().base || baseConocimiento()).split("\n").map(l => l.trim()).filter(l => l && !/^\[completar\]/i.test(l));
+  const lineas = (cuenta().base || (esAut() ? baseAutoridad(cuenta().perfil) : baseConocimiento())).split("\n").map(l => l.trim()).filter(l => l && !/^\[completar\]/i.test(l));
   const kw = x.tipo === "g" ? norm(x.m.notas.map(n => n.hay).join(" ")).split(/\s+/).filter(w => w.length > 4) : x.tipo === "h" ? x.h.kw.map(norm) : norm(x.tema).split(/\s+/).filter(w => w.length > 3);
   const toca = l => kw.some(k => kwRe(k).test(norm(l)));
   const rel = lineas.filter(toca);
@@ -2767,17 +3061,17 @@ function vocPrompt(x){
     ? `NOTICIA: ${x.m.lead.t}. Resumen: ${x.m.lead.res}. Medio: ${MED[x.m.lead.m].n}. La publicaron ${x.m.notas.length} medio(s); ${llego(escalera(x.m.notas)).toLowerCase()}. Tono: ${tonoLbl[x.m.tono]}.${respondida(x.m.g) ? " El municipio ya aprobó una respuesta: " + ((S.comunicados.find(y => y.org === S.org && y.g === x.m.g) || {}).texto || "").slice(0, 600) : ""}`
     : x.tipo === "h" ? `FECHA DEL CALENDARIO: ${x.h.nombre} (${fechaHito(x.h.desde)} al ${fechaHito(x.h.hasta)}). Qué suele pasar: ${x.h.que || "sin descripción"}. Preparación prevista: ${x.h.prep.join("; ") || "ninguna"}. Noticias recientes del tema: ${hitoMenciones(x.h, menciones(c, 30)).slice(0, 4).map(m => m.lead.t).join(" | ") || "ninguna"}.`
     : `TEMA: ${x.tema}. Noticias recientes de la comuna: ${menciones(c, 7).slice(0, 5).map(m => m.lead.t).join(" | ") || "ninguna"}.`;
-  return `Eres el asesor de vocería de PregonIA para la Municipalidad de ${S.org}, Chile. El vocero va a una entrevista de radio en minutos y necesita una hoja breve para responder sobre este tema.
+  return `Eres el asesor de vocería de PregonIA para ${esAut() ? "el equipo de " + inst() : inst()}, Chile. El vocero va a una entrevista de radio en minutos y necesita una hoja breve para responder sobre este tema.
 
 ${tema}
 
-DATOS DEL MUNICIPIO (los únicos que puedes usar como cifras o hechos):
+${datosLbl()} (los únicos que puedes usar como cifras o hechos):
 ${[...d.rel, ...d.resto].join("\n") || "(no hay datos cargados)"}
 
 Reglas obligatorias:
 1. Usa solo hechos de la noticia o de los DATOS DEL MUNICIPIO. Si falta un dato, escribe [completar: qué dato]. No inventes cifras, fechas, nombres ni compromisos. Los datos marcados [Ejemplo] son ficticios: puedes usarlos, pero mantén la marca [Ejemplo].
 2. Frases cortas para decir en voz alta, de máximo 25 palabras, en español de Chile, tono institucional y cercano.
-3. Sin promoción personal ni partidaria de ninguna autoridad.
+3. ${esAut() ? "Tono propio del cargo, sin ataques personales ni descalificaciones a otras autoridades o partidos." : "Sin promoción personal ni partidaria de ninguna autoridad."}
 
 Devuelve solo un objeto JSON con:
 - "mensajes": exactamente 3 objetos {"idea": lo que hay que decir, "dato": la cifra o hecho que lo respalda o [completar: …]}.
@@ -2881,7 +3175,7 @@ function vocAbrir(sel){
 function vocCerrar(){ VOC.ctl?.abort(); $("#vocBack")?.remove(); document.body.classList.remove("vid-on"); const o = vocAbrir.origen; if (o && o.isConnected) o.focus(); }
 function vocTexto(){
   const x = vocContexto(), k = VOC.kits[vocClave(x)]; if (!k) return "";
-  const d = vocDatos(x), L = [`*Kit de vocería · Municipalidad de ${S.org}*`, `Tema: ${x.tema}`];
+  const d = vocDatos(x), L = [`*Kit de vocería · ${inst()}*`, `Tema: ${x.tema}`];
   if (x.tipo === "g") { const a = accion(x.m); L.push(`Medio: ${MED[x.m.lead.m].n}${x.m.notas.length > 1 ? ` y ${x.m.notas.length - 1} más` : ""} · ${llego(escalera(x.m.notas))}`, x.m.lead.url || "", "", "*Lo que pasó*", x.m.lead.res, "", "*Qué hacer*", a.a + " (" + a.r + ")"); }
   if (x.tipo === "h") L.push(`${fechaHito(x.h.desde)} al ${fechaHito(x.h.hasta)}`, "", "*Qué suele pasar*", x.h.que || "");
   L.push("", "*Tres mensajes*"); k.mensajes.forEach((m, i) => L.push(`${i + 1}. ${m.idea}`, `   Dato: ${m.dato}`));
@@ -3428,7 +3722,7 @@ function videoPlan(){
   if (d.buena) S0.push({k: "buena", dur: 8, f: ficha(d.buena)});
   S0.push({k: "cierre", dur: 5.5});
   S0.forEach(s => { s.base = s.dur; });
-  const plan = {d, scenes: S0, total: 0, org: S.org, per: d.per, sig: d.asuntos[0] ? ficha(d.asuntos[0]) : null, temas};
+  const plan = {d, scenes: S0, total: 0, org: S.org, inst: inst(), per: d.per, sig: d.asuntos[0] ? ficha(d.asuntos[0]) : null, temas};
   return retimar(plan);
 }
 
@@ -3450,7 +3744,7 @@ const minus = t => t.charAt(0).toLowerCase() + t.slice(1);
 function guionBase(plan){
   const {M, v, comp} = plan.d, frase = t => t.trim().replace(/([^.!?])$/, "$1.");
   return plan.scenes.map(s => {
-    if (s.k === "intro") return `Parte de prensa de la Municipalidad de ${plan.org}, del ${fechaHablada(NOW - 6 * DAY)} al ${fechaHablada(NOW)}.`;
+    if (s.k === "intro") return `Parte de prensa de ${plan.inst}, del ${fechaHablada(NOW - 6 * DAY)} al ${fechaHablada(NOW)}.`;
     if (s.k === "veredicto") return `La prensa fue ${v.n.toLowerCase()} esta semana: ${plural(M.vol, "noticia", "noticias")}, ${M.pos} positivas, ${M.neu} neutras y ${M.cri} críticas. ${comp}`;
     if (s.k === "temas") { const t = s.temas.filter(x => !x.otros).slice(0, 2); return t.length ? `Los temas con más publicaciones fueron ${t.map((x, i) => `${x.nombre.toLowerCase()}, con ${i ? x.n : plural(x.n, "publicación", "publicaciones")}`).join(", y ")}.` : "La cobertura de la semana no se concentró en un tema en particular."; }
     if (s.k === "asunto") { const f = s.f; return `${ORD[s.i]} asunto: ${frase(minus(f.m.lead.res))} Salió en ${plural(f.medios.length, "medio", "medios")} y ${llego(f.e).toLowerCase().replace(/^solo/, "se quedó solo en la")}. Recomendación: ${frase(minus(f.ac.a))} Responsable: ${resp(f.ac.r)}.`; }
@@ -3542,7 +3836,7 @@ const VESC = {
   intro(ctx, s, l, plan){
     vlogo(ctx, VW / 2, 860, 150, vin(l, 0.1, 0.8));
     vtexto(ctx, "Parte semanal del alcalde", VW / 2, 1000, {px: 50, w: 500, fam: VF.h, color: VC.muted, a: vin(l, 0.5), align: "center"});
-    vtexto(ctx, "Municipalidad de " + plan.org, VW / 2, 1090, {px: 62, w: 700, fam: VF.h, a: vin(l, 0.75), align: "center"});
+    vtexto(ctx, plan.inst, VW / 2, 1090, {px: 62, w: 700, fam: VF.h, a: vin(l, 0.75), align: "center"});
     vtexto(ctx, plan.per, VW / 2, 1175, {px: 42, w: 500, color: VC.blue, a: vin(l, 1), align: "center"});
   },
   veredicto(ctx, s, l, plan){
@@ -3768,7 +4062,7 @@ async function videoPreparar(){
 }
 async function videoWhatsApp(){
   if (!VID || !VID.blob) return;
-  const f = new File([VID.blob], videoNombre(), {type: VID.blob.type}), titulo = "Video del parte semanal · Municipalidad de " + S.org;
+  const f = new File([VID.blob], videoNombre(), {type: VID.blob.type}), titulo = "Video del parte semanal · " + inst();
   if (navigator.canShare && movil() && navigator.canShare({files: [f]})) {
     try { await navigator.share({files: [f], title: titulo, text: titulo}); return; }
     catch(err) { if (err && err.name === "AbortError") return; if (err && err.name === "NotAllowedError") { toast("El video está listo: toca WhatsApp otra vez."); return; } }
