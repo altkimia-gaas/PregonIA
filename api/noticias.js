@@ -2,14 +2,15 @@
 // y devuelve titular, enlace, medio, fecha y resumen propio. La respuesta queda 15 minutos en la caché de Vercel.
 // La lectura y la clasificación viven en _lectura.js, compartido con la lectura programada (/api/ingesta).
 import { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre } from "./_lectura.js";
-import { AUTORIDADES, CARGOS, cargoDe, zonaDe, variantesNombre } from "./_autoridades.js";
+import { AUTORIDADES, CARGOS, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
 
 /* Autoridades: la consulta va por nombre y cargo, con palabras de contexto que descartan homónimos lejanos. */
 const CONTEXTO_ROL = {
   diputado: '(diputado OR diputada OR Cámara OR Congreso OR Valparaíso OR Chile)',
   senador: '(senador OR senadora OR Senado OR Congreso OR Valparaíso OR Chile)',
   core: '(consejero OR consejera OR core OR "gobierno regional" OR Valparaíso)',
-  concejal: '(concejal OR concejala OR concejo OR municipalidad OR comuna)'
+  concejal: '(concejal OR concejala OR concejo OR municipalidad OR comuna)',
+  alcalde: '(alcalde OR alcaldesa OR municipalidad OR municipio OR comuna)'
 };
 const limpio = (s, n = 80) => String(s || "").replace(/[\u0000-\u001f"<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
 function sujetoDe(u){
@@ -19,23 +20,25 @@ function sujetoDe(u){
   if (!CARGOS[rol] || rol === "municipio" || !zonaDe(rol, zona) || n.split(" ").length < 2) return null;
   return {id: null, rol, zona, n, c: n, p: "", g: u.searchParams.get("g") === "F" ? "F" : "M", nomina: false};
 }
-const consulta = (a, z) => `(${variantesNombre(a).map(v => `"${v}"`).join(" OR ")}) ${a.rol === "concejal" ? `("${z.n}" OR ${CONTEXTO_ROL.concejal})` : CONTEXTO_ROL[a.rol]}`;
-/* Presencia en prensa de los pares (mismo cargo y zona en la nómina): cuántas notas los nombran en la ventana, en cualquier medio que indexe Google News. */
-async function paresDe(a, z, desde){
-  const lista = AUTORIDADES.filter(x => x.rol === a.rol && x.zona === a.zona && x.id !== a.id).concat([a]);
+const consulta = a => { const z = zonaDe(a.rol, a.zona); return `(${variantesNombre(a).map(v => `"${v}"`).join(" OR ")}) ${a.rol === "concejal" || a.rol === "alcalde" ? `("${z.n}" OR ${CONTEXTO_ROL[a.rol]})` : CONTEXTO_ROL[a.rol]}`; };
+/* Presencia en prensa de los pares: cuántas notas los nombran en la ventana, en cualquier medio que indexe Google News.
+   Pares de una autoridad: mismo cargo y zona en la nómina. Pares de un alcalde: los alcaldes de su provincia. */
+async function paresDe(a, desde){
+  const mismo = a.rol === "alcalde" ? x => x.rol === "alcalde" && provinciaDe(x.zona) === provinciaDe(a.zona) : x => x.rol === a.rol && x.zona === a.zona;
+  const lista = AUTORIDADES.filter(x => mismo(x) && x.id !== a.id).concat([a]);
   if (lista.length < 2) return [];
   return Promise.all(lista.map(async x => {
     let n = 0; try {
       const re = new RegExp(variantesNombre(x).map(v => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"));
-      n = (await leerGoogleNewsConsulta(consulta(x, z), VENTANA_DIAS, false)).filter(i => Number.isFinite(i.fecha) && i.fecha >= desde && re.test(norm(i.titulo + " " + i.desc))).length;
+      n = (await leerGoogleNewsConsulta(consulta(x), VENTANA_DIAS, false)).filter(i => Number.isFinite(i.fecha) && i.fecha >= desde && re.test(norm(i.titulo + " " + i.desc))).length;
     } catch(e) { n = null; }
-    return {n_: x.n, p: x.p, n, yo: x === a};
+    return {n_: x.n, p: x.p || (a.rol === "alcalde" ? x.zona : ""), n, yo: x === a};
   })).then(r => r.filter(x => x.n !== null));
 }
 async function deAutoridad(u){
   const a = sujetoDe(u); if (!a) return json({ error: "Autoridad no disponible" }, 400);
   const z = zonaDe(a.rol, a.zona), cargo = cargoDe(a.rol, a.g), ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
-  const [cat, gn, pares] = await Promise.all([leerCatalogo(), leerGoogleNewsConsulta(consulta(a, z)).catch(() => null), a.nomina ? paresDe(a, z, desde).catch(() => []) : []]);
+  const [cat, gn, pares] = await Promise.all([leerCatalogo(), leerGoogleNewsConsulta(consulta(a)).catch(() => null), a.nomina ? paresDe(a, desde).catch(() => []) : []]);
   const errores = cat.errores.concat(gn ? [] : ["Google News"]);
   const candidatas = candidatasPorNombre(variantesNombre(a), cat.items.concat(gn || []), desde, ahora), lote = candidatas.slice(0, MAX_IA);
   let clas = {porI: new Map(), ok: false}; try { clas = await clasificar({nombre: a.n, cargo, zona: z.n}, lote); } catch(e) { console.error("clasificar", e); }
@@ -68,7 +71,8 @@ export async function GET(req){
   const comuna = u.searchParams.get("comuna") || "Casablanca";
   if (!COMUNAS[comuna]) return json({ error: "Comuna no disponible" }, 400);
   const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
-  const [cat, gn] = await Promise.all([leerCatalogo(), leerGoogleNews(comuna).catch(() => null)]);
+  const alcalde = AUTORIDADES.find(x => x.rol === "alcalde" && x.zona === comuna);
+  const [cat, gn, pares] = await Promise.all([leerCatalogo(), leerGoogleNews(comuna).catch(() => null), alcalde ? paresDe(alcalde, desde).catch(() => []) : []]);
   const errores = cat.errores.concat(gn ? [] : ["Google News"]);
   const candidatas = candidatasDe(comuna, cat.items.concat(gn || []), desde, ahora), lote = candidatas.slice(0, MAX_IA);
 
@@ -78,6 +82,6 @@ export async function GET(req){
   return json({
     comuna, generado: new Date(ahora).toISOString(), ventana_dias: VENTANA_DIAS, ia: clas.ok, ia_parcial: !clas.ok && clas.porI.size > 0,
     fuentes: { leidas: cat.total + 1 - errores.length, total: cat.total + 1, con_error: errores.slice(0, 40) },
-    candidatas: candidatas.length, ...(DIAG.length ? {ia_diagnostico: DIAG.slice(0, 6)} : {}), notas
+    candidatas: candidatas.length, alcalde: alcalde ? {nombre: alcalde.n, cargo: cargoDe("alcalde", alcalde.g)} : null, pares, ...(DIAG.length ? {ia_diagnostico: DIAG.slice(0, 6)} : {}), notas
   }, 200, { "cache-control": clas.ok ? "public, max-age=0, s-maxage=900, stale-while-revalidate=3600" : "public, max-age=0, s-maxage=60" });
 }

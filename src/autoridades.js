@@ -3,7 +3,8 @@
    scripts/build.py copia este archivo a api/_autoridades.js.
    Nómina al inicio de cada período; verificar cambios posteriores (reemplazos, renuncias) antes de usarla con un cliente.
    Fuentes: diputados 2026-2030 (Mala Espina Check, 17 nov 2025, distritos 6 y 7); senadores 2026-2034 (Meganoticias y T13, 11 mar 2026);
-   consejeros regionales 2025-2029 (Radio Universidad de Valparaíso, enero 2025). */
+   consejeros regionales 2025-2029 (Radio Universidad de Valparaíso, enero 2025); alcaldes 2024-2028 (resultados oficiales publicados por RedGol, oct 2024;
+   Nogales verificada con TuOpinas, oct 2026). De los alcaldes no se registra partido: la ficha muestra solo el cargo. */
 const NOMINA_CORTE = "11 de noviembre de 2026";
 const PROVINCIAS = {
   "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández"],
@@ -24,6 +25,7 @@ const CARGOS = {
   diputado: {n: "Diputado o diputada", f: "Diputada", m: "Diputado", zona: "Distrito", organo: "Cámara de Diputadas y Diputados"},
   senador: {n: "Senador o senadora", f: "Senadora", m: "Senador", zona: "Circunscripción", organo: "Senado"},
   core: {n: "Consejero o consejera regional", f: "Consejera regional", m: "Consejero regional", zona: "Circunscripción provincial", organo: "Consejo Regional de Valparaíso"},
+  alcalde: {n: "Alcalde o alcaldesa", f: "Alcaldesa", m: "Alcalde", zona: "Comuna", organo: "Municipalidad"},
   concejal: {n: "Concejal o concejala", f: "Concejala", m: "Concejal", zona: "Comuna", organo: "Concejo Municipal"}
 };
 const ZONAS = {
@@ -40,8 +42,10 @@ const ZONAS = {
     {id: "PET", n: "Petorca", comunas: PROVINCIAS["Petorca"]},
     {id: "IP", n: "Isla de Pascua", comunas: PROVINCIAS["Isla de Pascua"]}
   ],
-  concejal: COMUNAS_V.map(c => ({id: c, n: c, comunas: [c]}))
+  concejal: COMUNAS_V.map(c => ({id: c, n: c, comunas: [c]})),
+  alcalde: COMUNAS_V.map(c => ({id: c, n: c, comunas: [c]}))
 };
+const provinciaDe = c => Object.keys(PROVINCIAS).find(k => PROVINCIAS[k].includes(c)) || "";
 /* n: nombre con que se le conoce; c: nombre completo; p: partido o pacto al momento de la elección; g: F o M. */
 const nuevaAut = (rol, zona, n, c, p, g) => ({id: rol.slice(0, 3) + "-" + n.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-"), rol, zona, n, c, p, g});
 const AUTORIDADES = [
@@ -93,7 +97,46 @@ const AUTORIDADES = [
   nuevaAut("core", "PET", "Cristián Pinilla", "Cristián René Pinilla Ibacache", "Republicanos", "M"),
   nuevaAut("core", "PET", "Juan Bautista Ibacache", "Juan Bautista Ibacache Ibacache", "RN", "M"),
   nuevaAut("core", "IP", "Sabrina Tuki", "Sabrina Tuki Pont", "Ind.-Evópoli", "F"),
-  nuevaAut("core", "IP", "Francisco Haoa", "Francisco Haoa Hotus", "Ind.-PS", "M")
+  nuevaAut("core", "IP", "Francisco Haoa", "Francisco Haoa Hotus", "Ind.-PS", "M"),
+  /* Alcaldes 2024-2028: la zona es la comuna. */
+  nuevaAut("alcalde", "Algarrobo", "Marcos González", "Marcos González", "", "M"),
+  nuevaAut("alcalde", "Cabildo", "Víctor Donoso", "Víctor Donoso Oyanedel", "", "M"),
+  nuevaAut("alcalde", "Calle Larga", "Dina González", "Dina González Alfaro", "", "F"),
+  nuevaAut("alcalde", "Cartagena", "Lidia Silva", "Lidia Silva", "", "F"),
+  nuevaAut("alcalde", "Casablanca", "Rodrigo Martínez", "Rodrigo Martínez", "", "M"),
+  nuevaAut("alcalde", "Catemu", "Rodrigo Díaz", "Rodrigo Díaz Brito", "", "M"),
+  nuevaAut("alcalde", "Concón", "Freddy Ramírez", "Freddy Ramírez", "", "M"),
+  nuevaAut("alcalde", "El Quisco", "José Jofré", "José Jofré", "", "M"),
+  nuevaAut("alcalde", "El Tabo", "Alfonso Muñoz", "Alfonso Muñoz", "", "M"),
+  nuevaAut("alcalde", "Hijuelas", "Verónica Rossat", "Verónica Rossat Arriagada", "", "F"),
+  nuevaAut("alcalde", "Isla de Pascua", "Elizabeth Arévalo", "Elizabeth Arévalo Pakarati", "", "F"),
+  nuevaAut("alcalde", "Juan Fernández", "Pablo Manríquez", "Pablo Manríquez", "", "M"),
+  nuevaAut("alcalde", "La Calera", "Johnny Piraino", "Johnny Piraino Meneses", "", "M"),
+  nuevaAut("alcalde", "La Cruz", "Filomena Navia", "Filomena Navia Hevia", "", "F"),
+  nuevaAut("alcalde", "La Ligua", "Patricio Pallares", "Patricio Pallares Valenzuela", "", "M"),
+  nuevaAut("alcalde", "Limache", "Luciano Valenzuela", "Luciano Valenzuela Romero", "", "M"),
+  nuevaAut("alcalde", "Llaillay", "Edgardo González", "Edgardo González Arancibia", "", "M"),
+  nuevaAut("alcalde", "Los Andes", "Manuel Rivera", "Manuel Rivera Martínez", "", "M"),
+  nuevaAut("alcalde", "Nogales", "Leslie Pacheco", "Leslie Pacheco Ramírez", "", "F"),
+  nuevaAut("alcalde", "Olmué", "Jorge Jil", "Jorge Jil Herrera", "", "M"),
+  nuevaAut("alcalde", "Panquehue", "Gonzalo Vergara", "Gonzalo Vergara", "", "M"),
+  nuevaAut("alcalde", "Papudo", "Claudia Adasme", "Claudia Adasme", "", "F"),
+  nuevaAut("alcalde", "Petorca", "Gustavo Henríquez", "Gustavo Henríquez", "", "M"),
+  nuevaAut("alcalde", "Puchuncaví", "Marcos Morales", "Marcos Morales Ureta", "", "M"),
+  nuevaAut("alcalde", "Putaendo", "Mauricio Quiroz", "Mauricio Quiroz Chamorro", "", "M"),
+  nuevaAut("alcalde", "Quillota", "Luis Mella", "Luis Mella", "", "M"),
+  nuevaAut("alcalde", "Quilpué", "Carolina Corti", "Carolina Corti Badía", "", "F"),
+  nuevaAut("alcalde", "Quintero", "Rolando Silva", "Rolando Silva", "", "M"),
+  nuevaAut("alcalde", "Rinconada", "Juan Galdames", "Juan Galdames", "", "M"),
+  nuevaAut("alcalde", "San Antonio", "Omar Vera", "Omar Vera Castro", "", "M"),
+  nuevaAut("alcalde", "San Esteban", "Christian Ortega", "Christian Ortega", "", "M"),
+  nuevaAut("alcalde", "San Felipe", "Carmen Castillo", "Carmen Castillo", "", "F"),
+  nuevaAut("alcalde", "Santa María", "Claudio Zurita", "Claudio Zurita", "", "M"),
+  nuevaAut("alcalde", "Santo Domingo", "Fernando Rodríguez", "Fernando Rodríguez Larraín", "", "M"),
+  nuevaAut("alcalde", "Valparaíso", "Camila Nieto", "Camila Nieto Hernández", "", "F"),
+  nuevaAut("alcalde", "Villa Alemana", "Nelson Estay", "Nelson Estay", "", "M"),
+  nuevaAut("alcalde", "Viña del Mar", "Macarena Ripamonti", "Macarena Ripamonti", "", "F"),
+  nuevaAut("alcalde", "Zapallar", "Gustavo Alessandri", "Gustavo Alessandri", "", "M")
 ];
 const zonaDe = (rol, id) => (ZONAS[rol] || []).find(z => z.id === id) || null;
 const cargoDe = (rol, g) => CARGOS[rol] ? (g === "F" ? CARGOS[rol].f : CARGOS[rol].m) : "";

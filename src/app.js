@@ -3,7 +3,7 @@ NOTAS.forEach(n => { n.g = String(n.g); });
 
 /* Catálogos del motor de sugerencia (forma de lectura; la comparación ignora tildes y mayúsculas) */
 const CTX = ["comuna","vecinos","vecinas","municipio","municipalidad","alcalde","alcaldesa","concejo","litoral","provincia","región","sector","plaza","temporada","playa","Senapred","Carabineros","bomberos","Cesfam","agricultores","viña","feria","calles","borde costero","paseo","humedal","regata","cuenca","Las Cruces","Pinomar","Llolleo","Barrancas","Lo Ovalle","Los Maitenes","Lagunillas","Quintay"];
-const EXC = {"Casablanca":["Marruecos","película","Bogart"],"San Antonio":["Texas","Spurs","NBA","San Antonio de Padua"],"Cartagena":["Cartagena de Indias","Colombia","Murcia"],"Algarrobo":["Argentina","especie arbórea","árbol"],"El Quisco":[],"El Tabo":[]};
+const EXC = {"Los Andes":["cordillera de los Andes","Universidad de los Andes","Clínica Universidad de los Andes"],"Santa María":["Federico Santa María","Universidad Santa María","USM"],"La Cruz":["Cruz Roja"],"Valparaíso":[],"Casablanca":["Marruecos","película","Bogart"],"San Antonio":["Texas","Spurs","NBA","San Antonio de Padua"],"Cartagena":["Cartagena de Indias","Colombia","Murcia"],"Algarrobo":["Argentina","especie arbórea","árbol"],"El Quisco":[],"El Tabo":[]};
 const AGENDA = {"Casablanca":["Polideportivo","Plataforma logística"],"San Antonio":["Puerto Exterior","Borde costero"],"Cartagena":["Playa Grande","Patrimonio"],"El Quisco":["Plan regulador"],"El Tabo":["Las Cruces"],"Algarrobo":["Humedal"]};
 const SENS = {
   agua:{n:"Agua y sequía", t:["agua","sequía","escasez hídrica","corte de agua","aljibe","agua potable"]},
@@ -33,7 +33,7 @@ function candidatos(perfil){
   const c = perfil.comuna;
   const nucleo = [
     T("Municipalidad de " + c, "Núcleo", ["Municipalidad de " + c, "Municipio de " + c]),
-    T(perfil.autoridad ? perfil.autoridad : "Alcalde de " + c, "Núcleo", ["Alcalde de " + c, "Alcaldesa de " + c].concat(perfil.autoridad ? [perfil.autoridad] : [])),
+    T(perfil.autoridad ? perfil.autoridad : "Alcalde de " + c, "Núcleo", ["Alcalde de " + c, "Alcaldesa de " + c].concat(perfil.autoridad ? [perfil.autoridad] : [], perfil.variantes || [])),
     T(c + " (comuna)", "Núcleo", [c], CTX.slice(), (EXC[c] || []).slice())
   ];
   const otros = [ T("Concejo municipal", "Candidato", ["concejo municipal","concejal","concejala","concejales"], [c]) ];
@@ -404,7 +404,7 @@ function vReportes(){
   if (!REPS.some(r => r[0] === tState.rep)) tState.rep = "alcalde";
   const cur = REPS.find(r => r[0] === tState.rep), p = repMeta(cur[0], cur[2]);
   return `<div class="head"><div><h2 tabindex="-1">Reportes</h2><p>Un informe por lector. Cada uno responde una sola pregunta, con el nivel de detalle que esa persona necesita.</p></div></div>
-  <div class="tabs" role="tablist">${REPS.map(([k,n]) => `<button role="tab" aria-selected="${tState.rep===k}" data-act="rep" data-k="${k}">${esAut() && k === "alcalde" ? "Parte semanal" : n}</button>`).join("")}</div>
+  <div class="tabs" role="tablist">${REPS.map(([k,n]) => `<button role="tab" aria-selected="${tState.rep===k}" data-act="rep" data-k="${k}">${esAut() && k === "alcalde" ? "Parte semanal" : k === "alcalde" && cuenta().perfil.g === "F" && cuenta().perfil.autoridad ? "Parte de la alcaldesa" : n}</button>`).join("")}</div>
   <dl class="para"><div><dt>Para</dt><dd>${p.para}</dd></div><div><dt>Cuándo</dt><dd>${p.cuando}</dd></div><div><dt>Lectura</dt><dd>${p.lectura}</dd></div><div class="q"><dt>Responde</dt><dd>${p.responde}</dd></div></dl>
   ${({alcalde:repAlcalde, diario:repDiario, mesa:repMesa, gestion:repGestion, crisis:repCrisis, calendario:repCalendario})[tState.rep]()}`;
 }
@@ -648,6 +648,9 @@ function lecturaBase(M, porTema){
   return `${S.org} sumó ${plural(M.vol, "noticia", "noticias")} en 30 días, con una cobertura ${veredicto(M).n.toLowerCase()} (${conteo(M)}). El tema con más presencia fue ${top?top.t.nombre:"—"} y el que concentró más notas críticas fue ${crit&&crit.cri?crit.t.nombre + " (" + llego(crit.e).toLowerCase() + ")":"ninguno"}. Usa el botón para una lectura interpretativa con recomendaciones para el equipo.`;
 }
 function paresCard(){
+  const pr = MODO && MODO.tipo === "real" && MODO.info && MODO.info.pares, pa = cuenta().perfil, prov = provinciaDe(S.org);
+  if (pr && pr.length) return paresLista("Frente a los alcaldes de la provincia", pa.autoridad ? pa.autoridad.replace(/^Alcald(e|esa) /, "") : "Su alcalde", "la provincia de " + prov, pr);
+  if (!COMUNAS.includes(S.org)) return `<div class="card"><h3>Frente a los alcaldes de la provincia</h3><p class="muted" style="margin:0">Con noticias reales, aquí se compara la presencia en prensa de ${esc(pa.autoridad || "su alcalde o alcaldesa")} con la de los demás alcaldes de la provincia de ${esc(prov)} en los últimos 14 días.</p></div>`;
   const rows = COMUNAS.map(c => ({c, ...metricas(menciones({temas:[genericaComuna(c)]}))})).map(r => ({...r, pc: pct(r.cri, r.vol)}));
   const tot = rows.reduce((s,r) => s + r.vol, 0) || 1, maxV = Math.max(1, ...rows.map(r => r.vol)), me = rows.find(r => r.c === S.org);
   const pos = rows.slice().sort((a,b) => b.vol - a.vol).indexOf(me) + 1, promPc = Math.round(rows.reduce((s,r) => s + r.pc, 0) / rows.length);
@@ -1047,7 +1050,8 @@ document.addEventListener("focusout", e => { const el = e.target; if (el.dataset
 document.addEventListener("submit", e => {
   e.preventDefault();
   if (e.target.id === "carForm") {
-    const perfil = {...(esAut() ? cuenta().perfil : {tipo: $("#cTipo").value, comuna: S.org, autoridad: $("#cAut").value.trim()}), agenda: $("#cAg").value.split(",").map(s => s.trim()).filter(Boolean), sens: [...document.querySelectorAll('input[name="sens"]:checked')].map(x => x.value), plan: $("#cPlan").value};
+    const pa = cuenta().perfil, aut = esAut() ? "" : $("#cAut").value.trim();
+    const perfil = {...(esAut() ? pa : {...pa, tipo: $("#cTipo").value, comuna: S.org, autoridad: aut, ...(aut === pa.autoridad ? {} : {alcaldeId: null, variantes: []})}), agenda: $("#cAg").value.split(",").map(s => s.trim()).filter(Boolean), sens: [...document.querySelectorAll('input[name="sens"]:checked')].map(x => x.value), plan: $("#cPlan").value};
     propuesta = {perfil, ...proponer(perfil)};
     $("#propOut").innerHTML = propHtml(); const pc = $("#propCard"); pc.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"}); pc.focus({preventScroll:true});
   }
@@ -1241,8 +1245,9 @@ const FAQ = [
     ["¿Cómo envío o guardo una respuesta?", "Bajo el borrador está la barra Compartir. En el celular, WhatsApp y Correo abren la hoja de compartir con el PDF adjunto: eliges la app y el contacto. En el computador, WhatsApp abre el chat y guarda el PDF para que lo adjuntes con el clip; Correo te deja elegir Gmail, Outlook o el programa de correo del equipo, con asunto y texto listos. Nada se envía solo: tú eliges a quién."]
   ]],
   ["Autoridades", [
-    ["¿Para quién es la versión de autoridades?", "Para diputadas y diputados, senadoras y senadores, consejeras y consejeros regionales y concejales de la Región de Valparaíso, y sus equipos de prensa. Se entra eligiendo el cargo, la zona (distrito, circunscripción o comuna) y el nombre."],
-    ["¿De dónde sale la lista de nombres?", "Parlamentarios y consejeros regionales vienen precargados según la nómina vigente al " + NOMINA_CORTE + ". Si falta alguien o cambió, elige «Otra persona» y escribe el nombre. Los concejales escriben el suyo."],
+    ["¿Para quién es la versión de autoridades?", "Para alcaldesas y alcaldes, diputadas y diputados, senadoras y senadores, consejeras y consejeros regionales y concejales de la Región de Valparaíso, y sus equipos de prensa. Se entra eligiendo el cargo, la zona (distrito, circunscripción o comuna) y el nombre."],
+    ["¿Puedo seguir cualquier municipio de la región?", "Sí. En «Municipio / alcaldía» están las 38 comunas de la Región de Valparaíso, por provincia, con su alcalde o alcaldesa del período 2024-2028. La cuenta sigue a la municipalidad, a la comuna y a la persona por su nombre, y con noticias reales la compara con los alcaldes de su provincia. La demostración trae noticias ficticias solo del litoral central."],
+    ["¿De dónde sale la lista de nombres?", "Parlamentarios, consejeros regionales y alcaldes vienen precargados según la nómina vigente al " + NOMINA_CORTE + ". Si falta alguien o cambió, elige «Otra persona» y escribe el nombre. Los concejales escriben el suyo."],
     ["¿Qué noticias ve una autoridad?", "Con «Noticias reales», las que la nombran en los medios leídos y en Google News de los últimos 14 días; la IA descarta homónimos y mide el tono respecto de su imagen y su trabajo. En la demostración solo hay noticias ficticias del territorio."],
     ["¿Qué es «Frente a sus pares»?", "Cuántas notas nombraron a cada autoridad del mismo cargo y zona en los últimos 14 días. Mide presencia, no aprobación: una polémica también suma."],
     ["¿Las piezas cambian para una autoridad?", "Sí. Además de declaración, comunicado y aclaración, hay publicación para redes, columna de opinión y minuta de intervención para sala, comisión o pleno. Los textos usan el tono del cargo y nunca inventan cifras ni posiciones: lo que falta queda marcado para completar."],
@@ -1326,6 +1331,7 @@ function pintarModo(){
     : (/^https?:$/.test(location.protocol) ? "" : `<a class="modo-link" href="https://pregonia.vercel.app/" target="_blank" rel="noopener">Noticias reales en pregonia.vercel.app</a>`);
   if (MODO.cargando) { el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Leyendo medios</b>Buscando noticias de ${esc(S.org)}<span class="demo-mas"> en unas 70 fuentes; puede tardar hasta un minuto</span>…</span>${sw}`; return; }
   if (real) { el.className = "demo real"; el.innerHTML = `<span class="demo-txt"><b>Datos reales</b>${plural(i.notas.length, "nota", "notas")}<span class="demo-mas"> de ${esc(i.comuna)} en ${i.ventana_dias} días · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : i.ia_parcial ? " · tono clasificado en parte" : " · tono sin clasificar"}</span></span>${sw}`; return; }
+  if (!esAut() && !COMUNAS.includes(S.org)) { el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">La demostración trae noticias ficticias solo del litoral central · con «Noticias reales» se leen las de ${esc(S.org)}</span><span class="solo-movil">Datos ficticios</span></span>${sw}`; return; }
   el.className = "demo"; el.innerHTML = esAut()
     ? `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">Noticias ficticias del territorio, ninguna nombra a ${esc(cuenta().perfil.nombre)} · con «Noticias reales» se leen las que sí</span><span class="solo-movil">Datos ficticios</span></span>${sw}`
     : `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">Noticias y cifras ficticias · catálogo de 100 medios real</span><span class="solo-movil">Datos ficticios</span></span>${sw}`;
@@ -1348,7 +1354,7 @@ async function cargarReales(force, silencioso){
 }
 function usarDemo(){ if (MODO.tipo === "demo") return; MODO = {...MODO, tipo: "demo", info: null}; refrescarNotas(NOTAS_DEMO); try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
 document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; if (b.dataset.act === "modo-real") cargarReales(); if (b.dataset.act === "modo-demo") usarDemo(); });
-$("#org").addEventListener("change", () => { if ($("#entBack")) return; if (MODO.tipo === "real" || (esAut() && MODO.disponible)) cargarReales(true); });  // con el selector de cuentas abierto no hay cambio todavía
+$("#org").addEventListener("change", () => { if ($("#entBack")) return; pintarModo(); if (MODO.tipo === "real" || ((esAut() || !COMUNAS.includes(S.org)) && MODO.disponible)) cargarReales(true); });  // sin noticias ficticias propias, se leen las reales  // con el selector de cuentas abierto no hay cambio todavía
 (async () => {
   pintarModo();
   if (!/^https?:$/.test(location.protocol)) return;

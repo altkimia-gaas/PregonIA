@@ -21,7 +21,7 @@ def main():
         "export { NIVEL_AVISO, PREF_MINIMO, tonoHecho, rafagaDe, alertasDeHecho, horaChile, pasaPreferencia };\n", encoding="utf-8")
     # Zonas y nómina de autoridades: el mismo archivo en la aplicación y en el servidor (api/_autoridades.js).
     (RAIZ / "api" / "_autoridades.js").write_text("// Generado por scripts/build.py desde src/autoridades.js. No editar a mano.\n" + leer("autoridades.js") +
-        "export { NOMINA_CORTE, PROVINCIAS, COMUNAS_V, CARGOS, ZONAS, AUTORIDADES, zonaDe, cargoDe, variantesNombre };\n", encoding="utf-8")
+        "export { NOMINA_CORTE, PROVINCIAS, COMUNAS_V, CARGOS, ZONAS, AUTORIDADES, zonaDe, cargoDe, variantesNombre, provinciaDe };\n", encoding="utf-8")
     js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("calendario.js") + "\n" + leer("autoridades.js") + "\n" + leer("cuentas.js") + "\n" + leer("app.js") + "\n" + leer("captura.js") + "\n" + leer("vocero.js") + "\n" + leer("compartir.js") + "\n" + leer("reglas.js") + "\n" + leer("alertas.js") + "\n" + leer("piloto.js") + "\n" + leer("video.js")
     js = js.replace("/*CATALOG*/", json.dumps(catalogo(), ensure_ascii=False, separators=(",", ":")), 1)
     foto = "data:image/jpeg;base64," + base64.b64encode((RAIZ / "assets" / "portada.jpg").read_bytes()).decode()

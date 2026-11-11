@@ -1246,7 +1246,8 @@ document.addEventListener("click", e => {
    scripts/build.py copia este archivo a api/_autoridades.js.
    Nómina al inicio de cada período; verificar cambios posteriores (reemplazos, renuncias) antes de usarla con un cliente.
    Fuentes: diputados 2026-2030 (Mala Espina Check, 17 nov 2025, distritos 6 y 7); senadores 2026-2034 (Meganoticias y T13, 11 mar 2026);
-   consejeros regionales 2025-2029 (Radio Universidad de Valparaíso, enero 2025). */
+   consejeros regionales 2025-2029 (Radio Universidad de Valparaíso, enero 2025); alcaldes 2024-2028 (resultados oficiales publicados por RedGol, oct 2024;
+   Nogales verificada con TuOpinas, oct 2026). De los alcaldes no se registra partido: la ficha muestra solo el cargo. */
 const NOMINA_CORTE = "11 de noviembre de 2026";
 const PROVINCIAS = {
   "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández"],
@@ -1267,6 +1268,7 @@ const CARGOS = {
   diputado: {n: "Diputado o diputada", f: "Diputada", m: "Diputado", zona: "Distrito", organo: "Cámara de Diputadas y Diputados"},
   senador: {n: "Senador o senadora", f: "Senadora", m: "Senador", zona: "Circunscripción", organo: "Senado"},
   core: {n: "Consejero o consejera regional", f: "Consejera regional", m: "Consejero regional", zona: "Circunscripción provincial", organo: "Consejo Regional de Valparaíso"},
+  alcalde: {n: "Alcalde o alcaldesa", f: "Alcaldesa", m: "Alcalde", zona: "Comuna", organo: "Municipalidad"},
   concejal: {n: "Concejal o concejala", f: "Concejala", m: "Concejal", zona: "Comuna", organo: "Concejo Municipal"}
 };
 const ZONAS = {
@@ -1283,8 +1285,10 @@ const ZONAS = {
     {id: "PET", n: "Petorca", comunas: PROVINCIAS["Petorca"]},
     {id: "IP", n: "Isla de Pascua", comunas: PROVINCIAS["Isla de Pascua"]}
   ],
-  concejal: COMUNAS_V.map(c => ({id: c, n: c, comunas: [c]}))
+  concejal: COMUNAS_V.map(c => ({id: c, n: c, comunas: [c]})),
+  alcalde: COMUNAS_V.map(c => ({id: c, n: c, comunas: [c]}))
 };
+const provinciaDe = c => Object.keys(PROVINCIAS).find(k => PROVINCIAS[k].includes(c)) || "";
 /* n: nombre con que se le conoce; c: nombre completo; p: partido o pacto al momento de la elección; g: F o M. */
 const nuevaAut = (rol, zona, n, c, p, g) => ({id: rol.slice(0, 3) + "-" + n.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-"), rol, zona, n, c, p, g});
 const AUTORIDADES = [
@@ -1336,7 +1340,46 @@ const AUTORIDADES = [
   nuevaAut("core", "PET", "Cristián Pinilla", "Cristián René Pinilla Ibacache", "Republicanos", "M"),
   nuevaAut("core", "PET", "Juan Bautista Ibacache", "Juan Bautista Ibacache Ibacache", "RN", "M"),
   nuevaAut("core", "IP", "Sabrina Tuki", "Sabrina Tuki Pont", "Ind.-Evópoli", "F"),
-  nuevaAut("core", "IP", "Francisco Haoa", "Francisco Haoa Hotus", "Ind.-PS", "M")
+  nuevaAut("core", "IP", "Francisco Haoa", "Francisco Haoa Hotus", "Ind.-PS", "M"),
+  /* Alcaldes 2024-2028: la zona es la comuna. */
+  nuevaAut("alcalde", "Algarrobo", "Marcos González", "Marcos González", "", "M"),
+  nuevaAut("alcalde", "Cabildo", "Víctor Donoso", "Víctor Donoso Oyanedel", "", "M"),
+  nuevaAut("alcalde", "Calle Larga", "Dina González", "Dina González Alfaro", "", "F"),
+  nuevaAut("alcalde", "Cartagena", "Lidia Silva", "Lidia Silva", "", "F"),
+  nuevaAut("alcalde", "Casablanca", "Rodrigo Martínez", "Rodrigo Martínez", "", "M"),
+  nuevaAut("alcalde", "Catemu", "Rodrigo Díaz", "Rodrigo Díaz Brito", "", "M"),
+  nuevaAut("alcalde", "Concón", "Freddy Ramírez", "Freddy Ramírez", "", "M"),
+  nuevaAut("alcalde", "El Quisco", "José Jofré", "José Jofré", "", "M"),
+  nuevaAut("alcalde", "El Tabo", "Alfonso Muñoz", "Alfonso Muñoz", "", "M"),
+  nuevaAut("alcalde", "Hijuelas", "Verónica Rossat", "Verónica Rossat Arriagada", "", "F"),
+  nuevaAut("alcalde", "Isla de Pascua", "Elizabeth Arévalo", "Elizabeth Arévalo Pakarati", "", "F"),
+  nuevaAut("alcalde", "Juan Fernández", "Pablo Manríquez", "Pablo Manríquez", "", "M"),
+  nuevaAut("alcalde", "La Calera", "Johnny Piraino", "Johnny Piraino Meneses", "", "M"),
+  nuevaAut("alcalde", "La Cruz", "Filomena Navia", "Filomena Navia Hevia", "", "F"),
+  nuevaAut("alcalde", "La Ligua", "Patricio Pallares", "Patricio Pallares Valenzuela", "", "M"),
+  nuevaAut("alcalde", "Limache", "Luciano Valenzuela", "Luciano Valenzuela Romero", "", "M"),
+  nuevaAut("alcalde", "Llaillay", "Edgardo González", "Edgardo González Arancibia", "", "M"),
+  nuevaAut("alcalde", "Los Andes", "Manuel Rivera", "Manuel Rivera Martínez", "", "M"),
+  nuevaAut("alcalde", "Nogales", "Leslie Pacheco", "Leslie Pacheco Ramírez", "", "F"),
+  nuevaAut("alcalde", "Olmué", "Jorge Jil", "Jorge Jil Herrera", "", "M"),
+  nuevaAut("alcalde", "Panquehue", "Gonzalo Vergara", "Gonzalo Vergara", "", "M"),
+  nuevaAut("alcalde", "Papudo", "Claudia Adasme", "Claudia Adasme", "", "F"),
+  nuevaAut("alcalde", "Petorca", "Gustavo Henríquez", "Gustavo Henríquez", "", "M"),
+  nuevaAut("alcalde", "Puchuncaví", "Marcos Morales", "Marcos Morales Ureta", "", "M"),
+  nuevaAut("alcalde", "Putaendo", "Mauricio Quiroz", "Mauricio Quiroz Chamorro", "", "M"),
+  nuevaAut("alcalde", "Quillota", "Luis Mella", "Luis Mella", "", "M"),
+  nuevaAut("alcalde", "Quilpué", "Carolina Corti", "Carolina Corti Badía", "", "F"),
+  nuevaAut("alcalde", "Quintero", "Rolando Silva", "Rolando Silva", "", "M"),
+  nuevaAut("alcalde", "Rinconada", "Juan Galdames", "Juan Galdames", "", "M"),
+  nuevaAut("alcalde", "San Antonio", "Omar Vera", "Omar Vera Castro", "", "M"),
+  nuevaAut("alcalde", "San Esteban", "Christian Ortega", "Christian Ortega", "", "M"),
+  nuevaAut("alcalde", "San Felipe", "Carmen Castillo", "Carmen Castillo", "", "F"),
+  nuevaAut("alcalde", "Santa María", "Claudio Zurita", "Claudio Zurita", "", "M"),
+  nuevaAut("alcalde", "Santo Domingo", "Fernando Rodríguez", "Fernando Rodríguez Larraín", "", "M"),
+  nuevaAut("alcalde", "Valparaíso", "Camila Nieto", "Camila Nieto Hernández", "", "F"),
+  nuevaAut("alcalde", "Villa Alemana", "Nelson Estay", "Nelson Estay", "", "M"),
+  nuevaAut("alcalde", "Viña del Mar", "Macarena Ripamonti", "Macarena Ripamonti", "", "F"),
+  nuevaAut("alcalde", "Zapallar", "Gustavo Alessandri", "Gustavo Alessandri", "", "M")
 ];
 const zonaDe = (rol, id) => (ZONAS[rol] || []).find(z => z.id === id) || null;
 const cargoDe = (rol, g) => CARGOS[rol] ? (g === "F" ? CARGOS[rol].f : CARGOS[rol].m) : "";
@@ -1350,7 +1393,7 @@ function variantesNombre(a){
   return [...out].filter(x => x.split(" ").length >= 2);
 }
 
-/* Cuentas: municipios y autoridades electas (diputados, senadores, consejeros regionales y concejales).
+/* Cuentas: municipios con su alcalde o alcaldesa (las 38 comunas de la región) y autoridades electas (diputados, senadores, consejeros regionales y concejales).
    Una cuenta de autoridad funciona con la misma lógica que la de un municipio: temas, menciones, reportes, respuestas y avisos,
    pero sus temas base son la persona y su territorio, y sus piezas y reportes están pensados para su cargo y su equipo.
    La entrada al sistema se elige por rol, zona y nombre. Nunca se inventan noticias sobre personas reales:
@@ -1379,14 +1422,33 @@ function crearCuentaAutoridad({rol, zona, a, nombre, g}){
   const persona = a || {rol, zona, n: nombre.trim(), c: nombre.trim(), p: "", g};
   const perfil = {tipo: "Autoridad", rol, g: persona.g, zona, zonaNombre: rol === "concejal" ? "Comuna de " + z.n : z.n, comunas: z.comunas.slice(), autoridadId: a ? a.id : null,
     nombre: persona.n, completo: persona.c, partido: persona.p, variantes: variantesNombre(persona), plan: "regional", agenda: [], sens: [], comuna: null};
-  let key = persona.n; if (COMUNAS.includes(key) || (S.cuentas[key] && !esAut(S.cuentas[key]))) key += " (" + cargoDe(rol, persona.g) + ")";
+  let key = persona.n; if (COMUNAS_V.includes(key) || (S.cuentas[key] && !esAut(S.cuentas[key]))) key += " (" + cargoDe(rol, persona.g) + ")";
   if (!S.cuentas[key]) { const pr = proponer(perfil); S.cuentas[key] = {perfil, temas: pr.base, sugeridos: pr.sugeridos, borradores: 0, caracterizada: true, visto: false, onbOculto: false, base: baseAutoridad(perfil)}; }
   return key;
 }
+/* Municipio de cualquiera de las 38 comunas, con su alcalde o alcaldesa: la persona se sigue por nombre como tema base. */
+function crearCuentaMunicipio(c, a, nombre, g){
+  if (!COMUNAS_V.includes(c)) return null;
+  const persona = a || (nombre ? {rol: "alcalde", zona: c, n: nombre, c: nombre, p: "", g} : null);
+  const extra = persona ? {autoridad: cargoDe("alcalde", persona.g) + " " + persona.n, alcaldeId: a ? a.id : null, g: persona.g, variantes: variantesNombre(persona)} : {autoridad: "", alcaldeId: null, variantes: []};
+  const cu = S.cuentas[c];
+  if (cu && !esAut(cu)) {
+    if (cu.perfil.autoridad !== extra.autoridad || !cu.perfil.variantes) {
+      Object.assign(cu.perfil, extra);
+      const nuevo = candidatos(cu.perfil).nucleo[1], i = cu.temas.findIndex(t => t.origen === "Núcleo" && (t.terminos || []).includes("Alcalde de " + c));
+      if (i >= 0) cu.temas[i] = {...nuevo, ...puntaje(nuevo)}; else cu.temas.splice(1, 0, {...nuevo, ...puntaje(nuevo)});
+    }
+    return c;
+  }
+  const perfil = {tipo: "Municipio", comuna: c, agenda: (AGENDA[c] || []).slice(), sens: ["agua", "emergencias", "seguridad"], plan: "comunal", ...extra}, pr = proponer(perfil);
+  S.cuentas[c] = {perfil, temas: pr.base, sugeridos: pr.sugeridos, borradores: 0, caracterizada: false, visto: false, onbOculto: false};
+  return c;
+}
+const munisCuenta = () => COMUNAS.concat(Object.keys(S.cuentas).filter(k => !COMUNAS.includes(k) && !esAut(S.cuentas[k])).sort((a, b) => a.localeCompare(b, "es")));
 /* Selector del encabezado: municipios, autoridades ya agregadas y la opción de entrar con otra cuenta. */
 function opcionesCuenta(){
   const auts = Object.keys(S.cuentas).filter(k => esAut(S.cuentas[k]));
-  return `<optgroup label="Municipios">${COMUNAS.map(c => `<option value="${esc(c)}" ${c === S.org ? "selected" : ""}>${esc(c)}</option>`).join("")}</optgroup>`
+  return `<optgroup label="Municipios">${munisCuenta().map(c => `<option value="${esc(c)}" ${c === S.org ? "selected" : ""}>${esc(c)}</option>`).join("")}</optgroup>`
     + (auts.length ? `<optgroup label="Autoridades">${auts.map(k => `<option value="${esc(k)}" ${k === S.org ? "selected" : ""}>${esc(k)} · ${esc(cargoCuenta(S.cuentas[k]))}</option>`).join("")}</optgroup>` : "")
     + `<option value="__entrar">Entrar con otra cuenta…</option>`;
 }
@@ -1399,20 +1461,27 @@ function cambiarCuenta(key){
 
 /* Entrada por rol, zona y nombre */
 const ENT = {rol: "municipio", zona: "Casablanca", sel: "", libre: "", g: "F", enPortada: false};
-function entNombres(){ return AUTORIDADES.filter(a => a.rol === ENT.rol && a.zona === ENT.zona); }
-function entZonas(){ return ENT.rol === "municipio" ? COMUNAS.map(c => ({id: c, n: c, comunas: [c]})) : ZONAS[ENT.rol]; }
+const entRolN = () => ENT.rol === "municipio" ? "alcalde" : ENT.rol;  // en un municipio, el nombre que se elige es el del alcalde
+function entNombres(){ return AUTORIDADES.filter(a => a.rol === entRolN() && a.zona === ENT.zona); }
+function entZonas(){ return ENT.rol === "municipio" ? ZONAS.alcalde : ZONAS[ENT.rol]; }
+/* Comunas agrupadas por provincia; distritos y circunscripciones van en lista simple. */
+function entOpcionesZona(zs, z){
+  const op = x => `<option value="${esc(x.id)}" ${x.id === z.id ? "selected" : ""}>${esc(x.n)}</option>`;
+  if (ENT.rol !== "municipio" && ENT.rol !== "concejal") return zs.map(op).join("");
+  return Object.entries(PROVINCIAS).map(([pv, cs]) => `<optgroup label="Provincia de ${esc(pv)}">${cs.map(c => op(zs.find(x => x.id === c))).join("")}</optgroup>`).join("");
+}
 function entCuerpo(){
   const zs = entZonas(), z = zs.find(x => x.id === ENT.zona) || zs[0]; ENT.zona = z.id;
-  const ns = entNombres(), lista = ENT.rol !== "municipio" && ENT.rol !== "concejal";
+  const ns = entNombres(), lista = ENT.rol !== "concejal", rolN = entRolN();
   if (lista && ENT.sel !== "__otra" && !ns.some(a => a.id === ENT.sel)) ENT.sel = ns[0] ? ns[0].id : "__otra";
-  const lbl = CARGOS[ENT.rol].zona, gen = `<div class="ent-gen" role="radiogroup" aria-label="Cargo"><label><input type="radio" name="entG" value="F" ${ENT.g === "F" ? "checked" : ""}> ${cargoDe(ENT.rol, "F")}</label><label><input type="radio" name="entG" value="M" ${ENT.g === "M" ? "checked" : ""}> ${cargoDe(ENT.rol, "M")}</label></div>`;
+  const lbl = CARGOS[ENT.rol].zona, gen = `<div class="ent-gen" role="radiogroup" aria-label="Cargo"><label><input type="radio" name="entG" value="F" ${ENT.g === "F" ? "checked" : ""}> ${cargoDe(rolN, "F")}</label><label><input type="radio" name="entG" value="M" ${ENT.g === "M" ? "checked" : ""}> ${cargoDe(rolN, "M")}</label></div>`;
   return `<fieldset class="ent-paso"><legend><span class="n">1</span>Rol</legend>
-      <div class="ent-roles" role="radiogroup" aria-label="Rol">${Object.entries(CARGOS).map(([k, r]) => `<label class="ent-rol ${ENT.rol === k ? "on" : ""}"><input type="radio" name="entRol" value="${k}" ${ENT.rol === k ? "checked" : ""}><b>${k === "municipio" ? "Municipio" : r.n.replace(" o ", " / ")}</b><small>${r.organo}</small></label>`).join("")}</div></fieldset>
+      <div class="ent-roles" role="radiogroup" aria-label="Rol">${Object.entries(CARGOS).filter(([k]) => k !== "alcalde").map(([k, r]) => `<label class="ent-rol ${ENT.rol === k ? "on" : ""}"><input type="radio" name="entRol" value="${k}" ${ENT.rol === k ? "checked" : ""}><b>${k === "municipio" ? "Municipio / alcaldía" : r.n.replace(" o ", " / ")}</b><small>${r.organo}</small></label>`).join("")}</div></fieldset>
     <fieldset class="ent-paso"><legend><span class="n">2</span>${lbl}</legend>
-      <select id="entZona" aria-label="${lbl}">${zs.map(x => `<option value="${esc(x.id)}" ${x.id === z.id ? "selected" : ""}>${esc(x.n)}</option>`).join("")}</select>
-      ${z.comunas.length > 1 ? `<p class="ent-com">${z.comunas.length === COMUNAS_V.length ? `Las ${z.comunas.length} comunas de la Región de Valparaíso.` : `${z.comunas.length} comunas: ${z.comunas.map(esc).join(", ")}.`}</p>` : ENT.rol === "municipio" ? `<p class="ent-com">Comunas del piloto del litoral central.</p>` : ""}</fieldset>
-    ${ENT.rol === "municipio" ? "" : `<fieldset class="ent-paso"><legend><span class="n">3</span>Nombre</legend>
-      ${lista ? `<div class="ent-ns" role="radiogroup" aria-label="Nombre">${ns.map(a => `<label class="ent-n ${ENT.sel === a.id ? "on" : ""}"><input type="radio" name="entN" value="${a.id}" ${ENT.sel === a.id ? "checked" : ""}><b>${esc(a.n)}</b><small>${esc(cargoDe(a.rol, a.g))}${a.p ? " · " + esc(a.p) : ""}</small></label>`).join("")}<label class="ent-n ${ENT.sel === "__otra" ? "on" : ""}"><input type="radio" name="entN" value="__otra" ${ENT.sel === "__otra" ? "checked" : ""}><b>Otra persona</b><small>Si hubo un reemplazo o no aparece</small></label></div>` : ""}
+      <select id="entZona" aria-label="${lbl}">${entOpcionesZona(zs, z)}</select>
+      ${z.comunas.length > 1 ? `<p class="ent-com">${z.comunas.length === COMUNAS_V.length ? `Las ${z.comunas.length} comunas de la Región de Valparaíso.` : `${z.comunas.length} comunas: ${z.comunas.map(esc).join(", ")}.`}</p>` : ENT.rol === "municipio" ? `<p class="ent-com">Provincia de ${esc(provinciaDe(z.id))}.${COMUNAS.includes(z.id) ? "" : " Esta comuna se sigue con noticias reales; la demostración trae noticias ficticias solo del litoral central."}</p>` : ""}</fieldset>
+    ${`<fieldset class="ent-paso"><legend><span class="n">3</span>${ENT.rol === "municipio" ? "Alcalde o alcaldesa" : "Nombre"}</legend>
+      ${lista ? `<div class="ent-ns" role="radiogroup" aria-label="Nombre">${ns.map(a => `<label class="ent-n ${ENT.sel === a.id ? "on" : ""}"><input type="radio" name="entN" value="${a.id}" ${ENT.sel === a.id ? "checked" : ""}><b>${esc(a.n)}</b><small>${esc(cargoDe(a.rol, a.g))}${a.p ? " · " + esc(a.p) : a.rol === "alcalde" ? " · período 2024-2028" : ""}</small></label>`).join("")}<label class="ent-n ${ENT.sel === "__otra" ? "on" : ""}"><input type="radio" name="entN" value="__otra" ${ENT.sel === "__otra" ? "checked" : ""}><b>Otra persona</b><small>Si hubo un reemplazo o no aparece</small></label></div>` : ""}
       ${!lista || ENT.sel === "__otra" ? `<input id="entLibre" class="ent-libre" value="${esc(ENT.libre)}" placeholder="Nombre y apellido" autocomplete="off" aria-label="Nombre y apellido">${gen}` : ""}
       ${lista ? `<p class="ent-com">Nómina al inicio del período. Corte: ${NOMINA_CORTE}.</p>` : ""}</fieldset>`}
     <p class="cap-err" id="entErr" role="alert" hidden></p>`;
@@ -1420,7 +1489,8 @@ function entCuerpo(){
 function entPintar(){ const b = $("#entBody"); if (!b) return; const foco = document.activeElement && (document.activeElement.name || document.activeElement.id); b.innerHTML = entCuerpo(); const el = foco && (document.getElementById(foco) || document.querySelector(`[name="${foco}"]:checked`)); if (el) el.focus(); }
 function entAbrir(enPortada){
   ENT.enPortada = !!enPortada;
-  const c = cuenta(); if (c && esAut(c)) Object.assign(ENT, {rol: c.perfil.rol, zona: c.perfil.zona, sel: c.perfil.autoridadId || "__otra", libre: c.perfil.autoridadId ? "" : c.perfil.nombre, g: c.perfil.g}); else Object.assign(ENT, {rol: "municipio", zona: S.org});
+  const c = cuenta(); if (c && esAut(c)) Object.assign(ENT, {rol: c.perfil.rol, zona: c.perfil.zona, sel: c.perfil.autoridadId || "__otra", libre: c.perfil.autoridadId ? "" : c.perfil.nombre, g: c.perfil.g});
+  else Object.assign(ENT, {rol: "municipio", zona: S.org, sel: c && c.perfil.alcaldeId || "", libre: "", g: c && c.perfil.g || "F"});
   $("#entBack")?.remove();
   const ov = document.createElement("div"); ov.className = "vid-back ent-back"; ov.id = "entBack";
   ov.innerHTML = `<section class="vid ent" role="dialog" aria-modal="true" aria-labelledby="entT">
@@ -1433,16 +1503,13 @@ function entCerrar(){ $("#entBack")?.remove(); document.body.classList.remove("v
 function entEntrar(e){
   e.preventDefault();
   const err = $("#entErr"); let key;
-  if (ENT.rol === "municipio") key = ENT.zona;
-  else {
-    const a = ENT.sel && ENT.sel !== "__otra" ? AUTORIDADES.find(x => x.id === ENT.sel) : null, libre = ENT.libre.trim().replace(/\s+/g, " ");
-    if (!a && (libre.length < 5 || libre.split(" ").length < 2)) { err.textContent = "Escribe nombre y apellido."; err.hidden = false; $("#entLibre")?.focus(); return; }
-    key = crearCuentaAutoridad({rol: ENT.rol, zona: ENT.zona, a, nombre: libre, g: ENT.g});
-  }
+  const a = ENT.sel && ENT.sel !== "__otra" ? AUTORIDADES.find(x => x.id === ENT.sel) : null, libre = ENT.libre.trim().replace(/\s+/g, " ");
+  if (!a && (libre.length < 5 || libre.split(" ").length < 2)) { err.textContent = "Escribe nombre y apellido."; err.hidden = false; $("#entLibre")?.focus(); return; }
+  key = ENT.rol === "municipio" ? crearCuentaMunicipio(ENT.zona, a, libre, ENT.g) : crearCuentaAutoridad({rol: ENT.rol, zona: ENT.zona, a, nombre: libre, g: ENT.g});
   const portada = ENT.enPortada; entCerrar();
   if (portada) { mostrarPortada(false); if (!location.hash || location.hash === "#portada") location.hash = "inicio"; }
   if (key !== S.org) cambiarCuenta(key); else render(true);
-  if (esAut()) toast(`Entraste como ${inst()}. ${typeof MODO !== "undefined" && MODO.disponible ? "Buscando sus menciones en medios reales…" : "Sus menciones se leen de medios reales en pregonia.vercel.app."}`);
+  if (esAut() || !COMUNAS.includes(S.org)) toast(`Entraste como ${esAut() ? inst() : inst() + (cuenta().perfil.autoridad ? " · " + cuenta().perfil.autoridad : "")}. ${typeof MODO !== "undefined" && MODO.disponible ? "Buscando sus menciones en medios reales…" : "Sus menciones se leen de medios reales en pregonia.vercel.app."}`);
 }
 document.addEventListener("change", e => {
   const t = e.target;
@@ -1465,15 +1532,19 @@ document.addEventListener("keydown", e => {
   if (e.key === "Tab") { const f = [...document.querySelectorAll("#entBack input:checked, #entBack input:not([type=radio]), #entBack select, #entBack button")].filter(x => x.offsetParent); if (!f.length) return; const i = f.indexOf(document.activeElement); if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); } }
 });
 
+/* Lista de pares por presencia en prensa (14 días, Google News): la usan autoridades y alcaldes. */
+function paresLista(titulo, quien, grupo, pares){
+  const filas = pares.slice().sort((a, b) => b.n - a.n), max = Math.max(1, ...filas.map(r => r.n)), yo = filas.findIndex(r => r.yo) + 1, tot = filas.reduce((s, r) => s + r.n, 0) || 1, mio = filas.find(r => r.yo) || {n: 0};
+  return `<div class="card"><h3>${titulo}</h3>
+    <p class="vtx" style="margin:0 0 10px">${esc(quien)} es ${yo}.° de ${filas.length} en presencia en prensa de ${esc(grupo)} en 14 días, con ${plural(mio.n, "nota", "notas")} (${pct(mio.n, tot)}% del total del grupo).</p>
+    <ul class="hbars">${filas.map(r => `<li><span class="t"><i style="background:${r.yo ? "var(--accent)" : "var(--amb-l)"}"></i><span>${r.yo ? "<b>" + esc(r.n_) + "</b>" : esc(r.n_)}${r.p ? ` <small class="muted">${esc(r.p)}</small>` : ""}</span></span><span class="b" ${tipAttr(r.n + " notas")}><i style="width:${(r.n / max * 100).toFixed(1)}%;background:${r.yo ? "var(--accent)" : "var(--amb-l)"}"></i></span><span class="v mono">${r.n}</span></li>`).join("")}</ul>
+    <p class="hint" style="margin:10px 0 0">Cuenta notas con el nombre en el titular o el resumen, en medios chilenos, según Google News. No mide tono. Uso interno.</p></div>`;
+}
 /* Frente a sus pares: presencia en prensa de las autoridades del mismo cargo y zona (solo con noticias reales). */
 function paresAutCard(){
   const p = cuenta().perfil, pares = MODO && MODO.tipo === "real" && MODO.info && MODO.info.pares;
+  if (pares && pares.length) return paresLista("Frente a sus pares", p.nombre, p.zonaNombre, pares);
   if (!pares || !pares.length) return `<div class="card"><h3>Frente a sus pares</h3><p class="muted" style="margin:0">${p.autoridadId ? `Con noticias reales, aquí se compara la presencia en prensa de ${esc(p.nombre)} con la de ${CARGOS[p.rol].n.split(" o ")[0].toLowerCase()}s de ${esc(p.zonaNombre)} en los últimos 14 días.` : "La comparación con pares está disponible para las autoridades de la nómina."}</p></div>`;
-  const filas = pares.slice().sort((a, b) => b.n - a.n), max = Math.max(1, ...filas.map(r => r.n)), yo = filas.findIndex(r => r.yo) + 1, tot = filas.reduce((s, r) => s + r.n, 0) || 1, mio = filas.find(r => r.yo) || {n: 0};
-  return `<div class="card"><h3>Frente a sus pares</h3>
-    <p class="vtx" style="margin:0 0 10px">${esc(p.nombre)} es ${yo}.° de ${filas.length} en presencia en prensa de ${esc(p.zonaNombre)} en 14 días, con ${plural(mio.n, "nota", "notas")} (${pct(mio.n, tot)}% del total del grupo).</p>
-    <ul class="hbars">${filas.map(r => `<li><span class="t"><i style="background:${r.yo ? "var(--accent)" : "var(--amb-l)"}"></i><span>${r.yo ? "<b>" + esc(r.n_) + "</b>" : esc(r.n_)}${r.p ? ` <small class="muted">${esc(r.p)}</small>` : ""}</span></span><span class="b" ${tipAttr(r.n + " notas")}><i style="width:${(r.n / max * 100).toFixed(1)}%;background:${r.yo ? "var(--accent)" : "var(--amb-l)"}"></i></span><span class="v mono">${r.n}</span></li>`).join("")}</ul>
-    <p class="hint" style="margin:10px 0 0">Cuenta notas con el nombre en el titular o el resumen, en medios chilenos, según Google News. No mide tono. Uso interno.</p></div>`;
 }
 
 
@@ -1481,7 +1552,7 @@ NOTAS.forEach(n => { n.g = String(n.g); });
 
 /* Catálogos del motor de sugerencia (forma de lectura; la comparación ignora tildes y mayúsculas) */
 const CTX = ["comuna","vecinos","vecinas","municipio","municipalidad","alcalde","alcaldesa","concejo","litoral","provincia","región","sector","plaza","temporada","playa","Senapred","Carabineros","bomberos","Cesfam","agricultores","viña","feria","calles","borde costero","paseo","humedal","regata","cuenca","Las Cruces","Pinomar","Llolleo","Barrancas","Lo Ovalle","Los Maitenes","Lagunillas","Quintay"];
-const EXC = {"Casablanca":["Marruecos","película","Bogart"],"San Antonio":["Texas","Spurs","NBA","San Antonio de Padua"],"Cartagena":["Cartagena de Indias","Colombia","Murcia"],"Algarrobo":["Argentina","especie arbórea","árbol"],"El Quisco":[],"El Tabo":[]};
+const EXC = {"Los Andes":["cordillera de los Andes","Universidad de los Andes","Clínica Universidad de los Andes"],"Santa María":["Federico Santa María","Universidad Santa María","USM"],"La Cruz":["Cruz Roja"],"Valparaíso":[],"Casablanca":["Marruecos","película","Bogart"],"San Antonio":["Texas","Spurs","NBA","San Antonio de Padua"],"Cartagena":["Cartagena de Indias","Colombia","Murcia"],"Algarrobo":["Argentina","especie arbórea","árbol"],"El Quisco":[],"El Tabo":[]};
 const AGENDA = {"Casablanca":["Polideportivo","Plataforma logística"],"San Antonio":["Puerto Exterior","Borde costero"],"Cartagena":["Playa Grande","Patrimonio"],"El Quisco":["Plan regulador"],"El Tabo":["Las Cruces"],"Algarrobo":["Humedal"]};
 const SENS = {
   agua:{n:"Agua y sequía", t:["agua","sequía","escasez hídrica","corte de agua","aljibe","agua potable"]},
@@ -1511,7 +1582,7 @@ function candidatos(perfil){
   const c = perfil.comuna;
   const nucleo = [
     T("Municipalidad de " + c, "Núcleo", ["Municipalidad de " + c, "Municipio de " + c]),
-    T(perfil.autoridad ? perfil.autoridad : "Alcalde de " + c, "Núcleo", ["Alcalde de " + c, "Alcaldesa de " + c].concat(perfil.autoridad ? [perfil.autoridad] : [])),
+    T(perfil.autoridad ? perfil.autoridad : "Alcalde de " + c, "Núcleo", ["Alcalde de " + c, "Alcaldesa de " + c].concat(perfil.autoridad ? [perfil.autoridad] : [], perfil.variantes || [])),
     T(c + " (comuna)", "Núcleo", [c], CTX.slice(), (EXC[c] || []).slice())
   ];
   const otros = [ T("Concejo municipal", "Candidato", ["concejo municipal","concejal","concejala","concejales"], [c]) ];
@@ -1882,7 +1953,7 @@ function vReportes(){
   if (!REPS.some(r => r[0] === tState.rep)) tState.rep = "alcalde";
   const cur = REPS.find(r => r[0] === tState.rep), p = repMeta(cur[0], cur[2]);
   return `<div class="head"><div><h2 tabindex="-1">Reportes</h2><p>Un informe por lector. Cada uno responde una sola pregunta, con el nivel de detalle que esa persona necesita.</p></div></div>
-  <div class="tabs" role="tablist">${REPS.map(([k,n]) => `<button role="tab" aria-selected="${tState.rep===k}" data-act="rep" data-k="${k}">${esAut() && k === "alcalde" ? "Parte semanal" : n}</button>`).join("")}</div>
+  <div class="tabs" role="tablist">${REPS.map(([k,n]) => `<button role="tab" aria-selected="${tState.rep===k}" data-act="rep" data-k="${k}">${esAut() && k === "alcalde" ? "Parte semanal" : k === "alcalde" && cuenta().perfil.g === "F" && cuenta().perfil.autoridad ? "Parte de la alcaldesa" : n}</button>`).join("")}</div>
   <dl class="para"><div><dt>Para</dt><dd>${p.para}</dd></div><div><dt>Cuándo</dt><dd>${p.cuando}</dd></div><div><dt>Lectura</dt><dd>${p.lectura}</dd></div><div class="q"><dt>Responde</dt><dd>${p.responde}</dd></div></dl>
   ${({alcalde:repAlcalde, diario:repDiario, mesa:repMesa, gestion:repGestion, crisis:repCrisis, calendario:repCalendario})[tState.rep]()}`;
 }
@@ -2126,6 +2197,9 @@ function lecturaBase(M, porTema){
   return `${S.org} sumó ${plural(M.vol, "noticia", "noticias")} en 30 días, con una cobertura ${veredicto(M).n.toLowerCase()} (${conteo(M)}). El tema con más presencia fue ${top?top.t.nombre:"—"} y el que concentró más notas críticas fue ${crit&&crit.cri?crit.t.nombre + " (" + llego(crit.e).toLowerCase() + ")":"ninguno"}. Usa el botón para una lectura interpretativa con recomendaciones para el equipo.`;
 }
 function paresCard(){
+  const pr = MODO && MODO.tipo === "real" && MODO.info && MODO.info.pares, pa = cuenta().perfil, prov = provinciaDe(S.org);
+  if (pr && pr.length) return paresLista("Frente a los alcaldes de la provincia", pa.autoridad ? pa.autoridad.replace(/^Alcald(e|esa) /, "") : "Su alcalde", "la provincia de " + prov, pr);
+  if (!COMUNAS.includes(S.org)) return `<div class="card"><h3>Frente a los alcaldes de la provincia</h3><p class="muted" style="margin:0">Con noticias reales, aquí se compara la presencia en prensa de ${esc(pa.autoridad || "su alcalde o alcaldesa")} con la de los demás alcaldes de la provincia de ${esc(prov)} en los últimos 14 días.</p></div>`;
   const rows = COMUNAS.map(c => ({c, ...metricas(menciones({temas:[genericaComuna(c)]}))})).map(r => ({...r, pc: pct(r.cri, r.vol)}));
   const tot = rows.reduce((s,r) => s + r.vol, 0) || 1, maxV = Math.max(1, ...rows.map(r => r.vol)), me = rows.find(r => r.c === S.org);
   const pos = rows.slice().sort((a,b) => b.vol - a.vol).indexOf(me) + 1, promPc = Math.round(rows.reduce((s,r) => s + r.pc, 0) / rows.length);
@@ -2525,7 +2599,8 @@ document.addEventListener("focusout", e => { const el = e.target; if (el.dataset
 document.addEventListener("submit", e => {
   e.preventDefault();
   if (e.target.id === "carForm") {
-    const perfil = {...(esAut() ? cuenta().perfil : {tipo: $("#cTipo").value, comuna: S.org, autoridad: $("#cAut").value.trim()}), agenda: $("#cAg").value.split(",").map(s => s.trim()).filter(Boolean), sens: [...document.querySelectorAll('input[name="sens"]:checked')].map(x => x.value), plan: $("#cPlan").value};
+    const pa = cuenta().perfil, aut = esAut() ? "" : $("#cAut").value.trim();
+    const perfil = {...(esAut() ? pa : {...pa, tipo: $("#cTipo").value, comuna: S.org, autoridad: aut, ...(aut === pa.autoridad ? {} : {alcaldeId: null, variantes: []})}), agenda: $("#cAg").value.split(",").map(s => s.trim()).filter(Boolean), sens: [...document.querySelectorAll('input[name="sens"]:checked')].map(x => x.value), plan: $("#cPlan").value};
     propuesta = {perfil, ...proponer(perfil)};
     $("#propOut").innerHTML = propHtml(); const pc = $("#propCard"); pc.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"}); pc.focus({preventScroll:true});
   }
@@ -2719,8 +2794,9 @@ const FAQ = [
     ["¿Cómo envío o guardo una respuesta?", "Bajo el borrador está la barra Compartir. En el celular, WhatsApp y Correo abren la hoja de compartir con el PDF adjunto: eliges la app y el contacto. En el computador, WhatsApp abre el chat y guarda el PDF para que lo adjuntes con el clip; Correo te deja elegir Gmail, Outlook o el programa de correo del equipo, con asunto y texto listos. Nada se envía solo: tú eliges a quién."]
   ]],
   ["Autoridades", [
-    ["¿Para quién es la versión de autoridades?", "Para diputadas y diputados, senadoras y senadores, consejeras y consejeros regionales y concejales de la Región de Valparaíso, y sus equipos de prensa. Se entra eligiendo el cargo, la zona (distrito, circunscripción o comuna) y el nombre."],
-    ["¿De dónde sale la lista de nombres?", "Parlamentarios y consejeros regionales vienen precargados según la nómina vigente al " + NOMINA_CORTE + ". Si falta alguien o cambió, elige «Otra persona» y escribe el nombre. Los concejales escriben el suyo."],
+    ["¿Para quién es la versión de autoridades?", "Para alcaldesas y alcaldes, diputadas y diputados, senadoras y senadores, consejeras y consejeros regionales y concejales de la Región de Valparaíso, y sus equipos de prensa. Se entra eligiendo el cargo, la zona (distrito, circunscripción o comuna) y el nombre."],
+    ["¿Puedo seguir cualquier municipio de la región?", "Sí. En «Municipio / alcaldía» están las 38 comunas de la Región de Valparaíso, por provincia, con su alcalde o alcaldesa del período 2024-2028. La cuenta sigue a la municipalidad, a la comuna y a la persona por su nombre, y con noticias reales la compara con los alcaldes de su provincia. La demostración trae noticias ficticias solo del litoral central."],
+    ["¿De dónde sale la lista de nombres?", "Parlamentarios, consejeros regionales y alcaldes vienen precargados según la nómina vigente al " + NOMINA_CORTE + ". Si falta alguien o cambió, elige «Otra persona» y escribe el nombre. Los concejales escriben el suyo."],
     ["¿Qué noticias ve una autoridad?", "Con «Noticias reales», las que la nombran en los medios leídos y en Google News de los últimos 14 días; la IA descarta homónimos y mide el tono respecto de su imagen y su trabajo. En la demostración solo hay noticias ficticias del territorio."],
     ["¿Qué es «Frente a sus pares»?", "Cuántas notas nombraron a cada autoridad del mismo cargo y zona en los últimos 14 días. Mide presencia, no aprobación: una polémica también suma."],
     ["¿Las piezas cambian para una autoridad?", "Sí. Además de declaración, comunicado y aclaración, hay publicación para redes, columna de opinión y minuta de intervención para sala, comisión o pleno. Los textos usan el tono del cargo y nunca inventan cifras ni posiciones: lo que falta queda marcado para completar."],
@@ -2804,6 +2880,7 @@ function pintarModo(){
     : (/^https?:$/.test(location.protocol) ? "" : `<a class="modo-link" href="https://pregonia.vercel.app/" target="_blank" rel="noopener">Noticias reales en pregonia.vercel.app</a>`);
   if (MODO.cargando) { el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Leyendo medios</b>Buscando noticias de ${esc(S.org)}<span class="demo-mas"> en unas 70 fuentes; puede tardar hasta un minuto</span>…</span>${sw}`; return; }
   if (real) { el.className = "demo real"; el.innerHTML = `<span class="demo-txt"><b>Datos reales</b>${plural(i.notas.length, "nota", "notas")}<span class="demo-mas"> de ${esc(i.comuna)} en ${i.ventana_dias} días · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : i.ia_parcial ? " · tono clasificado en parte" : " · tono sin clasificar"}</span></span>${sw}`; return; }
+  if (!esAut() && !COMUNAS.includes(S.org)) { el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">La demostración trae noticias ficticias solo del litoral central · con «Noticias reales» se leen las de ${esc(S.org)}</span><span class="solo-movil">Datos ficticios</span></span>${sw}`; return; }
   el.className = "demo"; el.innerHTML = esAut()
     ? `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">Noticias ficticias del territorio, ninguna nombra a ${esc(cuenta().perfil.nombre)} · con «Noticias reales» se leen las que sí</span><span class="solo-movil">Datos ficticios</span></span>${sw}`
     : `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">Noticias y cifras ficticias · catálogo de 100 medios real</span><span class="solo-movil">Datos ficticios</span></span>${sw}`;
@@ -2826,7 +2903,7 @@ async function cargarReales(force, silencioso){
 }
 function usarDemo(){ if (MODO.tipo === "demo") return; MODO = {...MODO, tipo: "demo", info: null}; refrescarNotas(NOTAS_DEMO); try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
 document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; if (b.dataset.act === "modo-real") cargarReales(); if (b.dataset.act === "modo-demo") usarDemo(); });
-$("#org").addEventListener("change", () => { if ($("#entBack")) return; if (MODO.tipo === "real" || (esAut() && MODO.disponible)) cargarReales(true); });  // con el selector de cuentas abierto no hay cambio todavía
+$("#org").addEventListener("change", () => { if ($("#entBack")) return; pintarModo(); if (MODO.tipo === "real" || ((esAut() || !COMUNAS.includes(S.org)) && MODO.disponible)) cargarReales(true); });  // sin noticias ficticias propias, se leen las reales  // con el selector de cuentas abierto no hay cambio todavía
 (async () => {
   pintarModo();
   if (!/^https?:$/.test(location.protocol)) return;

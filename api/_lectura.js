@@ -1,15 +1,13 @@
 // Lectura de medios compartida por /api/noticias (etapa 1, al vuelo) y /api/ingesta (etapa 2, lectura programada).
 // Lee los RSS y sitemaps de noticias del catálogo y Google News; nunca guarda ni devuelve el texto de los medios.
 import { CATALOGO } from "./_catalogo.js";
+import { COMUNAS_V } from "./_autoridades.js";
 
-const COMUNAS = {
-  "Casablanca": ["casablanca"],
-  "San Antonio": ["san antonio"],
-  "Cartagena": ["cartagena"],
-  "El Quisco": ["el quisco"],
-  "El Tabo": ["el tabo"],
-  "Algarrobo": ["algarrobo"]
-};
+/* Las 38 comunas de la Región de Valparaíso, con las formas en que la prensa las escribe. */
+const ALIAS = { "Llaillay": ["llay-llay", "llay llay"], "Isla de Pascua": ["rapa nui"] };
+const COMUNAS = Object.fromEntries(COMUNAS_V.map(c => [c, [c.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].concat(ALIAS[c] || [])]));
+/* Frases que contienen el nombre de una comuna sin hablar de ella. */
+const QUITAR = ["region de valparaiso", "cordillera de los andes", "universidad de los andes", "federico santa maria", "universidad santa maria", "cruz roja"];
 // Palabras que en Google News acotan la búsqueda a la comuna chilena (Casablanca de Marruecos, Cartagena de Colombia, San Antonio de Texas).
 const CONTEXTO = '(Valparaíso OR comuna OR municipalidad OR alcalde OR Chile OR "litoral central")';
 const EXCLUIR = ["marruecos", "marroqui", "colombia", "cartagena de indias", "texas", "spurs", "ibiza", "murcia"];
@@ -172,7 +170,7 @@ export function candidatasDe(comuna, items, desde, ahora = Date.now()){
   const vistos = new Set(), out = [];
   for (const x of items) {
     if (!Number.isFinite(x.fecha) || x.fecha < desde || x.fecha > ahora + 36e5) continue;
-    const t = norm(x.titulo + " " + x.desc), local = x.m.ambito === "local" && (x.m.comuna || "").split(";").map(norm).includes(norm(comuna));
+    const t = QUITAR.reduce((s, q) => s.split(q).join(" "), norm(x.titulo + " " + x.desc)), local = x.m.ambito === "local" && (x.m.comuna || "").split(";").map(norm).includes(norm(comuna));
     if (!menciona(t) && !(local && !EXCLUIR.some(w => t.includes(w)))) continue;
     const k1 = x.url, k2 = x.m.id + "|" + norm(x.titulo);
     if (vistos.has(k1) || vistos.has(k2)) continue; vistos.add(k1); vistos.add(k2);
