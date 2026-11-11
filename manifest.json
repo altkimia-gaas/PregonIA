@@ -1,0 +1,28 @@
+{
+  "name": "PregonIA",
+  "short_name": "PregonIA",
+  "description": "Qué dice la prensa de tu comuna, hasta dónde ha llegado y qué responder.",
+  "lang": "es-CL",
+  "id": "/",
+  "start_url": "/?sin-portada#inicio",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#080B12",
+  "theme_color": "#080B12",
+  "icons": [
+    {"src": "/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "/icono-mascara-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "share_target": {
+    "action": "/compartir",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [{"name": "imagen", "accept": ["image/*"]}]
+    }
+  }
+}

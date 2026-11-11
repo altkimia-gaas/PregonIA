@@ -189,7 +189,7 @@ function vInicio(){
         <h3 class="dg-h1">${esc(lead.lead.t)}</h3>
         <p class="dg-bajada">${esc(lead.lead.res)}</p>
         <p class="dg-meta">${pillTono(lead.tono)}<span>${esc(medioN(lead.lead))}</span><span>${ago(lead.last)}</span>${lead.notas.length > 1 ? `<span>en ${lead.notas.length} medios</span>` : ""}</p>
-        <div class="dg-acts">${esPend ? `<button class="btn primary" data-act="responder" data-g="${lead.g}" data-from="inicio">Preparar respuesta</button>` : ""}<button class="btn" data-act="goto" data-tono="todos" data-dias="7">Ver la cobertura</button></div>
+        <div class="dg-acts">${esPend ? `<button class="btn primary" data-act="responder" data-g="${lead.g}" data-from="inicio">Preparar respuesta</button>` : ""}<button class="btn" data-act="vocero" data-g="${lead.g}">${ri("mic")} Me llaman de la radio</button><button class="btn ghost" data-act="goto" data-tono="todos" data-dias="7">Ver la cobertura</button></div>
       </div>
       <aside class="dg-ficha" aria-label="Datos de la noticia"><span class="dg-ficha-n">${k24}</span><span class="dg-ficha-l">${k24 === 1 ? "medio la publicó" : "medios la publicaron"} en 24 horas</span>${escHtml(e, true)}<span class="dg-ficha-l">${esc(ruta(e))}</span></aside>
     </article>`; })();
@@ -210,10 +210,11 @@ function vInicio(){
     <h3 class="dg-sec" id="hoyT">Para revisar hoy</h3>
     <div class="dg-portada-g ${otras.length ? "" : "solo"}">
       ${leadHtml}
-      ${otras.length ? `<div class="dg-col"><p class="dg-sec-s">También requieren respuesta</p>${otras.map(m => `<article class="dg-sec-n ${m.tono}"><p class="dg-kick ${m.tono}">${esc(temaDe(m))}</p><h4>${esc(m.lead.t)}</h4><p class="dg-meta"><span>${esc(medioN(m.lead))}</span><span>${ago(m.last)}</span></p>${escHtml(escalera(m.notas))}<button class="btn sm" data-act="responder" data-g="${m.g}" data-from="inicio">Preparar respuesta</button></article>`).join("")}${pend.length > 4 ? `<a class="btn ghost sm" href="#menciones" data-act="ver-criticas">Ver las ${pend.length}</a>` : ""}</div>` : ""}
+      ${otras.length ? `<div class="dg-col"><p class="dg-sec-s">También requieren respuesta</p>${otras.map(m => `<article class="dg-sec-n ${m.tono}"><p class="dg-kick ${m.tono}">${esc(temaDe(m))}</p><h4>${esc(m.lead.t)}</h4><p class="dg-meta"><span>${esc(medioN(m.lead))}</span><span>${ago(m.last)}</span></p>${escHtml(escalera(m.notas))}<div class="dg-acts2"><button class="btn sm" data-act="responder" data-g="${m.g}" data-from="inicio">Preparar respuesta</button><button class="btn ghost sm" data-act="vocero" data-g="${m.g}" aria-label="Kit de vocería: ${esc(m.lead.t)}">${ri("mic")} Vocería</button></div></article>`).join("")}${pend.length > 4 ? `<a class="btn ghost sm" href="#menciones" data-act="ver-criticas">Ver las ${pend.length}</a>` : ""}</div>` : ""}
     </div>
     ${!pend.length ? `<div class="allgood" style="margin-top:12px">${ri("ok")} Todo al día: nada crítico sin responder en los últimos 7 días.</div>` : ""}
   </section>
+  ${calendarioInicio()}
   <section aria-labelledby="secT">
     <h3 class="dg-sec" id="secT">Por tema</h3>
     <div class="dg-temas">${secciones.map(x => { const m = x.sub[0]; return `<button class="dg-tema" data-act="goto-tema" data-id="${x.t.id}" aria-label="${esc(x.t.nombre)}: ${x.sub.length} noticias, ${x.M.cri} críticas">
@@ -236,7 +237,7 @@ function itemHtml(m){
     <h4>${m.lead.url ? `<a class="ext" href="${esc(m.lead.url)}" target="_blank" rel="noopener">${esc(m.lead.t)}<span class="sr"> (abre el medio en otra pestaña)</span></a>` : esc(m.lead.t)}</h4>
     <p class="res">${esc(m.lead.res)}</p>
     <details><summary>¿Por qué aparece?</summary><p>${temas.map(x => `Tema <b>${esc(x.tema.nombre)}</b>: contiene «${[...x.found].map(esc).join("», «")}»${x.enTitulo?" en el titular":""}.`).join(" ")}${otros.length?` También la publicaron ${otros.join(", ")}.`:""}</p></details>
-    <div class="acts">${resp ? `<button class="btn sm" data-act="responder" data-g="${m.g}" data-from="menciones">Ver respuesta</button>` : `<button class="btn ${m.critico?"primary":""} sm" data-act="responder" data-g="${m.g}" data-from="menciones">Responder</button>`}<button class="btn ghost sm" data-act="fp" data-g="${m.g}">No corresponde</button>${m.notas.some(n => n.captura) ? `<button class="btn ghost sm" data-act="cap-del" data-g="${m.g}">Quitar lo que agregué</button>` : ""}</div>
+    <div class="acts">${resp ? `<button class="btn sm" data-act="responder" data-g="${m.g}" data-from="menciones">Ver respuesta</button>` : `<button class="btn ${m.critico?"primary":""} sm" data-act="responder" data-g="${m.g}" data-from="menciones">Responder</button>`}<button class="btn ghost sm" data-act="vocero" data-g="${m.g}">${ri("mic")} Vocería</button><button class="btn ghost sm" data-act="fp" data-g="${m.g}">No corresponde</button>${m.notas.some(n => n.captura) ? `<button class="btn ghost sm" data-act="cap-del" data-g="${m.g}">Quitar lo que agregué</button>` : ""}</div>
   </article>`;
 }
 function vMenciones(){
@@ -334,6 +335,7 @@ const RI = {
   rank:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/>',
   cal:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   up:'<path d="M12 19V5M6 11l6-6 6 6"/>', down:'<path d="M12 5v14M6 13l6 6 6-6"/>', flat:'<path d="M5 12h14"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/>',
   ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.2 9.6"/>', espera:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
 };
 const ri = (k, cls="") => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true">${RI[k]}</svg>`;
@@ -393,6 +395,7 @@ const REPS = [
   ["diario","Informe diario",{para:"Alcalde, equipo directivo y comunicaciones", cuando:"Todos los días, 8:00", lectura:"3 minutos los indicadores; el clipping, como respaldo", responde:"¿Qué se publicó sobre la comuna, con qué tono y dónde está cada nota?"}],
   ["mesa","Mesa de comunicaciones",{para:"Encargado(a) de comunicaciones", cuando:"Todos los días, 8:30", lectura:"10 a 15 minutos", responde:"¿Qué respondo hoy, qué está escalando y qué difundo?"}],
   ["gestion","Informe de gestión",{para:"Alcalde y equipo directivo", cuando:"Primer lunes del mes", lectura:"15 minutos, en reunión de equipo", responde:"¿Cómo se percibe la gestión, por tema, y cómo estamos frente a las comunas vecinas?"}],
+  ["calendario","Calendario de riesgos",{para:"Comunicaciones, alcalde y directores", cuando:"Revisión mensual y antes de cada fecha", lectura:"5 minutos", responde:"¿Qué se viene, qué suele estallar y qué tenemos listo?"}],
   ["crisis","Episodio crítico",{para:"Alcalde y comunicaciones", cuando:"Se activa solo ante una noticia crítica", lectura:"5 minutos", responde:"¿Cómo se propagó y qué hacemos ahora?"}]
 ];
 function vReportes(){
@@ -401,7 +404,7 @@ function vReportes(){
   return `<div class="head"><div><h2 tabindex="-1">Reportes</h2><p>Un informe por lector. Cada uno responde una sola pregunta, con el nivel de detalle que esa persona necesita.</p></div></div>
   <div class="tabs" role="tablist">${REPS.map(([k,n]) => `<button role="tab" aria-selected="${tState.rep===k}" data-act="rep" data-k="${k}">${n}</button>`).join("")}</div>
   <dl class="para"><div><dt>Para</dt><dd>${p.para}</dd></div><div><dt>Cuándo</dt><dd>${p.cuando}</dd></div><div><dt>Lectura</dt><dd>${p.lectura}</dd></div><div class="q"><dt>Responde</dt><dd>${p.responde}</dd></div></dl>
-  ${({alcalde:repAlcalde, diario:repDiario, mesa:repMesa, gestion:repGestion, crisis:repCrisis})[tState.rep]()}`;
+  ${({alcalde:repAlcalde, diario:repDiario, mesa:repMesa, gestion:repGestion, crisis:repCrisis, calendario:repCalendario})[tState.rep]()}`;
 }
 const muestra = n => n < 20 ? `<p class="note" style="margin-top:14px">Muestra pequeña (${plural(n,"noticia","noticias")}): las proporciones pueden cambiar mucho con pocas notas nuevas.</p>` : "";
 
@@ -665,7 +668,7 @@ function repCrisis(){
   <div class="card" style="margin-top:14px"><h3>Cómo se propagó</h3>${propagacion(m)}</div>
   <div class="rgrid r21" style="margin-top:14px">
     <div class="card"><h3>Cronología</h3><ol class="timeline">${m.notas.map(n => `<li><b>${fecha(n.ts)}</b> · ${n.url ? `<a class="ext" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(medioN(n))}</a>` : esc(medioN(n))}<br><span class="muted">${esc(n.res)}</span></li>`).join("")}</ol></div>
-    <div class="card" style="display:grid;gap:12px;align-content:start"><h3 style="margin:0">Qué hacer</h3><p class="note">Informa medidas concretas en las próximas horas, con una sola vocería y datos oficiales.</p><button class="btn primary" data-act="responder" data-g="${m.g}" data-from="reportes">${resp?"Ver respuesta":"Preparar respuesta"}</button>${ms.length>1?`<p class="hint" style="margin:0">Otros episodios de la semana: ${ms.slice(1,4).map(x => esc(x.lead.t)).join(" · ")}</p>`:""}</div>
+    <div class="card" style="display:grid;gap:12px;align-content:start"><h3 style="margin:0">Qué hacer</h3><p class="note">Informa medidas concretas en las próximas horas, con una sola vocería y datos oficiales.</p><button class="btn primary" data-act="responder" data-g="${m.g}" data-from="reportes">${resp?"Ver respuesta":"Preparar respuesta"}</button><button class="btn" data-act="vocero" data-g="${m.g}">${ri("mic")} Kit de vocería</button>${ms.length>1?`<p class="hint" style="margin:0">Otros episodios de la semana: ${ms.slice(1,4).map(x => esc(x.lead.t)).join(" · ")}</p>`:""}</div>
   </div>`;
 }
 /* Tooltips compartidos */
@@ -738,6 +741,7 @@ function shareDoc(src, i){
     const pz = document.querySelector('input[name="pieza"]:checked')?.value || "comunicado", m = tState.draft && menciones().find(x => x.g === tState.draft), t = ($("#kOut")?.value || "").trim();
     return {titulo: PIEZAS[pz][0], sub: m ? "Responde a: " + m.lead.t : "Anuncio propio", texto: t, cuerpo: t, borrador: true};
   }
+  if (src === "vocero") return vocDoc();
   if (src === "diario") { const t = diarioTexto(), d = diarioData(); return {titulo: "Informe diario de prensa", sub: d.etiqueta, sinFecha: true, tipo: "diario", texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "parte") { const t = parteTexto(); return {titulo: "Parte semanal del alcalde", sub: "Semana del " + parteData().per, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "aprob") { const x = S.comunicados.filter(y => y.org === S.org)[i]; return x && x.texto ? {titulo: x.pieza, sub: "Responde a: " + x.origen + " · aprobado el " + fecha(x.ts), texto: x.texto, cuerpo: x.texto} : null; }
@@ -1064,12 +1068,13 @@ document.addEventListener("click", async e => {
 
 /* IA desde la página (usa la cuenta de Claude de quien la abre) */
 /* Fuera de claude.ai (por ejemplo en Vercel) la IA va por /api/ia, con la clave solo en el servidor. Misma forma que sample(): (texto, {signal, onText, modelTier}) → {text}. */
+const aBase64 = b => new Promise((ok, mal) => { const r = new FileReader(); r.onload = () => ok({type: b.type || "image/jpeg", data: String(r.result).split(",")[1]}); r.onerror = mal; r.readAsDataURL(b); });
 async function iaServidor(){
   if (!/^https?:$/.test(location.protocol)) return null;
   try { const r = await fetch("/api/ia", {cache: "no-store"}); if (!r.ok) return null; const j = await r.json(); if (!j.ok) return null; } catch(e) { return null; }
-  return async function(input, opts = {}){
+  return Object.assign(async function(input, opts = {}){
     let r;
-    try { r = await fetch("/api/ia", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({prompt: String(input), tier: opts.modelTier === "quick" ? "quick" : "default"}), signal: opts.signal}); }
+    try { r = await fetch("/api/ia", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({prompt: String(input), tier: opts.modelTier === "quick" ? "quick" : "default", images: opts.images && opts.images.length ? await Promise.all(opts.images.slice(0, 2).map(aBase64)) : undefined}), signal: opts.signal}); }
     catch(err) { throw {code: err && err.name === "AbortError" ? "cancelled" : "network", message: String(err)}; }
     if (r.status === 429) throw {code: "rate_limited"};
     if (!r.ok || !r.body) throw {code: "error", message: await r.text().catch(() => "")};
@@ -1077,7 +1082,7 @@ async function iaServidor(){
     try { for (;;) { const {done, value} = await lector.read(); if (done) break; const delta = dec.decode(value, {stream: true}); text += delta; if (opts.onText) opts.onText({text, delta}); } }
     catch(err) { throw {code: opts.signal && opts.signal.aborted ? "cancelled" : "error", text}; }
     return {text, truncated: false};
-  };
+  }, {imagenes: true});
 }
 let samplePromise = ((window.claude && window.claude.use) ? window.claude.use("sample").catch(() => null) : Promise.resolve(null)).then(s => s || iaServidor());
 let ctl = null;
@@ -1161,13 +1166,20 @@ const GUIA = [
   ["Informa a quien decide", "En Reportes hay un informe por lector: parte semanal del alcalde, mesa diaria de comunicaciones, informe de gestión mensual y episodio crítico."]
 ];
 const FAQ = [
+  ["Vocería y calendario", [
+    ["¿Qué es el kit de vocería?", "Una hoja para una entrevista en minutos: lo que pasó, hasta dónde llegó, qué hacer, tres mensajes con su dato de respaldo, frases a evitar y cinco preguntas probables con respuesta. Ábrelo con «Me llaman de la radio» en Inicio o con «Vocería» en cada noticia. Usa solo los datos del municipio y de la noticia; lo que falte queda marcado [completar]."],
+    ["¿De dónde salen los datos del kit?", "De «Datos del municipio», en Comunicados. Mientras más cifras oficiales cargues ahí, con su fecha, mejores mensajes prepara. Los datos de ejemplo aparecen marcados como ficticios."],
+    ["¿Qué es el calendario de riesgos?", "Las fechas que se repiten cada año y en las que ciertos temas suelen llegar a la prensa: temporada estival, incendios, temporales, Fiestas Patrias, PADEM, presupuesto. Está en Reportes. Cada fecha trae qué suele pasar, una lista de preparación que puedes marcar y las noticias recientes del tema."],
+    ["¿Puedo agregar fechas de mi comuna?", "Sí. En Reportes · Calendario de riesgos, «Agregar fecha propia»: aniversario, fiestas locales o sesiones clave del concejo, con sus palabras clave y lo que hay que preparar."]
+  ]],
   ["Monitoreo", [
     ["¿Qué medios revisa PregonIA?", "100 medios digitales: 50 nacionales y 50 de la Región de Valparaíso, incluidos los medios comunales del litoral central, más páginas de Facebook de medios locales que se ingresan con captura asistida. La lista completa, con el estado de cada uno, está en Ajustes › Fuentes."],
     ["¿Cada cuánto se actualiza?", "Cada 15 minutos. La barra superior muestra la hora de la última actualización. En este prototipo las noticias son ficticias."],
     ["¿Por qué no aparece una noticia que vi?", "Puede que el medio no esté en el catálogo, que sea un medio restringido (se lee vía Google News y llega con retraso) o que la nota no calce con los términos del tema. Revisa términos, variantes y exclusiones en Ajustes › Mis temas."],
     ["¿Por qué aparece una noticia que no tiene que ver?", "Suele ser una coincidencia de nombre, como Casablanca la película o San Antonio de Texas. Márcala como \"No corresponde\" y agrega esa palabra a las exclusiones del tema."],
     ["¿PregonIA copia las noticias de los medios?", "No. Muestra el título, el medio, la fecha, un resumen propio de una línea y el enlace a la nota original. No reproduce el texto, respeta las reglas de cada sitio y no salta muros de pago."],
-    ["¿Revisa redes sociales?", "No. Esta versión cubre medios digitales. Las redes sociales quedan para una etapa posterior."]
+    ["¿Revisa redes sociales?", "No las lee por su cuenta. Las publicaciones de Facebook o de grupos vecinales se suman con «Agregar publicación»: pegas el texto o subes una captura y la IA la analiza. En el celular, con PregonIA instalada, basta con tocar Compartir en Facebook y elegir PregonIA."],
+    ["¿Cómo instalo PregonIA en el celular?", "En Android, abre pregonia.vercel.app en Chrome y toca «Instalar PregonIA» en Agregar publicación, o el menú de Chrome y luego Instalar aplicación. Desde ese momento aparece en la lista de Compartir de Facebook y otras apps. En iPhone se puede agregar a la pantalla de inicio, pero Safari no permite compartir hacia ella: copia el enlace y usa el botón Pegar."]
   ]],
   ["Lectura de los resultados", [
     ["¿Cómo se decide si una noticia es crítica, neutra o positiva?", "Una IA clasifica el tono de cada noticia respecto del tema vigilado, no del medio en general. Si no estás de acuerdo, puedes marcarlo; esas correcciones sirven para mejorar la clasificación."],

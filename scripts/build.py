@@ -2,7 +2,7 @@
 """Arma index.html autónomo desde src/ y data/catalogo_medios.csv.
 
 Uso: python3 scripts/build.py
-Orden del script embebido: base.js (constantes y catálogo) → corpus.js (noticias ficticias) → app.js (aplicación) → video.js (video resumen del parte).
+Orden del script embebido: base.js (constantes y catálogo) → corpus.js (noticias ficticias) → calendario.js (fechas de riesgo; antes de app.js porque la portada lo usa al primer dibujo) → app.js (aplicación) → captura.js → vocero.js (kit de vocería) → compartir.js (app instalable y Compartir) → piloto.js → video.js.
 """
 import base64, csv, json, pathlib
 
@@ -12,11 +12,11 @@ SRC, DATA = RAIZ / "src", RAIZ / "data"
 def catalogo():
     filas = csv.DictReader(open(DATA / "catalogo_medios.csv", encoding="utf-8"))
     return [{"id": int(f["id"]), "n": f["nombre"], "a": f["ambito"], "c": f["comuna"], "t": f["tipo"],
-             "l": f["nivel"], "m": f["metodo"], "e": f["estado"], "o": f["observacion"]} for f in filas]
+             "l": f["nivel"], "m": f["metodo"], "e": f["estado"], "o": f["observacion"], "u": f["url_lectura"]} for f in filas]
 
 def main():
     leer = lambda n: (SRC / n).read_text(encoding="utf-8")
-    js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("app.js") + "\n" + leer("captura.js") + "\n" + leer("piloto.js") + "\n" + leer("video.js")
+    js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("calendario.js") + "\n" + leer("app.js") + "\n" + leer("captura.js") + "\n" + leer("vocero.js") + "\n" + leer("compartir.js") + "\n" + leer("piloto.js") + "\n" + leer("video.js")
     js = js.replace("/*CATALOG*/", json.dumps(catalogo(), ensure_ascii=False, separators=(",", ":")), 1)
     foto = "data:image/jpeg;base64," + base64.b64encode((RAIZ / "assets" / "portada.jpg").read_bytes()).decode()
     cuerpo = leer("shell.html").replace("assets/portada.jpg", foto) + "<script>\n" + js + "\n</script>\n"
@@ -24,6 +24,9 @@ def main():
     cabeza = ('<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n'
               '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
               '<meta name="description" content="PregonIA: qué dice la prensa de tu comuna, hasta dónde ha llegado y qué responder.">\n'
+              '<link rel="manifest" href="/manifest.json">\n<meta name="theme-color" content="#080B12">\n'
+              '<link rel="icon" type="image/png" sizes="192x192" href="/icono-192.png">\n<link rel="apple-touch-icon" href="/icono-180.png">\n'
+              '<meta name="apple-mobile-web-app-title" content="PregonIA">\n'
               '</head>\n<body>\n')
     html = cabeza + cuerpo + "</body>\n</html>\n"
     (RAIZ / "index.html").write_text(html, encoding="utf-8")

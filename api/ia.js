@@ -8,6 +8,8 @@ const MODELOS = { quick: "claude-haiku-5-5", default: "claude-sonnet-5-5" };
 const VENTANA_MS = 10 * 60 * 1000;
 const MAX_CARACTERES = 16000;
 const MAX_TOKENS = 1200;
+const TIPOS_IMG = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const MAX_IMG = 2_800_000; // caracteres en base64, unos 2 MB
 const SISTEMA = "Eres el asistente de PregonIA, una plataforma que monitorea la prensa para municipios chilenos. " +
   "Solo ayudas con tareas de PregonIA: redactar comunicados y respuestas institucionales a partir de noticias, " +
   "escribir la lectura del analista de un informe y responder dudas sobre el uso del sistema. " +
@@ -49,11 +51,15 @@ export default async function handler(req) {
   if (!texto) return json({ error: "Falta el texto de la solicitud" }, 400);
   if (texto.length > MAX_CARACTERES) return json({ error: "La solicitud es demasiado larga" }, 413);
   const modelo = process.env.ANTHROPIC_MODEL || (cuerpo.tier === "quick" ? MODELOS.quick : MODELOS.default);
+  // Capturas de pantalla (captura asistida): hasta 2 imágenes livianas, ya achicadas en el navegador.
+  const imagenes = Array.isArray(cuerpo.images) ? cuerpo.images.slice(0, 2) : [];
+  if (imagenes.some(i => !i || !TIPOS_IMG.includes(i.type) || typeof i.data !== "string" || i.data.length > MAX_IMG)) return json({ error: "Imagen no válida o demasiado grande" }, 413);
+  const contenido = imagenes.length ? [...imagenes.map(i => ({ type: "image", source: { type: "base64", media_type: i.type, data: i.data } })), { type: "text", text: texto }] : texto;
 
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": clave, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: modelo, max_tokens: MAX_TOKENS, system: SISTEMA, stream: true, messages: [{ role: "user", content: texto }] })
+    body: JSON.stringify({ model: modelo, max_tokens: MAX_TOKENS, system: SISTEMA, stream: true, messages: [{ role: "user", content: contenido }] })
   });
   if (!r.ok || !r.body) {
     console.error("Anthropic", r.status, await r.text().catch(() => ""));
