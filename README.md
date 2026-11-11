@@ -1,6 +1,6 @@
 # PregonIA · escucha la plaza, decide a tiempo
 
-Monitoreo de noticias sobre municipios y actores públicos en 100 medios digitales chilenos (50 nacionales y 50 de la Región de Valparaíso), con lectura de tono, alcance territorial (comunal, regional, nacional), informes por lector y redacción asistida de respuestas.
+Monitoreo de noticias sobre municipios y actores públicos en más de 100 medios digitales chilenos (nacionales, regionales y comunales de la Región de Valparaíso), con lectura de tono, alcance territorial (comunal, regional, nacional), informes por lector y redacción asistida de respuestas.
 
 Demo publicada: https://pregonia.vercel.app
 
@@ -25,7 +25,7 @@ Los datos de la demo se guardan en el navegador (localStorage, clave `pregonia-d
 - `src/corpus.js` noticias ficticias de la demo.
 - `src/app.js` motor de calce, métricas, vistas, informes, comunicados y ayuda.
 - `assets/portada.jpg` foto de la portada; se embebe en `index.html` al compilar.
-- `data/catalogo_medios.csv` los 100 medios con método de lectura, URL y estado (listo, requiere_ajuste, restringido).
+- `data/catalogo_medios.csv` los medios con método de lectura, URL y estado (listo, requiere_ajuste, restringido).
 - `docs/especificacion.md` especificación funcional del MVP.
 - `api/ia.js` función de servidor (Vercel Edge) que conecta la IA con la clave en el servidor.
 - `api/voz.js` función de servidor que graba la voz del video resumen con ElevenLabs.

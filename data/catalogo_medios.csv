@@ -9,7 +9,7 @@ id,nombre,ambito,provincia,comuna,tipo,nivel,metodo,url_lectura,estado,observaci
 8,CNN Chile,nacional,,,TV,A,sitemap_noticias,https://www.cnnchile.com/_files/sitemaps/sitemap_news.xml,listo,Sin RSS
 9,CHV Noticias,nacional,,,TV,A,sitemap_noticias,https://www.chilevision.cl/_files/sitemaps/sitemap_news.xml,requiere_ajuste,Filtrar ruta /noticias/
 10,Diario Financiero,nacional,,,Economía,A,sitemap_noticias,https://www.df.cl/noticias/site/sitemap_news.xml,listo,Muro de pago; incluye notas de Capital
-11,El Mostrador,nacional,,,Nativo digital,A,sitemap_noticias,https://www.elmostrador.cl/sitemap_news.xml,listo,Su RSS está congelado desde 2021
+11,El Mostrador,nacional,,,Nativo digital,A,sitemap_noticias,https://www.elmostrador.cl/sitemap_news.xml,listo,Sitemap con prefijo n: (corregido 11 nov 2026); su RSS está congelado desde 2021
 12,CIPER,nacional,,,Investigación,A,rss,https://www.ciperchile.cl/feed/,listo,
 13,Infobae Chile,nacional,,,Internacional,A,rss_filtrado,https://www.infobae.com/arc/outboundfeeds/rss/tags_slug/chile/,requiere_ajuste,Mezcla notas de otros países que mencionan Chile
 14,El País Chile,nacional,,,Internacional,A,google_news,,restringido,robots.txt bloquea bots de IA y lectores de feeds
@@ -17,13 +17,13 @@ id,nombre,ambito,provincia,comuna,tipo,nivel,metodo,url_lectura,estado,observaci
 16,Radio Agricultura,nacional,,,Radio,B,portada,https://www.radioagricultura.cl/noticias/,requiere_ajuste,Sus sitemaps están bloqueados por su robots.txt
 17,Duna,nacional,,,Radio,B,sitemap,https://duna.cl/sitemaps/articles.xml,requiere_ajuste,No es formato noticias; filtrar por lastmod
 18,Radio Universidad de Chile,nacional,,,Radio,B,portada,https://radio.uchile.cl/,requiere_ajuste,robots.txt bloquea /feed/ desde el 26 de octubre de 2026
-19,Pauta,nacional,,,Radio y digital,B,sitemap_noticias,https://www.pauta.cl/sitemap_news.xml,listo,
+19,Pauta,nacional,,,Radio y digital,B,sitemap_noticias,https://www.pauta.cl/sitemap_news.xml,listo,Sitemap con prefijo n: (corregido 11 nov 2026)
 20,El Mercurio,nacional,,,Diario,B,google_news,,restringido,Suscripción; bloquea bots de IA
 21,La Segunda,nacional,,,Diario,B,google_news,,restringido,Bloquea bots de IA; suscripción
 22,Las Últimas Noticias,nacional,,,Diario,B,portada,https://www.lun.com/Pages/LUNHomepage.aspx,requiere_ajuste,Formato e-paper; titulares sin fecha
 23,SoyChile,nacional,,,Red regional,B,portada,https://www.soychile.cl/,requiere_ajuste,Fecha en la URL
 24,La Cuarta,nacional,,,Diario,B,google_news,,restringido,Mismo bloqueo que La Tercera
-25,Publimetro,nacional,,,Diario,B,rss,https://www.publimetro.cl/arc/outboundfeeds/rss/?outputType=xml,restringido,Bloquea bots de IA; revisar antes de usar
+25,Publimetro,nacional,,,Diario,B,rss,https://www.publimetro.cl/arc/outboundfeeds/rss/?outputType=xml,restringido,"Bloquea bots de IA en robots.txt; no se lee directo, solo vía Google News"
 26,Ex-Ante,nacional,,,Política y negocios,B,rss,https://www.ex-ante.cl/feed/,requiere_ajuste,Firewall filtra lectores; 7 ítems por consulta
 27,The Clinic,nacional,,,Nativo digital,B,rss,https://www.theclinic.cl/feed/,requiere_ajuste,Firewall rechaza algunos lectores
 28,El Dínamo,nacional,,,Nativo digital,B,sitemap_noticias,https://www.eldinamo.cl/_files/sitemaps/sitemap_news.xml,listo,XML puede llegar truncado; reintentar
@@ -38,7 +38,7 @@ id,nombre,ambito,provincia,comuna,tipo,nivel,metodo,url_lectura,estado,observaci
 37,El Siglo,nacional,,,Diario digital,C,rss,https://elsiglo.cl/feed/,listo,
 38,Diario Estrategia,nacional,,,Economía,C,sitemap_noticias,https://www.diarioestrategia.cl/sitemap/news,requiere_ajuste,Bloquea el user-agent por defecto de feedparser
 39,Chócale,nacional,,,Economía y consumo,C,rss,https://chocale.cl/feed/,listo,
-40,Bloomberg Línea Chile,nacional,,,Internacional,C,rss_filtrado,https://www.bloomberglinea.com/arc/outboundfeeds/google-news-feed-latam/?outputType=xml,requiere_ajuste,Filtrar ruta /latinoamerica/chile/
+40,Bloomberg Línea Chile,nacional,,,Internacional,C,rss_filtrado,https://www.bloomberglinea.com/arc/outboundfeeds/google-news-feed-latam/?outputType=xml,requiere_ajuste,Se leen solo las notas de /latinoamerica/chile/
 41,Interferencia,nacional,,,Investigación,C,rss,https://interferencia.cl/rss.xml,listo,Muro por cuota mensual
 42,El Periodista,nacional,,,Nativo digital,C,rss,https://www.elperiodista.cl/feed/,listo,
 43,Cambio21,nacional,,,Nativo digital,C,rss,https://cambio21.cl/rss,listo,
@@ -52,33 +52,33 @@ id,nombre,ambito,provincia,comuna,tipo,nivel,metodo,url_lectura,estado,observaci
 51,El Mercurio de Valparaíso,regional,,,Diario,A,google_news,,restringido,Mayor alcance regional; robots.txt impide la lectura
 52,La Estrella de Valparaíso,regional,,,Diario,B,google_news,,restringido,robots.txt impide la lectura
 53,VTV,regional,,,TV,B,google_news,,restringido,robots.txt impide la lectura
-54,"BioBioChile, Región de Valparaíso",regional,,,Radio nacional,A,rss_filtrado,https://www.biobiochile.cl/static/feed-google,requiere_ajuste,Filtrar por sección /lista/categorias/region-de-valparaiso
+54,"BioBioChile, Región de Valparaíso",regional,,,Radio nacional,A,rss_filtrado,https://www.biobiochile.cl/static/feed-google,listo,"Mismo feed que BioBioChile, leído una vez; se queda con las notas de la sección /region-de-valparaiso/"
 55,SoyValparaíso,regional,,,Red regional,B,portada,https://www.soychile.cl/valparaiso/,requiere_ajuste,Sin RSS
 56,Puranoticia,regional,,,Portal,B,sitemap_noticias,https://puranoticia.pnt.cl/cms/site/sitemap_news.xml,listo,
-57,"Meganoticias, Región de Valparaíso",regional,,,TV nacional,A,sitemap_filtrado,https://www.meganoticias.cl/sitemaps/sitemap-news.xml,requiere_ajuste,Filtrar con el tema /temas/region-de-valparaiso/
+57,"Meganoticias, Región de Valparaíso",regional,,,TV nacional,A,sitemap_filtrado,https://www.meganoticias.cl/sitemaps/sitemap-news.xml,requiere_ajuste,"Mismo sitemap que Meganoticias, sin sección regional en la URL; no se lee aparte para no duplicar"
 58,"24 Horas, Valparaíso",regional,,,TV,A,portada,https://www.24horas.cl/regiones/zona-centro/valparaiso,requiere_ajuste,Sin RSS
 59,Epicentro Chile,regional,Valparaíso,Viña del Mar,Portal,C,rss,https://www.epicentrochile.com/feed/,listo,
 60,G5noticias,regional,,,Portal,C,rss,https://g5noticias.cl/feed/,listo,Mucho comunicado institucional
 61,Radio Festival,regional,,,Radio,C,rss,https://www.radiofestival.cl/feed/,listo,
 62,UCV Radio,regional,,,Radio,C,portada,https://www.ucvradio.cl/,requiere_ajuste,RSS roto
 63,Panorama Noticioso,regional,Quillota,Quillota,Portal,C,rss,https://www.panoramanoticioso.cl/feed/,listo,Foco en Aconcagua y Petorca
-64,TuOpinas,regional,,,Portal,C,rss,https://www.tuopinas.cl/feed/,listo,Foco en Quillota y Petorca
+64,TuOpinas,regional,,,Portal,C,rss,https://www.tuopinas.cl/feed/,listo,"Responde en el navegador pero no a los servidores en la nube (sin respuesta en 8 s, 11 nov 2026); llega vía Google News"
 65,Alerta Noticias Valparaíso,regional,,,Portal,C,rss,https://alertanoticias.cl/feed/,listo,robots.txt no verificado
 66,CasablancaHoy,local,Valparaíso,Casablanca,Portal,C,rss,https://casablancahoy.cl/feed/,listo,No identifica responsable
 67,Radio Quintay 92.7,local,Valparaíso,Casablanca,Radio,C,sitemap,https://www.radioquintay.cl/sitemap.xml,requiere_ajuste,Sitemap sin fechas; se describe como portal de pruebas
 68,Diario Casablanca,local,Valparaíso,Casablanca,Diario,C,google_news,,restringido,robots.txt impide la lectura
-69,La Voz de Concón,local,Valparaíso,Concón,Diario,C,rss,https://www.lavozdeconcon.cl/?feed=rss2,listo,Baja frecuencia
+69,La Voz de Concón,local,Valparaíso,Concón,Diario,C,rss,https://www.lavozdeconcon.cl/?feed=rss2,listo,Sin publicaciones en 27 días al 11 nov 2026
 70,Concón al Día,local,Valparaíso,Concón,Portal,C,google_news,,restringido,robots.txt impide la lectura
 71,La Bahía on Line,local,Valparaíso,Quintero;Puchuncaví;Concón,Diario digital,C,rss,https://labahiaonline.cl/feed/,listo,Categorías por comuna
-72,El Martutino,local,Valparaíso,Valparaíso;Viña del Mar,Portal,C,portada,https://www.elmartutino.cl/,requiere_ajuste,Sitio con errores; actividad no verificada
+72,El Martutino,local,Valparaíso,Valparaíso;Viña del Mar,Portal,C,portada,https://www.elmartutino.cl/,requiere_ajuste,Sin feed; activo en Google News (19 notas en 14 días al 11 nov 2026)
 73,Gran Valparaíso,local,Valparaíso,Valparaíso,Portal ciudadano,C,google_news,,restringido,robots.txt impide la lectura
-74,Revista Arqueoturismo,local,Valparaíso,Juan Fernández,Revista,C,rss,https://www.arqueoturismo.org/feed/,listo,Baja frecuencia
+74,Revista Arqueoturismo,local,Valparaíso,Juan Fernández,Revista,C,rss,https://www.arqueoturismo.org/feed/,listo,"Revista de turismo y patrimonio, no noticias; sin publicaciones en 29 días al 11 nov 2026"
 75,moeVarua Rapa Nui,local,Isla de Pascua,Isla de Pascua,Revista cultural,C,rss,https://moevarua.com/feed/,listo,Mensual
 76,Quilpué Online,local,Marga Marga,Quilpué,Portal,C,sitemap,https://www.quilpueonline.cl/sitemap_index.xml,requiere_ajuste,RSS no verificado
 77,Bicomunal,local,Marga Marga,Villa Alemana;Quilpué,Diario digital,C,rss,https://bicomunal.cl/feed/,listo,
-78,Diario Crónica,local,Marga Marga,Limache;Olmué,Diario digital,C,rss,https://www.diariocronica.cl/?feed=rss2,listo,Baja frecuencia
+78,Diario Crónica,local,Marga Marga,Limache;Olmué,Diario digital,C,rss,https://www.diariocronica.cl/?feed=rss2,listo,Sin publicaciones en 18 días al 11 nov 2026
 79,El Digital,local,Quillota,Quillota;La Calera;La Cruz;Nogales;Hijuelas,Diario digital,C,rss,https://eldigital.cl/feed/,listo,Categorías por comuna
-80,El Observador,local,Quillota,Quillota,Diario,C,sitemap,https://www.observador.cl/sitemap.xml,requiere_ajuste,robots.txt cierra el RSS a todos los bots
+80,El Observador,local,Quillota,Quillota,Diario,C,sitemap,https://www.observador.cl/sitemap.xml,requiere_ajuste,robots.txt cierra el RSS a todos los bots; activo en Google News (14 notas en 14 días)
 81,Radio Quillota 101.5,local,Quillota,Quillota,Radio,C,rss,https://radioquillota.cl/feed/,listo,
 82,Radio Crystal,local,Quillota,Quillota;La Calera;Nogales;La Ligua;Cabildo;San Felipe,Radio,C,rss,https://radiocrystal.cl/feed/,listo,Categorías por provincia y comuna
 83,La Estrella de Quillota,local,Quillota,Quillota,Diario,C,google_news,,restringido,robots.txt impide la lectura
@@ -93,11 +93,16 @@ id,nombre,ambito,provincia,comuna,tipo,nivel,metodo,url_lectura,estado,observaci
 92,Diario El Trabajo,local,San Felipe,San Felipe,Diario,C,rss,https://eltrabajo.cl/web/feed/,requiere_ajuste,robots.txt pide no leer /feed/ en la raíz; confirmar con el medio
 93,Aconcagua News,local,San Felipe,San Felipe;Los Andes;Llaillay;Panquehue;Putaendo;Santa María;Catemu;Calle Larga;Rinconada;San Esteban,Portal,C,rss,https://www.aconcaguanews.cl/feed/,listo,Categorías por comuna
 94,Aconcagua al Día,local,San Felipe,San Felipe;Los Andes;Llaillay;Panquehue;Putaendo;Santa María;Catemu;Calle Larga;Rinconada;San Esteban,Portal,C,rss,https://aconcaguaaldia.cl/feed/,listo,Categorías por comuna
-95,Preludio Radio 100.9,local,San Felipe,San Felipe,Radio,C,rss,https://www.preludioradio.cl/feed/,listo,Lo local en la categoría Región de Aconcagua
+95,Preludio Radio 100.9,local,San Felipe,San Felipe,Radio,C,rss,https://www.preludioradio.cl/feed/,listo,"Responde en el navegador pero no a los servidores en la nube (sin respuesta en 8 s, 11 nov 2026). Lo local en la categoría Región de Aconcagua"
 96,Putaendo Uno,local,San Felipe,Putaendo,Portal comunal,C,rss,https://putaendouno.cl/?feed=rss2,listo,Baja frecuencia
 97,Catemu Noticias,local,San Felipe,Catemu,Blog,C,rss,https://catemunoticias.blogspot.com/feeds/posts/default?alt=rss,listo,Republica notas antiguas con fecha nueva
 98,Radio Orolonco 107.1,local,San Felipe,Santa María,Radio,C,rss,https://oroloncofm.cl/feed/,listo,Feed dominado por notas nacionales
 99,Radio Superandina 88.5,local,Los Andes,Los Andes;Calle Larga;Rinconada;San Esteban,Radio,C,sitemap_noticias,https://www.superandina.cl/sitemap/google-news/sitemap.xml,listo,Fechas sin zona horaria
-100,Andes Online,local,Los Andes,Los Andes,Diario digital,C,portada,http://www.losandesonline.cl/,requiere_ajuste,Sin feed; portada sin fechas
+100,Andes Online,local,Los Andes,Los Andes,Diario digital,C,portada,http://www.losandesonline.cl/,requiere_ajuste,Sin feed; activo en Google News (13 notas en 14 días)
 101,31TV Casablanca,local,Valparaíso,Casablanca,TV en línea,C,facebook,https://www.facebook.com/31tv.cl,captura_asistida,Solo Facebook e Instagram (31tv.cl); sin sitio web ni feed. Se ingresa con captura asistida
 102,Agenda Regional,local,Valparaíso,Casablanca,Medio digital,C,facebook,https://www.facebook.com/profile.php?id=61576308577918,captura_asistida,"Solo Facebook; cubre la región de Valparaíso y Casablanca. No confundir con agendaregional.cl, que es otro proyecto"
+103,MargaMargaTV,local,Marga Marga,Quilpué;Villa Alemana;Limache;Olmué,TV en línea,C,rss,https://margamargatv.cl/feed/,listo,"Categorías Nacional, Regional y Provincial; agregado 11 nov 2026"
+104,El Aconcagua,local,San Felipe,San Felipe;Los Andes;Santa María;Putaendo;Llaillay;Catemu;Panquehue;Calle Larga;Rinconada;San Esteban,Diario digital,C,rss,https://www.elaconcagua.cl/feed/,listo,Categorías por comuna; agregado 11 nov 2026
+105,Aconcagua Digital,local,San Felipe,San Felipe;Catemu;Llaillay;Panquehue;Putaendo;Santa María,Portal,C,rss,https://aconcaguadigital.cl/feed/,listo,Categoría Comunas; agregado 11 nov 2026
+106,El Diario de La Ligua,local,Petorca,La Ligua;Cabildo;Petorca;Papudo;Zapallar,Diario digital,C,google_news,https://laliguachile.cl/,restringido,robots.txt cierra /feed/ a todos los bots; se lee vía Google News
+107,PortalPortuario,nacional,,,Sectorial portuario,C,rss,https://portalportuario.cl/feed/,listo,Puertos de Valparaíso y San Antonio; mezcla notas internacionales; agregado 11 nov 2026

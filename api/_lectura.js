@@ -20,6 +20,8 @@ const deEnt = s => s.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (m, c) => c[0] === "#"
 const sinTags = s => s.replace(/<[^>]+>/g, " ");
 const limpiar = s => sinTags(deEnt(sinTags(String(s || "").replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")))).replace(/\s+/g, " ").trim();
 const tag = (xml, n) => { const m = xml.match(new RegExp(`<${n}(?:\\s[^>]*)?>([\\s\\S]*?)</${n}>`, "i")); return m ? m[1] : ""; };
+/* Etiqueta de un sitemap de noticias con cualquier prefijo: news:title, n:title… (El Mostrador y Pauta usan n:). */
+const tagNs = (xml, n) => { const m = xml.match(new RegExp(`<(\\w+):${n}(?:\\s[^>]*)?>([\\s\\S]*?)</\\1:${n}>`, "i")); return m ? m[2] : ""; };
 const attr = (xml, n, a) => { const m = xml.match(new RegExp(`<${n}\\s[^>]*${a}=["']([^"']+)["']`, "i")); return m ? m[1] : ""; };
 const bloques = (xml, n) => xml.match(new RegExp(`<${n}[\\s>][\\s\\S]*?</${n}>`, "gi")) || [];
 const hash = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
@@ -39,8 +41,8 @@ function parsear(xml){
   const out = [];
   if (/<urlset[\s>]/i.test(xml)) {
     for (const u of bloques(xml, "url")) {
-      const titulo = limpiar(tag(u, "news:title")); if (!titulo) continue;
-      out.push({ titulo, url: limpiar(tag(u, "loc")), fecha: Date.parse(limpiar(tag(u, "news:publication_date")) || limpiar(tag(u, "lastmod"))), desc: limpiar(tag(u, "news:keywords")) });
+      const titulo = limpiar(tagNs(u, "title")); if (!titulo) continue;
+      out.push({ titulo, url: limpiar(tag(u, "loc")), fecha: Date.parse(limpiar(tagNs(u, "publication_date")) || limpiar(tag(u, "lastmod"))), desc: limpiar(tagNs(u, "keywords")) });
     }
     return out;
   }
@@ -132,9 +134,20 @@ async function clasificar(comuna, notas, existentes = []){
 }
 
 /* Lectura de fuentes: los feeds del catálogo se leen una vez y sirven para todas las comunas; Google News se consulta por comuna. */
+/* Política de lectura: lo restringido (robots.txt o términos) no se lee directo, solo llega vía Google News.
+   Un mismo feed se descarga una vez; las ediciones filtradas se quedan con las notas que calzan con su filtro
+   (BioBio Región de Valparaíso: su sección regional) y el medio padre con el resto. */
+const FILTROS = { 54: u => /\/region-de-valparaiso\//.test(u), 40: u => /\/latinoamerica\/chile\//.test(u) };
+const seLee = m => METODOS.has(m.metodo) && m.url && m.estado !== "restringido" && m.estado !== "en_prueba" && !(m.metodo.endsWith("_filtrado") && !FILTROS[m.id]);
 export async function leerCatalogo(){
-  const fuentes = CATALOGO.filter(m => METODOS.has(m.metodo) && m.url), errores = [];
-  const items = (await Promise.all(fuentes.map(async m => { try { return parsear(await leer(m.url)).map(x => ({ ...x, m })); } catch(e) { errores.push(m.nombre); return []; } }))).flat();
+  const fuentes = CATALOGO.filter(seLee), errores = [], porUrl = new Map();
+  fuentes.forEach(m => { if (!porUrl.has(m.url)) porUrl.set(m.url, []); porUrl.get(m.url).push(m); });
+  const items = (await Promise.all([...porUrl.entries()].map(async ([url, ms]) => {
+    try {
+      const its = parsear(await leer(url)), filtrados = ms.filter(m => FILTROS[m.id]), resto = ms.find(m => !FILTROS[m.id]);
+      return its.map(x => { const f = filtrados.find(m => FILTROS[m.id](x.url)); const m = f || resto; return m ? { ...x, m } : null; }).filter(Boolean);
+    } catch(e) { ms.forEach(m => errores.push(m.nombre)); return []; }
+  }))).flat();
   return {items, total: fuentes.length, errores};
 }
 const porDominio = new Map(), porNombre = new Map();
@@ -195,14 +208,14 @@ function robotsPermite(txt, ruta){
 }
 export async function saludFuentes(consultasGN = []){
   const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
-  const leidas = CATALOGO.filter(m => METODOS.has(m.metodo) && m.url);
+  const leidas = CATALOGO.filter(m => METODOS.has(m.metodo) && m.url);  // incluye restringidos y en prueba: el diagnóstico los mide igual
   const fuentes = await Promise.all(leidas.map(async m => {
-    const r = {id: m.id, nombre: m.nombre, ambito: m.ambito, metodo: m.metodo, estado: m.estado};
+    const r = {id: m.id, nombre: m.nombre, ambito: m.ambito, metodo: m.metodo, estado: m.estado, seLee: seLee(m)};
     const u = (() => { try { return new URL(m.url); } catch { return null; } })();
     const [feed, rob] = await Promise.allSettled([leer(m.url, 9000), u ? leer(u.origin + "/robots.txt", 6000) : Promise.reject(new Error("URL"))]);
     if (rob.status === "fulfilled") Object.assign(r, robotsPermite(rob.value, u.pathname + u.search)); else r.robots = "sin robots.txt";
     if (feed.status === "rejected") return {...r, ok: false, error: String(feed.reason && feed.reason.message || feed.reason).slice(0, 80)};
-    const it = parsear(feed.value), con = it.filter(x => Number.isFinite(x.fecha)), ult = con.length ? Math.max(...con.map(x => x.fecha)) : null;
+    const it = parsear(feed.value).filter(x => !FILTROS[m.id] || FILTROS[m.id](x.url)), con = it.filter(x => Number.isFinite(x.fecha)), ult = con.length ? Math.max(...con.map(x => x.fecha)) : null;
     return {...r, ok: true, items: it.length, sinFecha: it.length - con.length, en14: con.filter(x => x.fecha >= desde).length, ultima: ult ? new Date(ult).toISOString() : null, diasSinPublicar: ult ? Math.round((ahora - ult) / 864e5) : null};
   }));
   const vistos = new Map();

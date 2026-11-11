@@ -484,7 +484,7 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss_filtrado",
 "url": "https://www.biobiochile.cl/static/feed-google",
-"estado": "requiere_ajuste"
+"estado": "listo"
 },
 {
 "id": 55,
@@ -917,5 +917,50 @@ export const CATALOGO = [
 "metodo": "facebook",
 "url": "https://www.facebook.com/profile.php?id=61576308577918",
 "estado": "captura_asistida"
+},
+{
+"id": 103,
+"nombre": "MargaMargaTV",
+"ambito": "local",
+"comuna": "Quilpué;Villa Alemana;Limache;Olmué",
+"metodo": "rss",
+"url": "https://margamargatv.cl/feed/",
+"estado": "listo"
+},
+{
+"id": 104,
+"nombre": "El Aconcagua",
+"ambito": "local",
+"comuna": "San Felipe;Los Andes;Santa María;Putaendo;Llaillay;Catemu;Panquehue;Calle Larga;Rinconada;San Esteban",
+"metodo": "rss",
+"url": "https://www.elaconcagua.cl/feed/",
+"estado": "listo"
+},
+{
+"id": 105,
+"nombre": "Aconcagua Digital",
+"ambito": "local",
+"comuna": "San Felipe;Catemu;Llaillay;Panquehue;Putaendo;Santa María",
+"metodo": "rss",
+"url": "https://aconcaguadigital.cl/feed/",
+"estado": "listo"
+},
+{
+"id": 106,
+"nombre": "El Diario de La Ligua",
+"ambito": "local",
+"comuna": "La Ligua;Cabildo;Petorca;Papudo;Zapallar",
+"metodo": "google_news",
+"url": "https://laliguachile.cl/",
+"estado": "restringido"
+},
+{
+"id": 107,
+"nombre": "PortalPortuario",
+"ambito": "nacional",
+"comuna": "",
+"metodo": "rss",
+"url": "https://portalportuario.cl/feed/",
+"estado": "listo"
 }
 ];
