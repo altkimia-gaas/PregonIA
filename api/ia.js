@@ -7,7 +7,7 @@
 const MODELOS = { quick: "claude-haiku-5-5", default: "claude-sonnet-5-5" };
 const VENTANA_MS = 10 * 60 * 1000;
 const MAX_CARACTERES = 16000;
-const MAX_TOKENS = 1200;
+const MAX_TOKENS = 4096; // holgado: si el modelo razona antes de escribir, ese razonamiento también consume tokens
 const TIPOS_IMG = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_IMG = 2_800_000; // caracteres en base64, unos 2 MB
 const SISTEMA = "Eres el asistente de PregonIA, una plataforma que monitorea la prensa para municipios chilenos. " +
@@ -70,7 +70,7 @@ async function handler(req) {
   const dec = new TextDecoder(), enc = new TextEncoder();
   const flujo = new ReadableStream({
     async start(ctrl) {
-      const lector = r.body.getReader(); let buf = "";
+      const lector = r.body.getReader(); let buf = ""; const diag = {bloques: [], fin: null, uso: null, error: null};
       try {
         for (;;) {
           const { done, value } = await lector.read(); if (done) break;
@@ -82,11 +82,17 @@ async function handler(req) {
             try {
               const d = JSON.parse(linea.slice(5));
               if (d.type === "content_block_delta" && d.delta?.type === "text_delta") ctrl.enqueue(enc.encode(d.delta.text));
-              if (d.type === "error") console.error("Anthropic stream", d.error);
+              if (d.type === "content_block_start") diag.bloques.push(d.content_block?.type);
+              if (d.type === "message_delta") { diag.fin = d.delta?.stop_reason || null; diag.uso = d.usage || null; }
+              if (d.type === "error") { diag.error = d.error?.type || "error"; console.error("Anthropic stream", d.error); }
             } catch { /* evento incompleto o sin JSON */ }
           }
         }
-      } finally { ctrl.close(); }
+      } finally {
+        if (diag.fin !== "end_turn" || diag.error) console.error("IA terminó", modelo, JSON.stringify(diag));
+        if (cuerpo.diag === true) ctrl.enqueue(enc.encode("\n[diag " + JSON.stringify({modelo, ...diag}) + "]"));
+        ctrl.close();
+      }
     },
     cancel() { r.body.cancel().catch(() => {}); }
   });
