@@ -178,4 +178,39 @@ export function candidatasDe(comuna, items, desde, ahora = Date.now()){
   }
   return out.sort((a, b) => b.ts - a.ts);
 }
+/* Salud de fuentes: qué entrega cada medio leído, qué dice su robots.txt y qué medios aparecen en Google News sin estar en el catálogo.
+   Solo lectura de datos públicos; no clasifica con IA ni guarda nada. */
+function robotsPermite(txt, ruta){
+  const grupos = []; let g = null, enReglas = false;
+  for (const l of txt.split(/\r?\n/)) {
+    const m = l.replace(/#.*/, "").trim().match(/^([a-z-]+)\s*:\s*(.*)$/i); if (!m) continue;
+    const k = m[1].toLowerCase(), v = m[2].trim();
+    if (k === "user-agent") { if (!g || enReglas) { g = {ua: [], reglas: []}; grupos.push(g); enReglas = false; } g.ua.push(v.toLowerCase()); }
+    else if ((k === "disallow" || k === "allow") && g) { enReglas = true; g.reglas.push([k, v]); }
+  }
+  const para = ua => grupos.filter(x => x.ua.some(u => u === ua || (ua !== "*" && ua.includes(u) && u !== "*")));
+  const evalua = gs => { let mejor = null; gs.forEach(x => x.reglas.forEach(([k, v]) => { if (v && ruta.startsWith(v) && (!mejor || v.length > mejor[1].length || (v.length === mejor[1].length && k === "allow"))) mejor = [k, v]; })); return mejor ? mejor[0] === "allow" : true; };
+  const propios = para("pregonia"), ia = ["gptbot", "claudebot", "anthropic-ai", "ccbot", "google-extended"].filter(b => para(b).some(x => x.reglas.some(([k, v]) => k === "disallow" && v === "/")));
+  return { permite: evalua(propios.length ? propios : para("*")), bloqueaIA: ia };
+}
+export async function saludFuentes(consultasGN = []){
+  const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
+  const leidas = CATALOGO.filter(m => METODOS.has(m.metodo) && m.url);
+  const fuentes = await Promise.all(leidas.map(async m => {
+    const r = {id: m.id, nombre: m.nombre, ambito: m.ambito, metodo: m.metodo, estado: m.estado};
+    const u = (() => { try { return new URL(m.url); } catch { return null; } })();
+    const [feed, rob] = await Promise.allSettled([leer(m.url, 9000), u ? leer(u.origin + "/robots.txt", 6000) : Promise.reject(new Error("URL"))]);
+    if (rob.status === "fulfilled") Object.assign(r, robotsPermite(rob.value, u.pathname + u.search)); else r.robots = "sin robots.txt";
+    if (feed.status === "rejected") return {...r, ok: false, error: String(feed.reason && feed.reason.message || feed.reason).slice(0, 80)};
+    const it = parsear(feed.value), con = it.filter(x => Number.isFinite(x.fecha)), ult = con.length ? Math.max(...con.map(x => x.fecha)) : null;
+    return {...r, ok: true, items: it.length, sinFecha: it.length - con.length, en14: con.filter(x => x.fecha >= desde).length, ultima: ult ? new Date(ult).toISOString() : null, diasSinPublicar: ult ? Math.round((ahora - ult) / 864e5) : null};
+  }));
+  const vistos = new Map();
+  await Promise.all(consultasGN.map(async q => { try {
+    const its = await leerGoogleNewsConsulta(q, VENTANA_DIAS, false);
+    its.forEach(x => { const k = dominio(x.fuenteUrl) || norm(x.fuente); const v = vistos.get(k) || {fuente: x.fuente, dominio: dominio(x.fuenteUrl), notas: 0, catalogo: null}; v.notas++; const m = porDominio.get(dominio(x.fuenteUrl)) || porNombre.get(norm(x.fuente)); if (m) v.catalogo = m.id; vistos.set(k, v); });
+  } catch(e) {} }));
+  const gn = [...vistos.values()].sort((a, b) => b.notas - a.notas);
+  return {generado: new Date(ahora).toISOString(), fuentes, googleNews: {consultas: consultasGN.length, enCatalogo: gn.filter(x => x.catalogo), fueraDelCatalogo: gn.filter(x => !x.catalogo).slice(0, 60)}};
+}
 export { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, hash, clasificar, json };

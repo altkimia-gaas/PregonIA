@@ -1,7 +1,7 @@
 // Noticias reales para PregonIA (etapa 1, sin base de datos): lee los medios al vuelo para una comuna, clasifica con Claude Haiku
 // y devuelve titular, enlace, medio, fecha y resumen propio. La respuesta queda 15 minutos en la caché de Vercel.
 // La lectura y la clasificación viven en _lectura.js, compartido con la lectura programada (/api/ingesta).
-import { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre } from "./_lectura.js";
+import { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre, saludFuentes } from "./_lectura.js";
 import { AUTORIDADES, CARGOS, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
 
 /* Autoridades: la consulta va por nombre y cargo, con palabras de contexto que descartan homónimos lejanos. */
@@ -67,6 +67,10 @@ function armar(lote, porI){
 export async function GET(req){
   const u = new URL(req.url); DIAG.length = 0;
   if (u.searchParams.has("ping")) return json({ ok: true, ia: Boolean(process.env.ANTHROPIC_API_KEY) }, 200, { "cache-control": "no-store" });
+  if (u.searchParams.has("salud")) {  // diagnóstico de fuentes: por provincia, más la región
+    const qs = ["Valparaíso", "San Antonio", "Quillota", "San Felipe", "Los Andes", "La Ligua", "Quilpué", "Casablanca", "Isla de Pascua"].map(c => `"${c}" ${'(Valparaíso OR comuna OR municipalidad OR alcalde OR Chile OR "litoral central")'}`).concat(['"Región de Valparaíso"']);
+    return json(await saludFuentes(qs), 200, { "cache-control": "public, max-age=0, s-maxage=1800" });
+  }
   if (u.searchParams.has("autoridad") || u.searchParams.has("rol")) return deAutoridad(u);
   const comuna = u.searchParams.get("comuna") || "Casablanca";
   if (!COMUNAS[comuna]) return json({ error: "Comuna no disponible" }, 400);
