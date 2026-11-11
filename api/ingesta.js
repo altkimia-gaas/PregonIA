@@ -65,9 +65,11 @@ async function manejar(req){
   const [lectura] = await sb("lecturas", {method: "POST", prefer: "return=representation", body: {inicio: new Date(ahora).toISOString()}});
   try {
     const munis = (await sb("municipios?activo=eq.true&select=id,comuna")).filter(m => COMUNAS[m.comuna]);
-    const [cat, ...gns] = await Promise.all([leerCatalogo(), ...munis.map(m => leerGoogleNews(m.comuna).catch(() => null))]);
+    const [cat0, enBase, ...gns] = await Promise.all([leerCatalogo(), sb("medios?select=id"), ...munis.map(m => leerGoogleNews(m.comuna).catch(() => null))]);
+    // Solo medios que ya existen en la base (clave foránea de notas): un medio nuevo del catálogo espera a que se cargue la semilla.
+    const ids = new Set(enBase.map(x => x.id)), cat = {...cat0, items: cat0.items.filter(x => ids.has(x.m.id))};
     const errores = cat.errores.concat(gns.some(g => !g) ? ["Google News"] : []);
-    const res = await Promise.all(munis.map((m, k) => procesarComuna(m, cat.items.concat(gns[k] || []), desde, ahora).catch(e => ({comuna: m.comuna, error: String(e.message || e).slice(0, 200)}))));
+    const res = await Promise.all(munis.map((m, k) => procesarComuna(m, cat.items.concat((gns[k] || []).filter(x => ids.has(x.m.id))), desde, ahora).catch(e => ({comuna: m.comuna, error: String(e.message || e).slice(0, 200)}))));
     // Avisos: un error aquí no debe perder la lectura ya guardada.
     await Promise.all(res.map(async (r, k) => { const grupos = r.grupos || []; delete r.grupos; if (!grupos.length) return;
       try { r.avisos = await avisar(sb, munis[k], grupos, Date.now()); } catch(e) { r.avisos = {error: String(e.message || e).slice(0, 160)}; } }));
