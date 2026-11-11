@@ -4,6 +4,7 @@
    - En el piloto, con la llave de notificaciones configurada: llegan aunque PregonIA esté cerrada (las envía la lectura programada),
      y por correo si el municipio lo configuró. */
 S.avisos ||= {pref: null, porOrg: {}, push: null};
+Object.keys(S.avisos.porOrg).forEach(k => { if (!k.includes("|")) delete S.avisos.porOrg[k]; });  // formato anterior, sin modo
 const AV = {abierto: false, vuelta: null, cfg: null, destacar: null};
 const AV_ETQ = {urgente: "Urgente", importante: "Importante", info: "Buena noticia"};
 const AV_NIV = [["urgente", "Solo lo urgente", "Críticas que llegaron a prensa regional o nacional, o que crecen rápido. Pensado para el alcalde."],
