@@ -11,7 +11,7 @@ id,nombre,ambito,provincia,comuna,tipo,nivel,metodo,url_lectura,estado,observaci
 10,Diario Financiero,nacional,,,Economía,A,sitemap_noticias,https://www.df.cl/noticias/site/sitemap_news.xml,listo,Muro de pago; incluye notas de Capital
 11,El Mostrador,nacional,,,Nativo digital,A,sitemap_noticias,https://www.elmostrador.cl/sitemap_news.xml,listo,Sitemap con prefijo n: (corregido 11 nov 2026); su RSS está congelado desde 2021
 12,CIPER,nacional,,,Investigación,A,rss,https://www.ciperchile.cl/feed/,listo,
-13,Infobae Chile,nacional,,,Internacional,A,rss_filtrado,https://www.infobae.com/arc/outboundfeeds/rss/tags_slug/chile/,requiere_ajuste,Mezcla notas de otros países que mencionan Chile
+13,Infobae Chile,nacional,,,Internacional,A,rss,https://www.infobae.com/arc/outboundfeeds/rss/tags_slug/chile/,listo,Feed de la etiqueta Chile; incluye notas de otros países que mencionan Chile
 14,El País Chile,nacional,,,Internacional,A,google_news,,restringido,robots.txt bloquea bots de IA y lectores de feeds
 15,ADN Radio,nacional,,,Radio,B,rss,https://www.adnradio.cl/arc/outboundfeeds/rss/,listo,
 16,Radio Agricultura,nacional,,,Radio,B,portada,https://www.radioagricultura.cl/noticias/,requiere_ajuste,Sus sitemaps están bloqueados por su robots.txt
@@ -62,7 +62,7 @@ id,nombre,ambito,provincia,comuna,tipo,nivel,metodo,url_lectura,estado,observaci
 61,Radio Festival,regional,,,Radio,C,rss,https://www.radiofestival.cl/feed/,listo,
 62,UCV Radio,regional,,,Radio,C,portada,https://www.ucvradio.cl/,requiere_ajuste,RSS roto
 63,Panorama Noticioso,regional,Quillota,Quillota,Portal,C,rss,https://www.panoramanoticioso.cl/feed/,listo,Foco en Aconcagua y Petorca
-64,TuOpinas,regional,,,Portal,C,rss,https://www.tuopinas.cl/feed/,listo,"Responde en el navegador pero no a los servidores en la nube (sin respuesta en 8 s, 11 nov 2026); llega vía Google News"
+64,TuOpinas,regional,,,Portal,C,rss,https://www.tuopinas.cl/feed/,listo,"Lento o intermitente desde servidores en la nube (sin respuesta en 8 s el 11 nov 2026, luego normal); también llega vía Google News"
 65,Alerta Noticias Valparaíso,regional,,,Portal,C,rss,https://alertanoticias.cl/feed/,listo,robots.txt no verificado
 66,CasablancaHoy,local,Valparaíso,Casablanca,Portal,C,rss,https://casablancahoy.cl/feed/,listo,No identifica responsable
 67,Radio Quintay 92.7,local,Valparaíso,Casablanca,Radio,C,sitemap,https://www.radioquintay.cl/sitemap.xml,requiere_ajuste,Sitemap sin fechas; se describe como portal de pruebas
@@ -93,7 +93,7 @@ id,nombre,ambito,provincia,comuna,tipo,nivel,metodo,url_lectura,estado,observaci
 92,Diario El Trabajo,local,San Felipe,San Felipe,Diario,C,rss,https://eltrabajo.cl/web/feed/,requiere_ajuste,robots.txt pide no leer /feed/ en la raíz; confirmar con el medio
 93,Aconcagua News,local,San Felipe,San Felipe;Los Andes;Llaillay;Panquehue;Putaendo;Santa María;Catemu;Calle Larga;Rinconada;San Esteban,Portal,C,rss,https://www.aconcaguanews.cl/feed/,listo,Categorías por comuna
 94,Aconcagua al Día,local,San Felipe,San Felipe;Los Andes;Llaillay;Panquehue;Putaendo;Santa María;Catemu;Calle Larga;Rinconada;San Esteban,Portal,C,rss,https://aconcaguaaldia.cl/feed/,listo,Categorías por comuna
-95,Preludio Radio 100.9,local,San Felipe,San Felipe,Radio,C,rss,https://www.preludioradio.cl/feed/,listo,"Responde en el navegador pero no a los servidores en la nube (sin respuesta en 8 s, 11 nov 2026). Lo local en la categoría Región de Aconcagua"
+95,Preludio Radio 100.9,local,San Felipe,San Felipe,Radio,C,rss,https://www.preludioradio.cl/feed/,listo,Lento o intermitente desde servidores en la nube (11 nov 2026). Lo local en la categoría Región de Aconcagua
 96,Putaendo Uno,local,San Felipe,Putaendo,Portal comunal,C,rss,https://putaendouno.cl/?feed=rss2,listo,Baja frecuencia
 97,Catemu Noticias,local,San Felipe,Catemu,Blog,C,rss,https://catemunoticias.blogspot.com/feeds/posts/default?alt=rss,listo,Republica notas antiguas con fecha nueva
 98,Radio Orolonco 107.1,local,San Felipe,Santa María,Radio,C,rss,https://oroloncofm.cl/feed/,listo,Feed dominado por notas nacionales

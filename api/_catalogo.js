@@ -113,9 +113,9 @@ export const CATALOGO = [
 "nombre": "Infobae Chile",
 "ambito": "nacional",
 "comuna": "",
-"metodo": "rss_filtrado",
+"metodo": "rss",
 "url": "https://www.infobae.com/arc/outboundfeeds/rss/tags_slug/chile/",
-"estado": "requiere_ajuste"
+"estado": "listo"
 },
 {
 "id": 14,
