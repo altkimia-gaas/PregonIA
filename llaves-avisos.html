@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Llaves de avisos · PregonIA</title>
+<style>
+:root{--bg:#080B12;--surface:#111827;--ink:#F0F4FF;--muted:#8B9DC3;--line:#1E2D4A;--accent:#42A5F5;--btn:#1976D2;color-scheme:dark}
+@media (prefers-color-scheme:light){:root{--bg:#F4F4F0;--surface:#fff;--ink:#111827;--muted:#56627A;--line:#D8D4CC;--accent:#1565C0;--btn:#1565C0;color-scheme:light}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:680px;margin:0 auto;padding:32px max(16px,env(safe-area-inset-left,0px)) 48px}
+h1{font-size:24px;margin:0 0 6px}p{margin:0 0 14px;color:var(--muted)}
+ol{padding-left:20px;display:grid;gap:8px;margin:0 0 20px}
+button{background:var(--btn);color:#fff;border:0;border-radius:6px;padding:10px 16px;font:600 15px system-ui,sans-serif;cursor:pointer}
+.k{display:grid;gap:6px;margin:16px 0;padding:14px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.k b{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.k code{font:13px/1.5 ui-monospace,Menlo,monospace;word-break:break-all;color:var(--ink)}
+.k button{justify-self:start;padding:6px 12px;font-size:13px;background:transparent;color:var(--accent);border:1px solid var(--line)}
+.aviso{border-left:3px solid #E0604A;padding:8px 12px;background:var(--surface);color:var(--ink);border-radius:4px}
+</style>
+</head>
+<body>
+<main>
+<h1>Llaves de avisos para PregonIA</h1>
+<p>Genera el par de llaves que permite enviar notificaciones al celular aunque PregonIA esté cerrada. Se generan aquí, en tu navegador: no se envían a ningún servidor ni quedan guardadas.</p>
+<ol>
+<li>Presiona «Generar llaves».</li>
+<li>En Vercel, en el proyecto pregonia, abre Settings y luego Environment Variables, y crea <b>VAPID_PUBLIC_KEY</b>, <b>VAPID_PRIVATE_KEY</b> y <b>VAPID_SUBJECT</b> con los valores de abajo.</li>
+<li>Vuelve a desplegar (Deployments, luego Redeploy) y cierra esta página.</li>
+</ol>
+<button id="gen" type="button">Generar llaves</button>
+<div id="out" hidden>
+  <div class="k"><b>VAPID_PUBLIC_KEY</b><code id="pub"></code><button type="button" data-c="pub">Copiar</button></div>
+  <div class="k"><b>VAPID_PRIVATE_KEY</b><code id="priv"></code><button type="button" data-c="priv">Copiar</button></div>
+  <div class="k"><b>VAPID_SUBJECT</b><code id="subj">mailto:avillalobos@altkimia.com</code><button type="button" data-c="subj">Copiar</button></div>
+  <p class="aviso">La llave privada es un secreto: pégala solo en Vercel. No la envíes por correo ni por chat. Si cambias las llaves, cada persona debe volver a activar los avisos en su celular.</p>
+</div>
+</main>
+<script>
+const b64u = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+document.getElementById("gen").addEventListener("click", async () => {
+  const par = await crypto.subtle.generateKey({name: "ECDSA", namedCurve: "P-256"}, true, ["sign", "verify"]);
+  document.getElementById("pub").textContent = b64u(await crypto.subtle.exportKey("raw", par.publicKey));
+  document.getElementById("priv").textContent = (await crypto.subtle.exportKey("jwk", par.privateKey)).d;
+  document.getElementById("out").hidden = false;
+});
+document.addEventListener("click", async e => { const k = e.target.dataset && e.target.dataset.c; if (!k) return;
+  try { await navigator.clipboard.writeText(document.getElementById(k).textContent); e.target.textContent = "Copiado"; setTimeout(() => e.target.textContent = "Copiar", 1500); }
+  catch (er) { const r = document.createRange(); r.selectNodeContents(document.getElementById(k)); getSelection().removeAllRanges(); getSelection().addRange(r); } });
+</script>
+</body>
+</html>

@@ -2,8 +2,10 @@
 // Solo se clasifica lo nuevo (lo ya visto no se vuelve a pagar) y las notas nuevas se agrupan con los hechos de días anteriores,
 // para que el historial, las respuestas y las marcas queden en el mismo hecho aunque lleguen notas días después.
 // La llama un programador externo (GitHub Actions) con Authorization: Bearer CRON_SECRET.
-// Variables: SUPABASE_URL, SUPABASE_SECRET_KEY, CRON_SECRET, ANTHROPIC_API_KEY.
+// Variables: SUPABASE_URL, SUPABASE_SECRET_KEY, CRON_SECRET, ANTHROPIC_API_KEY. Para avisos: ver api/_avisos.js.
+// Después de guardar, revisa los hechos que recibieron notas nuevas y avisa lo urgente (notificación y correo).
 import { COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, candidatasDe } from "./_lectura.js";
+import { avisar } from "./_avisos.js";
 
 const MAX_POR_COMUNA = 30;  // tope de notas nuevas que se clasifican por comuna en cada pasada; el resto entra en la siguiente
 
@@ -49,7 +51,7 @@ async function procesarComuna(muni, items, desde, ahora){
   });
   // Lo que la IA no alcanzó a clasificar se guarda igual (neutro, con el titular) y queda marcado con ia = false para revisarlo.
   await sb("menciones?on_conflict=nota_id,municipio_id", {method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body: filas});
-  return {comuna, candidatas: candidatas.length, nuevas: nuevas.length, clasificadas: filas.filter(f => f.ia).length, descartadas: filas.filter(f => !f.rel).length};
+  return {comuna, candidatas: candidatas.length, nuevas: nuevas.length, clasificadas: filas.filter(f => f.ia).length, descartadas: filas.filter(f => !f.rel).length, grupos: filas.filter(f => f.rel).map(f => f.grupo)};
 }
 
 async function manejar(req){
@@ -64,6 +66,9 @@ async function manejar(req){
     const [cat, ...gns] = await Promise.all([leerCatalogo(), ...munis.map(m => leerGoogleNews(m.comuna).catch(() => null))]);
     const errores = cat.errores.concat(gns.some(g => !g) ? ["Google News"] : []);
     const res = await Promise.all(munis.map((m, k) => procesarComuna(m, cat.items.concat(gns[k] || []), desde, ahora).catch(e => ({comuna: m.comuna, error: String(e.message || e).slice(0, 200)}))));
+    // Avisos: un error aquí no debe perder la lectura ya guardada.
+    await Promise.all(res.map(async (r, k) => { const grupos = r.grupos || []; delete r.grupos; if (!grupos.length) return;
+      try { r.avisos = await avisar(sb, munis[k], grupos, Date.now()); } catch(e) { r.avisos = {error: String(e.message || e).slice(0, 160)}; } }));
     const suma = k => res.reduce((s, r) => s + (r[k] || 0), 0);
     const resumen = {fin: new Date().toISOString(), fuentes_ok: cat.total + 1 - errores.length, fuentes_total: cat.total + 1, errores: errores.slice(0, 60),
       candidatas: suma("candidatas"), nuevas: suma("nuevas"), clasificadas: suma("clasificadas"), detalle: {comunas: res, ia: DIAG.slice(0, 8)}};

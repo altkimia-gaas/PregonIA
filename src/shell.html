@@ -764,6 +764,41 @@ details.resp[open] summary{margin-bottom:12px}
 .hp-ask textarea{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);resize:vertical;min-height:60px;line-height:1.45}
 .hp-ans{margin-top:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);white-space:pre-wrap;font-size:14px;line-height:1.55}
 body.hp-on{overflow:hidden}
+.hp-apar{display:none}
+@media (max-width:430px){ #temaBtn{display:none} .hp-apar{display:grid;gap:0;justify-items:start} }
+/* Avisos: campana y panel */
+.av-btn{position:relative}
+.av-btn .av-n{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent-bg);color:var(--accent-ink);font-size:11px;font-weight:800;line-height:18px;text-align:center;border:2px solid var(--top-bg,var(--bg))}
+.av-btn.urg .av-n{background:var(--cri)}
+.av-btn.urg .ico{color:var(--cri-ink)}
+.av-sec{display:grid;gap:10px}
+.av-sec>p{margin:0;font-size:14px;line-height:1.5}
+.av-sec .btn{justify-self:start}
+.av-opts{display:grid;gap:6px}
+.av-opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);cursor:pointer}
+.av-opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.av-opt input{margin-top:3px;accent-color:var(--accent-bg);flex:none}
+.av-opt span{display:grid;gap:2px}
+.av-opt b{font-size:14px}
+.av-opt small{font-size:12.5px;color:var(--muted);line-height:1.4}
+.av-chk{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;line-height:1.45;cursor:pointer}
+.av-chk input{margin-top:3px;accent-color:var(--accent-bg);flex:none}
+.av-chk input:disabled+*{opacity:.6}
+.av-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.av-g{margin:6px 0 0;font-size:12px;color:var(--muted);font-weight:700}
+.av-l{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.av-i{display:grid;gap:4px;padding:12px;border:1px solid var(--line);border-left:3px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.av-i.urgente{border-left-color:var(--cri)} .av-i.info{border-left-color:var(--pos)} .av-i.importante{border-left-color:var(--accent)}
+.av-i.nueva{box-shadow:0 0 0 1px var(--accent) inset}
+.av-i.dest{outline:2px solid var(--accent);outline-offset:2px}
+.av-i p{margin:0}
+.av-k{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;font-weight:600;color:var(--muted)}
+.av-k .pill{font-size:11px}
+.av-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-left:auto}
+.av-t{font-size:14.5px;font-weight:600;line-height:1.4}
+.av-t a{color:inherit}
+.av-m{font-size:12.5px;color:var(--muted)}
+.av-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
 @media (max-width:820px){ .helpbtn{margin-left:auto;padding:6px 9px} .helpbtn span{display:none} .help{width:100vw;border-left:0} }
 
 /* Portada de bienvenida · identidad ALTKimia (fondo #080B12, azul #2196F3, Inter, trama de puntos) */

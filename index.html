@@ -777,6 +777,41 @@ details.resp[open] summary{margin-bottom:12px}
 .hp-ask textarea{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);resize:vertical;min-height:60px;line-height:1.45}
 .hp-ans{margin-top:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);white-space:pre-wrap;font-size:14px;line-height:1.55}
 body.hp-on{overflow:hidden}
+.hp-apar{display:none}
+@media (max-width:430px){ #temaBtn{display:none} .hp-apar{display:grid;gap:0;justify-items:start} }
+/* Avisos: campana y panel */
+.av-btn{position:relative}
+.av-btn .av-n{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent-bg);color:var(--accent-ink);font-size:11px;font-weight:800;line-height:18px;text-align:center;border:2px solid var(--top-bg,var(--bg))}
+.av-btn.urg .av-n{background:var(--cri)}
+.av-btn.urg .ico{color:var(--cri-ink)}
+.av-sec{display:grid;gap:10px}
+.av-sec>p{margin:0;font-size:14px;line-height:1.5}
+.av-sec .btn{justify-self:start}
+.av-opts{display:grid;gap:6px}
+.av-opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);cursor:pointer}
+.av-opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.av-opt input{margin-top:3px;accent-color:var(--accent-bg);flex:none}
+.av-opt span{display:grid;gap:2px}
+.av-opt b{font-size:14px}
+.av-opt small{font-size:12.5px;color:var(--muted);line-height:1.4}
+.av-chk{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;line-height:1.45;cursor:pointer}
+.av-chk input{margin-top:3px;accent-color:var(--accent-bg);flex:none}
+.av-chk input:disabled+*{opacity:.6}
+.av-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.av-g{margin:6px 0 0;font-size:12px;color:var(--muted);font-weight:700}
+.av-l{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.av-i{display:grid;gap:4px;padding:12px;border:1px solid var(--line);border-left:3px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.av-i.urgente{border-left-color:var(--cri)} .av-i.info{border-left-color:var(--pos)} .av-i.importante{border-left-color:var(--accent)}
+.av-i.nueva{box-shadow:0 0 0 1px var(--accent) inset}
+.av-i.dest{outline:2px solid var(--accent);outline-offset:2px}
+.av-i p{margin:0}
+.av-k{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;font-weight:600;color:var(--muted)}
+.av-k .pill{font-size:11px}
+.av-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-left:auto}
+.av-t{font-size:14.5px;font-weight:600;line-height:1.4}
+.av-t a{color:inherit}
+.av-m{font-size:12.5px;color:var(--muted)}
+.av-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
 @media (max-width:820px){ .helpbtn{margin-left:auto;padding:6px 9px} .helpbtn span{display:none} .help{width:100vw;border-left:0} }
 
 /* Portada de bienvenida · identidad ALTKimia (fondo #080B12, azul #2196F3, Inter, trama de puntos) */
@@ -2352,6 +2387,13 @@ const GUIA = [
   ["Informa a quien decide", "En Reportes hay un informe por lector: parte semanal del alcalde, mesa diaria de comunicaciones, informe de gestión mensual y episodio crítico."]
 ];
 const FAQ = [
+  ["Avisos", [
+    ["¿De qué me avisa PregonIA?", "De tres cosas: una noticia crítica nueva, una noticia crítica que escala de prensa comunal a regional o nacional, y un tema que crece rápido (tres medios en seis horas). Si eliges «Todo», también de las buenas noticias que llegan a prensa regional o nacional. Cada hecho se avisa una sola vez por nivel."],
+    ["¿Cómo elijo qué me llega?", "En la campana del encabezado, «Qué te avisamos»: solo lo urgente (pensado para el alcalde), lo crítico (para comunicaciones), todo o nada. El silencio de 23:00 a 7:00 deja pasar solo lo urgente."],
+    ["¿Me llegan con PregonIA cerrada?", "En el piloto, sí: una vez configuradas las llaves de avisos en el servidor, al activar los avisos en tu celular te llegan aunque la aplicación esté cerrada, porque los envía la lectura programada cada 30 minutos. Sin esa configuración, llegan mientras PregonIA esté abierta o instalada."],
+    ["¿Y en iPhone?", "En iPhone los avisos llegan solo con PregonIA instalada en la pantalla de inicio: en Safari toca Compartir, luego «Agregar a inicio», y activa los avisos desde ese ícono."],
+    ["¿Puedo recibirlos por correo?", "Sí, en el piloto, si el municipio configuró el envío de correos. Se manda un correo por lectura con todos los avisos nuevos que te corresponden, no uno por noticia."]
+  ]],
   ["Vocería y calendario", [
     ["¿Qué es el kit de vocería?", "Una hoja para una entrevista en minutos: lo que pasó, hasta dónde llegó, qué hacer, tres mensajes con su dato de respaldo, frases a evitar y cinco preguntas probables con respuesta. Ábrelo con «Me llaman de la radio» en Inicio o con «Vocería» en cada noticia. Usa solo los datos del municipio y de la noticia; lo que falte queda marcado [completar]."],
     ["¿De dónde salen los datos del kit?", "De «Datos del municipio», en Comunicados. Mientras más cifras oficiales cargues ahí, con su fecha, mejores mensajes prepara. Los datos de ejemplo aparecen marcados como ficticios."],
@@ -2405,6 +2447,7 @@ function renderHelp(){
   const [t, d] = ayudaVista();
   el.querySelector(".hp-body").innerHTML = `
     <section class="hp-here"><span class="kick">Estás en</span><h3>${esc(t)}</h3><p>${esc(d)}</p></section>
+    <section class="hp-apar"><h3 class="hp-h">Apariencia</h3><button class="btn sm" type="button" data-act="tema" id="temaAyuda">${temaActual() === "light" ? "Usar modo oscuro" : "Usar modo claro"}</button></section>
     <section><h3 class="hp-h">Cómo se usa, en cinco pasos</h3><ol class="hp-guia">${GUIA.map(([a, b]) => `<li><b>${a}</b><span>${b}</span></li>`).join("")}</ol></section>
     <section><h3 class="hp-h">Preguntas frecuentes</h3><input id="helpQ" class="hp-q" type="search" placeholder="Busca, por ejemplo: tono, WhatsApp, límite" aria-label="Buscar en las preguntas frecuentes" value="${esc(helpQ)}"><div id="faqOut">${faqHtml()}</div></section>
     <section class="hp-teclado"><h3 class="hp-h">Atajos de teclado</h3><dl class="hp-atajos"><dt><span class="kbd">1</span> a <span class="kbd">5</span></dt><dd>Ir a Inicio, Menciones, Reportes, Comunicados o Ajustes</dd><dt><span class="kbd">/</span></dt><dd>Buscar en las menciones</dd><dt><span class="kbd">?</span></dt><dd>Abrir o cerrar esta ayuda</dd><dt><span class="kbd">Esc</span></dt><dd>Cerrar ventanas y menús</dd></dl></section>
@@ -2471,7 +2514,7 @@ function pintarModo(){
   if (real) { el.className = "demo real"; el.innerHTML = `<span class="demo-txt"><b>Datos reales</b>${plural(i.notas.length, "nota", "notas")}<span class="demo-mas"> de ${esc(i.comuna)} en ${i.ventana_dias} días · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : i.ia_parcial ? " · tono clasificado en parte" : " · tono sin clasificar"}</span></span>${sw}`; return; }
   el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">Noticias y cifras ficticias · catálogo de 100 medios real</span><span class="solo-movil">Datos ficticios</span></span>${sw}`;
 }
-async function cargarReales(force){
+async function cargarReales(force, silencioso){
   if (PILOTO && PILOTO.activo) return;
   if (MODO.cargando || (MODO.tipo === "real" && MODO.info && MODO.info.comuna === S.org && !force)) return; MODO.cargando = true; pintarModo();
   const org = S.org;
@@ -2482,8 +2525,8 @@ async function cargarReales(force){
     refrescarNotas(nuevas); MODO = {...MODO, tipo: "real", info: {...j, notas: nuevas}, cargando: false};
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
     pintarModo(); render();
-    toast(nuevas.length ? `Listo: ${plural(nuevas.length, "nota real", "notas reales")} de ${org}. Ábrelas en Menciones.` : `Los medios leídos no publicaron sobre ${org} en los últimos ${j.ventana_dias} días.`);
-  } catch(e) { MODO.cargando = false; pintarModo(); toast("No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
+    if (!silencioso) toast(nuevas.length ? `Listo: ${plural(nuevas.length, "nota real", "notas reales")} de ${org}. Ábrelas en Menciones.` : `Los medios leídos no publicaron sobre ${org} en los últimos ${j.ventana_dias} días.`);
+  } catch(e) { MODO.cargando = false; pintarModo(); if (!silencioso) toast("No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
 }
 function usarDemo(){ if (MODO.tipo === "demo") return; refrescarNotas(NOTAS_DEMO); MODO = {...MODO, tipo: "demo", info: null}; try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
 document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; if (b.dataset.act === "modo-real") cargarReales(); if (b.dataset.act === "modo-demo") usarDemo(); });
@@ -2500,7 +2543,7 @@ $("#org").addEventListener("change", () => { if (MODO.tipo === "real") cargarRea
 /* Tema: la marca es oscura; el modo claro es una opción que se recuerda en este navegador. */
 const TEMA_KEY = "pregonia-tema", ICO_TEMA = {sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>', luna: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'};
 function temaActual(){ return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"; }
-function pintarTema(){ const claro = temaActual() === "light", b = $("#temaBtn"); if (!b) return; $("#temaIco").innerHTML = claro ? ICO_TEMA.luna : ICO_TEMA.sol; b.setAttribute("aria-label", claro ? "Cambiar a modo oscuro" : "Cambiar a modo claro"); b.title = claro ? "Modo oscuro" : "Modo claro"; }
+function pintarTema(){ const claro = temaActual() === "light", b = $("#temaBtn"), ba = $("#temaAyuda"); if (ba) ba.textContent = claro ? "Usar modo oscuro" : "Usar modo claro"; if (!b) return; $("#temaIco").innerHTML = claro ? ICO_TEMA.luna : ICO_TEMA.sol; b.setAttribute("aria-label", claro ? "Cambiar a modo oscuro" : "Cambiar a modo claro"); b.title = claro ? "Modo oscuro" : "Modo claro"; }
 try { const t = localStorage.getItem(TEMA_KEY); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch(e) {}
 pintarTema();
 new MutationObserver(pintarTema).observe(document.documentElement, {attributes: true, attributeFilter: ["data-theme"]});
@@ -2920,6 +2963,220 @@ async function recibirCompartido(){
 }
 recibirCompartido();
 
+/* Reglas de alerta de PregonIA. Las comparten la aplicación (avisos en el navegador) y la lectura programada del servidor
+   (notificaciones con la aplicación cerrada y correo): scripts/build.py copia este archivo a api/_reglas.js.
+   Un «hecho» es una noticia con todas sus notas: {g, tonos: [...], notas: [{ts, nivel (0 comunal, 1 regional, 2 nacional), medio, titulo, url}]}.
+   «visto» guarda lo ya avisado de ese hecho, para avisar una sola vez por nivel: {cri: nivel, pos: nivel, raf: true}. */
+const NIVEL_AVISO = {urgente: 3, importante: 2, info: 1};
+const PREF_MINIMO = {urgente: 3, importante: 2, todo: 1, nada: 99};
+const PRENSA_TXT = ["prensa comunal", "prensa regional", "prensa nacional"];
+const VENTANA_AVISO = 48 * 36e5;   // solo se avisa de hechos con notas de las últimas 48 horas
+const RAFAGA = {medios: 3, horas: 6}; // tema en alza: 3 medios distintos en 6 horas
+const tonoHecho = tonos => tonos.includes("cri") ? "cri" : tonos.includes("pos") ? "pos" : "neu";
+function rafagaDe(notas){
+  let mejor = 0;
+  notas.forEach((a, i) => { const k = new Set(notas.slice(i).filter(b => b.ts - a.ts <= RAFAGA.horas * 36e5).map(b => b.medio)).size; if (k > mejor) mejor = k; });
+  return mejor;
+}
+function alertasDeHecho(h, ahora, visto = {}){
+  const notas = h.notas.slice().sort((a, b) => a.ts - b.ts), nuevo = {...visto}, out = [];
+  if (!notas.length || ahora - notas[notas.length - 1].ts > VENTANA_AVISO) return {alertas: out, visto: nuevo};
+  const tono = tonoHecho(h.tonos || notas.map(n => n.tono)), max = Math.max(...notas.map(n => n.nivel || 0));
+  const principal = notas.filter(n => (n.nivel || 0) === max).pop(), medios = new Set(notas.map(n => n.medio)).size;
+  const base = {g: h.g, ts: notas[notas.length - 1].ts, titular: principal.titulo || "", medio: principal.medioNombre || "", url: principal.url || "", medios, nivelPrensa: max};
+  if (tono === "cri" && max > (visto.cri ?? -1)) {
+    const escala = visto.cri !== undefined;
+    out.push({...base, clave: h.g + ":cri:" + max, tipo: escala ? "escala" : "critica", nivel: max ? "urgente" : "importante",
+      titulo: escala ? `Escaló a ${PRENSA_TXT[max]}` : max ? `Noticia crítica en ${PRENSA_TXT[max]}` : "Nueva noticia crítica"});
+    nuevo.cri = max;
+  }
+  const raf = rafagaDe(notas);
+  if (tono !== "pos" && raf >= RAFAGA.medios && !visto.raf) {
+    nuevo.raf = true;
+    if (out.length) out[0].titulo += ` · ${raf} medios en ${RAFAGA.horas} horas`;
+    else out.push({...base, clave: h.g + ":raf", tipo: "rafaga", nivel: tono === "cri" ? "urgente" : "importante", titulo: `Tema en alza: ${raf} medios en ${RAFAGA.horas} horas`});
+  }
+  if (tono === "pos" && max >= 1 && max > (visto.pos ?? 0)) {
+    out.push({...base, clave: h.g + ":pos:" + max, tipo: "positiva", nivel: "info", titulo: `Buena noticia en ${PRENSA_TXT[max]}`});
+    nuevo.pos = max;
+  }
+  return {alertas: out, visto: nuevo};
+}
+/* Hora en Chile continental, para el silencio nocturno (23:00 a 7:00). */
+function horaChile(ahora){ return Number(new Intl.DateTimeFormat("es-CL", {timeZone: "America/Santiago", hour: "numeric", hourCycle: "h23"}).format(new Date(ahora))); }
+function pasaPreferencia(alerta, pref, ahora){
+  if (!pref || (NIVEL_AVISO[alerta.nivel] || 0) < (PREF_MINIMO[pref.nivel] ?? 2)) return false;
+  if (pref.silencio !== false && alerta.nivel !== "urgente") { const h = horaChile(ahora); if (h >= 23 || h < 7) return false; }
+  return true;
+}
+
+/* Avisos: cada vez que llegan noticias, el motor de reglas (reglas.js) revisa los hechos y avisa lo urgente.
+   - En la campana del encabezado queda la lista de avisos de cada municipio.
+   - En este dispositivo: notificación del navegador mientras PregonIA esté abierta o instalada.
+   - En el piloto, con la llave de notificaciones configurada: llegan aunque PregonIA esté cerrada (las envía la lectura programada),
+     y por correo si el municipio lo configuró. */
+S.avisos ||= {pref: null, porOrg: {}, push: null};
+const AV = {abierto: false, vuelta: null, cfg: null, destacar: null};
+const AV_ETQ = {urgente: "Urgente", importante: "Importante", info: "Buena noticia"};
+const AV_NIV = [["urgente", "Solo lo urgente", "Críticas que llegaron a prensa regional o nacional, o que crecen rápido. Pensado para el alcalde."],
+  ["importante", "Lo crítico", "Además, toda noticia crítica nueva, aunque sea comunal. Pensado para comunicaciones."],
+  ["todo", "Todo", "Además, las buenas noticias que llegan a prensa regional o nacional."],
+  ["nada", "Nada", "Sin avisos; la campana sigue guardando la lista."]];
+fetch("/api/config").then(r => r.ok ? r.json() : {}).then(j => { AV.cfg = j.avisos || null; if (AV.abierto) avPintar(); }).catch(() => {});
+const avRol = () => typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo && PILOTO.perfil ? PILOTO.perfil.rol : "";
+function avPref(){ return S.avisos.pref || {nivel: ["alcalde", "directivo"].includes(avRol()) ? "urgente" : "importante", silencio: true, correo: true}; }
+const avEstado = (org = S.org) => S.avisos.porOrg[org] ||= {vistos: {}, lista: [], init: false};
+const avSoporte = () => "Notification" in window && "serviceWorker" in navigator && !(window.claude && window.claude.use);
+const avPermiso = () => avSoporte() ? Notification.permission : "no";
+const avPushServidor = () => typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo && !!(AV.cfg && AV.cfg.push);
+function hechosApp(){
+  return menciones(cuenta(), 3).map(m => ({g: m.g, tonos: m.notas.map(n => n.tono),
+    notas: m.notas.map(n => ({ts: n.ts, nivel: nivIdx(MED[n.m].a), medio: n.m, medioNombre: MED[n.m].n, titulo: n.t, url: n.url || "", captura: !!n.captura}))}));
+}
+function revisarAlertas(){
+  if (!S || !cuenta()) return;
+  const st = avEstado(), ahora = Date.now(), nuevas = [];
+  for (const h of hechosApp()) {
+    const {alertas, visto} = alertasDeHecho(h, ahora, st.vistos[h.g]);
+    if (!alertas.length) continue;
+    st.vistos[h.g] = visto;
+    const propia = h.notas.every(n => n.captura); // lo que el equipo acaba de agregar no se le avisa a sí mismo
+    alertas.forEach(a => nuevas.push({...a, id: S.org + ":" + a.clave, creada: ahora, leida: !st.init ? a.nivel !== "urgente" : propia}));
+  }
+  const g = Object.keys(st.vistos); if (g.length > 800) g.slice(0, g.length - 800).forEach(k => delete st.vistos[k]);
+  if (!nuevas.length) { if (!st.init) { st.init = true; save(); } return; }
+  const primera = !st.init; st.init = true;
+  st.lista = nuevas.sort((a, b) => (AV_ORD(b) - AV_ORD(a)) || b.ts - a.ts).concat(st.lista).slice(0, 60);
+  save(); avBadge();
+  if (primera) return;  // la primera revisión de un municipio solo arma la lista; no notifica lo que ya estaba
+  const pref = avPref();
+  nuevas.filter(a => !a.leida && pasaPreferencia(a, pref, ahora)).slice(0, 3).forEach(a => {
+    if (!avPushServidor() || !S.avisos.push) notificar(a);
+    if (document.visibilityState === "visible" && a.nivel === "urgente") toast(`${AV_ETQ[a.nivel]}: ${a.titulo}. Ábrelo en la campana.`);
+  });
+}
+const AV_ORD = a => ({urgente: 3, importante: 2, info: 1})[a.nivel] || 0;
+async function notificar(a, prueba){
+  if (avPermiso() !== "granted") return false;
+  const titulo = `${AV_ETQ[a.nivel] || "Aviso"} · ${a.titulo}`, opts = {body: `${a.titular}${a.medio ? " — " + a.medio : ""}`, tag: a.clave || "prueba", icon: "/icono-192.png", badge: "/icono-192.png",
+    data: {url: prueba ? "/?sin-portada#inicio" : `/?sin-portada&alerta=${encodeURIComponent(a.g)}#inicio`}, requireInteraction: a.nivel === "urgente"};
+  try { const reg = await navigator.serviceWorker.getRegistration(); if (reg) { await reg.showNotification(titulo, opts); return true; } new Notification(titulo, opts); return true; } catch(e) { return false; }
+}
+const avNoLeidas = () => avEstado().lista.filter(a => !a.leida).length;
+function avBadge(){
+  const b = $("#avisosBtn"); if (!b) return; const n = avNoLeidas(), urg = avEstado().lista.some(a => !a.leida && a.nivel === "urgente");
+  b.querySelector(".av-n").textContent = n > 9 ? "9+" : n || ""; b.querySelector(".av-n").hidden = !n; b.classList.toggle("urg", urg);
+  b.setAttribute("aria-label", n ? `Avisos: ${plural(n, "sin leer", "sin leer")}` : "Avisos");
+}
+function avBoton(){
+  const tools = document.querySelector(".tools"); if (!tools || $("#avisosBtn")) return;
+  const b = document.createElement("button"); b.id = "avisosBtn"; b.type = "button"; b.className = "themebtn av-btn"; b.dataset.act = "avisos"; b.setAttribute("aria-haspopup", "dialog"); b.title = "Avisos";
+  b.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2H4.5z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg><span class="av-n" hidden></span>`;
+  tools.insertBefore(b, $("#temaBtn") || tools.firstChild);
+  const back = document.createElement("div"); back.className = "hp-back"; back.id = "avisosBack"; back.dataset.act = "avisos-cerrar"; back.hidden = true;
+  const panel = document.createElement("aside"); panel.className = "help av-panel"; panel.id = "avisosPanel"; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-modal", "true"); panel.setAttribute("aria-labelledby", "avT"); panel.hidden = true;
+  panel.innerHTML = `<header class="hp-top"><h2 id="avT">Avisos</h2><button class="hp-x" data-act="avisos-cerrar" aria-label="Cerrar avisos"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header><div class="hp-body" id="avBody"></div>`;
+  document.body.append(back, panel); avBadge();
+}
+function avDispositivo(){
+  const per = avPermiso(), push = avPushServidor(), ios = typeof esIOS !== "undefined" && esIOS, inst = typeof PWA !== "undefined" && PWA.instalada;
+  if (per === "no") return `<p class="muted">Esta vista no permite avisos del navegador. Ábrelo en pregonia.vercel.app${ios ? " e instálala en la pantalla de inicio" : ""}.</p>`;
+  if (ios && !inst) return `<p class="muted">En iPhone los avisos llegan solo con PregonIA instalada: toca Compartir en Safari, luego «Agregar a inicio», y abre PregonIA desde ese ícono.</p>`;
+  if (per === "denied") return `<p class="muted">Los avisos están bloqueados en este navegador. Actívalos desde el candado junto a la dirección (Configuración del sitio · Notificaciones).</p>`;
+  if (per !== "granted") return `<p>${push ? "Recibe aquí lo urgente aunque PregonIA esté cerrada." : "Recibe aquí lo urgente mientras PregonIA esté abierta o instalada."}</p><button class="btn alt sm" type="button" data-act="avisos-activar">Activar avisos en este dispositivo</button>`;
+  return `<p><span class="pill t-pos">Activos</span> ${push && S.avisos.push ? "Llegan aunque PregonIA esté cerrada." : push ? "Llegan con PregonIA abierta. <button class=\"btn ghost sm\" type=\"button\" data-act=\"avisos-activar\">Recibirlos también con la app cerrada</button>" : "Llegan mientras PregonIA esté abierta o instalada."}</p><button class="btn ghost sm" type="button" data-act="avisos-probar">Enviar un aviso de prueba</button>`;
+}
+function avPintar(){
+  const el = $("#avBody"); if (!el) return;
+  const pref = avPref(), st = avEstado(), piloto = typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo;
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const grupos = [["Hoy", st.lista.filter(a => a.creada >= hoy.getTime())], ["Antes", st.lista.filter(a => a.creada < hoy.getTime())]].filter(([, l]) => l.length);
+  const item = a => { const m = menciones(cuenta(), 30).find(x => x.g === a.g);
+    return `<li class="av-i ${a.nivel} ${a.leida ? "" : "nueva"} ${AV.destacar === a.g ? "dest" : ""}" id="av-${esc(a.g)}">
+      <p class="av-k"><span class="pill ${a.nivel === "urgente" ? "t-cri" : a.nivel === "info" ? "t-pos" : "t-neu"}">${AV_ETQ[a.nivel]}</span><span>${esc(a.titulo)}</span>${a.leida ? "" : '<i class="av-dot" aria-label="Sin leer"></i>'}</p>
+      <p class="av-t">${a.url ? `<a class="ext" href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.titular)}</a>` : esc(a.titular)}</p>
+      <p class="av-m">${esc(a.medio)}${a.medios > 1 ? ` y ${a.medios - 1} más` : ""} · ${ago(a.ts)}</p>
+      ${m ? `<div class="av-acts"><button class="btn sm" data-act="vocero" data-g="${esc(a.g)}">${ri("mic")} Vocería</button><button class="btn ghost sm" data-act="responder" data-g="${esc(a.g)}" data-from="inicio">${respondida(a.g) ? "Ver respuesta" : "Preparar respuesta"}</button></div>` : ""}</li>`; };
+  el.innerHTML = `
+    <section class="av-sec"><h3 class="hp-h">En este dispositivo</h3>${avDispositivo()}</section>
+    <section class="av-sec"><h3 class="hp-h">Qué te avisamos</h3>
+      <div class="av-opts" role="radiogroup" aria-label="Qué te avisamos">${AV_NIV.map(([k, n, d]) => `<label class="av-opt"><input type="radio" name="avNivel" value="${k}" ${pref.nivel === k ? "checked" : ""}><span><b>${n}</b><small>${d}</small></span></label>`).join("")}</div>
+      <label class="av-chk"><input type="checkbox" id="avSilencio" ${pref.silencio !== false ? "checked" : ""}> Silencio de 23:00 a 7:00, salvo lo urgente</label>
+      ${piloto ? `<label class="av-chk"><input type="checkbox" id="avCorreo" ${pref.correo !== false ? "checked" : ""} ${AV.cfg && AV.cfg.correo ? "" : "disabled"}> También por correo${AV.cfg && AV.cfg.correo ? "" : ' <span class="muted">(el correo aún no está configurado en el servidor)</span>'}</label>` : ""}
+    </section>
+    <section class="av-sec"><div class="av-h"><h3 class="hp-h" style="margin:0">Avisos de ${esc(S.org)}</h3>${avNoLeidas() ? `<button class="btn ghost sm" type="button" data-act="avisos-leidos">Marcar todo como leído</button>` : ""}</div>
+      ${grupos.length ? grupos.map(([t, l]) => `<h4 class="av-g">${t}</h4><ul class="av-l">${l.map(item).join("")}</ul>`).join("") : `<p class="muted">Sin avisos todavía. Aquí aparecerán las noticias críticas, las que escalan a prensa regional o nacional y los temas que crecen rápido.</p>`}
+    </section>`;
+  if (AV.destacar) setTimeout(() => document.getElementById("av-" + AV.destacar)?.scrollIntoView({block: "center"}), 30);
+}
+function avAbrir(destacar){
+  avBoton(); AV.vuelta = document.activeElement; AV.abierto = true; AV.destacar = destacar || null; avPintar();
+  $("#avisosPanel").hidden = false; $("#avisosBack").hidden = false; document.body.classList.add("hp-on"); $("#avisosPanel .hp-x").focus();
+}
+function avCerrar(){
+  if (!AV.abierto) return; AV.abierto = false;
+  const st = avEstado(); if (st.lista.some(a => !a.leida)) { st.lista.forEach(a => a.leida = true); save(); }
+  avBadge(); $("#avisosPanel").hidden = true; $("#avisosBack").hidden = true; document.body.classList.remove("hp-on");
+  if (AV.vuelta && AV.vuelta.isConnected) AV.vuelta.focus();
+}
+function avGuardarPref(p){
+  S.avisos.pref = {...avPref(), ...p}; save();
+  if (typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo && PILOTO.sb) PILOTO.sb.from("avisos").upsert({usuario: PILOTO.user.id, municipio_id: PILOTO.muni.id, nivel: S.avisos.pref.nivel, silencio: S.avisos.pref.silencio !== false, correo: S.avisos.pref.correo !== false, actualizado: new Date().toISOString()}).then(r => { if (r.error) toast("No se pudo guardar la preferencia en el piloto."); });
+}
+const b64u = s => { const p = (s + "===".slice((s.length + 3) % 4)).replace(/-/g, "+").replace(/_/g, "/"), b = atob(p); return Uint8Array.from(b, c => c.charCodeAt(0)); };
+async function avActivar(){
+  if (!avSoporte()) return;
+  const per = Notification.permission === "granted" ? "granted" : await Notification.requestPermission().catch(() => "default");
+  if (per !== "granted") { avPintar(); return toast(per === "denied" ? "Bloqueaste los avisos: puedes activarlos desde el candado junto a la dirección." : "No se activaron los avisos."); }
+  if (avPushServidor()) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: b64u(AV.cfg.push)});
+      const j = sub.toJSON();
+      const r = await PILOTO.sb.from("suscripciones").upsert({endpoint: j.endpoint, usuario: PILOTO.user.id, municipio_id: PILOTO.muni.id, p256dh: j.keys.p256dh, auth: j.keys.auth, dispositivo: navigator.userAgent.slice(0, 160)}, {onConflict: "endpoint"});
+      if (r.error) throw r.error;
+      S.avisos.push = j.endpoint; save();
+    } catch(e) { toast("Los avisos quedan activos con PregonIA abierta; no se pudo suscribir este dispositivo para recibirlos cerrada."); }
+  }
+  avPintar(); notificar({nivel: "info", titulo: "Avisos activados", titular: S.avisos.push ? "Te llegarán aunque PregonIA esté cerrada." : "Te llegarán mientras PregonIA esté abierta o instalada.", medio: "PregonIA"}, true);
+}
+/* Al salir del piloto, este dispositivo deja de recibir avisos de esa cuenta. */
+async function avisosAlSalir(){
+  try { if (S.avisos.push && PILOTO.sb) { await PILOTO.sb.from("suscripciones").delete().eq("endpoint", S.avisos.push); const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } } catch(e) {}
+}
+/* Al entrar al piloto: preferencias guardadas de la persona. */
+async function avisosAlEntrar(){
+  try { const r = await PILOTO.sb.from("avisos").select("nivel, silencio, correo").eq("usuario", PILOTO.user.id).maybeSingle(); if (r.data) { S.avisos.pref = r.data; save(); } } catch(e) {}
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return; const a = b.dataset.act;
+  if (a === "avisos") avAbrir();
+  if (a === "avisos-cerrar") avCerrar();
+  if (a === "avisos-activar") avActivar();
+  if (a === "avisos-probar") { const x = avEstado().lista[0]; notificar(x ? {...x, titulo: "Prueba · " + x.titulo} : {nivel: "info", titulo: "Aviso de prueba", titular: "Así se verán los avisos de PregonIA.", medio: "PregonIA"}, true).then(ok => toast(ok ? "Aviso de prueba enviado." : "No se pudo mostrar el aviso.")); }
+  if (a === "avisos-leidos") { avEstado().lista.forEach(x => x.leida = true); save(); avBadge(); avPintar(); }
+  if (AV.abierto && (a === "vocero" || a === "responder") && b.closest("#avisosPanel")) avCerrar();
+});
+document.addEventListener("change", e => {
+  if (e.target.name === "avNivel") avGuardarPref({nivel: e.target.value});
+  if (e.target.id === "avSilencio") avGuardarPref({silencio: e.target.checked});
+  if (e.target.id === "avCorreo") avGuardarPref({correo: e.target.checked});
+});
+document.addEventListener("keydown", e => {
+  if (!AV.abierto) return;
+  if (e.key === "Escape") { e.preventDefault(); avCerrar(); return; }
+  if (e.key === "Tab") { const f = [...document.querySelectorAll("#avisosPanel button, #avisosPanel input, #avisosPanel a[href]")].filter(x => x.offsetParent && !x.disabled); if (!f.length) return; const i = f.indexOf(document.activeElement); if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); } }
+});
+/* Cada vez que cambian las noticias (demo, noticias reales, piloto o captura), se revisan las reglas. */
+const refrescarSinAvisos = refrescarNotas;
+refrescarNotas = function(base){ refrescarSinAvisos(base); try { revisarAlertas(); } catch(e) {} };
+/* Con noticias reales y avisos activos, la lectura se repite cada 10 minutos aunque la pestaña esté en segundo plano. */
+setInterval(() => { if (typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo) return; if (MODO.tipo === "real" && !MODO.cargando && (document.visibilityState === "visible" || avPermiso() === "granted")) cargarReales(true, true); }, 10 * 60000);
+avBoton(); revisarAlertas();
+/* Llegada desde una notificación: abre la campana en ese aviso. */
+(() => { const g = new URLSearchParams(location.search).get("alerta"); if (!g) return; const resto = location.search.slice(1).split("&").filter(x => x && !x.startsWith("alerta=")).join("&"); history.replaceState(null, "", location.pathname + (resto ? "?" + resto : "") + location.hash); setTimeout(() => avAbrir(g), 300); })();
+navigator.serviceWorker?.addEventListener?.("message", e => { if (e.data && e.data.tipo === "abrir-aviso") avAbrir(e.data.g); });
+
 
 /* Modo piloto (etapa 2): inicio de sesión con Supabase y datos compartidos por municipio.
    Las noticias vienen de la base (lectura programada cada 30 minutos); temas, marcas, respuestas aprobadas y publicaciones
@@ -3017,6 +3274,7 @@ async function entrarPiloto(user){
   if (COMUNAS.includes(PILOTO.muni.comuna)) S.org = PILOTO.muni.comuna;
   $("#org").disabled = true; $("#org").title = "En el piloto ves solo tu municipio";
   pintarAcceso();
+  if (typeof avisosAlEntrar === "function") await avisosAlEntrar();
   try { await cargarDatosPiloto(); toast(`Hola, ${(perfil.nombre || "").split(" ")[0] || "bienvenido"}. Estás en el piloto de ${PILOTO.muni.nombre}.`); }
   catch(e) { toast("No se pudieron cargar los datos del piloto: " + (e.message || e)); }
 }
@@ -3094,6 +3352,7 @@ async function sincronizar(){
   }
 }
 async function salir(){
+  if (typeof avisosAlSalir === "function") await avisosAlSalir();
   try { await PILOTO.sb.auth.signOut(); } catch(e) {}
   try { localStorage.removeItem(KEY); localStorage.setItem(MODO_KEY, "demo"); } catch(e) {}  // en equipos compartidos no queda copia de los datos del municipio
   location.hash = "inicio"; location.reload();
@@ -3113,7 +3372,7 @@ document.addEventListener("click", e => { if (e.target.id === "dlgBack") cerrarD
 document.addEventListener("submit", e => { if (e.target.id === "loginForm") ingresar(e); if (e.target.id === "claveForm") guardarClave(e); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#dlgBack")) { e.preventDefault(); cerrarDialogo(); } });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && PILOTO.activo && !PILOTO.sinc && !PILOTO.timer) cargarDatosPiloto().catch(() => {}); });
-setInterval(() => { if (PILOTO.activo && document.visibilityState === "visible" && !PILOTO.sinc) cargarDatosPiloto().catch(() => {}); }, 5 * 60000);
+setInterval(() => { if (PILOTO.activo && (document.visibilityState === "visible" || ("Notification" in window && Notification.permission === "granted")) && !PILOTO.sinc) cargarDatosPiloto().catch(() => {}); }, 5 * 60000);
 
 (async function iniciarPiloto(){
   if (!/^https?:$/.test(location.protocol)) return;

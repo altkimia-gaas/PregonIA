@@ -2,7 +2,7 @@
 """Arma index.html autónomo desde src/ y data/catalogo_medios.csv.
 
 Uso: python3 scripts/build.py
-Orden del script embebido: base.js (constantes y catálogo) → corpus.js (noticias ficticias) → calendario.js (fechas de riesgo; antes de app.js porque la portada lo usa al primer dibujo) → app.js (aplicación) → captura.js → vocero.js (kit de vocería) → compartir.js (app instalable y Compartir) → piloto.js → video.js.
+Orden del script embebido: base.js (constantes y catálogo) → corpus.js (noticias ficticias) → calendario.js (fechas de riesgo; antes de app.js porque la portada lo usa al primer dibujo) → app.js (aplicación) → captura.js → vocero.js (kit de vocería) → compartir.js (app instalable y Compartir) → reglas.js + alertas.js (avisos) → piloto.js → video.js.
 """
 import base64, csv, json, pathlib
 
@@ -16,7 +16,10 @@ def catalogo():
 
 def main():
     leer = lambda n: (SRC / n).read_text(encoding="utf-8")
-    js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("calendario.js") + "\n" + leer("app.js") + "\n" + leer("captura.js") + "\n" + leer("vocero.js") + "\n" + leer("compartir.js") + "\n" + leer("piloto.js") + "\n" + leer("video.js")
+    # Reglas de alerta: el mismo archivo va en la aplicación y en el servidor (api/_reglas.js), para que avisen lo mismo.
+    (RAIZ / "api" / "_reglas.js").write_text("// Generado por scripts/build.py desde src/reglas.js. No editar a mano.\n" + leer("reglas.js") +
+        "export { NIVEL_AVISO, PREF_MINIMO, tonoHecho, rafagaDe, alertasDeHecho, horaChile, pasaPreferencia };\n", encoding="utf-8")
+    js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("calendario.js") + "\n" + leer("app.js") + "\n" + leer("captura.js") + "\n" + leer("vocero.js") + "\n" + leer("compartir.js") + "\n" + leer("reglas.js") + "\n" + leer("alertas.js") + "\n" + leer("piloto.js") + "\n" + leer("video.js")
     js = js.replace("/*CATALOG*/", json.dumps(catalogo(), ensure_ascii=False, separators=(",", ":")), 1)
     foto = "data:image/jpeg;base64," + base64.b64encode((RAIZ / "assets" / "portada.jpg").read_bytes()).decode()
     cuerpo = leer("shell.html").replace("assets/portada.jpg", foto) + "<script>\n" + js + "\n</script>\n"

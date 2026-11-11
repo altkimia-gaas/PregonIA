@@ -1166,6 +1166,13 @@ const GUIA = [
   ["Informa a quien decide", "En Reportes hay un informe por lector: parte semanal del alcalde, mesa diaria de comunicaciones, informe de gestión mensual y episodio crítico."]
 ];
 const FAQ = [
+  ["Avisos", [
+    ["¿De qué me avisa PregonIA?", "De tres cosas: una noticia crítica nueva, una noticia crítica que escala de prensa comunal a regional o nacional, y un tema que crece rápido (tres medios en seis horas). Si eliges «Todo», también de las buenas noticias que llegan a prensa regional o nacional. Cada hecho se avisa una sola vez por nivel."],
+    ["¿Cómo elijo qué me llega?", "En la campana del encabezado, «Qué te avisamos»: solo lo urgente (pensado para el alcalde), lo crítico (para comunicaciones), todo o nada. El silencio de 23:00 a 7:00 deja pasar solo lo urgente."],
+    ["¿Me llegan con PregonIA cerrada?", "En el piloto, sí: una vez configuradas las llaves de avisos en el servidor, al activar los avisos en tu celular te llegan aunque la aplicación esté cerrada, porque los envía la lectura programada cada 30 minutos. Sin esa configuración, llegan mientras PregonIA esté abierta o instalada."],
+    ["¿Y en iPhone?", "En iPhone los avisos llegan solo con PregonIA instalada en la pantalla de inicio: en Safari toca Compartir, luego «Agregar a inicio», y activa los avisos desde ese ícono."],
+    ["¿Puedo recibirlos por correo?", "Sí, en el piloto, si el municipio configuró el envío de correos. Se manda un correo por lectura con todos los avisos nuevos que te corresponden, no uno por noticia."]
+  ]],
   ["Vocería y calendario", [
     ["¿Qué es el kit de vocería?", "Una hoja para una entrevista en minutos: lo que pasó, hasta dónde llegó, qué hacer, tres mensajes con su dato de respaldo, frases a evitar y cinco preguntas probables con respuesta. Ábrelo con «Me llaman de la radio» en Inicio o con «Vocería» en cada noticia. Usa solo los datos del municipio y de la noticia; lo que falte queda marcado [completar]."],
     ["¿De dónde salen los datos del kit?", "De «Datos del municipio», en Comunicados. Mientras más cifras oficiales cargues ahí, con su fecha, mejores mensajes prepara. Los datos de ejemplo aparecen marcados como ficticios."],
@@ -1219,6 +1226,7 @@ function renderHelp(){
   const [t, d] = ayudaVista();
   el.querySelector(".hp-body").innerHTML = `
     <section class="hp-here"><span class="kick">Estás en</span><h3>${esc(t)}</h3><p>${esc(d)}</p></section>
+    <section class="hp-apar"><h3 class="hp-h">Apariencia</h3><button class="btn sm" type="button" data-act="tema" id="temaAyuda">${temaActual() === "light" ? "Usar modo oscuro" : "Usar modo claro"}</button></section>
     <section><h3 class="hp-h">Cómo se usa, en cinco pasos</h3><ol class="hp-guia">${GUIA.map(([a, b]) => `<li><b>${a}</b><span>${b}</span></li>`).join("")}</ol></section>
     <section><h3 class="hp-h">Preguntas frecuentes</h3><input id="helpQ" class="hp-q" type="search" placeholder="Busca, por ejemplo: tono, WhatsApp, límite" aria-label="Buscar en las preguntas frecuentes" value="${esc(helpQ)}"><div id="faqOut">${faqHtml()}</div></section>
     <section class="hp-teclado"><h3 class="hp-h">Atajos de teclado</h3><dl class="hp-atajos"><dt><span class="kbd">1</span> a <span class="kbd">5</span></dt><dd>Ir a Inicio, Menciones, Reportes, Comunicados o Ajustes</dd><dt><span class="kbd">/</span></dt><dd>Buscar en las menciones</dd><dt><span class="kbd">?</span></dt><dd>Abrir o cerrar esta ayuda</dd><dt><span class="kbd">Esc</span></dt><dd>Cerrar ventanas y menús</dd></dl></section>
@@ -1285,7 +1293,7 @@ function pintarModo(){
   if (real) { el.className = "demo real"; el.innerHTML = `<span class="demo-txt"><b>Datos reales</b>${plural(i.notas.length, "nota", "notas")}<span class="demo-mas"> de ${esc(i.comuna)} en ${i.ventana_dias} días · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : i.ia_parcial ? " · tono clasificado en parte" : " · tono sin clasificar"}</span></span>${sw}`; return; }
   el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">Noticias y cifras ficticias · catálogo de 100 medios real</span><span class="solo-movil">Datos ficticios</span></span>${sw}`;
 }
-async function cargarReales(force){
+async function cargarReales(force, silencioso){
   if (PILOTO && PILOTO.activo) return;
   if (MODO.cargando || (MODO.tipo === "real" && MODO.info && MODO.info.comuna === S.org && !force)) return; MODO.cargando = true; pintarModo();
   const org = S.org;
@@ -1296,8 +1304,8 @@ async function cargarReales(force){
     refrescarNotas(nuevas); MODO = {...MODO, tipo: "real", info: {...j, notas: nuevas}, cargando: false};
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
     pintarModo(); render();
-    toast(nuevas.length ? `Listo: ${plural(nuevas.length, "nota real", "notas reales")} de ${org}. Ábrelas en Menciones.` : `Los medios leídos no publicaron sobre ${org} en los últimos ${j.ventana_dias} días.`);
-  } catch(e) { MODO.cargando = false; pintarModo(); toast("No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
+    if (!silencioso) toast(nuevas.length ? `Listo: ${plural(nuevas.length, "nota real", "notas reales")} de ${org}. Ábrelas en Menciones.` : `Los medios leídos no publicaron sobre ${org} en los últimos ${j.ventana_dias} días.`);
+  } catch(e) { MODO.cargando = false; pintarModo(); if (!silencioso) toast("No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
 }
 function usarDemo(){ if (MODO.tipo === "demo") return; refrescarNotas(NOTAS_DEMO); MODO = {...MODO, tipo: "demo", info: null}; try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
 document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; if (b.dataset.act === "modo-real") cargarReales(); if (b.dataset.act === "modo-demo") usarDemo(); });
@@ -1314,7 +1322,7 @@ $("#org").addEventListener("change", () => { if (MODO.tipo === "real") cargarRea
 /* Tema: la marca es oscura; el modo claro es una opción que se recuerda en este navegador. */
 const TEMA_KEY = "pregonia-tema", ICO_TEMA = {sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>', luna: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'};
 function temaActual(){ return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"; }
-function pintarTema(){ const claro = temaActual() === "light", b = $("#temaBtn"); if (!b) return; $("#temaIco").innerHTML = claro ? ICO_TEMA.luna : ICO_TEMA.sol; b.setAttribute("aria-label", claro ? "Cambiar a modo oscuro" : "Cambiar a modo claro"); b.title = claro ? "Modo oscuro" : "Modo claro"; }
+function pintarTema(){ const claro = temaActual() === "light", b = $("#temaBtn"), ba = $("#temaAyuda"); if (ba) ba.textContent = claro ? "Usar modo oscuro" : "Usar modo claro"; if (!b) return; $("#temaIco").innerHTML = claro ? ICO_TEMA.luna : ICO_TEMA.sol; b.setAttribute("aria-label", claro ? "Cambiar a modo oscuro" : "Cambiar a modo claro"); b.title = claro ? "Modo oscuro" : "Modo claro"; }
 try { const t = localStorage.getItem(TEMA_KEY); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch(e) {}
 pintarTema();
 new MutationObserver(pintarTema).observe(document.documentElement, {attributes: true, attributeFilter: ["data-theme"]});

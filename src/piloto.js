@@ -95,6 +95,7 @@ async function entrarPiloto(user){
   if (COMUNAS.includes(PILOTO.muni.comuna)) S.org = PILOTO.muni.comuna;
   $("#org").disabled = true; $("#org").title = "En el piloto ves solo tu municipio";
   pintarAcceso();
+  if (typeof avisosAlEntrar === "function") await avisosAlEntrar();
   try { await cargarDatosPiloto(); toast(`Hola, ${(perfil.nombre || "").split(" ")[0] || "bienvenido"}. Estás en el piloto de ${PILOTO.muni.nombre}.`); }
   catch(e) { toast("No se pudieron cargar los datos del piloto: " + (e.message || e)); }
 }
@@ -172,6 +173,7 @@ async function sincronizar(){
   }
 }
 async function salir(){
+  if (typeof avisosAlSalir === "function") await avisosAlSalir();
   try { await PILOTO.sb.auth.signOut(); } catch(e) {}
   try { localStorage.removeItem(KEY); localStorage.setItem(MODO_KEY, "demo"); } catch(e) {}  // en equipos compartidos no queda copia de los datos del municipio
   location.hash = "inicio"; location.reload();
@@ -191,7 +193,7 @@ document.addEventListener("click", e => { if (e.target.id === "dlgBack") cerrarD
 document.addEventListener("submit", e => { if (e.target.id === "loginForm") ingresar(e); if (e.target.id === "claveForm") guardarClave(e); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#dlgBack")) { e.preventDefault(); cerrarDialogo(); } });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && PILOTO.activo && !PILOTO.sinc && !PILOTO.timer) cargarDatosPiloto().catch(() => {}); });
-setInterval(() => { if (PILOTO.activo && document.visibilityState === "visible" && !PILOTO.sinc) cargarDatosPiloto().catch(() => {}); }, 5 * 60000);
+setInterval(() => { if (PILOTO.activo && (document.visibilityState === "visible" || ("Notification" in window && Notification.permission === "granted")) && !PILOTO.sinc) cargarDatosPiloto().catch(() => {}); }, 5 * 60000);
 
 (async function iniciarPiloto(){
   if (!/^https?:$/.test(location.protocol)) return;

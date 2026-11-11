@@ -236,3 +236,68 @@ drop trigger if exists act_capturas on capturas;
 create trigger act_capturas after insert or delete on capturas for each row execute function registrar_actividad();
 drop trigger if exists act_config on municipios;
 create trigger act_config after update of config on municipios for each row when (old.config is distinct from new.config) execute function registrar_actividad();
+
+-- Avisos (alertas): lo que la lectura programada detectó, las preferencias de cada persona y sus celulares suscritos.
+-- Una fila por aviso emitido; la clave (hecho + regla + nivel) evita avisar dos veces lo mismo.
+create table if not exists alertas (
+  id           bigserial primary key,
+  municipio_id uuid not null references municipios (id) on delete cascade,
+  clave        text not null,
+  grupo        text not null,
+  tipo         text not null check (tipo in ('critica', 'escala', 'rafaga', 'positiva')),
+  nivel        text not null check (nivel in ('urgente', 'importante', 'info')),
+  titulo       text not null,
+  titular      text,
+  medio        text,
+  url          text,
+  creada       timestamptz not null default now(),
+  unique (municipio_id, clave)
+);
+create index if not exists alertas_muni_creada on alertas (municipio_id, creada desc);
+-- Qué quiere recibir cada persona: nivel mínimo, silencio nocturno (23:00 a 7:00, salvo lo urgente) y si también por correo.
+create table if not exists avisos (
+  usuario      uuid primary key default auth.uid() references auth.users (id) on delete cascade,
+  municipio_id uuid not null references municipios (id) on delete cascade,
+  nivel        text not null default 'importante' check (nivel in ('urgente', 'importante', 'todo', 'nada')),
+  silencio     boolean not null default true,
+  correo       boolean not null default true,
+  actualizado  timestamptz not null default now()
+);
+-- Celulares y computadores suscritos a notificaciones (Web Push). Las llaves son del navegador, no secretos del municipio.
+create table if not exists suscripciones (
+  endpoint     text primary key,
+  usuario      uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  municipio_id uuid not null references municipios (id) on delete cascade,
+  p256dh       text not null,
+  auth         text not null,
+  dispositivo  text,
+  creada       timestamptz not null default now()
+);
+alter table alertas       enable row level security;
+alter table avisos        enable row level security;
+alter table suscripciones enable row level security;
+drop policy if exists alertas_leer on alertas;
+create policy alertas_leer on alertas for select to authenticated using (municipio_id = mi_municipio());
+drop policy if exists avisos_propios on avisos;
+create policy avisos_propios on avisos for all to authenticated using (usuario = auth.uid()) with check (usuario = auth.uid() and municipio_id = mi_municipio());
+drop policy if exists suscripciones_propias on suscripciones;
+create policy suscripciones_propias on suscripciones for all to authenticated using (usuario = auth.uid()) with check (usuario = auth.uid() and municipio_id = mi_municipio());
+-- Destinatarios de un municipio con su correo y preferencias. Solo la usa el servidor (lectura programada).
+-- Sin preferencia guardada: el alcalde y los directivos reciben solo lo urgente; el resto, lo crítico.
+create or replace function destinatarios_avisos(muni uuid)
+returns table (usuario uuid, correo text, nivel text, silencio boolean, por_correo boolean)
+language sql stable security definer set search_path = public, auth as $$
+  select p.id, u.email::text,
+         coalesce(a.nivel, case when p.rol in ('alcalde', 'directivo') then 'urgente' else 'importante' end),
+         coalesce(a.silencio, true), coalesce(a.correo, true)
+  from perfiles p join auth.users u on u.id = p.id left join avisos a on a.usuario = p.id
+  where p.municipio_id = muni
+    -- Segundo resguardo, además de los permisos: nunca responde a una sesión de usuario ni a una visita anónima.
+    and auth.uid() is null
+    and coalesce(nullif(current_setting('request.jwt.claim.role', true), ''), nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role', '') <> 'anon' $$;
+revoke execute on function destinatarios_avisos(uuid) from public;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then execute 'revoke execute on function destinatarios_avisos(uuid) from anon'; end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then execute 'revoke execute on function destinatarios_avisos(uuid) from authenticated'; end if;
+  if exists (select 1 from pg_roles where rolname = 'service_role') then execute 'grant execute on function destinatarios_avisos(uuid) to service_role'; end if;
+end $$;

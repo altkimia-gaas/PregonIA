@@ -93,3 +93,16 @@ Puesta en marcha:
 5. Invitar a cada persona en Supabase › Authentication › Users y asignarle municipio y rol con `supabase/alta_usuario.sql`.
 
 Roles: `admin` y `comunicaciones` editan; `alcalde`, `directivo` y `lector` solo leen. Cada persona ve solo su municipio.
+
+## Avisos (alertas)
+
+PregonIA avisa de noticias críticas nuevas, de las que escalan a prensa regional o nacional y de los temas que crecen rápido (3 medios en 6 horas). Las reglas están en `src/reglas.js`; `scripts/build.py` las copia a `api/_reglas.js` para que la aplicación y el servidor avisen exactamente lo mismo.
+
+- **En la aplicación:** campana en el encabezado, con la lista por municipio y las preferencias de cada persona (solo lo urgente, lo crítico, todo o nada; silencio nocturno).
+- **En el navegador:** notificación mientras PregonIA esté abierta o instalada. No requiere configuración.
+- **Con la aplicación cerrada (piloto):** la lectura programada evalúa las reglas y envía notificaciones (Web Push) y correos. Para activarlo:
+  1. Correr de nuevo `supabase/esquema.sql` (agrega las tablas `alertas`, `avisos` y `suscripciones` y la función `destinatarios_avisos`, que solo puede usar el servidor).
+  2. Abrir `https://pregonia.vercel.app/llaves-avisos.html`, generar las llaves y crear en Vercel `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`. Las llaves se generan en el navegador; la privada va solo en Vercel.
+  3. Correo (opcional): cuenta en Resend con el dominio verificado, y en Vercel `RESEND_API_KEY` y `AVISOS_REMITENTE` (por ejemplo `PregonIA <avisos@altkimia.com>`).
+  4. Volver a desplegar. Cada persona activa los avisos en la campana de su celular.
+

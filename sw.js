@@ -19,3 +19,21 @@ async function recibir(req){
     return Response.redirect("/?compartir=reintentar#menciones", 303);
   }
 }
+
+/* Avisos con la aplicación cerrada (Web Push): los envía la lectura programada del servidor. */
+self.addEventListener("push", e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch (er) { d = {cuerpo: e.data ? e.data.text() : ""}; }
+  e.waitUntil(self.registration.showNotification(d.titulo || "PregonIA", {body: d.cuerpo || "", tag: d.tag || undefined, icon: "/icono-192.png", badge: "/icono-192.png",
+    data: {url: d.url || "/?sin-portada#inicio"}, requireInteraction: !!d.urgente}));
+});
+/* Al tocar un aviso: si PregonIA ya está abierta, se enfoca y abre ese aviso; si no, se abre. */
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || "/?sin-portada#inicio", self.location.origin);
+  e.waitUntil((async () => {
+    const ventanas = await self.clients.matchAll({type: "window", includeUncontrolled: true});
+    const abierta = ventanas.find(c => new URL(c.url).origin === self.location.origin);
+    if (abierta) { await abierta.focus(); const g = url.searchParams.get("alerta"); if (g) abierta.postMessage({tipo: "abrir-aviso", g}); return; }
+    await self.clients.openWindow(url.href);
+  })());
+});
