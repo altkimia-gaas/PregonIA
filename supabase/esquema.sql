@@ -8,7 +8,7 @@
 create table if not exists medios (
   id          int primary key,
   nombre      text not null,
-  ambito      text not null check (ambito in ('nacional', 'regional', 'local')),
+  ambito      text not null check (ambito in ('nacional', 'regional', 'local', 'institucional')),
   provincia   text,
   comunas     text,
   tipo        text,
@@ -18,6 +18,9 @@ create table if not exists medios (
   estado      text,
   observacion text
 );
+-- Fuentes institucionales (nov 2026): en bases creadas antes, ampliar el ámbito permitido.
+alter table medios drop constraint if exists medios_ambito_check;
+alter table medios add constraint medios_ambito_check check (ambito in ('nacional', 'regional', 'local', 'institucional'));
 
 -- Municipios clientes. config guarda la caracterización y los temas tal como los usa la aplicación.
 create table if not exists municipios (

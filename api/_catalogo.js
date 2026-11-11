@@ -962,5 +962,122 @@ export const CATALOGO = [
 "metodo": "rss",
 "url": "https://portalportuario.cl/feed/",
 "estado": "listo"
+},
+{
+"id": 108,
+"nombre": "Radio Universidad de Valparaíso (RVL)",
+"ambito": "regional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://rvl.uv.cl/",
+"estado": "listo"
+},
+{
+"id": 109,
+"nombre": "El Informador",
+"ambito": "local",
+"comuna": "Los Andes;Calle Larga;Rinconada;San Esteban",
+"metodo": "rss",
+"url": "https://www.elinformador.cl/feed/",
+"estado": "listo"
+},
+{
+"id": 200,
+"nombre": "Gobierno Regional de Valparaíso",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.gorevalparaiso.cl/",
+"estado": "listo"
+},
+{
+"id": 201,
+"nombre": "Universidad de Valparaíso",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.uv.cl/",
+"estado": "listo"
+},
+{
+"id": 202,
+"nombre": "Pontificia Universidad Católica de Valparaíso",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.pucv.cl/",
+"estado": "listo"
+},
+{
+"id": 203,
+"nombre": "Universidad Técnica Federico Santa María",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://usm.cl/",
+"estado": "listo"
+},
+{
+"id": 204,
+"nombre": "Universidad de Playa Ancha",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.upla.cl/",
+"estado": "listo"
+},
+{
+"id": 205,
+"nombre": "Municipalidad de Valparaíso",
+"ambito": "institucional",
+"comuna": "Valparaíso",
+"metodo": "google_news",
+"url": "https://municipalidaddevalparaiso.cl/",
+"estado": "listo"
+},
+{
+"id": 206,
+"nombre": "Municipalidad de Viña del Mar",
+"ambito": "institucional",
+"comuna": "Viña del Mar",
+"metodo": "google_news",
+"url": "https://www.munivina.cl/",
+"estado": "listo"
+},
+{
+"id": 207,
+"nombre": "Municipalidad de San Antonio",
+"ambito": "institucional",
+"comuna": "San Antonio",
+"metodo": "google_news",
+"url": "https://www.sanantonio.cl/",
+"estado": "listo"
+},
+{
+"id": 208,
+"nombre": "Municipalidad de Quillota",
+"ambito": "institucional",
+"comuna": "Quillota",
+"metodo": "google_news",
+"url": "https://www.quillota.cl/",
+"estado": "listo"
+},
+{
+"id": 209,
+"nombre": "Municipalidad de Rapa Nui",
+"ambito": "institucional",
+"comuna": "Isla de Pascua",
+"metodo": "google_news",
+"url": "https://www.rapanui.net/",
+"estado": "listo"
+},
+{
+"id": 299,
+"nombre": "Otra fuente institucional",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "",
+"estado": "listo"
 }
 ];

@@ -106,3 +106,16 @@ id,nombre,ambito,provincia,comuna,tipo,nivel,metodo,url_lectura,estado,observaci
 105,Aconcagua Digital,local,San Felipe,San Felipe;Catemu;Llaillay;Panquehue;Putaendo;Santa María,Portal,C,rss,https://aconcaguadigital.cl/feed/,listo,Categoría Comunas; agregado 11 nov 2026
 106,El Diario de La Ligua,local,Petorca,La Ligua;Cabildo;Petorca;Papudo;Zapallar,Diario digital,C,google_news,https://laliguachile.cl/,restringido,robots.txt cierra /feed/ a todos los bots; se lee vía Google News
 107,PortalPortuario,nacional,,,Sectorial portuario,C,rss,https://portalportuario.cl/feed/,listo,Puertos de Valparaíso y San Antonio; mezcla notas internacionales; agregado 11 nov 2026
+108,Radio Universidad de Valparaíso (RVL),regional,,,Radio universitaria,C,google_news,https://rvl.uv.cl/,listo,Sin feed verificado; aparece en Google News; agregado 11 nov 2026
+109,El Informador,local,Los Andes,Los Andes;Calle Larga;Rinconada;San Esteban,Diario digital,C,rss,https://www.elinformador.cl/feed/,listo,Agregado 11 nov 2026
+200,Gobierno Regional de Valparaíso,institucional,,,Fuente institucional,C,google_news,https://www.gorevalparaiso.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas
+201,Universidad de Valparaíso,institucional,,,Fuente institucional,C,google_news,https://www.uv.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas
+202,Pontificia Universidad Católica de Valparaíso,institucional,,,Fuente institucional,C,google_news,https://www.pucv.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas
+203,Universidad Técnica Federico Santa María,institucional,,,Fuente institucional,C,google_news,https://usm.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas
+204,Universidad de Playa Ancha,institucional,,,Fuente institucional,C,google_news,https://www.upla.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas
+205,Municipalidad de Valparaíso,institucional,Valparaíso,Valparaíso,Fuente institucional,C,google_news,https://municipalidaddevalparaiso.cl/,listo,Comunicados municipales
+206,Municipalidad de Viña del Mar,institucional,Valparaíso,Viña del Mar,Fuente institucional,C,google_news,https://www.munivina.cl/,listo,Comunicados municipales
+207,Municipalidad de San Antonio,institucional,San Antonio,San Antonio,Fuente institucional,C,google_news,https://www.sanantonio.cl/,listo,Comunicados municipales
+208,Municipalidad de Quillota,institucional,Quillota,Quillota,Fuente institucional,C,google_news,https://www.quillota.cl/,listo,Comunicados municipales
+209,Municipalidad de Rapa Nui,institucional,Isla de Pascua,Isla de Pascua,Fuente institucional,C,google_news,https://www.rapanui.net/,listo,Comunicados municipales
+299,Otra fuente institucional,institucional,,,Fuente institucional,C,google_news,,listo,"Ministerios, servicios, municipalidades y Fuerzas Armadas sin ficha propia; cada nota muestra el nombre real de la institución"

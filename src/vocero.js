@@ -34,7 +34,7 @@ function vocPlantilla(x){
 function vocPrompt(x){
   const d = vocDatos(x), c = cuenta();
   const tema = x.tipo === "g"
-    ? `NOTICIA: ${x.m.lead.t}. Resumen: ${x.m.lead.res}. Medio: ${MED[x.m.lead.m].n}. La publicaron ${x.m.notas.length} medio(s); ${llego(escalera(x.m.notas)).toLowerCase()}. Tono: ${tonoLbl[x.m.tono]}.${respondida(x.m.g) ? " El municipio ya aprobó una respuesta: " + ((S.comunicados.find(y => y.org === S.org && y.g === x.m.g) || {}).texto || "").slice(0, 600) : ""}`
+    ? `NOTICIA: ${x.m.lead.t}. Resumen: ${x.m.lead.res}. Medio: ${nomMedio(x.m.lead)}. La publicaron ${x.m.notas.length} medio(s); ${llego(escalera(x.m.notas)).toLowerCase()}. Tono: ${tonoLbl[x.m.tono]}.${respondida(x.m.g) ? " El municipio ya aprobó una respuesta: " + ((S.comunicados.find(y => y.org === S.org && y.g === x.m.g) || {}).texto || "").slice(0, 600) : ""}`
     : x.tipo === "h" ? `FECHA DEL CALENDARIO: ${x.h.nombre} (${fechaHito(x.h.desde)} al ${fechaHito(x.h.hasta)}). Qué suele pasar: ${x.h.que || "sin descripción"}. Preparación prevista: ${x.h.prep.join("; ") || "ninguna"}. Noticias recientes del tema: ${hitoMenciones(x.h, menciones(c, 30)).slice(0, 4).map(m => m.lead.t).join(" | ") || "ninguna"}.`
     : `TEMA: ${x.tema}. Noticias recientes de la comuna: ${menciones(c, 7).slice(0, 5).map(m => m.lead.t).join(" | ") || "ninguna"}.`;
   return `Eres el asesor de vocería de PregonIA para ${esAut() ? "el equipo de " + inst() : inst()}, Chile. El vocero va a una entrevista de radio en minutos y necesita una hoja breve para responder sobre este tema.
@@ -152,7 +152,7 @@ function vocCerrar(){ VOC.ctl?.abort(); $("#vocBack")?.remove(); document.body.c
 function vocTexto(){
   const x = vocContexto(), k = VOC.kits[vocClave(x)]; if (!k) return "";
   const d = vocDatos(x), L = [`*Kit de vocería · ${inst()}*`, `Tema: ${x.tema}`];
-  if (x.tipo === "g") { const a = accion(x.m); L.push(`Medio: ${MED[x.m.lead.m].n}${x.m.notas.length > 1 ? ` y ${x.m.notas.length - 1} más` : ""} · ${llego(escalera(x.m.notas))}`, x.m.lead.url || "", "", "*Lo que pasó*", x.m.lead.res, "", "*Qué hacer*", a.a + " (" + a.r + ")"); }
+  if (x.tipo === "g") { const a = accion(x.m); L.push(`Medio: ${nomMedio(x.m.lead)}${x.m.notas.length > 1 ? ` y ${x.m.notas.length - 1} más` : ""} · ${llego(escalera(x.m.notas))}`, x.m.lead.url || "", "", "*Lo que pasó*", x.m.lead.res, "", "*Qué hacer*", a.a + " (" + a.r + ")"); }
   if (x.tipo === "h") L.push(`${fechaHito(x.h.desde)} al ${fechaHito(x.h.hasta)}`, "", "*Qué suele pasar*", x.h.que || "");
   L.push("", "*Tres mensajes*"); k.mensajes.forEach((m, i) => L.push(`${i + 1}. ${m.idea}`, `   Dato: ${m.dato}`));
   if (k.evitar.length) { L.push("", "*Evita decir*"); k.evitar.forEach(v => L.push("- " + v)); }

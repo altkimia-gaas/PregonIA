@@ -151,6 +151,9 @@ export async function leerCatalogo(){
   return {items, total: fuentes.length, errores};
 }
 const porDominio = new Map(), porNombre = new Map();
+/* Fuentes institucionales sin ficha propia (ministerios, servicios, municipalidades, Fuerzas Armadas): una ficha común que conserva el nombre real. */
+const INST = CATALOGO.find(m => m.id === 299);
+const esInstitucional = (d, nombre) => /(^|\.)(gob|mil)\.cl$/.test(d) || /municipalidad|^muni|imv\.cl$/.test(d) || /municipalidad|ministerio|gobierno regional|delegaci[oó]n presidencial|subsecretar|seremi|senapred|carabineros|fuerza a[eé]rea|armada de chile|ej[eé]rcito/i.test(nombre || "");
 CATALOGO.forEach(m => { const d = dominio(m.url); if (d) porDominio.set(d, m); porNombre.set(norm(m.nombre), m); });
 export async function leerGoogleNews(comuna, dias = VENTANA_DIAS){ return leerGoogleNewsConsulta(`"${comuna}" ${CONTEXTO}`, dias); }
 /* Google News con una consulta cualquiera. Con catalogo = true solo quedan los medios del catálogo; con false, todo lo que encuentre (para contar). */
@@ -159,8 +162,8 @@ export async function leerGoogleNewsConsulta(q, dias = VENTANA_DIAS, catalogo = 
   const items = parsear(await leer(gn, 10000));
   if (!catalogo) return items;
   return items.map(x => {
-    const m = porDominio.get(dominio(x.fuenteUrl)) || porNombre.get(norm(x.fuente)); if (!m) return null;
-    return { ...x, titulo: x.titulo.replace(new RegExp("\\s+-\\s+" + x.fuente.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"), ""), desc: "", m, via: "google_news" };
+    const d = dominio(x.fuenteUrl), m = porDominio.get(d) || porNombre.get(norm(x.fuente)) || (INST && esInstitucional(d, x.fuente) ? INST : null); if (!m) return null;
+    return { ...x, titulo: x.titulo.replace(new RegExp("\\s+-\\s+" + x.fuente.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"), ""), desc: "", m, via: "google_news", fuente: m === INST ? x.fuente.replace(/^\|\s*/, "").slice(0, 80) : undefined };
   }).filter(Boolean);
 }
 /* Lo que nombra a una autoridad (por cualquiera de sus variantes de nombre) en la ventana, sin duplicados. */
@@ -172,7 +175,7 @@ export function candidatasPorNombre(variantes, items, desde, ahora = Date.now())
     if (!re.test(norm(x.titulo + " " + x.desc))) continue;
     const k1 = x.url, k2 = x.m.id + "|" + norm(x.titulo);
     if (vistos.has(k1) || vistos.has(k2)) continue; vistos.add(k1); vistos.add(k2);
-    out.push({ id: "r" + hash(x.url), m: x.m.id, medio: x.m.nombre, ambito: x.m.ambito, titulo: x.titulo, desc: x.desc, url: x.url, ts: Math.min(x.fecha, ahora), via: x.via || "lectura" });
+    out.push({ id: "r" + hash(x.url), m: x.m.id, medio: x.m.nombre, ambito: x.m.ambito, titulo: x.titulo, desc: x.desc, url: x.url, ts: Math.min(x.fecha, ahora), via: x.via || "lectura", ...(x.fuente ? {fuente: x.fuente} : {}) });
   }
   return out.sort((a, b) => b.ts - a.ts);
 }
@@ -187,7 +190,7 @@ export function candidatasDe(comuna, items, desde, ahora = Date.now()){
     if (!menciona(t) && !(local && !EXCLUIR.some(w => t.includes(w)))) continue;
     const k1 = x.url, k2 = x.m.id + "|" + norm(x.titulo);
     if (vistos.has(k1) || vistos.has(k2)) continue; vistos.add(k1); vistos.add(k2);
-    out.push({ id: "r" + hash(x.url), m: x.m.id, medio: x.m.nombre, ambito: x.m.ambito, titulo: x.titulo, desc: x.desc, url: x.url, ts: Math.min(x.fecha, ahora), via: x.via || "lectura" });
+    out.push({ id: "r" + hash(x.url), m: x.m.id, medio: x.m.nombre, ambito: x.m.ambito, titulo: x.titulo, desc: x.desc, url: x.url, ts: Math.min(x.fecha, ahora), via: x.via || "lectura", ...(x.fuente ? {fuente: x.fuente} : {}) });
   }
   return out.sort((a, b) => b.ts - a.ts);
 }

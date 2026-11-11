@@ -140,7 +140,8 @@ function dia(ts){ const a = new Date(NOW); a.setHours(0,0,0,0); const d = Math.r
 const tonoLbl = {pos:"Positivo", neu:"Neutro", cri:"Crítico"};
 const tonoPl = {pos:"Positivas", neu:"Neutras", cri:"Críticas"};
 const pillTono = t => `<span class="pill ic t-${t}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${({cri:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.4h.01"/>',pos:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.2 9.6"/>',neu:'<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>'})[t]}</svg>${tonoLbl[t]}</span>`;
-const medioN = n => MED[n.m].n + (n.via === "facebook" || MED[n.m].t === "Facebook" ? " · Facebook" : MED[n.m].e === "restringido" ? " (vía Google News)" : "");
+const nomMedio = n => n.fuente || MED[n.m].n;  // las fuentes institucionales sin ficha propia guardan su nombre real
+const medioN = n => nomMedio(n) + (n.via === "facebook" || MED[n.m].t === "Facebook" ? " · Facebook" : MED[n.m].e === "restringido" ? " (vía Google News)" : "");
 const signo = n => (n > 0 ? "+" : "") + n;
 const plural = (n, s, p) => n + " " + (n === 1 ? s : p);
 /* Balance del tono: veredicto en cinco niveles. El índice (positivas − críticas) / total solo decide el nivel; el usuario ve palabras y conteos. */
@@ -158,7 +159,7 @@ function renderChrome(){
   const pend = pendientes().length;
   const link = ([key, name], ic, cnt) => `<a href="#${key}" ${key===k || (key==="temas" && cfg) ? 'aria-current="page"' : ""}>${icon(ic)}<span>${name}</span>${cnt ? `<span class="count" aria-label="${cnt} por revisar">${cnt}</span>` : ""}</a>`;
   $("#nav").innerHTML = MAIN.map(x => link(x, x[0], x[0]==="menciones" ? pend : 0)).join("") + link(["temas","Ajustes"], "config", 0);
-  $("#fecha").textContent = PILOTO && PILOTO.activo ? (PILOTO.lectura ? "Lectura de medios cada 30 min · última " + horaCorta(PILOTO.lectura.fin) : "Lectura de medios cada 30 min") : "Monitoreando " + CATALOG.filter(m => m.m !== "facebook").length + " medios · actualizado " + new Date(NOW - 7*60000).toLocaleTimeString("es-CL", {hour:"2-digit", minute:"2-digit", hourCycle:"h23"});
+  $("#fecha").textContent = PILOTO && PILOTO.activo ? (PILOTO.lectura ? "Lectura de medios cada 30 min · última " + horaCorta(PILOTO.lectura.fin) : "Lectura de medios cada 30 min") : "Monitoreando " + CATALOG.filter(m => m.m !== "facebook" && m.a !== "institucional").length + " medios · actualizado " + new Date(NOW - 7*60000).toLocaleTimeString("es-CL", {hour:"2-digit", minute:"2-digit", hourCycle:"h23"});
   $("#bnav").innerHTML = MAIN.map(x => link(x, x[0], x[0]==="menciones" ? pend : 0)).join("") + link(["temas","Ajustes"], "config", 0);
 }
 
@@ -201,7 +202,7 @@ function vInicio(){
     <h2 tabindex="-1">${esc(S.org)}, hoy</h2>
     <p class="dg-sum">${pend.length ? `<b class="c">${pend.length} ${pend.length===1?"noticia crítica":"noticias críticas"}</b> sin responder esta semana.` : "Sin noticias críticas pendientes esta semana."} En 30 días, ${plural(M.vol,"noticia","noticias")} sobre ${esAut() ? esc(cuenta().perfil.nombre) + " y su territorio" : "la comuna"} en ${plural(Object.keys(medios).length,"medio","medios")}; la cobertura fue <b>${v.n.toLowerCase()}</b>.</p>
   </header>
-  ${ultimas.length ? `<section class="dg-ticker" aria-label="Lo último"><span class="dg-ticker-l"><i class="dot" aria-hidden="true"></i>Lo último</span><ul>${ultimas.map(n => `<li><time>${hhmm(n.ts)}</time><span>${esc(n.t)}</span><em>${esc(MED[n.m].n)}</em></li>`).join("")}</ul></section>` : ""}
+  ${ultimas.length ? `<section class="dg-ticker" aria-label="Lo último"><span class="dg-ticker-l"><i class="dot" aria-hidden="true"></i>Lo último</span><ul>${ultimas.map(n => `<li><time>${hhmm(n.ts)}</time><span>${esc(n.t)}</span><em>${esc(nomMedio(n))}</em></li>`).join("")}</ul></section>` : ""}
   <section class="dg-ind" aria-label="Indicadores">
     <button data-act="goto" data-tono="todos" data-dias="30"><span class="l">Noticias · 30 días</span><span class="v">${M.vol}</span><span class="s">en ${plural(Object.keys(medios).length,"medio","medios")}, sin réplicas</span></button>
     <button data-act="goto" data-tono="cri" data-dias="30"><span class="l">Tono de la cobertura</span><span class="v word ${v.k}">${v.n}</span>${escala(v.i)}</button>
@@ -221,7 +222,7 @@ function vInicio(){
     <h3 class="dg-sec" id="secT">Por tema</h3>
     <div class="dg-temas">${secciones.map(x => { const m = x.sub[0]; return `<button class="dg-tema" data-act="goto-tema" data-id="${x.t.id}" aria-label="${esc(x.t.nombre)}: ${x.sub.length} noticias, ${x.M.cri} críticas">
       <span class="dg-tema-h"><span class="dg-kick">${esc(x.t.nombre)}</span><span class="dg-tema-c">${x.sub.length}<small>${x.M.cri ? ` · ${x.M.cri} crít.` : ""}</small></span></span>
-      ${m ? `<span class="dg-tema-t">${esc(m.lead.t)}</span><span class="dg-meta">${pillTono(m.tono)}<span>${esc(MED[m.lead.m].n)} · ${ago(m.last)}</span></span>` : `<span class="dg-tema-t muted">Sin noticias en 30 días</span>`}
+      ${m ? `<span class="dg-tema-t">${esc(m.lead.t)}</span><span class="dg-meta">${pillTono(m.tono)}<span>${esc(nomMedio(m.lead))} · ${ago(m.last)}</span></span>` : `<span class="dg-tema-t muted">Sin noticias en 30 días</span>`}
       ${segbar([{l:"Críticas", v:x.M.cri, c:"var(--cri)"},{l:"Neutras", v:x.M.neu, c:"var(--neu)"},{l:"Positivas", v:x.M.pos, c:"var(--pos)"}])}</button>`; }).join("")}</div>
   </section>
   <div class="dg-fondo">
@@ -233,7 +234,7 @@ function vInicio(){
 /* Menciones */
 function itemHtml(m){
   const temas = [...m.temas.values()], resp = respondida(m.g);
-  const otros = m.notas.filter(n => n !== m.lead).map(n => n.url ? `<a class="ext" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(MED[n.m].n)}</a>` : esc(MED[n.m].n));
+  const otros = m.notas.filter(n => n !== m.lead).map(n => n.url ? `<a class="ext" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(nomMedio(n))}</a>` : esc(nomMedio(n)));
   return `<article class="item ${resp?"resp":(m.critico?"cri":"")}">
     <div class="meta">${pillTono(m.tono)}${resp?'<span class="pill done">Respondida</span>':""}<span>${esc(medioN(m.lead))}</span><span>·</span><span title="${fecha(m.lead.ts)}">${ago(m.lead.ts)}</span>${m.notas.length>1?`<span>·</span><span>en ${m.notas.length} medios</span>`:""}</div>
     <h4>${m.lead.url ? `<a class="ext" href="${esc(m.lead.url)}" target="_blank" rel="noopener">${esc(m.lead.t)}<span class="sr"> (abre el medio en otra pestaña)</span></a>` : esc(m.lead.t)}</h4>
@@ -314,11 +315,11 @@ function vFuentes(){
   const cnt = k => CATALOG.filter(m => m.e===k).length;
   const lbl = {listo:"Listo", requiere_ajuste:"Requiere ajuste", restringido:"Restringido", captura_asistida:"Captura asistida"};
   const met = {rss:"RSS", sitemap_noticias:"Sitemap de noticias", sitemap:"Sitemap", sitemap_mensual:"Sitemap mensual", portada:"Portada", google_news:"Google News", rss_filtrado:"RSS filtrado", sitemap_filtrado:"Sitemap filtrado", facebook:"Facebook"};
-  return `<div class="head"><div><h2 tabindex="-1">Fuentes</h2><p>Los ${CATALOG.filter(m => m.m !== "facebook").length} medios web que PregonIA lee y cómo se lee cada uno (verificado el 3 de noviembre de 2026), más ${plural(CATALOG.filter(m => m.m === "facebook").length, "página", "páginas")} de Facebook. Los restringidos se consultan solo vía Google News; las de Facebook se ingresan con Agregar publicación, en Menciones.</p></div></div>
+  return `<div class="head"><div><h2 tabindex="-1">Fuentes</h2><p>Los ${CATALOG.filter(m => m.m !== "facebook" && m.a !== "institucional").length} medios web que PregonIA lee y cómo se lee cada uno (verificado el 3 de noviembre de 2026), más ${plural(CATALOG.filter(m => m.m === "facebook").length, "página", "páginas")} de Facebook. Los restringidos se consultan solo vía Google News; las de Facebook se ingresan con Agregar publicación, en Menciones.</p></div></div>
   ${subtabs()}
   <div class="filters">
     <div class="seg" role="group" aria-label="Estado">${[["todos","Todos",CATALOG.length],["listo","Listos",cnt("listo")],["requiere_ajuste","Requieren ajuste",cnt("requiere_ajuste")],["restringido","Restringidos",cnt("restringido")],["captura_asistida","Facebook",cnt("captura_asistida")]].map(([v,l,n]) => `<button data-act="f-est" data-k="${v}" aria-pressed="${f.e===v}">${l}<span class="c">${n}</span></button>`).join("")}</div>
-    <div class="seg" role="group" aria-label="Ámbito">${[["todos","Todos"],["nacional","Nacional"],["regional","Regional"],["local","Local"]].map(([v,l]) => `<button data-act="f-amb" data-k="${v}" aria-pressed="${f.a===v}">${l}</button>`).join("")}</div>
+    <div class="seg" role="group" aria-label="Ámbito">${[["todos","Todos"],["nacional","Nacional"],["regional","Regional"],["local","Local"],["institucional","Institucional"]].map(([v,l]) => `<button data-act="f-amb" data-k="${v}" aria-pressed="${f.a===v}">${l}</button>`).join("")}</div>
   </div>
   <div class="card scroll" style="padding:0"><table class="ftab"><thead><tr><th>Medio</th><th>Ámbito</th><th>Comuna</th><th>Lectura</th><th>Estado</th></tr></thead><tbody>${rows.map(m => `<tr><td class="fm"><b>${esc(m.n)}</b>${m.o?`<div class="muted" style="font-size:12px">${esc(m.o)}</div>`:""}</td><td data-l="Ámbito">${m.a}</td><td data-l="Comuna">${esc((m.c||"").replace(/;/g, ", ")) || '<span class="muted">—</span>'}</td><td data-l="Lectura">${met[m.m]||m.m}</td><td data-l="Estado"><span class="pill e-${m.e}">${lbl[m.e]}</span></td></tr>`).join("")}</tbody></table></div>`;
 }
@@ -342,7 +343,7 @@ const RI = {
 };
 const ri = (k, cls="") => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true">${RI[k]}</svg>`;
 const tonoCol = {cri:"var(--cri)", neu:"var(--neu)", pos:"var(--pos)"};
-const AMB = [["nacional","Nacional","var(--amb-n)"],["regional","Regional","var(--amb-r)"],["local","Local","var(--amb-l)"]];
+const AMB = [["nacional","Nacional","var(--amb-n)"],["regional","Regional","var(--amb-r)"],["local","Local","var(--amb-l)"],["institucional","Institucional","var(--neu)"]];
 const ambCol = a => (AMB.find(x => x[0] === a) || AMB[2])[2];
 const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
 
@@ -369,7 +370,7 @@ function escala(i){ const n = ["Muy desfavorable","Desfavorable","Equilibrada","
 function segbar(parts, tall){ const tot = parts.reduce((s,p) => s + p.v, 0) || 1; return `<div class="segbar ${tall?"tall":""}" role="img" aria-label="${esc(parts.map(p => p.l + ": " + p.v).join(", "))}">${parts.filter(p => p.v).map(p => `<span style="flex:${p.v};background:${p.c}" ${tipAttr(p.l + ": " + p.v + " (" + pct(p.v, tot) + "%)")}></span>`).join("")}</div>`; }
 function keys(parts){ return `<div class="keys">${parts.map(p => `<span><i style="background:${p.c}"></i>${p.l} <b>${p.v}</b></span>`).join("")}</div>`; }
 function climaHtml(M){ const v = veredicto(M), k = v.k === "pos" ? "up" : v.k === "cri" ? "down" : "flat"; return `<span class="clima">${ri(k)}${v.c}</span>`; }
-function ambitos(ms){ const r = {nacional:0, regional:0, local:0}; ms.forEach(m => m.notas.forEach(n => r[MED[n.m].a] = (r[MED[n.m].a]||0) + 1)); return r; }
+function ambitos(ms){ const r = {nacional:0, regional:0, local:0, institucional:0}; ms.forEach(m => m.notas.forEach(n => r[MED[n.m].a] = (r[MED[n.m].a]||0) + 1)); return r; }
 
 function chartDias(ms, n = 30){
   const W = 720, H = 200, L = 30, B = 26, top = 10;
@@ -463,7 +464,7 @@ function accionAut(m){
   else { a = propia ? (e.max === 0 ? "Llevarla a medios regionales y amplificarla en redes." : "Amplificarla en redes y usarla en la próxima entrevista.") : "Sumarse con un reconocimiento si corresponde a su agenda."; r = ["Prensa"]; }
   return {a, r: [...new Set(r.filter(Boolean))].join(" · ")};
 }
-const enMedios = m => { const k = new Set(m.notas.map(n => n.m)).size; return esc(MED[m.lead.m].n) + (k > 1 ? ` y ${k - 1} ${k === 2 ? "medio más" : "medios más"}` : ""); };
+const enMedios = m => { const k = new Set(m.notas.map(n => n.m)).size; return esc(nomMedio(m.lead)) + (k > 1 ? ` y ${k - 1} ${k === 2 ? "medio más" : "medios más"}` : ""); };
 const rango = (d0, d1) => new Date(d0).toLocaleDateString("es-CL",{day:"numeric", month:"short"}) + " al " + new Date(d1).toLocaleDateString("es-CL",{day:"numeric", month:"short", year:"numeric"});
 
 /* 1. Parte del alcalde: semanal, una pantalla */
@@ -532,7 +533,7 @@ function repMesa(){
 const PERIODOS = [["24h","Últimas 24 h"],["hoy","Hoy"],["ayer","Ayer"]];
 const fechaLarga = ts => new Date(ts).toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long"});
 const horaHM = ts => new Date(ts).toLocaleTimeString("es-CL", {hour: "2-digit", minute: "2-digit", hourCycle: "h23"});
-const NIVLBL = {local: "Comunal", regional: "Regional", nacional: "Nacional"};
+const NIVLBL = {local: "Comunal", regional: "Regional", nacional: "Nacional", institucional: "Institucional"};
 function rangoDiario(k){
   const h = new Date(NOW); h.setHours(0, 0, 0, 0); const hoy = h.getTime();
   if (k === "hoy") return [hoy, NOW + 1, "Hoy, " + fechaLarga(NOW) + ", hasta las " + horaHM(NOW)];
@@ -639,7 +640,7 @@ function repGestion(){
     <div id="lectura" class="draft" style="min-height:90px">${esc(lecturaTxt.gestion || lecturaBase(M, porTema))}</div>
     <div><button class="btn primary" data-act="lectura">Redactar con IA</button></div></div>
   <details class="card resp" style="margin-top:14px"><summary>Respaldo: las ${notas.length} notas del mes</summary>
-    <div class="scroll"><table><thead><tr><th>Fecha</th><th>Medio</th><th>Nivel</th><th>Tono</th><th>Titular</th></tr></thead><tbody>${notas.map(({n}) => `<tr><td class="mono">${hora(n.ts)}</td><td>${esc(MED[n.m].n)}</td><td>${NIVS[nivIdx(MED[n.m].a)][1]}</td><td>${tonoLbl[n.tono]}</td><td>${esc(n.t)}</td></tr>`).join("")}</tbody></table></div>
+    <div class="scroll"><table><thead><tr><th>Fecha</th><th>Medio</th><th>Nivel</th><th>Tono</th><th>Titular</th></tr></thead><tbody>${notas.map(({n}) => `<tr><td class="mono">${hora(n.ts)}</td><td>${esc(nomMedio(n))}</td><td>${NIVS[nivIdx(MED[n.m].a)][1]}</td><td>${tonoLbl[n.tono]}</td><td>${esc(n.t)}</td></tr>`).join("")}</tbody></table></div>
     <p class="hint" style="margin:10px 0 0">En producción cada fila enlaza a la nota original en el sitio del medio.</p></details>
   ${muestra(M.vol)}`;
 }
@@ -680,7 +681,7 @@ function repCrisis(){
   const ms = menciones(cuenta(), 7).filter(m => m.tono === "cri").sort((a,b) => b.notas.length - a.notas.length || b.last - a.last);
   if (!ms.length) return `<div class="allgood">${ri("ok")} No hubo episodios críticos en los últimos 7 días.</div>`;
   const m = ms[0], medios = new Set(m.notas.filter(n => n.ts - m.first < DAY).map(n => n.m)).size, resp = respondida(m.g);
-  const hrs = Math.max(0, Math.round((m.last - m.first) / 36e5)), ambN = {nacional:0, regional:0, local:0}; m.notas.forEach(n => ambN[MED[n.m].a]++);
+  const hrs = Math.max(0, Math.round((m.last - m.first) / 36e5)), ambN = {nacional:0, regional:0, local:0, institucional:0}; m.notas.forEach(n => ambN[MED[n.m].a]++);
   const ambP = AMB.map(([k,l,c]) => ({l, v: ambN[k], c}));
   return `<div class="rhead"><h3 style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="pill ic t-cri">${ri("cri")} Episodio crítico</span>${resp?`<span class="pill ic done">${ri("ok")} Respondida</span>`:""}</h3><span class="per">${ri("cal")} ${fecha(m.first)}</span></div>
   <div class="card" style="margin-bottom:14px"><b style="font-size:17px;line-height:1.35;display:block">${esc(m.lead.t)}</b><p class="muted" style="margin:6px 0 0">${esc(m.lead.res)}</p></div>
@@ -1128,13 +1129,13 @@ Reglas obligatorias:
 5. Devuelve solo el texto de la pieza, sin explicaciones previas.
 
 NOTICIA:
-${m ? `Medio: ${MED[m.lead.m].n}. Titular: ${m.lead.t}. Resumen: ${m.lead.res}. Tono detectado: ${tonoLbl[m.tono]}. Otros medios que la publicaron: ${m.notas.length-1}.` : "No hay noticia: es un anuncio propio."}
+${m ? `Medio: ${nomMedio(m.lead)}. Titular: ${m.lead.t}. Resumen: ${m.lead.res}. Tono detectado: ${tonoLbl[m.tono]}. Otros medios que la publicaron: ${m.notas.length-1}.` : "No hay noticia: es un anuncio propio."}
 
 ${datosLbl()}:
 ${base}`;
 }
 function plantilla(m, pieza){
-  return `${PIEZAS[pieza][0]} · ${inst()}\n\n[Plantilla: la IA no está disponible en esta vista]\n\nEn relación con ${m ? "lo informado por " + MED[m.lead.m].n + " (" + m.lead.res.replace(/\.$/,"") + ")" : "[completar: anuncio]"}, la Municipalidad de ${S.org} informa:\n\n1. [completar: hechos verificados]\n2. [completar: medidas adoptadas y plazos]\n3. [completar: canal de contacto para vecinos]\n\n[cita propuesta, validar con el vocero]: «[completar]»\n\nContacto de prensa: [completar]`;
+  return `${PIEZAS[pieza][0]} · ${inst()}\n\n[Plantilla: la IA no está disponible en esta vista]\n\nEn relación con ${m ? "lo informado por " + nomMedio(m.lead) + " (" + m.lead.res.replace(/\.$/,"") + ")" : "[completar: anuncio]"}, la Municipalidad de ${S.org} informa:\n\n1. [completar: hechos verificados]\n2. [completar: medidas adoptadas y plazos]\n3. [completar: canal de contacto para vecinos]\n\n[cita propuesta, validar con el vocero]: «[completar]»\n\nContacto de prensa: [completar]`;
 }
 function setDraft(txt){ const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = txt; const has = !!txt.trim(); const a = $("#btnAprob"), k = $("#btnCopy"); if (a) a.disabled = !has; if (k) k.disabled = !has; document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
 async function generar(){
@@ -1345,7 +1346,7 @@ async function cargarReales(force, silencioso){
     const q = !pa ? "comuna=" + encodeURIComponent(org) : pa.autoridadId ? "autoridad=" + encodeURIComponent(pa.autoridadId) : "rol=" + encodeURIComponent(pa.rol) + "&zona=" + encodeURIComponent(pa.zona) + "&nombre=" + encodeURIComponent(pa.nombre) + "&g=" + pa.g;
     const r = await fetch("/api/noticias?" + q); if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json(); if (PILOTO && PILOTO.activo) { MODO.cargando = false; return; } if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
-    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? pa.variantes[0] : org + " comuna")), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna
+    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, ...(n.fuente ? {fuente: n.fuente} : {}), hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? pa.variantes[0] : org + " comuna")), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna
     MODO = {...MODO, tipo: "real", info: {...j, comuna: org, notas: nuevas}, cargando: false}; refrescarNotas(nuevas);  // el modo primero: los avisos se guardan por modo
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
     pintarModo(); render();

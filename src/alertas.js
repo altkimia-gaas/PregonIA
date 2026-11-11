@@ -23,7 +23,7 @@ const avPermiso = () => avSoporte() ? Notification.permission : "no";
 const avPushServidor = () => typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo && !!(AV.cfg && AV.cfg.push);
 function hechosApp(){
   return menciones(cuenta(), 3).map(m => ({g: m.g, tonos: m.notas.map(n => n.tono),
-    notas: m.notas.map(n => ({ts: n.ts, nivel: nivIdx(MED[n.m].a), medio: n.m, medioNombre: MED[n.m].n, titulo: n.t, url: n.url || "", captura: !!n.captura}))}));
+    notas: m.notas.map(n => ({ts: n.ts, nivel: nivIdx(MED[n.m].a), medio: n.m, medioNombre: n.fuente || MED[n.m].n, titulo: n.t, url: n.url || "", captura: !!n.captura}))}));
 }
 function revisarAlertas(){
   if (!S || !cuenta()) return;
