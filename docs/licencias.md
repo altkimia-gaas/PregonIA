@@ -28,7 +28,7 @@ Recomendación: alojarlas en el propio dominio para que el navegador no envíe l
 
 | Activo | Origen | Derechos |
 |---|---|---|
-| assets/portada.jpg | Generada con IA (indicado en la portada) | [VERIFICAR] herramienta usada y sus términos de uso comercial |
+| assets/portada.jpg | Punto de prensa, generada con IA en Canva (13-nov-2026), indicado en la portada | Uso comercial según los términos de Canva para contenido generado con IA |
 | icono-*.png | Diseño propio de ALTKimia | Propios |
 
 ## Datos
