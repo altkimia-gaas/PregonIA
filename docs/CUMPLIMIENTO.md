@@ -21,8 +21,8 @@ Si se agregan pagos en línea, analítica, píxeles o correos comerciales, se ac
 
 | N° | Control | Estado | Evidencia o acción |
 |---|---|---|---|
-| 1 | Política de privacidad | Implementado | `legal.html#privacidad`. Completar campos [COMPLETAR] y revisión de abogado |
-| 2 | Plazo de retención | Parcial | Plazos propuestos en la política [CONFIRMAR]. Falta borrado automático programado (función SQL + llamada diaria desde `api/ingesta.js`) |
+| 1 | Política de privacidad | Implementado | `legal.html#privacidad`, vigente desde el 13-nov-2026 (revisada) |
+| 2 | Plazo de retención | Parcial | Plazos fijados en la política (cuentas: contrato + 90 días; actividad: 12 meses; noticias: 24 meses). Falta borrado automático programado (función SQL + llamada diaria desde `api/ingesta.js`) |
 | 3 | Descargar y borrar datos | Pendiente | Hoy se atiende por correo y desde Supabase. Falta "Exportar datos del municipio" (JSON) y flujo de baja de cuenta |
 | 4 | Minimización | Cumple | No se guarda el texto de los medios (`notas`), la imagen de las capturas no se almacena, perfiles con datos mínimos |
 | 5 | Datos de menores | No aplica | Usuarios son funcionarios municipales |
@@ -38,7 +38,7 @@ Si se agregan pagos en línea, analítica, píxeles o correos comerciales, se ac
 | 15 | Cancelar tan fácil como suscribirse | No aplica hoy | En el contrato: término por el mismo medio de contratación |
 | 16 | Aviso de renovación automática | No aplica hoy | En el contrato, si hay renovación automática |
 | 17 | Sin cargos ocultos | Revisar | La barra superior muestra "Plan Comunal · $149.000/mes" (`src/base.js`, PLANES) sin decir si incluye IVA. Definir y mostrar "IVA incluido" o "+ IVA"; lo mismo en propuestas comerciales |
-| 18 | Datos de contacto de la empresa | Implementado | `legal.html#quien`: ALTKIMIA Consultoría y Tecnología SpA, RUT 77.508.685-8, Padre Mariano 391 of. 704, Providencia. Faltan los correos [COMPLETAR] |
+| 18 | Datos de contacto de la empresa | Implementado | `legal.html#quien`: ALTKIMIA Consultoría y Tecnología SpA, RUT 77.508.685-8, Padre Mariano 391 of. 704, Providencia. Contacto: soporte@altkimia.cl |
 | 19 | Sin cuentas regresivas falsas | Cumple | No hay |
 | 20 | Sin patrones engañosos | Cumple | Revisado: sin casillas premarcadas ni "confirmshaming"; nada se publica sin aprobación |
 | 21 | Sin reseñas falsas | Cumple | No hay reseñas |
@@ -51,7 +51,7 @@ Si se agregan pagos en línea, analítica, píxeles o correos comerciales, se ac
 | 28 | Navegación con teclado | Cumple | Enlace "Ir al contenido", foco visible, atajos, diálogos con Escape. No se hizo prueba completa con lector de pantalla |
 | 29 | Licencias de activos | Implementado | `docs/licencias.md`. Verificar términos de la herramienta que generó la portada |
 | 30 | Licencias open source | Cumple | MIT y MPL-2.0 sin modificar; sin GPL/AGPL |
-| 31 | Canal de derechos de autor | Implementado | `legal.html#medios`: retiro de fuentes y reclamos. Falta el correo |
+| 31 | Canal de derechos de autor | Implementado | `legal.html#medios`: retiro de fuentes y reclamos a soporte@altkimia.cl, respuesta en 5 días hábiles |
 | 32 | Etiquetar contenido IA | Implementado | Borradores, PDF, kit de vocería, respuestas de la ayuda y cierre del video con voz sintética |
 | 33 | Auditar SDKs | Cumple | Sin SDK de terceros en el navegador salvo supabase-js, jsPDF y mp4-muxer; inventario en `docs/licencias.md` |
 | 34 | Acuerdos de tratamiento con proveedores | Pendiente | Firmar o aceptar DPA de Supabase, Vercel, Anthropic, ElevenLabs, Resend, Meta, Apify, GitHub. Y DPA de ALTKimia hacia cada municipio |
@@ -66,6 +66,4 @@ Si se agregan pagos en línea, analítica, píxeles o correos comerciales, se ac
 ## Pasos manuales para activar lo de esta rama
 
 1. Supabase › SQL Editor: correr `supabase/esquema.sql` completo (agrega `aceptaciones` y `aceptar_documentos`). Sin esto, el ingreso funciona igual y la consola avisa que falta la tabla.
-2. Completar los campos [COMPLETAR] y [CONFIRMAR] de `legal.html`.
-3. Revisión de abogado de `legal.html` y quitar el aviso de borrador.
-4. Al cambiar los documentos, subir `LEGAL_VERSION` en `src/piloto.js` para que todos acepten la nueva versión.
+2. Al cambiar los documentos, subir `LEGAL_VERSION` en `src/piloto.js` para que todos acepten la nueva versión.
