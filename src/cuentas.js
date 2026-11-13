@@ -65,7 +65,10 @@ function cambiarCuenta(key){
   sel.dispatchEvent(new Event("change"));
 }
 
-/* Entrada por rol, zona y nombre */
+/* Entrada por rol, zona y nombre. Para la demostración se pide una contraseña común («pregonia»); una vez ingresada
+   en esta pestaña no se vuelve a pedir. Es un resguardo de acceso a la demo, no seguridad: el piloto con datos usa sus propias cuentas. */
+const CLAVE_DEMO = "pregonia", CLAVE_KEY = "pregonia-clave";
+const claveOk = () => { try { return sessionStorage.getItem(CLAVE_KEY) === "1"; } catch(e) { return false; } };
 const ENT = {rol: "municipio", zona: "Casablanca", sel: "", libre: "", g: "F", enPortada: false};
 const entRolN = () => ENT.rol === "municipio" ? "alcalde" : ENT.rol;  // en un municipio, el nombre que se elige es el del alcalde
 function entNombres(){ return AUTORIDADES.filter(a => a.rol === entRolN() && a.zona === ENT.zona); }
@@ -101,7 +104,7 @@ function entAbrir(enPortada){
   const ov = document.createElement("div"); ov.className = "vid-back ent-back"; ov.id = "entBack";
   ov.innerHTML = `<section class="vid ent" role="dialog" aria-modal="true" aria-labelledby="entT">
     <header class="vid-h"><div><h2 id="entT">¿Para quién es PregonIA?</h2><p>Elige el rol, la zona y el nombre. Cada cuenta sigue la prensa de esa persona o institución y de su territorio.</p></div><button class="btn ghost" type="button" data-act="ent-cerrar" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
-    <form class="ent-f" id="entForm" novalidate><div id="entBody"></div><div class="ent-acts"><button class="btn alt" type="submit">Entrar</button></div></form></section>`;
+    <form class="ent-f" id="entForm" novalidate><div id="entBody"></div><div class="ent-acts">${claveOk() ? "" : `<label class="ent-clave">Contraseña<input id="entClave" type="password" autocomplete="current-password" autocapitalize="off" spellcheck="false" placeholder="Ingresa la contraseña"></label>`}<button class="btn alt" type="submit">Ingresar</button></div></form></section>`;
   document.body.appendChild(ov); document.body.classList.add("vid-on"); entAbrir.vuelta = document.activeElement;
   entPintar(); setTimeout(() => document.querySelector('#entBack input[name="entRol"]:checked')?.focus(), 30);
 }
@@ -109,6 +112,11 @@ function entCerrar(){ $("#entBack")?.remove(); document.body.classList.remove("v
 function entEntrar(e){
   e.preventDefault();
   const err = $("#entErr"); let key;
+  if (!claveOk()) {
+    const c = $("#entClave");
+    if (!c || c.value.trim().toLowerCase() !== CLAVE_DEMO) { err.textContent = c && c.value ? "Contraseña incorrecta." : "Ingresa la contraseña."; err.hidden = false; if (c) { c.select(); c.focus(); } return; }
+    try { sessionStorage.setItem(CLAVE_KEY, "1"); } catch(e) {}
+  }
   const a = ENT.sel && ENT.sel !== "__otra" ? AUTORIDADES.find(x => x.id === ENT.sel) : null, libre = ENT.libre.trim().replace(/\s+/g, " ");
   if (!a && (libre.length < 5 || libre.split(" ").length < 2)) { err.textContent = "Escribe nombre y apellido."; err.hidden = false; $("#entLibre")?.focus(); return; }
   key = ENT.rol === "municipio" ? crearCuentaMunicipio(ENT.zona, a, libre, ENT.g) : crearCuentaAutoridad({rol: ENT.rol, zona: ENT.zona, a, nombre: libre, g: ENT.g});

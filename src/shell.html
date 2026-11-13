@@ -174,9 +174,11 @@ body.vid-on{overflow:hidden}
 .ent-com{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45}
 .ent-gen{display:flex;gap:16px;flex-wrap:wrap;font-size:13.5px}
 .ent-gen label{display:flex;gap:6px;align-items:center;cursor:pointer}
-.ent-acts{display:flex;justify-content:flex-end}
-.ent-acts .btn{min-width:140px}
-@media (max-width:560px){ .ent-f{padding:14px} .ent-acts .btn{width:100%} }
+.ent-acts{display:flex;justify-content:flex-end;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.ent-acts .btn{min-width:140px;min-height:42px}
+.ent-clave{display:grid;gap:6px;font-size:13px;font-weight:600;color:var(--ink);flex:0 1 260px}
+.ent-clave input{font:inherit;font-size:14px;font-weight:400;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-btn);padding:9px 10px;min-height:42px;width:100%}
+@media (max-width:560px){ .ent-f{padding:14px} .ent-acts .btn,.ent-clave{width:100%;flex:1 1 100%} }
 /* Kit de vocería */
 .voc{width:min(980px,100%)}
 .voc-b{display:grid;gap:16px;padding:16px 18px}
