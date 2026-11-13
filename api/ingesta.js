@@ -3,9 +3,14 @@
 // para que el historial, las respuestas y las marcas queden en el mismo hecho aunque lleguen notas días después.
 // La llama un programador externo (GitHub Actions) con Authorization: Bearer CRON_SECRET.
 // Variables: SUPABASE_URL, SUPABASE_SECRET_KEY, CRON_SECRET, ANTHROPIC_API_KEY. Para avisos: ver api/_avisos.js.
+// Cuentas de Facebook e Instagram de medios: META_ACCESS_TOKEN, META_IG_USER_ID, META_FB_PPCA (ver api/_redes.js).
 // Después de guardar, revisa los hechos que recibieron notas nuevas y avisa lo urgente (notificación y correo).
 import { COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, candidatasDe } from "./_lectura.js";
 import { avisar } from "./_avisos.js";
+import { leerRedes, usuarioDe } from "./_redes.js";
+
+/* Cuentas de Facebook e Instagram de la base: las del catálogo fijo y las inscritas desde la aplicación. */
+const cuentaDe = r => ({id: r.id, nombre: r.nombre, ambito: r.ambito, comuna: r.comunas || "", red: r.metodo, usuario: r.usuario_red || usuarioDe(r.metodo, r.url_lectura)});
 
 const MAX_POR_COMUNA = 30;  // tope de notas nuevas que se clasifican por comuna en cada pasada; el resto entra en la siguiente
 
@@ -35,7 +40,7 @@ async function procesarComuna(muni, items, desde, ahora){
   const existentes = [...porGrupo.values()].slice(0, 40);
 
   await sb("notas?on_conflict=id", {method: "POST", prefer: "resolution=ignore-duplicates,return=minimal",
-    body: nuevas.map(n => ({id: n.id, medio_id: n.m, url: n.url, titulo: n.titulo.slice(0, 400), publicado: new Date(n.ts).toISOString(), via: n.via === "google_news" ? "google_news" : "lectura"}))});
+    body: nuevas.map(n => ({id: n.id, medio_id: n.m, url: n.url, titulo: n.titulo.slice(0, 400), publicado: new Date(n.ts).toISOString(), via: ["google_news", "instagram", "facebook"].includes(n.via) ? n.via : "lectura"}))});
 
   const clas = await clasificar(comuna, nuevas, existentes);
   // Grupo estable: el de un hecho existente, o la nota más antigua de un hecho nuevo.
@@ -65,10 +70,16 @@ async function manejar(req){
   const [lectura] = await sb("lecturas", {method: "POST", prefer: "return=representation", body: {inicio: new Date(ahora).toISOString()}});
   try {
     const munis = (await sb("municipios?activo=eq.true&select=id,comuna")).filter(m => COMUNAS[m.comuna]);
-    const [cat0, enBase, ...gns] = await Promise.all([leerCatalogo(), sb("medios?select=id"), ...munis.map(m => leerGoogleNews(m.comuna).catch(() => null))]);
+    const [cat0, enBase, filasRedes, ...gns] = await Promise.all([leerCatalogo(), sb("medios?select=id"),
+      sb("medios?metodo=in.(instagram,facebook)&estado=neq.retirado&select=id,nombre,ambito,comunas,metodo,url_lectura,usuario_red").catch(() => []),
+      ...munis.map(m => leerGoogleNews(m.comuna).catch(() => null))]);
+    const rs = await leerRedes(filasRedes.map(cuentaDe));
+    // Estado de cada cuenta para la vista Fuentes: cuándo se leyó y, si falló, por qué. Un error aquí no detiene la lectura.
+    await Promise.all(rs.estado.filter(e => !e.pendiente).map(e => sb(`medios?id=eq.${e.id}`, {method: "PATCH", prefer: "return=minimal",
+      body: e.ok ? {ultima_lectura: new Date().toISOString(), error_lectura: null} : {error_lectura: e.error}}).catch(() => null)));
     // Solo medios que ya existen en la base (clave foránea de notas): un medio nuevo del catálogo espera a que se cargue la semilla.
-    const ids = new Set(enBase.map(x => x.id)), cat = {...cat0, items: cat0.items.filter(x => ids.has(x.m.id))};
-    const errores = cat.errores.concat(gns.some(g => !g) ? ["Google News"] : []);
+    const ids = new Set(enBase.map(x => x.id)), cat = {...cat0, items: cat0.items.filter(x => ids.has(x.m.id)).concat(rs.items), total: cat0.total + rs.total};
+    const errores = cat.errores.concat(gns.some(g => !g) ? ["Google News"] : [], rs.errores);
     const res = await Promise.all(munis.map((m, k) => procesarComuna(m, cat.items.concat((gns[k] || []).filter(x => ids.has(x.m.id))), desde, ahora).catch(e => ({comuna: m.comuna, error: String(e.message || e).slice(0, 200)}))));
     // Avisos: un error aquí no debe perder la lectura ya guardada.
     await Promise.all(res.map(async (r, k) => { const grupos = r.grupos || []; delete r.grupos; if (!grupos.length) return;

@@ -18,7 +18,7 @@ refrescarNotas(); render();
 
 const ahoraLocal = () => { const d = new Date(Date.now() - new Date().getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); };
 function capAbrir(pre = {}){
-  const nombres = [...new Set([...S.fbPaginas.filter(p => !p.c || p.c === S.org).map(p => p.n), ...CATALOG.filter(m => m.a === "local" && (m.c || "").split(";").some(x => territorio().includes(x))).sort((x, y) => (y.m === "facebook") - (x.m === "facebook")).map(m => m.n)])];
+  const nombres = [...new Set([...S.fbPaginas.filter(p => !p.c || p.c === S.org).map(p => p.n), ...CATALOG.filter(m => (m.a === "local" && (m.c || "").split(";").some(x => territorio().includes(x))) || (esRed(m) && m.a !== "local")).sort((x, y) => esRed(y) - esRed(x)).map(m => m.n)])];
   const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "capBack";
   ov.innerHTML = `<section class="vid cap" role="dialog" aria-modal="true" aria-labelledby="capT">
     <header class="vid-h"><div><h2 id="capT">Agregar publicación</h2><p>${pre.compartida ? "Llegó desde Compartir. Revisa los datos y agrégala." : `Para medios que publican en Facebook, grupos vecinales u otras redes. PregonIA la analiza como cualquier noticia de ${esc(S.org)}.`}</p></div><button class="btn ghost" type="button" data-act="cap-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
@@ -28,7 +28,7 @@ function capAbrir(pre = {}){
         <label class="cap-l">Alcance de la página<select id="capAmb"><option value="local">Comunal</option><option value="regional">Regional</option><option value="nacional">Nacional</option></select></label>
       </div>
       <div class="cap-row">
-        <label class="cap-l">Enlace a la publicación <span class="opc">opcional</span><input id="capUrl" type="url" inputmode="url" placeholder="https://www.facebook.com/…"></label>
+        <label class="cap-l">Enlace a la publicación <span class="opc">opcional</span><input id="capUrl" type="url" inputmode="url" placeholder="https://www.facebook.com/… o instagram.com/…"></label>
         <label class="cap-l">Publicada el<input id="capFecha" type="datetime-local" value="${ahoraLocal()}" max="${ahoraLocal()}"></label>
       </div>
       <div class="cap-l"><span class="cap-lh"><label for="capTexto">Texto de la publicación</label><button class="btn ghost sm" type="button" data-act="cap-pegar">Pegar</button></span><textarea id="capTexto" rows="5" placeholder="Pega aquí el texto del post."></textarea><small>Se usa solo para analizarla. PregonIA guarda un titular y un resumen propios, no el texto.</small></div>
@@ -104,7 +104,7 @@ async function capGuardar(e){
   if (img && (!r || r.legible === false) && texto.length < 20) { err.textContent = r ? "No se alcanza a leer la captura: prueba con una más nítida o pega el texto." : "No se pudo analizar la captura ahora: pega el texto de la publicación."; err.hidden = false; btn.disabled = false; btn.textContent = "Analizar y agregar"; return; }
   const medioF = medio || (r && typeof r.medio === "string" && r.medio.trim()) || "Publicación en redes";
   // Medio: si coincide con uno del catálogo se usa ese (publica también en Facebook); si no, se registra la página.
-  let m = CATALOG.find(x => norm(x.n) === norm(medioF)), via = "facebook";
+  let m = CATALOG.find(x => norm(x.n) === norm(medioF)), via = m && m.m === "instagram" || /instagram\.com\//i.test(url) ? "instagram" : "facebook";
   if (!m) { let p = S.fbPaginas.find(x => norm(x.n) === norm(medioF)); if (!p) { p = {id: FB_ID0 + S.fbPaginas.length + 1, n: medioF, a: amb, c: amb === "local" ? S.org : ""}; S.fbPaginas.push(p); registrarPagina(p); } else if (p.a !== amb) { p.a = amb; registrarPagina(p); } m = MED[p.id]; }
   if (!r) sinIA = true;
   const primera = (texto || (r && r.titular) || "Publicación en redes").split(/(?<=[.!?])\s+/)[0].slice(0, 110);

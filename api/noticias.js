@@ -3,6 +3,19 @@
 // La lectura y la clasificación viven en _lectura.js, compartido con la lectura programada (/api/ingesta).
 import { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre, saludFuentes } from "./_lectura.js";
 import { AUTORIDADES, CARGOS, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
+import { CATALOGO } from "./_catalogo.js";
+import { leerRedes, usuarioDe, cuentasCatalogo } from "./_redes.js";
+
+/* Cuentas de Facebook e Instagram: las del catálogo fijo más las que la persona inscribió en su navegador (parámetro redes,
+   JSON [[id, red, usuario, ámbito, comuna, nombre], …], ids 9000 a 9999). En el piloto las inscritas viven en la base. */
+const AMBITOS = new Set(["nacional", "regional", "local"]);
+function redesDe(u){
+  let extra = []; try { extra = JSON.parse(u.searchParams.get("redes") || "[]"); } catch {}
+  const propias = (Array.isArray(extra) ? extra : []).slice(0, 20).map(x => Array.isArray(x) && {id: Number(x[0]), red: x[1], usuario: usuarioDe(x[1], x[2]), ambito: x[3], comuna: limpio(x[4], 300), nombre: limpio(x[5], 80) || "Cuenta en redes"})
+    .filter(m => m && m.id >= 9000 && m.id < 10000 && m.usuario && AMBITOS.has(m.ambito));
+  const fijas = cuentasCatalogo(CATALOGO);
+  return fijas.concat(propias.filter(p => !fijas.some(f => f.red === p.red && f.usuario.toLowerCase() === p.usuario.toLowerCase())));
+}
 
 /* Autoridades: la consulta va por nombre y cargo, con palabras de contexto que descartan homónimos lejanos. */
 const CONTEXTO_ROL = {
@@ -38,14 +51,14 @@ async function paresDe(a, desde){
 async function deAutoridad(u){
   const a = sujetoDe(u); if (!a) return json({ error: "Autoridad no disponible" }, 400);
   const z = zonaDe(a.rol, a.zona), cargo = cargoDe(a.rol, a.g), ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
-  const [cat, gn, pares] = await Promise.all([leerCatalogo(), leerGoogleNewsConsulta(consulta(a)).catch(() => null), a.nomina ? paresDe(a, desde).catch(() => []) : []]);
-  const errores = cat.errores.concat(gn ? [] : ["Google News"]);
-  const candidatas = candidatasPorNombre(variantesNombre(a), cat.items.concat(gn || []), desde, ahora), lote = candidatas.slice(0, MAX_IA);
+  const [cat, gn, pares, rs] = await Promise.all([leerCatalogo(), leerGoogleNewsConsulta(consulta(a)).catch(() => null), a.nomina ? paresDe(a, desde).catch(() => []) : [], leerRedes(redesDe(u))]);
+  const errores = cat.errores.concat(gn ? [] : ["Google News"], rs.errores);
+  const candidatas = candidatasPorNombre(variantesNombre(a), cat.items.concat(gn || [], rs.items), desde, ahora), lote = candidatas.slice(0, MAX_IA);
   let clas = {porI: new Map(), ok: false}; try { clas = await clasificar({nombre: a.n, cargo, zona: z.n}, lote); } catch(e) { console.error("clasificar", e); }
   const notas = armar(lote, clas.porI);
   return json({
     autoridad: {id: a.id, nombre: a.n, cargo, zona: z.n}, generado: new Date(ahora).toISOString(), ventana_dias: VENTANA_DIAS, ia: clas.ok, ia_parcial: !clas.ok && clas.porI.size > 0,
-    fuentes: { leidas: cat.total + 1 - errores.length, total: cat.total + 1, con_error: errores.slice(0, 40) },
+    fuentes: { leidas: cat.total + 1 + rs.total - errores.length, total: cat.total + 1 + rs.total, con_error: errores.slice(0, 40) }, redes: rs.estado,
     candidatas: candidatas.length, pares, ...(DIAG.length ? {ia_diagnostico: DIAG.slice(0, 6)} : {}), notas
   }, 200, { "cache-control": clas.ok ? "public, max-age=0, s-maxage=900, stale-while-revalidate=3600" : "public, max-age=0, s-maxage=60" });
 }
@@ -56,7 +69,7 @@ function armar(lote, porI){
     const c = porI.get(i);
     if (c && c.rel === false) return;
     const etiqueta = c && c.g ? "g:" + norm(c.g) : n.id, clasificada = Boolean(c && c.tono);
-    notas.push({ id: n.id, m: n.m, ts: n.ts, t: n.titulo, url: n.url, tono: c && ["cri", "neu", "pos"].includes(c.tono) ? c.tono : "neu", res: c && c.res ? String(c.res).slice(0, 220) : n.titulo, x: c && c.x ? String(c.x).slice(0, 120) : "", clasificada, etiqueta, ...(n.fuente ? {fuente: n.fuente} : {}) });
+    notas.push({ id: n.id, m: n.m, ts: n.ts, t: n.titulo, url: n.url, tono: c && ["cri", "neu", "pos"].includes(c.tono) ? c.tono : "neu", res: c && c.res ? String(c.res).slice(0, 220) : n.titulo, x: c && c.x ? String(c.x).slice(0, 120) : "", clasificada, etiqueta, ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via === "instagram" || n.via === "facebook" ? {via: n.via} : {}) });
   });
   // Grupo estable: el id de la nota más antigua del mismo hecho, para que "respondida" o "no corresponde" sobrevivan a una nueva lectura.
   notas.slice().sort((a, b) => a.ts - b.ts).forEach(n => { if (!grupos.has(n.etiqueta)) grupos.set(n.etiqueta, n.id); });
@@ -76,16 +89,16 @@ export async function GET(req){
   if (!COMUNAS[comuna]) return json({ error: "Comuna no disponible" }, 400);
   const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
   const alcalde = AUTORIDADES.find(x => x.rol === "alcalde" && x.zona === comuna);
-  const [cat, gn, pares] = await Promise.all([leerCatalogo(), leerGoogleNews(comuna).catch(() => null), alcalde ? paresDe(alcalde, desde).catch(() => []) : []]);
-  const errores = cat.errores.concat(gn ? [] : ["Google News"]);
-  const candidatas = candidatasDe(comuna, cat.items.concat(gn || []), desde, ahora), lote = candidatas.slice(0, MAX_IA);
+  const [cat, gn, pares, rs] = await Promise.all([leerCatalogo(), leerGoogleNews(comuna).catch(() => null), alcalde ? paresDe(alcalde, desde).catch(() => []) : [], leerRedes(redesDe(u))]);
+  const errores = cat.errores.concat(gn ? [] : ["Google News"], rs.errores);
+  const candidatas = candidatasDe(comuna, cat.items.concat(gn || [], rs.items), desde, ahora), lote = candidatas.slice(0, MAX_IA);
 
   let clas = {porI: new Map(), ok: false}; try { clas = await clasificar(comuna, lote); } catch(e) { console.error("clasificar", e); }
   const notas = armar(lote, clas.porI);
 
   return json({
     comuna, generado: new Date(ahora).toISOString(), ventana_dias: VENTANA_DIAS, ia: clas.ok, ia_parcial: !clas.ok && clas.porI.size > 0,
-    fuentes: { leidas: cat.total + 1 - errores.length, total: cat.total + 1, con_error: errores.slice(0, 40) },
+    fuentes: { leidas: cat.total + 1 + rs.total - errores.length, total: cat.total + 1 + rs.total, con_error: errores.slice(0, 40) }, redes: rs.estado,
     candidatas: candidatas.length, alcalde: alcalde ? {nombre: alcalde.n, cargo: cargoDe("alcalde", alcalde.g)} : null, pares, ...(DIAG.length ? {ia_diagnostico: DIAG.slice(0, 6)} : {}), notas
   }, 200, { "cache-control": clas.ok ? "public, max-age=0, s-maxage=900, stale-while-revalidate=3600" : "public, max-age=0, s-maxage=60" });
 }

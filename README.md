@@ -31,6 +31,7 @@ Los datos de la demo se guardan en el navegador (localStorage, clave `pregonia-d
 - `api/ia.js` función de servidor (Vercel Edge) que conecta la IA con la clave en el servidor.
 - `api/voz.js` función de servidor que graba la voz del video resumen con ElevenLabs.
 - `src/video.js` video resumen del parte del alcalde: escenas en canvas, guion, voz y exportación a MP4 en el navegador.
+- `src/redes.js` cuentas de Facebook e Instagram de medios: inscripción desde Ajustes › Fuentes, estado de lectura y retiro. `api/_redes.js` las lee por la API de Meta; `src/cuentasred.js` (copiado a `api/_cuentasred.js`) reconoce el usuario a partir del enlace.
 - `scripts/build.py` arma `index.html` desde `src/`, `assets/` y `data/`.
 
 ## Uso
@@ -107,3 +108,29 @@ PregonIA avisa de noticias críticas nuevas, de las que escalan a prensa regiona
   3. Correo (opcional): cuenta en Resend con el dominio verificado, y en Vercel `RESEND_API_KEY` y `AVISOS_REMITENTE` (por ejemplo `PregonIA <avisos@altkimia.com>`).
   4. Volver a desplegar. Cada persona activa los avisos en la campana de su celular.
 
+
+
+## Cuentas de Facebook e Instagram de medios
+
+Un editor inscribe la cuenta en **Ajustes › Fuentes › Inscribir cuenta de red social** (red, enlace o @usuario, nombre del medio, alcance y comuna). Queda en el listado de fuentes de todas las cuentas de PregonIA y en la lista de Agregar publicación. En el piloto se guarda en la base (`inscribir_red`, ids desde 10000); en la demostración, en el navegador. Solo quien la inscribió (su municipio) puede retirarla; al retirarla deja de leerse y sus notas se conservan.
+
+Cómo se procesan:
+
+- **Instagram (lectura automática).** La lectura programada y «Noticias reales» leen las últimas 30 publicaciones de cada cuenta con la API oficial de Meta (Business Discovery) y las clasifican igual que una nota de prensa: relevancia para la comuna, tono, resumen propio y hecho al que pertenecen. Se guarda la primera frase como titular, el enlace y la fecha; el texto se usa solo para clasificar. Solo funciona con cuentas profesionales (empresa o creador), que es lo habitual en medios; si una cuenta es personal, Fuentes lo indica y queda para captura asistida.
+- **Facebook (captura asistida por ahora).** Meta solo permite leer páginas de terceros con el permiso *Page Public Content Access*, que aprueba tras revisar la app y verificar la empresa. El lector ya está hecho: se activa con `META_FB_PPCA=1` cuando Meta lo apruebe. Mientras tanto, las publicaciones se agregan con Agregar publicación.
+
+Conectar Meta (una vez, en la cuenta de ALTKimia):
+
+1. Tener una cuenta de Instagram **profesional** de ALTKimia o PregonIA, ligada a una página de Facebook.
+2. En developers.facebook.com, crear una app de tipo Empresa y agregarle el producto «API de Instagram con inicio de sesión con Facebook».
+3. Generar un token con los permisos `instagram_basic`, `pages_show_list` y `pages_read_engagement`. Para que no venza, crearlo para un **usuario del sistema** en el Business Manager; un token de usuario normal dura 60 días.
+4. Obtener el id de la cuenta de Instagram: `GET /me/accounts?fields=instagram_business_account` con ese token.
+5. En Vercel (Settings › Environment Variables), y luego Redeploy:
+   - `META_ACCESS_TOKEN`: el token.
+   - `META_IG_USER_ID`: el id de la cuenta profesional de Instagram.
+   - `META_FB_PPCA` (opcional): `1` solo cuando Meta apruebe Page Public Content Access.
+   - `META_GRAPH_VERSION` (opcional): por defecto `v25.0`.
+
+Mientras quien generó el token tenga un rol en la app, no hace falta pasar por la revisión de Meta para Instagram. Si el token vence, Fuentes muestra «No se pudo leer» con el motivo.
+
+En la base del piloto: volver a ejecutar `supabase/esquema.sql` (agrega las columnas de cuentas de redes, las funciones `inscribir_red` y `retirar_red` y el origen `instagram`/`facebook` de las notas) y luego `supabase/semilla.sql`.

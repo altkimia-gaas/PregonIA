@@ -26,6 +26,7 @@ function medioDeUrl(url){
   const id = u.searchParams.get("id");
   const hit = CATALOG.find(m => { if (!m.u) return false; let v; try { v = new URL(m.u); } catch(e) { return false; }
     const vh = v.hostname.replace(/^(www|m|web|mobile)\./, ""); if (vh !== host) return false;
+    if (/instagram\.com$/.test(vh)) { const vr = v.pathname.toLowerCase().split("/").filter(Boolean); return !!vr[0] && vr[0] === ruta[0]; }  // un enlace a una publicación (/p/…) no trae la cuenta
     if (/facebook\.com$/.test(vh)) { const vr = v.pathname.toLowerCase().split("/").filter(Boolean); return vr[0] === "profile.php" ? !!id && v.searchParams.get("id") === id : !!vr[0] && vr[0] === ruta[0]; }
     return true; });
   return hit ? hit.n : "";

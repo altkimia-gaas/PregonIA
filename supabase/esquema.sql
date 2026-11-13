@@ -22,6 +22,18 @@ create table if not exists medios (
 alter table medios drop constraint if exists medios_ambito_check;
 alter table medios add constraint medios_ambito_check check (ambito in ('nacional', 'regional', 'local', 'institucional'));
 
+-- Cuentas de Facebook e Instagram de medios (nov 2026): las inscribe un editor desde la aplicación y quedan en el catálogo,
+-- compartidas por todos los municipios. La lectura programada las lee por la API de Meta y anota cuándo y si falló.
+-- Nunca se borran (sus notas las referencian): al retirarlas quedan con estado 'retirado' y dejan de leerse.
+alter table medios add column if not exists usuario_red    text;
+alter table medios add column if not exists inscrito_muni  uuid;
+alter table medios add column if not exists inscrito_por   uuid references auth.users (id) on delete set null;
+alter table medios add column if not exists inscrito       timestamptz;
+alter table medios add column if not exists ultima_lectura timestamptz;
+alter table medios add column if not exists error_lectura  text;
+create unique index if not exists medios_cuenta_red on medios (metodo, lower(usuario_red)) where usuario_red is not null and estado <> 'retirado';
+create sequence if not exists medios_redes_id start 10000;
+
 -- Municipios clientes. config guarda la caracterización y los temas tal como los usa la aplicación.
 create table if not exists municipios (
   id      uuid primary key default gen_random_uuid(),
@@ -115,6 +127,10 @@ create table if not exists comunicados (
 );
 create index if not exists comunicados_muni on comunicados (municipio_id, creado desc);
 
+-- Notas que llegan de cuentas de Instagram o Facebook (bases creadas antes: ampliar el origen permitido).
+alter table notas drop constraint if exists notas_via_check;
+alter table notas add constraint notas_via_check check (via in ('lectura', 'google_news', 'instagram', 'facebook'));
+
 -- Registro de cada lectura programada de medios.
 create table if not exists lecturas (
   id            bigint generated always as identity primary key,
@@ -206,6 +222,46 @@ drop policy if exists actividad_leer on actividad;
 create policy actividad_leer on actividad for select to authenticated using (municipio_id = mi_municipio());
 drop policy if exists actividad_crear on actividad;
 create policy actividad_crear on actividad for insert to authenticated with check (municipio_id = mi_municipio() and usuario = auth.uid());
+
+-- Inscribir y retirar cuentas de redes: solo administradores y comunicaciones, por funciones que validan todo en la base.
+-- Si la cuenta ya está inscrita (por cualquier municipio) devuelve la existente en vez de duplicarla.
+create or replace function inscribir_red(p_red text, p_usuario text, p_nombre text, p_ambito text, p_comunas text)
+returns medios language plpgsql security definer set search_path = public as $$
+declare fila medios; u text := trim(p_usuario);
+begin
+  if not puedo_editar() then raise exception 'Solo administración y comunicaciones pueden inscribir cuentas'; end if;
+  if p_red not in ('instagram', 'facebook') then raise exception 'Red no válida'; end if;
+  if p_ambito not in ('nacional', 'regional', 'local') then raise exception 'Alcance no válido'; end if;
+  if (p_red = 'instagram' and u !~ '^[A-Za-z0-9._]{1,30}$') or (p_red = 'facebook' and u !~ '^[A-Za-z0-9.-]{5,80}$') then raise exception 'Usuario no válido'; end if;
+  if length(trim(coalesce(p_nombre, ''))) < 2 then raise exception 'Falta el nombre del medio'; end if;
+  if p_red = 'instagram' then u := lower(u); end if;
+  select * into fila from medios where metodo = p_red and lower(usuario_red) = lower(u) and estado <> 'retirado';
+  if found then return fila; end if;
+  insert into medios (id, nombre, ambito, comunas, tipo, nivel, metodo, url_lectura, estado, observacion, usuario_red, inscrito_muni, inscrito_por, inscrito)
+  values (nextval('medios_redes_id'), left(trim(p_nombre), 120), p_ambito, nullif(left(trim(coalesce(p_comunas, '')), 600), ''),
+    case p_red when 'instagram' then 'Instagram' else 'Facebook' end, 'C', p_red,
+    case when p_red = 'instagram' then 'https://www.instagram.com/' || u || '/'
+         when u ~ '^[0-9]+$' then 'https://www.facebook.com/profile.php?id=' || u else 'https://www.facebook.com/' || u end,
+    'inscrita', 'Inscrita desde la aplicación', u, mi_municipio(), auth.uid(), now())
+  returning * into fila;
+  insert into actividad (municipio_id, usuario, accion, detalle) values (mi_municipio(), auth.uid(), 'medios.inscribir', jsonb_build_object('id', fila.id, 'red', p_red, 'usuario', u, 'nombre', fila.nombre));
+  return fila;
+end $$;
+create or replace function retirar_red(p_id int) returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not puedo_editar() then raise exception 'Solo administración y comunicaciones pueden retirar cuentas'; end if;
+  update medios set estado = 'retirado' where id = p_id and inscrito_muni = mi_municipio() and estado <> 'retirado';
+  if not found then raise exception 'Solo se pueden retirar cuentas que inscribió este municipio'; end if;
+  insert into actividad (municipio_id, usuario, accion, detalle) values (mi_municipio(), auth.uid(), 'medios.retirar', jsonb_build_object('id', p_id));
+end $$;
+revoke execute on function inscribir_red(text, text, text, text, text) from public;
+revoke execute on function retirar_red(int) from public;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then
+    execute 'grant execute on function inscribir_red(text, text, text, text, text) to authenticated';
+    execute 'grant execute on function retirar_red(int) to authenticated';
+  end if;
+end $$;
 
 -- Municipios del piloto (litoral central). La configuración la completa la aplicación la primera vez que entra un editor.
 insert into municipios (comuna, nombre) values

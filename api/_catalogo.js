@@ -920,6 +920,15 @@ export const CATALOGO = [
 },
 {
 "id": 103,
+"nombre": "31TV Casablanca (Instagram)",
+"ambito": "local",
+"comuna": "Casablanca",
+"metodo": "instagram",
+"url": "https://www.instagram.com/31tv.cl/",
+"estado": "red"
+},
+{
+"id": 103,
 "nombre": "MargaMargaTV",
 "ambito": "local",
 "comuna": "Quilpué;Villa Alemana;Limache;Olmué",

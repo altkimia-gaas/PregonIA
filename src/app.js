@@ -143,7 +143,7 @@ const tonoLbl = {pos:"Positivo", neu:"Neutro", cri:"Crítico"};
 const tonoPl = {pos:"Positivas", neu:"Neutras", cri:"Críticas"};
 const pillTono = t => `<span class="pill ic t-${t}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${({cri:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.4h.01"/>',pos:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.2 9.6"/>',neu:'<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>'})[t]}</svg>${tonoLbl[t]}</span>`;
 const nomMedio = n => n.fuente || MED[n.m].n;  // las fuentes institucionales sin ficha propia guardan su nombre real
-const medioN = n => nomMedio(n) + (n.via === "facebook" || MED[n.m].t === "Facebook" ? " · Facebook" : MED[n.m].e === "restringido" ? " (vía Google News)" : "");
+const medioN = n => { const nm = nomMedio(n), red = n.via === "instagram" || MED[n.m].t === "Instagram" ? "Instagram" : n.via === "facebook" || MED[n.m].t === "Facebook" ? "Facebook" : ""; return nm + (red ? (nm.includes(red) ? "" : " · " + red) : MED[n.m].e === "restringido" ? " (vía Google News)" : ""); };
 const signo = n => (n > 0 ? "+" : "") + n;
 const plural = (n, s, p) => n + " " + (n === 1 ? s : p);
 /* Balance del tono: veredicto en cinco niveles. El índice (positivas − críticas) / total solo decide el nivel; el usuario ve palabras y conteos. */
@@ -161,7 +161,7 @@ function renderChrome(){
   const pend = pendientes().length;
   const link = ([key, name], ic, cnt) => `<a href="#${key}" ${key===k || (key==="temas" && cfg) ? 'aria-current="page"' : ""}>${icon(ic)}<span>${name}</span>${cnt ? `<span class="count" aria-label="${cnt} por revisar">${cnt}</span>` : ""}</a>`;
   $("#nav").innerHTML = MAIN.map(x => link(x, x[0], x[0]==="menciones" ? pend : 0)).join("") + link(["temas","Ajustes"], "config", 0);
-  $("#fecha").textContent = PILOTO && PILOTO.activo ? (PILOTO.lectura ? "Lectura de medios cada 30 min · última " + horaCorta(PILOTO.lectura.fin) : "Lectura de medios cada 30 min") : "Monitoreando " + CATALOG.filter(m => m.m !== "facebook" && m.a !== "institucional").length + " medios · actualizado " + new Date(NOW - 7*60000).toLocaleTimeString("es-CL", {hour:"2-digit", minute:"2-digit", hourCycle:"h23"});
+  $("#fecha").textContent = PILOTO && PILOTO.activo ? (PILOTO.lectura ? "Lectura de medios cada 30 min · última " + horaCorta(PILOTO.lectura.fin) : "Lectura de medios cada 30 min") : "Monitoreando " + CATALOG.filter(m => m.m !== "facebook" && m.m !== "instagram" && m.a !== "institucional").length + " medios · actualizado " + new Date(NOW - 7*60000).toLocaleTimeString("es-CL", {hour:"2-digit", minute:"2-digit", hourCycle:"h23"});
   $("#bnav").innerHTML = MAIN.map(x => link(x, x[0], x[0]==="menciones" ? pend : 0)).join("") + link(["temas","Ajustes"], "config", 0);
 }
 
@@ -313,17 +313,22 @@ function propHtml(){
   <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="activar">Usar estos temas</button><button class="btn" data-act="descartar">Descartar</button></div></div>`;
 }
 function vFuentes(){
-  const f = tState.fuente, rows = CATALOG.filter(m => (f.a==="todos"||m.a===f.a) && (f.e==="todos"||m.e===f.e));
-  const cnt = k => CATALOG.filter(m => m.e===k).length;
+  // Las cuentas de Facebook e Instagram tienen un estado vivo (lectura automática, pendiente de Meta, captura asistida o error): src/redes.js.
+  const f = tState.fuente, est = m => esRed(m) ? estadoRed(m) : {k: m.e, l: null, o: m.o};
+  const todas = CATALOG.filter(m => m.e !== "retirado"), redes = todas.filter(esRed), web = todas.filter(m => !esRed(m) && m.a !== "institucional");
+  const rows = todas.filter(m => (f.a==="todos"||m.a===f.a) && (f.e==="todos" || (f.e==="redes" ? esRed(m) : !esRed(m) && m.e===f.e)));
+  const cnt = k => todas.filter(m => !esRed(m) && m.e===k).length;
   const lbl = {listo:"Listo", requiere_ajuste:"Requiere ajuste", restringido:"Restringido", captura_asistida:"Captura asistida"};
-  const met = {rss:"RSS", sitemap_noticias:"Sitemap de noticias", sitemap:"Sitemap", sitemap_mensual:"Sitemap mensual", portada:"Portada", google_news:"Google News", rss_filtrado:"RSS filtrado", sitemap_filtrado:"Sitemap filtrado", facebook:"Facebook"};
-  return `<div class="head"><div><h2 tabindex="-1">Fuentes</h2><p>Los ${CATALOG.filter(m => m.m !== "facebook" && m.a !== "institucional").length} medios web que PregonIA lee y cómo se lee cada uno (verificado el 3 de noviembre de 2026), más ${plural(CATALOG.filter(m => m.m === "facebook").length, "página", "páginas")} de Facebook. Los restringidos se consultan solo vía Google News; las de Facebook se ingresan con Agregar publicación, en Menciones.</p></div></div>
+  const met = {rss:"RSS", sitemap_noticias:"Sitemap de noticias", sitemap:"Sitemap", sitemap_mensual:"Sitemap mensual", portada:"Portada", google_news:"Google News", rss_filtrado:"RSS filtrado", sitemap_filtrado:"Sitemap filtrado", facebook:"Facebook", instagram:"Instagram"};
+  const nIg = redes.filter(m => m.m === "instagram").length, nFb = redes.length - nIg;
+  return `<div class="head"><div><h2 tabindex="-1">Fuentes</h2><p>Los ${web.length} medios web que PregonIA lee y cómo se lee cada uno (verificado el 3 de noviembre de 2026), más ${plural(redes.length, "cuenta", "cuentas")} de medios en redes sociales (${nIg} de Instagram y ${nFb} de Facebook). Los restringidos se consultan solo vía Google News. Las cuentas de Instagram se leen solas cuando PregonIA está conectado con Meta; las de Facebook, por ahora, con Agregar publicación.</p></div>
+    ${puedeInscribir() ? `<button class="btn alt" type="button" data-act="red-abrir">Inscribir cuenta de red social</button>` : ""}</div>
   ${subtabs()}
   <div class="filters">
-    <div class="seg" role="group" aria-label="Estado">${[["todos","Todos",CATALOG.length],["listo","Listos",cnt("listo")],["requiere_ajuste","Requieren ajuste",cnt("requiere_ajuste")],["restringido","Restringidos",cnt("restringido")],["captura_asistida","Facebook",cnt("captura_asistida")]].map(([v,l,n]) => `<button data-act="f-est" data-k="${v}" aria-pressed="${f.e===v}">${l}<span class="c">${n}</span></button>`).join("")}</div>
+    <div class="seg" role="group" aria-label="Estado">${[["todos","Todos",todas.length],["listo","Listos",cnt("listo")],["requiere_ajuste","Requieren ajuste",cnt("requiere_ajuste")],["restringido","Restringidos",cnt("restringido")],["redes","Redes sociales",redes.length]].map(([v,l,n]) => `<button data-act="f-est" data-k="${v}" aria-pressed="${f.e===v}">${l}<span class="c">${n}</span></button>`).join("")}</div>
     <div class="seg" role="group" aria-label="Ámbito">${[["todos","Todos"],["nacional","Nacional"],["regional","Regional"],["local","Local"],["institucional","Institucional"]].map(([v,l]) => `<button data-act="f-amb" data-k="${v}" aria-pressed="${f.a===v}">${l}</button>`).join("")}</div>
   </div>
-  <div class="card scroll" style="padding:0"><table class="ftab"><thead><tr><th>Medio</th><th>Ámbito</th><th>Comuna</th><th>Lectura</th><th>Estado</th></tr></thead><tbody>${rows.map(m => `<tr><td class="fm"><b>${esc(m.n)}</b>${m.o?`<div class="muted" style="font-size:12px">${esc(m.o)}</div>`:""}</td><td data-l="Ámbito">${m.a}</td><td data-l="Comuna">${esc((m.c||"").replace(/;/g, ", ")) || '<span class="muted">—</span>'}</td><td data-l="Lectura">${met[m.m]||m.m}</td><td data-l="Estado"><span class="pill e-${m.e}">${lbl[m.e]}</span></td></tr>`).join("")}</tbody></table></div>`;
+  <div class="card scroll" style="padding:0"><table class="ftab"><thead><tr><th>Medio</th><th>Ámbito</th><th>Comuna</th><th>Lectura</th><th>Estado</th></tr></thead><tbody>${rows.map(m => { const e = est(m); return `<tr><td class="fm"><b>${esc(m.n)}</b>${e.o?`<div class="muted" style="font-size:12px">${esc(e.o)}</div>`:""}${esRed(m) && redRetirable(m) ? `<div><button class="btn ghost sm" type="button" data-act="red-retirar" data-id="${m.id}">Retirar</button></div>` : ""}</td><td data-l="Ámbito">${m.a}</td><td data-l="Comuna">${esc((m.c||"").replace(/;/g, ", ")) || '<span class="muted">—</span>'}</td><td data-l="Lectura">${met[m.m]||m.m}${esRed(m) && m.usr ? `<div><a class="muted" style="font-size:12px" href="${esc(m.u)}" target="_blank" rel="noopener">${/^\d+$/.test(m.usr) ? "perfil " + esc(m.usr) : "@" + esc(m.usr)}</a></div>` : ""}</td><td data-l="Estado"><span class="pill e-${e.k}">${esc(e.l || lbl[e.k] || e.k)}</span></td></tr>`; }).join("")}</tbody></table></div>`;
 }
 
 /* Reportes: cada resultado se lee como gráfico y como cifra */
@@ -1346,9 +1351,10 @@ async function cargarReales(force, silencioso){
   try {
     const pa = esAut() ? cuenta().perfil : null;
     const q = !pa ? "comuna=" + encodeURIComponent(org) : pa.autoridadId ? "autoridad=" + encodeURIComponent(pa.autoridadId) : "rol=" + encodeURIComponent(pa.rol) + "&zona=" + encodeURIComponent(pa.zona) + "&nombre=" + encodeURIComponent(pa.nombre) + "&g=" + pa.g;
-    const r = await fetch("/api/noticias?" + q); if (!r.ok) throw new Error("HTTP " + r.status);
+    const r = await fetch("/api/noticias?" + q + redesParam()); if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json(); if (PILOTO && PILOTO.activo) { MODO.cargando = false; return; } if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
-    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, ...(n.fuente ? {fuente: n.fuente} : {}), hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? pa.variantes[0] : org + " comuna")), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna
+    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via ? {via: n.via} : {}), hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? pa.variantes[0] : org + " comuna")), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna
+    actualizarEstadoRedes(j.redes);  // estado de cada cuenta de Facebook e Instagram para la vista Fuentes
     MODO = {...MODO, tipo: "real", info: {...j, comuna: org, notas: nuevas}, cargando: false}; refrescarNotas(nuevas);  // el modo primero: los avisos se guardan por modo
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
     pintarModo(); render();
