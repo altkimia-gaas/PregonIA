@@ -257,6 +257,10 @@ end $$;
 revoke execute on function inscribir_red(text, text, text, text, text) from public;
 revoke execute on function retirar_red(int) from public;
 do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then
+    execute 'revoke execute on function inscribir_red(text, text, text, text, text) from anon';
+    execute 'revoke execute on function retirar_red(int) from anon';
+  end if;
   if exists (select 1 from pg_roles where rolname = 'authenticated') then
     execute 'grant execute on function inscribir_red(text, text, text, text, text) to authenticated';
     execute 'grant execute on function retirar_red(int) to authenticated';
