@@ -951,7 +951,7 @@ export const CATALOGO = [
 "ambito": "local",
 "comuna": "San Antonio;El Tabo;El Quisco;Algarrobo;Santo Domingo",
 "metodo": "facebook",
-"url": "https://www.facebook.com/RadioGalactika",
+"url": "https://www.facebook.com/profile.php?id=61591891344038",
 "estado": "red"
 },
 {
