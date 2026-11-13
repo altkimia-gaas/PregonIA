@@ -72,7 +72,8 @@ function defaults(){
 let S;
 try { const raw = localStorage.getItem(KEY); S = raw ? JSON.parse(raw) : defaults(); if (!S.cuentas || !S.cuentas.Casablanca) S = defaults(); } catch(e) { S = defaults(); }
 S.resp ||= {}; S.fp ||= {};
-if (Object.values(S.cuentas).map(adaptarCuenta).some(Boolean)) save();  // cuentas de una versión anterior: temas adaptados a su territorio
+if (Object.values(S.cuentas).map(adaptarCuenta).some(Boolean)) save();
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch(e) {}  // pide al navegador no borrar los temas guardados en este equipo  // cuentas de una versión anterior: temas adaptados a su territorio
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
 const cuenta = () => S.cuentas[S.org];
 const respondida = g => !!S.resp[S.org + ":" + g];
