@@ -38,7 +38,7 @@ Si se agregan pagos en línea, analítica, píxeles o correos comerciales, se ac
 | 15 | Cancelar tan fácil como suscribirse | No aplica hoy | En el contrato: término por el mismo medio de contratación |
 | 16 | Aviso de renovación automática | No aplica hoy | En el contrato, si hay renovación automática |
 | 17 | Sin cargos ocultos | Revisar | La barra superior muestra "Plan Comunal · $149.000/mes" (`src/base.js`, PLANES) sin decir si incluye IVA. Definir y mostrar "IVA incluido" o "+ IVA"; lo mismo en propuestas comerciales |
-| 18 | Datos de contacto de la empresa | Implementado | `legal.html#quien` con [COMPLETAR] razón social, RUT y domicilio |
+| 18 | Datos de contacto de la empresa | Implementado | `legal.html#quien`: ALTKIMIA Consultoría y Tecnología SpA, RUT 77.508.685-8, Padre Mariano 391 of. 704, Providencia. Faltan los correos [COMPLETAR] |
 | 19 | Sin cuentas regresivas falsas | Cumple | No hay |
 | 20 | Sin patrones engañosos | Cumple | Revisado: sin casillas premarcadas ni "confirmshaming"; nada se publica sin aprobación |
 | 21 | Sin reseñas falsas | Cumple | No hay reseñas |
