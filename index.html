@@ -1976,7 +1976,8 @@ function defaults(){
 let S;
 try { const raw = localStorage.getItem(KEY); S = raw ? JSON.parse(raw) : defaults(); if (!S.cuentas || !S.cuentas.Casablanca) S = defaults(); } catch(e) { S = defaults(); }
 S.resp ||= {}; S.fp ||= {};
-if (Object.values(S.cuentas).map(adaptarCuenta).some(Boolean)) save();  // cuentas de una versión anterior: temas adaptados a su territorio
+if (Object.values(S.cuentas).map(adaptarCuenta).some(Boolean)) save();
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch(e) {}  // pide al navegador no borrar los temas guardados en este equipo  // cuentas de una versión anterior: temas adaptados a su territorio
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
 const cuenta = () => S.cuentas[S.org];
 const respondida = g => !!S.resp[S.org + ":" + g];
@@ -4280,6 +4281,7 @@ function paginaFB(nombre, ambito){
 }
 const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null, hitos: c.hitos || [], prep: c.prep || {}, tv: c.tv || 0});
 async function cargarDatosPiloto(){
+  if (PILOTO.timer) await sincronizarYa();  // un cambio a medio guardar se envía antes de releer la base
   const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 32 * DAY).toISOString();
   const pide = q => q.then(r => { if (r.error) throw new Error(r.error.message); return r.data; });
   const [men, mar, com, cap, lec, mun] = await Promise.all([
@@ -4291,8 +4293,14 @@ async function cargarDatosPiloto(){
     pide(sb.from("municipios").select("config").eq("id", mid).single()),
     cargarRedesPiloto(sb).catch(() => null)  // cuentas de Facebook e Instagram: antes de las notas, que las necesitan como medio
   ]);
-  const c = cuenta();
-  if (mun.config && mun.config.temas) { Object.assign(c, mun.config); c.tv = mun.config.tv || 0; adaptarCuenta(c); }  // configuración guardada antes de los temas por territorio: se adapta al leerla
+  const c = cuenta(), pend = PILOTO.editor ? leerPendiente() : null;
+  if (pend) {  // temas cambiados en este equipo que no alcanzaron a llegar a la base: se suben y prevalecen
+    const cfg = JSON.parse(pend.cfg);
+    const d = await pide(sb.from("municipios").update({config: cfg, actualizado: new Date().toISOString()}).eq("id", mid).select("id"));
+    if (d && d.length) { Object.assign(c, cfg); limpiarPendiente(pend.cfg); toast("Se guardaron en la base los cambios de temas que habían quedado pendientes."); }
+    else if (mun.config && mun.config.temas) { Object.assign(c, mun.config); c.tv = mun.config.tv || 0; adaptarCuenta(c); }
+  }
+  else if (mun.config && mun.config.temas) { Object.assign(c, mun.config); c.tv = mun.config.tv || 0; adaptarCuenta(c); }  // configuración guardada antes de los temas por territorio: se adapta al leerla
   else if (PILOTO.editor) await pide(sb.from("municipios").update({config: configDe(c)}).eq("id", mid).select("id"));  // primera vez: se sube la caracterización actual
   const notas = men.filter(r => MED[r.notas.medio_id]).map(r => { const n = r.notas, t = n.titulo, res = r.resumen || t, x = r.palabras || "";
     return {id: n.id, m: n.medio_id, ts: Date.parse(n.publicado), t, b: "", x, tono: r.tono || "neu", res, g: String(r.grupo || n.id), url: n.url, hay: norm(t + " " + res + " " + x + " " + org + " comuna"), ht: norm(t), real: true}; });
@@ -4313,13 +4321,27 @@ function serializar(){
   return {fp: lista(S.fp), resp: lista(S.resp), cap: S.capturas.filter(x => x.org === org).map(x => x.id), com: S.comunicados.filter(x => x.org === org && !x.dbid).length, config: JSON.stringify(configDe(cuenta()))};
 }
 const guardarLocal = save;
-save = function(){ guardarLocal(); if (PILOTO.activo) { clearTimeout(PILOTO.timer); PILOTO.timer = setTimeout(sincronizar, 400); } };
+/* Temas y configuración: cada cambio queda marcado como pendiente en este equipo hasta que la base confirma que lo guardó.
+   Si la pestaña se cierra antes, o la base falla, el cambio no se pierde: se sube en la próxima sesión antes de leer la base. */
+const PEND_KEY = "pregonia-config-pendiente";
+function marcarPendiente(){
+  if (!PILOTO.activo || !PILOTO.snap || !PILOTO.editor) return;
+  const cfg = JSON.stringify(configDe(cuenta()));
+  if (cfg === PILOTO.snap.config) return;
+  try { localStorage.setItem(PEND_KEY, JSON.stringify({mid: PILOTO.muni.id, cfg, ts: Date.now()})); } catch(e) {}
+}
+function leerPendiente(){ try { const p = JSON.parse(localStorage.getItem(PEND_KEY) || "null"); return p && p.mid === (PILOTO.muni && PILOTO.muni.id) ? p : null; } catch(e) { return null; } }
+function limpiarPendiente(cfg){ const p = leerPendiente(); if (p && (!cfg || p.cfg === cfg)) try { localStorage.removeItem(PEND_KEY); } catch(e) {} }
+function sincronizarYa(){ if (PILOTO.timer) { clearTimeout(PILOTO.timer); PILOTO.timer = null; return sincronizar(); } }
+save = function(){ guardarLocal(); if (PILOTO.activo) { marcarPendiente(); clearTimeout(PILOTO.timer); PILOTO.timer = setTimeout(() => { PILOTO.timer = null; sincronizar(); }, 400); } };
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") sincronizarYa(); });
+window.addEventListener("pagehide", () => { sincronizarYa(); });
 async function sincronizar(){
   if (!PILOTO.activo || !PILOTO.snap) return;
   if (PILOTO.sinc) { PILOTO.pendiente = true; return; }
   const ahora = serializar(), antes = PILOTO.snap, dif = (a, b) => a.filter(x => !b.includes(x));
   const hay = dif(ahora.fp, antes.fp).length || dif(antes.fp, ahora.fp).length || dif(ahora.resp, antes.resp).length || dif(antes.resp, ahora.resp).length || ahora.com || dif(ahora.cap, antes.cap).length || dif(antes.cap, ahora.cap).length || ahora.config !== antes.config;
-  if (!hay) return;
+  if (!hay) { limpiarPendiente(); return; }
   if (!PILOTO.editor) { toast("Tu perfil es de solo lectura: ese cambio no se guarda."); return cargarDatosPiloto().catch(() => {}); }
   PILOTO.sinc = true; PILOTO.estado = "guardando…"; pintarModo();
   const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, ops = [];
@@ -4334,12 +4356,15 @@ async function sincronizar(){
     const capAdd = dif(ahora.cap, antes.cap), capDel = dif(antes.cap, ahora.cap);
     if (capAdd.length) ops.push(pide(sb.from("capturas").upsert(S.capturas.filter(x => x.org === org && capAdd.includes(x.id)).map(capAFila), {onConflict: "id", ignoreDuplicates: true})));
     if (capDel.length) ops.push(pide(sb.from("capturas").delete().eq("municipio_id", mid).in("id", capDel)));
-    if (ahora.config !== antes.config) ops.push(pide(sb.from("municipios").update({config: JSON.parse(ahora.config), actualizado: new Date().toISOString()}).eq("id", mid)));
+    if (ahora.config !== antes.config) ops.push(pide(sb.from("municipios").update({config: JSON.parse(ahora.config), actualizado: new Date().toISOString()}).eq("id", mid).select("id")).then(d => {
+      if (!d || !d.length) throw new Error("la base no aceptó el cambio de temas (revisa el rol de tu cuenta)");
+    }));
     await Promise.all(ops);
-    guardarLocal(); PILOTO.snap = serializar(); PILOTO.estado = "cambios guardados " + horaHM(Date.now());
+    guardarLocal(); PILOTO.snap = serializar(); limpiarPendiente(ahora.config); PILOTO.estado = "cambios guardados " + horaHM(Date.now());
   } catch(e) {
-    PILOTO.estado = ""; toast("No se pudo guardar en la base (" + (e.message || e) + "). Recargamos los datos del equipo.");
-    await cargarDatosPiloto().catch(() => {});
+    PILOTO.estado = "cambios sin guardar"; marcarPendiente();
+    toast("No se pudo guardar en la base (" + (e.message || e) + "). Tus cambios quedan en este equipo y se reintentan en 30 segundos.");
+    clearTimeout(PILOTO.reintento); PILOTO.reintento = setTimeout(sincronizar, 30000);
   } finally {
     PILOTO.sinc = false; pintarModo();
     if (PILOTO.pendiente) { PILOTO.pendiente = false; sincronizar(); }
