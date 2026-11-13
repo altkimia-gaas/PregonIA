@@ -36,7 +36,7 @@ def main():
     # Documento completo para Vercel o GitHub Pages: sin charset ni viewport el celular lo mostraría como escritorio.
     cabeza = ('<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n'
               '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
-              '<meta name="description" content="PregonIA: qué dice la prensa de tu comuna, hasta dónde ha llegado y qué responder.">\n'
+              '<meta name="description" content="PregonIA: qué dice la prensa de tu institución o autoridad pública, hasta dónde ha llegado y qué responder.">\n'
               '<link rel="manifest" href="/manifest.json">\n<meta name="theme-color" content="#080B12">\n'
               '<link rel="icon" type="image/png" sizes="192x192" href="/icono-192.png">\n<link rel="apple-touch-icon" href="/icono-180.png">\n'
               '<meta name="apple-mobile-web-app-title" content="PregonIA">\n'

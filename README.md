@@ -8,7 +8,7 @@ Producto de ALTKimia. Piloto: Casablanca, Algarrobo, El Quisco, El Tabo, Cartage
 Versión de demostración: el catálogo de medios es real; las noticias, cifras y fechas son ficticias.
 
 ## Qué incluye el prototipo
-- **Portada:** logo, propuesta de valor y botón Empezar sobre una foto de un periodista en terreno (imagen ilustrativa generada con IA). Aparece cada vez que se abre o recarga la aplicación, con `#portada` y al tocar el logo; "Empezar" lleva a la sección de la dirección o a Inicio. Para abrir sin portada: `?sin-portada`.
+- **Portada:** logo, propuesta de valor y botón Empezar sobre la foto de un punto de prensa frente a un edificio público (imagen ilustrativa generada con IA en Canva). Aparece cada vez que se abre o recarga la aplicación, con `#portada` y al tocar el logo; "Empezar" lleva a la sección de la dirección o a Inicio. Para abrir sin portada: `?sin-portada`.
 - **Inicio:** portada de diario digital del día (lo último, indicadores, para revisar hoy, por tema, medios que más hablan).
 - **Menciones:** cada noticia una vez aunque la publiquen varios medios; filtros por tono, período, tema y palabra; "¿Por qué aparece?" y "No corresponde".
 - **Reportes por lector:** parte semanal del alcalde (copiable a WhatsApp), mesa diaria de comunicaciones, informe de gestión mensual y episodio crítico. Cada asunto muestra hasta dónde llegó: prensa comunal, regional o nacional.

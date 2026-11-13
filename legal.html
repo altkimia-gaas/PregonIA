@@ -81,20 +81,20 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
     <h3>2.1 Dos modos de uso</h3>
     <ul>
       <li><b>Demostración (sin iniciar sesión).</b> Noticias y cifras ficticias. Lo que configuras queda solo en tu navegador (almacenamiento local) y no se envía a nuestros servidores, salvo lo que pidas redactar con IA (ver sección 4).</li>
-      <li><b>Piloto (con sesión).</b> Para equipos municipales invitados. Los datos se guardan en la base de datos de PregonIA y cada persona ve solo la información de su municipio.</li>
+      <li><b>Servicio (con sesión).</b> Para los equipos de las instituciones clientes, que ingresan por invitación. Los datos se guardan en la base de datos de PregonIA y cada persona ve solo la información de su municipio.</li>
     </ul>
 
     <h3>2.2 Qué datos tratamos</h3>
     <div class="tabla"><table>
       <thead><tr><th scope="col">Datos</th><th scope="col">De quién</th><th scope="col">Para qué</th><th scope="col">Base de licitud</th></tr></thead>
       <tbody>
-        <tr><td>Nombre, correo, rol y municipio; contraseña (guardada cifrada por el proveedor de autenticación)</td><td>Personas del equipo municipal invitadas al piloto</td><td>Dar acceso, separar la información por municipio y definir quién puede editar</td><td>Ejecución del contrato con el municipio</td></tr>
-        <tr><td>Registro de actividad (quién hizo qué cambio y cuándo)</td><td>Usuarios del piloto</td><td>Seguridad, trazabilidad y soporte</td><td>Interés legítimo en la seguridad del servicio</td></tr>
-        <tr><td>Aceptación de estos documentos (usuario, versión, fecha y hora, navegador)</td><td>Usuarios del piloto</td><td>Acreditar qué versión aceptaste y cuándo</td><td>Cumplimiento de obligación legal</td></tr>
-        <tr><td>Preferencias de avisos y suscripción a notificaciones del navegador (dirección técnica del dispositivo)</td><td>Usuarios del piloto que activan avisos</td><td>Enviar alertas de noticias críticas</td><td>Consentimiento, que retiras desactivando los avisos</td></tr>
+        <tr><td>Nombre, correo, rol y municipio; contraseña (guardada cifrada por el proveedor de autenticación)</td><td>Personas del equipo de la institución cliente invitadas al servicio</td><td>Dar acceso, separar la información por municipio y definir quién puede editar</td><td>Ejecución del contrato con el municipio</td></tr>
+        <tr><td>Registro de actividad (quién hizo qué cambio y cuándo)</td><td>Usuarios del servicio</td><td>Seguridad, trazabilidad y soporte</td><td>Interés legítimo en la seguridad del servicio</td></tr>
+        <tr><td>Aceptación de estos documentos (usuario, versión, fecha y hora, navegador)</td><td>Usuarios del servicio</td><td>Acreditar qué versión aceptaste y cuándo</td><td>Cumplimiento de obligación legal</td></tr>
+        <tr><td>Preferencias de avisos y suscripción a notificaciones del navegador (dirección técnica del dispositivo)</td><td>Usuarios del servicio que activan avisos</td><td>Enviar alertas de noticias críticas</td><td>Consentimiento, que retiras desactivando los avisos</td></tr>
         <tr><td>Titular, enlace, medio, fecha, tono y un resumen propio de cada noticia. <b>No guardamos el texto completo de la nota.</b></td><td>Medios de prensa; puede incluir nombres de personas mencionadas en la noticia</td><td>Detectar menciones sobre el municipio y medir su alcance</td><td>Fuentes de acceso público e interés legítimo del municipio en conocer lo que se publica sobre su gestión</td></tr>
         <tr><td>Nómina de autoridades: nombre, cargo, territorio y afiliación política declarada públicamente</td><td>Autoridades electas en ejercicio</td><td>Reconocer cuándo una noticia menciona a una autoridad</td><td>Fuentes de acceso público sobre el ejercicio de funciones públicas</td></tr>
-        <tr><td>Publicaciones agregadas a mano y capturas de pantalla subidas para análisis. De la captura se guarda solo el titular, el resumen y palabras clave; la imagen no se almacena.</td><td>Usuarios del piloto</td><td>Incorporar al monitoreo notas que no se leen automáticamente</td><td>Ejecución del contrato</td></tr>
+        <tr><td>Publicaciones agregadas a mano y capturas de pantalla subidas para análisis. De la captura se guarda solo el titular, el resumen y palabras clave; la imagen no se almacena.</td><td>Usuarios del servicio</td><td>Incorporar al monitoreo notas que no se leen automáticamente</td><td>Ejecución del contrato</td></tr>
         <tr><td>Borradores de comunicados aprobados</td><td>Equipo municipal</td><td>Guardar las respuestas aprobadas por el municipio</td><td>Ejecución del contrato</td></tr>
       </tbody>
     </table></div>
@@ -118,7 +118,7 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
     <p>Cumplido el plazo, los datos se eliminan o anonimizan.</p>
 
     <h3>2.5 Almacenamiento en tu navegador</h3>
-    <p>PregonIA no usa cookies de publicidad ni de analítica, ni píxeles de seguimiento. Usa el almacenamiento local del navegador para guardar la demostración, tus preferencias (como el modo claro u oscuro) y, en el piloto, la sesión iniciada. Al salir del piloto se borra la copia local de los datos del municipio.</p>
+    <p>PregonIA no usa cookies de publicidad ni de analítica, ni píxeles de seguimiento. Usa el almacenamiento local del navegador para guardar la demostración, tus preferencias (como el modo claro u oscuro) y, cuando inicias sesión en el servicio, la sesión iniciada. Al cerrar sesión se borra la copia local de los datos de tu institución.</p>
     <p>Para mostrar las tipografías y algunas funciones, el navegador descarga archivos desde servicios de terceros (ver sección 5); esos servicios reciben la dirección IP de tu equipo.</p>
 
     <h3>2.6 Seguridad</h3>
@@ -131,9 +131,9 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
   <section id="terminos" aria-labelledby="termT">
     <h2 id="termT">3. Términos de uso</h2>
     <h3>3.1 El servicio</h3>
-    <p>PregonIA lee publicaciones de medios digitales chilenos y de cuentas públicas de medios en redes sociales, detecta las que tratan sobre el municipio o autoridad cliente, estima su tono y alcance, prepara informes y ayuda a redactar respuestas. La demostración usa noticias y cifras ficticias. El piloto se presta a los municipios según el convenio o contrato firmado con cada uno, que prevalece sobre estos términos en lo que regule de forma distinta.</p>
+    <p>PregonIA lee publicaciones de medios digitales chilenos y de cuentas públicas de medios en redes sociales, detecta las que tratan sobre el municipio o autoridad cliente, estima su tono y alcance, prepara informes y ayuda a redactar respuestas. La demostración usa noticias y cifras ficticias. El servicio se presta a cada institución según el convenio o contrato firmado con ella, que prevalece sobre estos términos en lo que regule de forma distinta.</p>
     <h3>3.2 Cuentas</h3>
-    <p>Las cuentas del piloto son personales e intransferibles y se crean por invitación. Cada persona debe cuidar su contraseña y avisar de inmediato a ALTKimia si sospecha un uso no autorizado. El municipio define los roles de su equipo.</p>
+    <p>Las cuentas del servicio son personales e intransferibles y se crean por invitación. Cada persona debe cuidar su contraseña y avisar de inmediato a ALTKimia si sospecha un uso no autorizado. El municipio define los roles de su equipo.</p>
     <h3>3.3 Uso correcto</h3>
     <ul>
       <li>No usar PregonIA para hostigar, perfilar o vigilar a personas privadas, periodistas o medios.</li>
@@ -143,7 +143,7 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
     <h3>3.4 Contenidos generados y decisiones</h3>
     <p>Los tonos, resúmenes, lecturas y borradores son apoyos para la decisión del municipio. Ningún contenido se publica sin que una persona del equipo lo apruebe, y el municipio es responsable de lo que finalmente difunde. Revisa siempre cifras, citas y nombres antes de usar un borrador.</p>
     <h3>3.5 Disponibilidad</h3>
-    <p>Durante el piloto, el servicio se entrega sin un nivel de disponibilidad garantizado. La lectura de medios depende de que cada sitio y red social siga accesible; cuando una fuente no se puede leer, PregonIA lo muestra en Ajustes › Fuentes. Cualquier compromiso de disponibilidad se fija por escrito en el contrato con cada municipio.</p>
+    <p>El servicio se entrega sin un nivel de disponibilidad garantizado, salvo el que se acuerde por escrito. La lectura de medios depende de que cada sitio y red social siga accesible; cuando una fuente no se puede leer, PregonIA lo muestra en Ajustes › Fuentes. Cualquier compromiso de disponibilidad se fija por escrito en el contrato con cada institución.</p>
     <h3>3.6 Precio</h3>
     <p>PregonIA no cobra en línea. El precio, el plan y su duración se acuerdan en el contrato con cada municipio, que indica también cómo terminarlo.</p>
     <h3>3.7 Propiedad intelectual</h3>
@@ -180,11 +180,11 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
     <div class="tabla"><table>
       <thead><tr><th scope="col">Proveedor</th><th scope="col">Función</th><th scope="col">País</th><th scope="col">Qué datos recibe</th></tr></thead>
       <tbody>
-        <tr><td>Supabase</td><td>Base de datos y autenticación del piloto</td><td>Servidores en Brasil (São Paulo); empresa en EE.UU.</td><td>Cuentas, perfiles y datos del piloto</td></tr>
+        <tr><td>Supabase</td><td>Base de datos y autenticación del servicio</td><td>Servidores en Brasil (São Paulo); empresa en EE.UU.</td><td>Cuentas, perfiles y datos del servicio</td></tr>
         <tr><td>Vercel</td><td>Alojamiento de la aplicación y funciones del servidor</td><td>EE.UU.</td><td>Solicitudes a la aplicación y textos enviados a la IA</td></tr>
         <tr><td>Anthropic</td><td>Inteligencia artificial (Claude)</td><td>EE.UU.</td><td>Textos de noticias, preguntas y datos del municipio necesarios para cada tarea</td></tr>
         <tr><td>ElevenLabs</td><td>Voz sintética del video resumen</td><td>EE.UU.</td><td>Guion del video resumen</td></tr>
-        <tr><td>Resend</td><td>Correos de aviso a usuarios del piloto</td><td>EE.UU.</td><td>Correo del destinatario y el contenido del aviso</td></tr>
+        <tr><td>Resend</td><td>Correos de aviso a usuarios del servicio</td><td>EE.UU.</td><td>Correo del destinatario y el contenido del aviso</td></tr>
         <tr><td>Meta Platforms</td><td>Lectura de cuentas públicas de medios en Instagram y Facebook</td><td>EE.UU.</td><td>Ninguno de usuarios: solo consultas sobre cuentas públicas de medios</td></tr>
         <tr><td>Apify</td><td>Lectura de publicaciones públicas de medios en redes sociales (etapa de demostración)</td><td>República Checa (UE)</td><td>Ninguno de usuarios: solo consultas sobre cuentas públicas de medios</td></tr>
         <tr><td>GitHub (Microsoft)</td><td>Ejecución programada de la lectura de medios</td><td>EE.UU.</td><td>Ninguno de usuarios: solo dispara la lectura programada</td></tr>
@@ -203,7 +203,7 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
   <section id="contacto" aria-labelledby="contT">
     <h2 id="contT">7. Contacto y derechos sobre tus datos</h2>
     <p>Puedes pedir en cualquier momento acceso a tus datos, su rectificación, su supresión, oponerte a un tratamiento, pedir su bloqueo temporal o recibirlos en un formato de uso común (portabilidad). Escribe a <a href="mailto:soporte@altkimia.cl">soporte@altkimia.cl</a> con el asunto "Datos personales" desde el correo asociado a tu cuenta. Responderemos dentro del plazo legal.</p>
-    <p>Si eres usuario del piloto, también puedes pedirlo al administrador de tu municipio. Si no quedas conforme con la respuesta, puedes recurrir a la Agencia de Protección de Datos Personales.</p>
+    <p>Si eres usuario del servicio, también puedes pedirlo al administrador de tu institución. Si no quedas conforme con la respuesta, puedes recurrir a la Agencia de Protección de Datos Personales.</p>
     <p>Soporte del servicio: <a href="mailto:soporte@altkimia.cl">soporte@altkimia.cl</a>.</p>
   </section>
 </main>
