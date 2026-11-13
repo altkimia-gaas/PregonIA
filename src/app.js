@@ -1411,7 +1411,8 @@ function mostrarPortada(on){
 }
 document.addEventListener("click", e => {
   if (!e.target.closest("#ptGo")) return;
-  entAbrir(true);  // la entrada se elige por rol, zona y nombre
+  // Antes de entrar se muestra el aviso legal (demostración); con sesión iniciada lo cubre el registro en la base.
+  avisoLegal().then(ok => { if (ok) entAbrir(true); });  // la entrada se elige por rol, zona y nombre
 });
 window.addEventListener("hashchange", () => { if (location.hash === "#portada") mostrarPortada(true); });
 
