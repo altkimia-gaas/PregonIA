@@ -73,7 +73,12 @@ function avBoton(){
 function avDispositivo(){
   const per = avPermiso(), push = avPushServidor(), ios = typeof esIOS !== "undefined" && esIOS, inst = typeof PWA !== "undefined" && PWA.instalada;
   if (per === "no") return `<p class="muted">Esta vista no permite avisos del navegador. Ábrelo en pregonia.vercel.app${ios ? " e instálala en la pantalla de inicio" : ""}.</p>`;
-  if (ios && !inst) return `<p class="muted">En iPhone los avisos llegan solo con PregonIA instalada: toca Compartir en Safari, luego «Agregar a inicio», y abre PregonIA desde ese ícono.</p>`;
+  if (ios && !inst) return `<p class="muted">En iPhone los avisos llegan solo con PregonIA instalada en la pantalla de inicio. Son dos toques.</p><button class="btn alt sm" type="button" data-act="guia-ios">Ver cómo instalarla</button>`;
+  const instalar = !ios && !inst && typeof PWA !== "undefined" && PWA.aviso && typeof movil === "function" && movil()
+    ? `<p class="cap-inst" style="margin:0 0 12px"><span>Instala PregonIA en este celular: queda como una app más, con su ícono y los avisos aunque esté cerrada.</span><button class="btn sm alt" type="button" data-act="instalar">Instalar PregonIA</button></p>` : "";
+  return instalar + avDispositivoBase(per, push);
+}
+function avDispositivoBase(per, push){
   if (per === "denied") return `<p class="muted">Los avisos están bloqueados en este navegador. Actívalos desde el candado junto a la dirección (Configuración del sitio · Notificaciones).</p>`;
   if (per !== "granted") return `<p>${push ? "Recibe aquí lo urgente aunque PregonIA esté cerrada." : "Recibe aquí lo urgente mientras PregonIA esté abierta o instalada."}</p><button class="btn alt sm" type="button" data-act="avisos-activar">Activar avisos en este dispositivo</button>`;
   return `<p><span class="pill t-pos">Activos</span> ${push && S.avisos.push ? "Llegan aunque PregonIA esté cerrada." : push ? "Llegan con PregonIA abierta. <button class=\"btn ghost sm\" type=\"button\" data-act=\"avisos-activar\">Recibirlos también con la app cerrada</button>" : "Llegan mientras PregonIA esté abierta o instalada."}</p><button class="btn ghost sm" type="button" data-act="avisos-probar">Enviar un aviso de prueba</button>`;
@@ -165,6 +170,6 @@ refrescarNotas = function(base){ refrescarSinAvisos(base); try { revisarAlertas(
 /* Con noticias reales y avisos activos, la lectura se repite cada 10 minutos aunque la pestaña esté en segundo plano. */
 setInterval(() => { if (typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo) return; if (MODO.tipo === "real" && !MODO.cargando && (document.visibilityState === "visible" || avPermiso() === "granted")) cargarReales(true, true); }, 10 * 60000);
 avBoton(); revisarAlertas();
-/* Llegada desde una notificación: abre la campana en ese aviso. */
-(() => { const g = new URLSearchParams(location.search).get("alerta"); if (!g) return; const resto = location.search.slice(1).split("&").filter(x => x && !x.startsWith("alerta=")).join("&"); history.replaceState(null, "", location.pathname + (resto ? "?" + resto : "") + location.hash); setTimeout(() => avAbrir(g), 300); })();
+/* Llegada desde una notificación (abre la campana en ese aviso) o desde el atajo «Avisos» del ícono instalado (abre la campana). */
+(() => { const q = new URLSearchParams(location.search), g = q.get("alerta"), lista = q.has("avisos"); if (!g && !lista) return; const resto = location.search.slice(1).split("&").filter(x => x && !x.startsWith("alerta=") && !/^avisos(=|$)/.test(x)).join("&"); history.replaceState(null, "", location.pathname + (resto ? "?" + resto : "") + location.hash); setTimeout(() => avAbrir(g || undefined), 300); })();
 navigator.serviceWorker?.addEventListener?.("message", e => { if (e.data && e.data.tipo === "abrir-aviso") avAbrir(e.data.g); });
