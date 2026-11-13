@@ -3315,7 +3315,8 @@ function mostrarPortada(on){
 }
 document.addEventListener("click", e => {
   if (!e.target.closest("#ptGo")) return;
-  entAbrir(true);  // la entrada se elige por rol, zona y nombre
+  // Antes de entrar se muestra el aviso legal (demostración); con sesión iniciada lo cubre el registro en la base.
+  avisoLegal().then(ok => { if (ok) entAbrir(true); });  // la entrada se elige por rol, zona y nombre
 });
 window.addEventListener("hashchange", () => { if (location.hash === "#portada") mostrarPortada(true); });
 
@@ -4143,7 +4144,7 @@ function dialogo(id, titulo, sub, cuerpo){
   dialogo.origen = document.activeElement; document.body.appendChild(ov); document.body.classList.add("vid-on");
   const f = ov.querySelector("input, button.btn:not(.ghost)"); if (f) f.focus();
 }
-function cerrarDialogo(){ const o = $("#dlgBack"); if (!o) return; if (aceptacion.pend) { const r = aceptacion.pend; aceptacion.pend = null; r(false); } o.remove(); document.body.classList.remove("vid-on"); if (dialogo.origen && dialogo.origen.isConnected) dialogo.origen.focus(); }
+function cerrarDialogo(){ const o = $("#dlgBack"); if (!o) return; if (aceptacion.pend) { const r = aceptacion.pend; aceptacion.pend = null; r(false); } if (avisoLegal.pend) { const r = avisoLegal.pend; avisoLegal.pend = null; r(false); } o.remove(); document.body.classList.remove("vid-on"); if (dialogo.origen && dialogo.origen.isConnected) dialogo.origen.focus(); }
 function abrirLogin(){
   dialogo("login", "Ingresar a PregonIA", "Para los equipos de las instituciones clientes. Si aún no tienes cuenta, pide una invitación a ALTKimia.", `
     <form class="cap-f" id="loginForm" novalidate>
@@ -4215,6 +4216,34 @@ async function aceptacion(user){
       </form>`);
     aceptacion.pend = res;
   });
+}
+/* Aviso legal al entrar sin sesión (demostración): se acepta una vez por versión y queda guardado solo en este navegador.
+   Con sesión iniciada no se muestra: la aceptación del servicio se registra en la base (aceptacion()). */
+const AVISO_KEY = "pregonia-aviso-legal";
+function avisoLegal(){
+  if (PILOTO.activo) return Promise.resolve(true);
+  try { if (localStorage.getItem(AVISO_KEY) === LEGAL_VERSION) return Promise.resolve(true); } catch(e) {}
+  return new Promise(res => {
+    dialogo("aviso", "Antes de empezar", "PregonIA es un servicio de ALTKIMIA Consultoría y Tecnología SpA para instituciones y autoridades públicas.", `
+      <form class="cap-f" id="avisoForm" novalidate>
+        <ul class="hint" style="margin:0;padding-left:18px;display:grid;gap:4px">
+          <li>Estás entrando a una <b>demostración</b>: las noticias, cifras y fechas son ficticias; el catálogo de medios es real.</li>
+          <li>Lo que configures queda solo en este navegador.</li>
+          <li>Los textos generados con inteligencia artificial pueden contener errores: revísalos antes de usarlos.</li>
+        </ul>
+        <p class="hint" style="margin:0">Lee los <a href="/legal.html#terminos" target="_blank" rel="noopener">Términos de uso</a> y la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a> (versión ${LEGAL_VERSION}). Se abren en una pestaña nueva.</p>
+        <label class="cap-l" style="display:flex;align-items:flex-start;gap:10px;font-weight:500"><input id="avAcepto" type="checkbox" style="width:20px;min-height:20px;height:20px;margin:1px 0 0;padding:0;flex:none;accent-color:var(--accent)"> He leído y acepto los Términos de uso y la Política de privacidad.</label>
+        <p class="cap-err" id="avErr" role="alert" hidden></p>
+        <div class="cap-acts"><button class="btn alt" type="submit">Aceptar y continuar</button><button class="btn" type="button" data-act="dlg-close">Volver</button></div>
+      </form>`);
+    avisoLegal.pend = res;
+  });
+}
+function aceptarAviso(e){
+  e.preventDefault();
+  if (!$("#avAcepto").checked) return errorEn("#avErr", "Para continuar, marca la casilla de aceptación.", "#avAcepto");
+  try { localStorage.setItem(AVISO_KEY, LEGAL_VERSION); } catch(er) {}
+  const r = avisoLegal.pend; avisoLegal.pend = null; cerrarDialogo(); if (r) r(true);
 }
 async function registrarAceptacion(e){
   e.preventDefault();
@@ -4334,7 +4363,7 @@ document.addEventListener("click", e => {
   if (a === "recargar-piloto") { cerrarMenu(); cargarDatosPiloto().then(() => toast("Datos actualizados.")).catch(er => toast("No se pudieron actualizar: " + er.message)); }
 });
 document.addEventListener("click", e => { if (e.target.id === "dlgBack") cerrarDialogo(); });
-document.addEventListener("submit", e => { if (e.target.id === "loginForm") ingresar(e); if (e.target.id === "claveForm") guardarClave(e); if (e.target.id === "legalForm") registrarAceptacion(e); });
+document.addEventListener("submit", e => { if (e.target.id === "loginForm") ingresar(e); if (e.target.id === "claveForm") guardarClave(e); if (e.target.id === "legalForm") registrarAceptacion(e); if (e.target.id === "avisoForm") aceptarAviso(e); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#dlgBack")) { e.preventDefault(); cerrarDialogo(); } });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && PILOTO.activo && !PILOTO.sinc && !PILOTO.timer) cargarDatosPiloto().catch(() => {}); });
 setInterval(() => { if (PILOTO.activo && (document.visibilityState === "visible" || ("Notification" in window && Notification.permission === "granted")) && !PILOTO.sinc) cargarDatosPiloto().catch(() => {}); }, 5 * 60000);
