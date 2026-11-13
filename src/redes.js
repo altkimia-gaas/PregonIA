@@ -6,7 +6,7 @@
      sus publicaciones se ingresan con Agregar publicación (captura asistida), donde la cuenta ya aparece en la lista.
    En la demostración las inscritas se guardan en el navegador (ids 9000 a 9999); en el piloto, en la base (ids desde 10000).
    Estado y funciones van con var y declaraciones de función: la vista Fuentes puede dibujarse antes de que este archivo cargue. */
-var META = {instagram: false, facebook: false, sabido: false};
+var META = {instagram: false, facebook: false, sabido: false, via: {}};  // via: "meta" (API oficial) o "apify" (lector de redes para la demostración)
 var RED_EST = {};  // id → {ok, error, n, ts}: resultado de la última lectura
 const RED_ID0 = 9000, RED_N = {instagram: "Instagram", facebook: "Facebook"};
 function esRed(m){ return !!m && (m.m === "facebook" || m.m === "instagram"); }
@@ -32,13 +32,16 @@ function redRetirable(m){ return puedeInscribir() && (m.propia || false); }
 function estadoRed(m){
   const M = META || {}, st = (RED_EST || {})[m.id] || (m.err ? {ok: false, error: m.err} : m.ult ? {ok: true, ts: Date.parse(m.ult)} : null);
   const activa = m.m === "instagram" ? M.instagram : M.facebook;
-  if (!activa) return m.m === "instagram"
-    ? {k: "requiere_ajuste", l: "Pendiente de Meta", o: M.sabido ? "Se leerá sola cuando PregonIA quede conectado con Meta. Mientras tanto, sus publicaciones se agregan con Agregar publicación." : "Se lee sola en pregonia.vercel.app, con PregonIA conectado con Meta. Aquí, con Agregar publicación."}
-    : {k: "captura_asistida", l: "Captura asistida", o: "Meta no permite leer páginas de Facebook de terceros sin aprobar antes la app. Sus publicaciones se agregan con Agregar publicación, en Menciones."};
+  if (!activa) return !M.sabido
+    ? {k: "requiere_ajuste", l: "Se lee en el sitio", o: "Se lee sola en pregonia.vercel.app. Aquí, sus publicaciones se agregan con Agregar publicación."}
+    : m.m === "instagram"
+    ? {k: "requiere_ajuste", l: "Sin lector conectado", o: "Se leerá sola cuando PregonIA tenga conectado un lector de redes. Mientras tanto, sus publicaciones se agregan con Agregar publicación."}
+    : {k: "captura_asistida", l: "Captura asistida", o: "Aún no hay lector de Facebook conectado. Sus publicaciones se agregan con Agregar publicación, en Menciones."};
+  if (st && st.pendiente && st.primera) return {k: "requiere_ajuste", l: "Primera lectura", o: st.error};
   if (st && st.ok === false) return {k: "restringido", l: "No se pudo leer", o: st.error || "Meta no entregó sus publicaciones."};
   return {k: "listo", l: "Lectura automática", o: st && st.ts ? `Leída ${ago(st.ts)}${Number.isFinite(st.n) ? ` · ${plural(st.n, "publicación reciente", "publicaciones recientes")}` : ""}.` : "Se lee con cada lectura de medios."};
 }
-function actualizarEstadoRedes(lista){ const ts = Date.now(); (lista || []).forEach(e => { if (!e.pendiente) RED_EST[e.id] = {...e, ts}; }); }
+function actualizarEstadoRedes(lista){ const ts = Date.now(); (lista || []).forEach(e => { if (!e.pendiente || e.primera) RED_EST[e.id] = {...e, ts}; }); }
 /* Para «Noticias reales» (sin base de datos): las inscritas en este navegador viajan en la consulta. */
 function redesParam(){
   const l = S.redes.filter(r => r.estado !== "retirado").slice(0, 20).map(r => [r.id, r.red, r.u, r.a, r.c || "", r.n]);
@@ -48,7 +51,7 @@ function redesParam(){
 /* Qué puede leer el servidor ahora (sin conexión con Meta, Instagram queda pendiente y Facebook en captura asistida). */
 (async () => {
   if (!/^https?:$/.test(location.protocol)) return;
-  try { const r = await fetch("/api/redes?estado"); if (!r.ok) return; const j = await r.json(); META = {instagram: !!j.instagram, facebook: !!j.facebook, sabido: true}; if (route() === "fuentes") render(); } catch(e) {}
+  try { const r = await fetch("/api/redes?estado"); if (!r.ok) return; const j = await r.json(); META = {instagram: !!j.instagram, facebook: !!j.facebook, sabido: true, via: j.via || {}}; if (route() === "fuentes") render(); } catch(e) {}
 })();
 
 /* Inscripción */
@@ -82,9 +85,10 @@ function redPintar(){
   if (a !== "local" && !$("#redC").querySelector('option[value=""]')) { $("#redC").insertAdjacentHTML("afterbegin", '<option value="">Toda la región</option>'); $("#redC").value = ""; }
   if (a === "local") $("#redC").querySelector('option[value=""]')?.remove();
   $("#redU").placeholder = red === "instagram" ? "instagram.com/medio o @medio" : "facebook.com/medio";
-  $("#redHint").textContent = red === "instagram"
-    ? (META.instagram ? "Se leerá sola en cada lectura de medios, si es una cuenta profesional (empresa o creador). PregonIA guarda solo un titular, un resumen propio y el enlace." : "Se leerá sola cuando PregonIA quede conectado con Meta, si es una cuenta profesional. Mientras tanto, sus publicaciones se agregan con Agregar publicación.")
-    : (META.facebook ? "Se leerá sola en cada lectura de medios. PregonIA guarda solo un titular, un resumen propio y el enlace." : "Meta aún no permite a PregonIA leer páginas de Facebook de terceros. La cuenta queda en el listado y sus publicaciones se agregan con Agregar publicación, en Menciones.");
+  const via = (META.via || {})[red], guarda = " PregonIA guarda solo un titular, un resumen propio y el enlace; nunca comentarios.";
+  $("#redHint").textContent = via === "apify" ? `Se leerá sola cada pocas horas, si ${red === "instagram" ? "la cuenta es pública" : "la página es pública"}. Sus primeras publicaciones aparecen unos minutos después de la primera lectura.${guarda}`
+    : via === "meta" ? (red === "instagram" ? "Se leerá sola en cada lectura de medios, si es una cuenta profesional (empresa o creador)." : "Se leerá sola en cada lectura de medios.") + guarda
+    : "Aún no hay lector conectado para esta red. La cuenta queda en el listado y sus publicaciones se agregan con Agregar publicación, en Menciones.";
 }
 function redCerrar(){ $("#redBack")?.remove(); document.body.classList.remove("vid-on"); const o = redAbrir.origen; if (o && o.isConnected) o.focus(); }
 function redError(msg, campo, info){ const e = $("#redErr"); e.textContent = msg; e.hidden = false; e.classList.toggle("info", !!info); if (campo) $(campo).focus(); }
@@ -123,7 +127,7 @@ async function redGuardar(ev){
   redCerrar();
   Object.assign(tState.fuente, {e: "redes", a: "todos"}); if (route() !== "fuentes") location.hash = "fuentes"; else render(true);
   const auto = red === "instagram" ? META.instagram : META.facebook, seg = RED_F.verificada && Number.isFinite(RED_F.verificada.seguidores) ? ` (${fmt(RED_F.verificada.seguidores)} seguidores)` : "";
-  toast(`Inscribiste ${m.n}${seg}. ${auto ? "Sus publicaciones entran en la próxima lectura de medios." : "Ya aparece en Agregar publicación."}`);
+  toast(`Inscribiste ${m.n}${seg}. ${auto ? ((META.via || {})[red] === "apify" ? "Su primera lectura toma unos minutos." : "Sus publicaciones entran en la próxima lectura de medios.") : "Ya aparece en Agregar publicación."}`);
   if (typeof MODO !== "undefined" && MODO.tipo === "real" && auto) cargarReales(true, true);
 }
 /* Fila de la base (piloto) → cuenta. */

@@ -321,7 +321,7 @@ function vFuentes(){
   const lbl = {listo:"Listo", requiere_ajuste:"Requiere ajuste", restringido:"Restringido", captura_asistida:"Captura asistida"};
   const met = {rss:"RSS", sitemap_noticias:"Sitemap de noticias", sitemap:"Sitemap", sitemap_mensual:"Sitemap mensual", portada:"Portada", google_news:"Google News", rss_filtrado:"RSS filtrado", sitemap_filtrado:"Sitemap filtrado", facebook:"Facebook", instagram:"Instagram"};
   const nIg = redes.filter(m => m.m === "instagram").length, nFb = redes.length - nIg;
-  return `<div class="head"><div><h2 tabindex="-1">Fuentes</h2><p>Los ${web.length} medios web que PregonIA lee y cómo se lee cada uno (verificado el 3 de noviembre de 2026), más ${plural(redes.length, "cuenta", "cuentas")} de medios en redes sociales (${nIg} de Instagram y ${nFb} de Facebook). Los restringidos se consultan solo vía Google News. Las cuentas de Instagram se leen solas cuando PregonIA está conectado con Meta; las de Facebook, por ahora, con Agregar publicación.</p></div>
+  return `<div class="head"><div><h2 tabindex="-1">Fuentes</h2><p>Los ${web.length} medios web que PregonIA lee y cómo se lee cada uno (verificado el 3 de noviembre de 2026), más ${plural(redes.length, "cuenta", "cuentas")} de medios en redes sociales (${nIg} de Instagram y ${nFb} de Facebook). Los restringidos se consultan solo vía Google News. Las cuentas de redes se leen solas cuando hay un lector conectado; si no, sus publicaciones se agregan con Agregar publicación.</p></div>
     ${puedeInscribir() ? `<button class="btn alt" type="button" data-act="red-abrir">Inscribir cuenta de red social</button>` : ""}</div>
   ${subtabs()}
   <div class="filters">

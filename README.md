@@ -119,6 +119,17 @@ Cómo se procesan:
 - **Instagram (lectura automática).** La lectura programada y «Noticias reales» leen las últimas 30 publicaciones de cada cuenta con la API oficial de Meta (Business Discovery) y las clasifican igual que una nota de prensa: relevancia para la comuna, tono, resumen propio y hecho al que pertenecen. Se guarda la primera frase como titular, el enlace y la fecha; el texto se usa solo para clasificar. Solo funciona con cuentas profesionales (empresa o creador), que es lo habitual en medios; si una cuenta es personal, Fuentes lo indica y queda para captura asistida.
 - **Facebook (captura asistida por ahora).** Meta solo permite leer páginas de terceros con el permiso *Page Public Content Access*, que aprueba tras revisar la app y verificar la empresa. El lector ya está hecho: se activa con `META_FB_PPCA=1` cuando Meta lo apruebe. Mientras tanto, las publicaciones se agregan con Agregar publicación.
 
+### Opción rápida para la demostración: Apify (sin Meta)
+
+Con un token de Apify, Facebook e Instagram se leen solos, sin app de Meta ni revisión. Se usan los lectores oficiales de Apify (`apify/facebook-posts-scraper` y `apify/instagram-post-scraper`): solo páginas y cuentas públicas, sin iniciar sesión, sin comentarios. Cada 6 horas se lanza una pasada que pide solo lo publicado desde la anterior, de modo que cada publicación se paga una vez (una cuenta recién inscrita se pide con 14 días hacia atrás). La lanzan la lectura programada y «Noticias reales»; los resultados aparecen en la consulta siguiente, unos minutos después.
+
+1. Crear una cuenta en apify.com (con la de ALTKimia).
+2. En Apify › Settings › Billing, fijar un **límite de gasto mensual** (por ejemplo, US$20).
+3. Copiar el token en Apify › Settings › API & Integrations.
+4. En Vercel (Settings › Environment Variables): `APIFY_TOKEN` con ese token. Opcionales: `APIFY_CADA_HORAS` (por defecto 6) y `APIFY_MAX_POR_CUENTA` (publicaciones por cuenta en cada pasada, por defecto 10). Luego Redeploy.
+
+Costo de referencia: desde US$2 por 1.000 publicaciones de Facebook y US$1 por 1.000 de Instagram; 20 cuentas que publican 4 veces al día son unas 2.400 publicaciones al mes, menos de US$10. Es una solución para la demostración: Meta bloquea estos lectores de vez en cuando (Fuentes lo muestra como «No se pudo leer») y antes del primer contrato pagado conviene pasar a la vía oficial. Si Meta queda configurado para una red, esa red se lee por Meta y deja de usar Apify.
+
 Conectar Meta (una vez, en la cuenta de ALTKimia):
 
 1. Tener una cuenta de Instagram **profesional** de ALTKimia o PregonIA, ligada a una página de Facebook.
