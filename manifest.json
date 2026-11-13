@@ -1,7 +1,7 @@
 {
   "name": "PregonIA",
   "short_name": "PregonIA",
-  "description": "Qué dice la prensa de tu comuna, hasta dónde ha llegado y qué responder.",
+  "description": "Qué dice la prensa de tu institución o autoridad pública, hasta dónde ha llegado y qué responder.",
   "lang": "es-CL",
   "id": "/",
   "start_url": "/?sin-portada#inicio",

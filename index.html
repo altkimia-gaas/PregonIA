@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="PregonIA: qué dice la prensa de tu comuna, hasta dónde ha llegado y qué responder.">
+<meta name="description" content="PregonIA: qué dice la prensa de tu institución o autoridad pública, hasta dónde ha llegado y qué responder.">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#080B12">
 <link rel="icon" type="image/png" sizes="192x192" href="/icono-192.png">
@@ -856,6 +856,10 @@ body.hp-on{overflow:hidden}
 .pt-h em{font-style:normal;color:var(--alt-blue)}
 .pt-sub{margin:0;font-size:15px;color:var(--alt-muted);display:flex;flex-wrap:wrap;gap:6px 20px}
 .pt-sub span{display:inline-flex;align-items:center;gap:8px}
+.pt-seg{margin:2px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:8px;max-width:760px}
+.pt-seg b{width:100%;font-size:12.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--alt-muted)}
+.pt-seg span{font-size:14.5px;font-weight:600;color:#F0F4FF;border:1px solid rgba(66,165,245,.45);background:rgba(13,17,23,.55);border-radius:99px;padding:5px 13px}
+@media (max-width:520px){ .pt-seg{gap:6px} .pt-seg span{font-size:12.5px;padding:4px 10px} }
 .pt-sub span::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--alt-blue);box-shadow:0 0 0 3px rgba(33,150,243,.18)}
 .pt-go{margin-top:10px;display:inline-flex;align-items:center;gap:10px;border:0;border-radius:8px;padding:15px 30px;background:var(--alt-btn);color:#FFFFFF;font:inherit;font-size:17px;font-weight:700;letter-spacing:-.01em;cursor:pointer;box-shadow:0 10px 30px rgba(21,101,192,.35);transition:transform .15s,background .15s}
 .pt-go:hover{background:var(--alt-blue-d);transform:translateY(-1px)}
@@ -984,8 +988,9 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   <div class="pt-in">
     <p class="pt-logo" id="ptT"><span class="mk" aria-hidden="true"><i></i><i></i><i></i></span><span>Pregon<b>IA</b></span></p>
     <p class="pt-kick">Escucha la plaza. Decide a tiempo.</p>
-    <h1 class="pt-h">Sabe qué dice la prensa de tu comuna, hasta dónde ha llegado y qué responder, <em>antes de que el tema escale.</em></h1>
-    <p class="pt-sub"><span>Más de 100 medios nacionales, regionales y comunales</span><span>Alertas e informes para quien decide</span><span>Respuestas redactadas con IA</span></p>
+    <h1 class="pt-h">Sabe qué dice la prensa de tu institución y de tu gestión, hasta dónde ha llegado y qué responder, <em>antes de que el tema escale.</em></h1>
+    <p class="pt-seg"><b>Para instituciones y autoridades públicas</b><span>Municipios y alcaldías</span><span>Concejos municipales</span><span>Consejos regionales</span><span>Diputados y senadores</span></p>
+    <p class="pt-sub"><span>Más de 100 medios nacionales, regionales y locales, y sus redes</span><span>Alertas e informes para quien decide</span><span>Respuestas redactadas con IA</span></p>
     <button class="pt-go" id="ptGo" type="button">Empezar <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
     <p class="pt-by">Un producto de <b><span>ALT</span>Kimia</b></p>
   </div>
