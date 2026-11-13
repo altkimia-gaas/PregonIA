@@ -43,7 +43,7 @@
 :root[data-theme="light"]{
   --bg:#F4F4F0; --surface:#FFFFFF; --surface-2:#F8F7F2; --ink:#111827; --muted:#56627A; --line:#D8D4CC; --track:#E8E5DD;
   --accent:#1565C0; --accent-bg:#1565C0; --accent-bg-h:#0F4C9C; --accent-ink:#FFFFFF; --accent-soft:#E3F2FD;
-  --bell:#A8650F; --bell-soft:#FBEFD9;
+  --bell:#8F560C; --bell-soft:#FBEFD9;
   --pos:#00897B; --pos-soft:#DCF1EE; --pos-ink:#00695E;
   --neu:#A3AEBB; --neu-soft:#EDF0F4; --neu-ink:#525F6E;
   --cri:#C8412C; --cri-soft:#FBE7E2; --cri-ink:#A23422;
@@ -75,7 +75,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .nav a{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;text-decoration:none;color:var(--ink);font-weight:500}
 .nav a:hover{background:var(--surface-2)}
 .nav a[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
-.nav .count,.bnav .count{margin-left:auto;font-family:var(--f-mono);font-size:11px;background:var(--cri);color:#fff;border-radius:99px;padding:1px 7px;font-weight:600}
+.nav .count,.bnav .count{margin-left:auto;font-family:var(--f-mono);font-size:11px;background:#C8412C;color:#fff;border-radius:99px;padding:1px 7px;font-weight:600}
 .usage{display:flex;flex-direction:column;gap:5px;margin:10px 6px 0}
 .usage .row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
 .usage a{font-size:11.5px;font-weight:600}
@@ -865,6 +865,7 @@ body.hp-on{overflow:hidden}
 .pt-by b{color:var(--alt-text);font-weight:700;letter-spacing:-.02em}
 .pt-by b span{color:var(--alt-blue)}
 .pt-note{position:absolute;z-index:1;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));margin:0;font-size:11.5px;color:var(--alt-muted);text-align:right}
+.pt-note a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 body.pt-on{overflow:hidden}
 @media (max-width:820px){ .portada::before{background-position:38% 20%} .pt-in{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))} .pt-note{left:max(24px,env(safe-area-inset-left,0px));right:auto;text-align:left} .pt-go{width:100%;justify-content:center} .pt-kick{letter-spacing:.13em;font-size:12px} .pt-note{right:max(24px,env(safe-area-inset-right,0px))} .pt-sub{font-size:14.5px} }
 @media (prefers-reduced-motion: reduce){ .portada::before{animation:none;transform:none} .pt-go{transition:none} }
@@ -988,7 +989,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
     <button class="pt-go" id="ptGo" type="button">Empezar <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
     <p class="pt-by">Un producto de <b><span>ALT</span>Kimia</b></p>
   </div>
-  <p class="pt-note">Prototipo con noticias ficticias · Imagen ilustrativa generada con IA</p>
+  <p class="pt-note">Prototipo con noticias ficticias · Imagen ilustrativa generada con IA · <a href="/legal.html#privacidad">Privacidad</a> · <a href="/legal.html#terminos">Términos</a></p>
 </section>
 <button class="skip" type="button" data-act="skip">Ir al contenido</button>
 <div class="demo" id="demo" role="status" aria-live="polite"><b>Prototipo</b><span class="demo-mas">Noticias y cifras ficticias · catálogo de más de 100 medios real</span><span class="solo-movil">Datos ficticios</span></div>
@@ -2735,7 +2736,7 @@ async function pdfBlob(d){
     for (const l of doc.splitTextToSize(txt, AN - sangria)) { salto(5.6); doc.text(l, M + sangria, y); y += 5.6; }
     y += 1.4;
   }
-  const n = doc.getNumberOfPages(), pie = d.borrador ? "Borrador preparado con PregonIA · Revisar antes de difundir" : "Preparado con PregonIA";
+  const n = doc.getNumberOfPages(), pie = d.borrador ? "Borrador generado con IA por PregonIA · Revisar antes de difundir" : "Preparado con PregonIA · Incluye análisis generado con IA";
   for (let p = 1; p <= n; p++) { doc.setPage(p); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(120, 128, 140); doc.text(pdfTxt(pie), M, PIE + 6); doc.text(`Página ${p} de ${n}`, M + AN, PIE + 6, {align: "right"}); }
   return doc.output("blob");
 }
@@ -3054,7 +3055,7 @@ async function generar(){
   try {
     const {text} = await sample(prompt(m, pieza, enfoque, base), {signal: ctl.signal, cache: false, onText: ({text}) => { out.value = text; }});
     out.value = text; setDraft(text); c.borradores = (c.borradores||0) + 1; save(); renderChrome();
-    note.textContent = (c.borradores > pl.borradores ? "Superaste los borradores de tu plan; en producción se suma un paquete. " : "") + "Revisa lo marcado [completar] y las citas propuestas antes de aprobar.";
+    note.textContent = (c.borradores > pl.borradores ? "Superaste los borradores de tu plan; en producción se suma un paquete. " : "") + "Borrador generado con IA (Claude): revisa lo marcado [completar], las cifras y las citas propuestas antes de aprobar.";
   } catch(err) {
     out.value = err && err.text ? err.text : "";
     if (err && (err.code === "not_granted" || err.code === "sampling_disabled")) { out.value = plantilla(m, pieza); note.textContent = "No se autorizó el uso de Claude en esta vista; usamos una plantilla."; }
@@ -3177,7 +3178,8 @@ function renderHelp(){
     <section class="hp-teclado"><h3 class="hp-h">Atajos de teclado</h3><dl class="hp-atajos"><dt><span class="kbd">1</span> a <span class="kbd">5</span></dt><dd>Ir a Inicio, Menciones, Reportes, Comunicados o Ajustes</dd><dt><span class="kbd">/</span></dt><dd>Buscar en las menciones</dd><dt><span class="kbd">?</span></dt><dd>Abrir o cerrar esta ayuda</dd><dt><span class="kbd">Esc</span></dt><dd>Cerrar ventanas y menús</dd></dl></section>
     <section class="hp-ask"><h3 class="hp-h">¿No encuentras la respuesta?</h3><p class="hint" style="margin:0 0 8px">Pregúntale a PregonIA. Responde con la guía y las preguntas frecuentes de este sistema.</p>
       <form id="helpForm"><textarea id="helpAsk" rows="2" placeholder="Por ejemplo: ¿cómo agrego un tema nuevo?" aria-label="Tu pregunta"></textarea><div style="display:flex;gap:8px;margin-top:8px"><button class="btn primary sm" type="submit" id="helpBtn">Preguntar</button><button class="btn sm" type="button" data-act="help-stop" id="helpStop" hidden>Detener</button></div></form>
-      <div id="helpAns" class="hp-ans" aria-live="polite" hidden></div></section>`;
+      <div id="helpAns" class="hp-ans" aria-live="polite" hidden></div></section>
+    <section><h3 class="hp-h">Privacidad y condiciones</h3><p class="hint" style="margin:0 0 6px">Cómo tratamos los datos, qué hace la IA y quién procesa la información.</p><ul class="hp-legal" style="margin:0;padding-left:18px;display:grid;gap:4px"><li><a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a></li><li><a href="/legal.html#terminos" target="_blank" rel="noopener">Términos de uso</a></li><li><a href="/legal.html#ia" target="_blank" rel="noopener">Uso de inteligencia artificial</a></li><li><a href="/legal.html#proveedores" target="_blank" rel="noopener">Proveedores que procesan datos</a></li><li><a href="/legal.html#medios" target="_blank" rel="noopener">Medios y derechos de autor</a></li><li><a href="/legal.html#contacto" target="_blank" rel="noopener">Contacto y derechos sobre tus datos</a></li></ul></section>`;
 }
 function abrirAyuda(){
   helpReturn = document.activeElement; helpOpen = true; renderHelp();
@@ -3198,7 +3200,7 @@ async function preguntarAyuda(){
   helpCtl = new AbortController(); btn.disabled = true; stop.hidden = false; out.textContent = "Pensando…";
   try {
     const {text} = await sample(`Eres la ayuda de PregonIA, un sistema que monitorea noticias sobre municipios en medios digitales chilenos. Responde en español de Chile, en tono cordial y directo, en máximo 120 palabras, la pregunta del usuario. Usa solo la información de abajo. Si la respuesta no está, dilo con claridad y sugiere escribir al equipo de ALTkimia; no inventes funciones, cifras ni plazos. Cuando ayude, indica dónde está la opción (por ejemplo: Ajustes › Mis temas).\n\n${base}\n\nPREGUNTA: ${q}`, {signal: helpCtl.signal, cache: false, modelTier: "quick", onText: ({text}) => { out.textContent = text; }});
-    out.textContent = text;
+    out.textContent = text + "\n\n— Respuesta generada con IA. Puede contener errores; confírmala en las preguntas frecuentes.";
   } catch(err) {
     out.textContent = err && err.text ? err.text : err && err.code === "cancelled" ? "Respuesta detenida." : err && err.code === "not_granted" ? "No se autorizó el uso de Claude en esta vista. Revisa las preguntas frecuentes." : err && err.code === "rate_limited" ? "Llegaste al límite de uso por ahora. Intenta más tarde." : "No se pudo responder ahora. Intenta de nuevo en un momento.";
   } finally { btn.disabled = false; stop.hidden = true; }
@@ -3809,7 +3811,7 @@ function vocTexto(){
   if (k.evitar.length) { L.push("", "*Evita decir*"); k.evitar.forEach(v => L.push("- " + v)); }
   L.push("", "*Preguntas probables*"); k.preguntas.forEach((q, i) => L.push(`${i + 1}. ${q.p}`, `   ${q.r}`));
   const ds = [...d.rel, ...d.resto]; if (ds.length) { L.push("", "*Datos que puedes citar*"); ds.forEach(l => L.push("- " + l)); }
-  L.push("", "Borrador preparado con PregonIA. Validar cifras y citas antes de usarlo.");
+  L.push("", "Borrador generado con IA por PregonIA. Validar cifras y citas antes de usarlo.");
   return L.filter((l, i, a) => !(l === "" && a[i - 1] === "")).join("\n");
 }
 function vocDoc(){ const t = vocTexto(); if (!t) return null; return {titulo: "Kit de vocería", sub: vocContexto().tema, texto: t, cuerpo: t.split("\n").slice(2).join("\n"), borrador: true}; }
@@ -4135,13 +4137,14 @@ function dialogo(id, titulo, sub, cuerpo){
   dialogo.origen = document.activeElement; document.body.appendChild(ov); document.body.classList.add("vid-on");
   const f = ov.querySelector("input, button.btn:not(.ghost)"); if (f) f.focus();
 }
-function cerrarDialogo(){ const o = $("#dlgBack"); if (!o) return; o.remove(); document.body.classList.remove("vid-on"); if (dialogo.origen && dialogo.origen.isConnected) dialogo.origen.focus(); }
+function cerrarDialogo(){ const o = $("#dlgBack"); if (!o) return; if (aceptacion.pend) { const r = aceptacion.pend; aceptacion.pend = null; r(false); } o.remove(); document.body.classList.remove("vid-on"); if (dialogo.origen && dialogo.origen.isConnected) dialogo.origen.focus(); }
 function abrirLogin(){
   dialogo("login", "Ingresar a PregonIA", "Para los equipos municipales del piloto. Si aún no tienes cuenta, pide una invitación a ALTKimia.", `
     <form class="cap-f" id="loginForm" novalidate>
       <label class="cap-l">Correo<input id="lgCorreo" type="email" autocomplete="username" inputmode="email" required></label>
       <label class="cap-l">Contraseña<input id="lgClave" type="password" autocomplete="current-password" required></label>
       <p class="cap-err" id="lgErr" role="alert" hidden></p>
+      <p class="hint" style="margin:0">El uso del piloto se rige por los <a href="/legal.html#terminos" target="_blank" rel="noopener">Términos de uso</a> y la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a>.</p>
       <div class="cap-acts"><button class="btn alt" type="submit" id="lgOk">Ingresar</button><button class="btn" type="button" data-act="dlg-close">Cancelar</button><button class="btn ghost" type="button" data-act="olvide">Olvidé mi contraseña</button></div>
     </form>`);
 }
@@ -4188,6 +4191,34 @@ function menuCuenta(b){
   document.body.appendChild(m); m._origen = b; ubicarMenu(); m.querySelector("button").focus({preventScroll: true});
 }
 
+/* Aceptación de Términos y Política de privacidad (control 6 y 12 del checklist legal).
+   Se pide una vez por versión de los documentos; la base guarda quién aceptó, qué versión y cuándo (tabla aceptaciones).
+   Si la tabla aún no existe (esquema sin actualizar), no bloquea el ingreso y lo deja anotado en la consola. */
+const LEGAL_VERSION = "2026-11-13";
+async function aceptacion(user){
+  const {data, error} = await PILOTO.sb.from("aceptaciones").select("id").eq("usuario", user.id).eq("version", LEGAL_VERSION).limit(1);
+  if (error) { console.warn("PregonIA: falta la tabla aceptaciones; corre de nuevo supabase/esquema.sql.", error.message); return true; }
+  if (data && data.length) return true;
+  return new Promise(res => {
+    dialogo("legal", "Antes de continuar", "Para usar el piloto necesitamos que leas y aceptes los documentos que rigen el servicio.", `
+      <form class="cap-f" id="legalForm" novalidate>
+        <p class="hint" style="margin:0">Lee los <a href="/legal.html#terminos" target="_blank" rel="noopener">Términos de uso</a> y la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a> (versión ${LEGAL_VERSION}). Se abren en una pestaña nueva.</p>
+        <label class="cap-l" style="display:flex;align-items:flex-start;gap:10px;font-weight:500"><input id="lgAcepto" type="checkbox" style="width:20px;min-height:20px;height:20px;margin:1px 0 0;padding:0;flex:none;accent-color:var(--accent)"> He leído y acepto los Términos de uso y la Política de privacidad.</label>
+        <p class="cap-err" id="lgaErr" role="alert" hidden></p>
+        <div class="cap-acts"><button class="btn alt" type="submit" id="lgaOk">Aceptar y continuar</button><button class="btn" type="button" data-act="dlg-close">No acepto</button></div>
+      </form>`);
+    aceptacion.pend = res;
+  });
+}
+async function registrarAceptacion(e){
+  e.preventDefault();
+  if (!$("#lgAcepto").checked) return errorEn("#lgaErr", "Para continuar, marca la casilla de aceptación.", "#lgAcepto");
+  const ok = $("#lgaOk"); ok.disabled = true; ok.textContent = "Guardando…";
+  const {error} = await PILOTO.sb.rpc("aceptar_documentos", {p_version: LEGAL_VERSION, p_agente: navigator.userAgent});
+  if (error) { ok.disabled = false; ok.textContent = "Aceptar y continuar"; return errorEn("#lgaErr", "No se pudo registrar la aceptación: " + error.message); }
+  const r = aceptacion.pend; aceptacion.pend = null; cerrarDialogo(); if (r) r(true);
+}
+
 /* Sesión */
 async function entrarPiloto(user){
   const sb = PILOTO.sb;
@@ -4196,6 +4227,7 @@ async function entrarPiloto(user){
     dialogo("sinmuni", "Tu cuenta aún no tiene municipio", "Ingresaste bien, pero falta asignarte un municipio y un rol. Pídeselo a ALTKimia o al administrador del piloto.", `<div class="cap-f"><p class="hint" style="margin:0">${esc(user.email)}</p><div class="cap-acts"><button class="btn" type="button" data-act="salir">Salir</button></div></div>`);
     return;
   }
+  if (!(await aceptacion(user))) { salir(); return; }
   Object.assign(PILOTO, {activo: true, user, perfil, muni: perfil.municipios, editor: ["admin", "comunicaciones"].includes(perfil.rol)});
   if (COMUNAS.includes(PILOTO.muni.comuna)) S.org = PILOTO.muni.comuna;
   $("#org").disabled = true; $("#org").title = "En el piloto ves solo tu municipio";
@@ -4296,7 +4328,7 @@ document.addEventListener("click", e => {
   if (a === "recargar-piloto") { cerrarMenu(); cargarDatosPiloto().then(() => toast("Datos actualizados.")).catch(er => toast("No se pudieron actualizar: " + er.message)); }
 });
 document.addEventListener("click", e => { if (e.target.id === "dlgBack") cerrarDialogo(); });
-document.addEventListener("submit", e => { if (e.target.id === "loginForm") ingresar(e); if (e.target.id === "claveForm") guardarClave(e); });
+document.addEventListener("submit", e => { if (e.target.id === "loginForm") ingresar(e); if (e.target.id === "claveForm") guardarClave(e); if (e.target.id === "legalForm") registrarAceptacion(e); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#dlgBack")) { e.preventDefault(); cerrarDialogo(); } });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && PILOTO.activo && !PILOTO.sinc && !PILOTO.timer) cargarDatosPiloto().catch(() => {}); });
 setInterval(() => { if (PILOTO.activo && (document.visibilityState === "visible" || ("Notification" in window && Notification.permission === "granted")) && !PILOTO.sinc) cargarDatosPiloto().catch(() => {}); }, 5 * 60000);
@@ -4545,6 +4577,7 @@ const VESC = {
     vlogo(ctx, VW / 2, 1500, 96, vin(l, 1.4));
     vtexto(ctx, "Escucha la plaza. Decide a tiempo.", VW / 2, 1590, {px: 38, w: 500, color: VC.blue, a: vin(l, 1.7), align: "center"});
     vtexto(ctx, "Un producto de ALTKimia", VW / 2, 1660, {px: 32, w: 500, color: VC.muted, a: vin(l, 1.9), align: "center"});
+    if (plan.audio) vtexto(ctx, "Guion y voz sintética generados con IA", VW / 2, 1730, {px: 28, w: 500, color: VC.muted, a: vin(l, 2.1), align: "center"});
   }
 };
 function vdibujar(ctx, t, plan){

@@ -228,6 +228,7 @@ const VESC = {
     vlogo(ctx, VW / 2, 1500, 96, vin(l, 1.4));
     vtexto(ctx, "Escucha la plaza. Decide a tiempo.", VW / 2, 1590, {px: 38, w: 500, color: VC.blue, a: vin(l, 1.7), align: "center"});
     vtexto(ctx, "Un producto de ALTKimia", VW / 2, 1660, {px: 32, w: 500, color: VC.muted, a: vin(l, 1.9), align: "center"});
+    if (plan.audio) vtexto(ctx, "Guion y voz sintética generados con IA", VW / 2, 1730, {px: 28, w: 500, color: VC.muted, a: vin(l, 2.1), align: "center"});
   }
 };
 function vdibujar(ctx, t, plan){

@@ -838,7 +838,7 @@ async function pdfBlob(d){
     for (const l of doc.splitTextToSize(txt, AN - sangria)) { salto(5.6); doc.text(l, M + sangria, y); y += 5.6; }
     y += 1.4;
   }
-  const n = doc.getNumberOfPages(), pie = d.borrador ? "Borrador preparado con PregonIA · Revisar antes de difundir" : "Preparado con PregonIA";
+  const n = doc.getNumberOfPages(), pie = d.borrador ? "Borrador generado con IA por PregonIA · Revisar antes de difundir" : "Preparado con PregonIA · Incluye análisis generado con IA";
   for (let p = 1; p <= n; p++) { doc.setPage(p); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(120, 128, 140); doc.text(pdfTxt(pie), M, PIE + 6); doc.text(`Página ${p} de ${n}`, M + AN, PIE + 6, {align: "right"}); }
   return doc.output("blob");
 }
@@ -1157,7 +1157,7 @@ async function generar(){
   try {
     const {text} = await sample(prompt(m, pieza, enfoque, base), {signal: ctl.signal, cache: false, onText: ({text}) => { out.value = text; }});
     out.value = text; setDraft(text); c.borradores = (c.borradores||0) + 1; save(); renderChrome();
-    note.textContent = (c.borradores > pl.borradores ? "Superaste los borradores de tu plan; en producción se suma un paquete. " : "") + "Revisa lo marcado [completar] y las citas propuestas antes de aprobar.";
+    note.textContent = (c.borradores > pl.borradores ? "Superaste los borradores de tu plan; en producción se suma un paquete. " : "") + "Borrador generado con IA (Claude): revisa lo marcado [completar], las cifras y las citas propuestas antes de aprobar.";
   } catch(err) {
     out.value = err && err.text ? err.text : "";
     if (err && (err.code === "not_granted" || err.code === "sampling_disabled")) { out.value = plantilla(m, pieza); note.textContent = "No se autorizó el uso de Claude en esta vista; usamos una plantilla."; }
@@ -1280,7 +1280,8 @@ function renderHelp(){
     <section class="hp-teclado"><h3 class="hp-h">Atajos de teclado</h3><dl class="hp-atajos"><dt><span class="kbd">1</span> a <span class="kbd">5</span></dt><dd>Ir a Inicio, Menciones, Reportes, Comunicados o Ajustes</dd><dt><span class="kbd">/</span></dt><dd>Buscar en las menciones</dd><dt><span class="kbd">?</span></dt><dd>Abrir o cerrar esta ayuda</dd><dt><span class="kbd">Esc</span></dt><dd>Cerrar ventanas y menús</dd></dl></section>
     <section class="hp-ask"><h3 class="hp-h">¿No encuentras la respuesta?</h3><p class="hint" style="margin:0 0 8px">Pregúntale a PregonIA. Responde con la guía y las preguntas frecuentes de este sistema.</p>
       <form id="helpForm"><textarea id="helpAsk" rows="2" placeholder="Por ejemplo: ¿cómo agrego un tema nuevo?" aria-label="Tu pregunta"></textarea><div style="display:flex;gap:8px;margin-top:8px"><button class="btn primary sm" type="submit" id="helpBtn">Preguntar</button><button class="btn sm" type="button" data-act="help-stop" id="helpStop" hidden>Detener</button></div></form>
-      <div id="helpAns" class="hp-ans" aria-live="polite" hidden></div></section>`;
+      <div id="helpAns" class="hp-ans" aria-live="polite" hidden></div></section>
+    <section><h3 class="hp-h">Privacidad y condiciones</h3><p class="hint" style="margin:0 0 6px">Cómo tratamos los datos, qué hace la IA y quién procesa la información.</p><ul class="hp-legal" style="margin:0;padding-left:18px;display:grid;gap:4px"><li><a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a></li><li><a href="/legal.html#terminos" target="_blank" rel="noopener">Términos de uso</a></li><li><a href="/legal.html#ia" target="_blank" rel="noopener">Uso de inteligencia artificial</a></li><li><a href="/legal.html#proveedores" target="_blank" rel="noopener">Proveedores que procesan datos</a></li><li><a href="/legal.html#medios" target="_blank" rel="noopener">Medios y derechos de autor</a></li><li><a href="/legal.html#contacto" target="_blank" rel="noopener">Contacto y derechos sobre tus datos</a></li></ul></section>`;
 }
 function abrirAyuda(){
   helpReturn = document.activeElement; helpOpen = true; renderHelp();
@@ -1301,7 +1302,7 @@ async function preguntarAyuda(){
   helpCtl = new AbortController(); btn.disabled = true; stop.hidden = false; out.textContent = "Pensando…";
   try {
     const {text} = await sample(`Eres la ayuda de PregonIA, un sistema que monitorea noticias sobre municipios en medios digitales chilenos. Responde en español de Chile, en tono cordial y directo, en máximo 120 palabras, la pregunta del usuario. Usa solo la información de abajo. Si la respuesta no está, dilo con claridad y sugiere escribir al equipo de ALTkimia; no inventes funciones, cifras ni plazos. Cuando ayude, indica dónde está la opción (por ejemplo: Ajustes › Mis temas).\n\n${base}\n\nPREGUNTA: ${q}`, {signal: helpCtl.signal, cache: false, modelTier: "quick", onText: ({text}) => { out.textContent = text; }});
-    out.textContent = text;
+    out.textContent = text + "\n\n— Respuesta generada con IA. Puede contener errores; confírmala en las preguntas frecuentes.";
   } catch(err) {
     out.textContent = err && err.text ? err.text : err && err.code === "cancelled" ? "Respuesta detenida." : err && err.code === "not_granted" ? "No se autorizó el uso de Claude en esta vista. Revisa las preguntas frecuentes." : err && err.code === "rate_limited" ? "Llegaste al límite de uso por ahora. Intenta más tarde." : "No se pudo responder ahora. Intenta de nuevo en un momento.";
   } finally { btn.disabled = false; stop.hidden = true; }
