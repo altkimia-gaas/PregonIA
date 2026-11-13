@@ -106,7 +106,7 @@ function paginaFB(nombre, ambito){
   if (!p) { p = {id: FB_ID0 + S.fbPaginas.length + 1, n: nombre, a: ambito || "local", c: ambito === "local" ? S.org : ""}; S.fbPaginas.push(p); registrarPagina(p); }
   return p.id;
 }
-const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null, hitos: c.hitos || [], prep: c.prep || {}});
+const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null, hitos: c.hitos || [], prep: c.prep || {}, tv: c.tv || 0});
 async function cargarDatosPiloto(){
   const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 32 * DAY).toISOString();
   const pide = q => q.then(r => { if (r.error) throw new Error(r.error.message); return r.data; });
@@ -119,7 +119,7 @@ async function cargarDatosPiloto(){
     pide(sb.from("municipios").select("config").eq("id", mid).single())
   ]);
   const c = cuenta();
-  if (mun.config && mun.config.temas) Object.assign(c, mun.config);
+  if (mun.config && mun.config.temas) { Object.assign(c, mun.config); c.tv = mun.config.tv || 0; adaptarCuenta(c); }  // configuración guardada antes de los temas por territorio: se adapta al leerla
   else if (PILOTO.editor) await pide(sb.from("municipios").update({config: configDe(c)}).eq("id", mid).select("id"));  // primera vez: se sube la caracterización actual
   const notas = men.filter(r => MED[r.notas.medio_id]).map(r => { const n = r.notas, t = n.titulo, res = r.resumen || t, x = r.palabras || "";
     return {id: n.id, m: n.medio_id, ts: Date.parse(n.publicado), t, b: "", x, tono: r.tono || "neu", res, g: String(r.grupo || n.id), url: n.url, hay: norm(t + " " + res + " " + x + " " + org + " comuna"), ht: norm(t), real: true}; });

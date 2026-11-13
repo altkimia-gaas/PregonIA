@@ -34,11 +34,12 @@ function candidatos(perfil){
   const nucleo = [
     T("Municipalidad de " + c, "Núcleo", ["Municipalidad de " + c, "Municipio de " + c]),
     T(perfil.autoridad ? perfil.autoridad : "Alcalde de " + c, "Núcleo", ["Alcalde de " + c, "Alcaldesa de " + c].concat(perfil.autoridad ? [perfil.autoridad] : [], perfil.variantes || [])),
-    T(c + " (comuna)", "Núcleo", [c], CTX.slice(), (EXC[c] || []).slice())
+    T(c + " (comuna)", "Núcleo", [c], ctxComuna(c), excComuna(c))
   ];
   const otros = [ T("Concejo municipal", "Candidato", ["concejo municipal","concejal","concejala","concejales"], [c]) ];
   perfil.agenda.forEach(a => { if (a.trim()) otros.push(T(a.trim(), "Agenda", [a.trim()], norm(a).includes(norm(c)) ? [] : [c])); });
-  Object.entries(SENS).forEach(([key, s]) => otros.push(T(s.n, perfil.sens.includes(key) ? "Sensibilidad" : "Descubrimiento", s.t.slice(), [c], [], {sens: key})));
+  // Las mismas ocho temáticas para todos, con el nombre, las palabras y los dolores de esta comuna (src/territorios.js).
+  Object.entries(ejesDe(perfil)).forEach(([key, s]) => otros.push(T(s.n, perfil.sens.includes(key) ? "Sensibilidad" : "Descubrimiento", s.t.slice(), s.ctx.slice(), [], {sens: key})));
   return {nucleo, otros};
 }
 function puntaje(tema){
@@ -62,15 +63,16 @@ const KEY = "pregonia-demo-v2";
 function defaults(){
   const s = {org: "Casablanca", cuentas: {}, comunicados: [], fp: {}, resp: {}};
   COMUNAS.forEach(c => {
-    const perfil = {tipo: "Municipio", comuna: c, autoridad: "", agenda: AGENDA[c].slice(), sens: ["agua","emergencias","seguridad"], plan: "comunal"};
+    const perfil = {tipo: "Municipio", comuna: c, autoridad: "", agenda: AGENDA[c].slice(), sens: sensDe([c]), plan: "comunal"};
     const p = proponer(perfil);
-    s.cuentas[c] = {perfil, temas: p.base, sugeridos: p.sugeridos, borradores: 0, caracterizada: false, visto: false, onbOculto: false};
+    s.cuentas[c] = {perfil, temas: p.base, sugeridos: p.sugeridos, borradores: 0, caracterizada: false, visto: false, onbOculto: false, tv: TV};
   });
   return s;
 }
 let S;
 try { const raw = localStorage.getItem(KEY); S = raw ? JSON.parse(raw) : defaults(); if (!S.cuentas || !S.cuentas.Casablanca) S = defaults(); } catch(e) { S = defaults(); }
 S.resp ||= {}; S.fp ||= {};
+if (Object.values(S.cuentas).map(adaptarCuenta).some(Boolean)) save();  // cuentas de una versión anterior: temas adaptados a su territorio
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
 const cuenta = () => S.cuentas[S.org];
 const respondida = g => !!S.resp[S.org + ":" + g];
@@ -106,7 +108,7 @@ function metricas(ms){
   return {vol, pos, neu, cri, neto: vol ? Math.round((pos - cri) / vol * 100) : 0, alcance: ms.reduce((s,m) => s + m.alcance, 0)};
 }
 const pendientes = (c = cuenta()) => menciones(c, 7).filter(m => m.critico && !respondida(m.g));
-function genericaComuna(c){ return {id:"g-"+norm(c), nombre:c, terminos:[c, "Municipalidad de "+c], contexto: CTX, exclusiones: EXC[c]||[], activo:true}; }
+function genericaComuna(c){ return {id:"g-"+norm(c), nombre:c, terminos:[c, "Municipalidad de "+c], contexto: ctxComuna(c), exclusiones: excComuna(c), activo:true}; }
 
 /* Utilidades de interfaz */
 const $ = s => document.querySelector(s);
@@ -298,7 +300,7 @@ function vAsistente(){
     <div class="field"><label for="cPlan">2. ¿Qué plan?</label><select id="cPlan">${Object.entries(PLANES).map(([k,v]) => `<option value="${k}" ${p.plan===k?"selected":""}>${v.nombre}: ${v.temas} temas, ${clp(v.precio)} al mes</option>`).join("")}</select></div>
     ${esAut() ? "" : `<div class="field"><label for="cAut">3. Nombre de la autoridad principal <span class="muted">(opcional)</span></label><input id="cAut" value="${esc(p.autoridad)}" placeholder="Ej.: nombre y apellido del alcalde"><small>Solo personas en su rol público.</small></div>`}
     <div class="field"><label for="cAg">${esAut() ? "3. Proyectos, comisiones o causas que impulsa" : "4. Proyectos u obras con nombre propio"}</label><input id="cAg" value="${esc(p.agenda.join(", "))}" placeholder="${esAut() ? "Ej.: ley de humedales, comisión de Salud, Ruta 68" : "Ej.: Polideportivo, Plan regulador"}"><small>Sepáralos con comas.</small></div>
-    <fieldset class="field span2"><legend>${esAut() ? "4. ¿Qué temas son sensibles hoy en su territorio?" : "5. ¿Qué temas son sensibles hoy en la comuna?"}</legend><div class="checks">${Object.entries(SENS).map(([k,s]) => `<label><input type="checkbox" name="sens" value="${k}" ${p.sens.includes(k)?"checked":""}> ${s.n}</label>`).join("")}</div><small>Los que marques tienen prioridad; el resto entra solo si ya aparece en las noticias.</small></fieldset>
+    <fieldset class="field span2"><legend>${esAut() ? "4. ¿Qué temas son sensibles hoy en su territorio?" : "5. ¿Qué temas son sensibles hoy en la comuna?"}</legend><div class="checks">${Object.entries(ejesDe(esAut() ? p : {...p, comuna: S.org})).map(([k,s]) => `<label><input type="checkbox" name="sens" value="${k}" ${p.sens.includes(k)?"checked":""}> ${esc(s.n)}</label>`).join("")}</div><small>${(pt => pt ? `Adaptados a ${esAut() ? esc(p.zonaNombre) : esc(S.org)}: ${esc(pt.charAt(0).toLowerCase() + pt.slice(1))}. ` : "")(perfilTerritorial(esAut() ? p : {...p, comuna: S.org}))}Los que marques tienen prioridad; el resto entra solo si ya aparece en las noticias.</small></fieldset>
     <div class="span2"><button class="btn primary" type="submit">Ver propuesta</button></div>
   </form>
   <div id="propOut" style="margin-top:16px">${propuesta ? propHtml() : ""}</div>`;

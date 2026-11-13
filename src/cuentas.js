@@ -19,16 +19,17 @@ function candidatosAut(p){
   ];
   const otros = [T(CARGOS[p.rol].organo, "Candidato", [norm(CARGOS[p.rol].organo), cargo.toLowerCase()], p.comunas.length > 6 ? ["valparaiso"] : p.comunas.slice())];
   (p.agenda || []).forEach(a => { if (a.trim()) otros.push(T(a.trim(), "Agenda", [a.trim()])); });
-  Object.entries(SENS).forEach(([key, s]) => otros.push(T(s.n, (p.sens || []).includes(key) ? "Sensibilidad" : "Descubrimiento", s.t.slice(), p.comunas.slice(0, 40), [], {sens: key})));
+  // Las ocho temáticas con la lente de su cargo y los dolores de su territorio; el contexto incluye su nombre, porque sus notas reales ya la nombran.
+  Object.entries(ejesDe(p)).forEach(([key, s]) => otros.push(T(s.n, (p.sens || []).includes(key) ? "Sensibilidad" : "Descubrimiento", s.t.slice(), s.ctx.slice(), [], {sens: key})));
   return {nucleo, otros};
 }
 function crearCuentaAutoridad({rol, zona, a, nombre, g}){
   const z = zonaDe(rol, zona); if (!z) return null;
   const persona = a || {rol, zona, n: nombre.trim(), c: nombre.trim(), p: "", g};
   const perfil = {tipo: "Autoridad", rol, g: persona.g, zona, zonaNombre: rol === "concejal" ? "Comuna de " + z.n : z.n, comunas: z.comunas.slice(), autoridadId: a ? a.id : null,
-    nombre: persona.n, completo: persona.c, partido: persona.p, variantes: variantesNombre(persona), plan: "regional", agenda: [], sens: [], comuna: null};
+    nombre: persona.n, completo: persona.c, partido: persona.p, variantes: variantesNombre(persona), plan: "regional", agenda: [], sens: sensDe(z.comunas), comuna: null};
   let key = persona.n; if (COMUNAS_V.includes(key) || (S.cuentas[key] && !esAut(S.cuentas[key]))) key += " (" + cargoDe(rol, persona.g) + ")";
-  if (!S.cuentas[key]) { const pr = proponer(perfil); S.cuentas[key] = {perfil, temas: pr.base, sugeridos: pr.sugeridos, borradores: 0, caracterizada: true, visto: false, onbOculto: false, base: baseAutoridad(perfil)}; }
+  if (!S.cuentas[key]) { const pr = proponer(perfil); S.cuentas[key] = {perfil, temas: pr.base, sugeridos: pr.sugeridos, borradores: 0, caracterizada: true, visto: false, onbOculto: false, base: baseAutoridad(perfil), tv: TV}; }
   return key;
 }
 /* Municipio de cualquiera de las 38 comunas, con su alcalde o alcaldesa: la persona se sigue por nombre como tema base. */
@@ -45,8 +46,8 @@ function crearCuentaMunicipio(c, a, nombre, g){
     }
     return c;
   }
-  const perfil = {tipo: "Municipio", comuna: c, agenda: (AGENDA[c] || []).slice(), sens: ["agua", "emergencias", "seguridad"], plan: "comunal", ...extra}, pr = proponer(perfil);
-  S.cuentas[c] = {perfil, temas: pr.base, sugeridos: pr.sugeridos, borradores: 0, caracterizada: false, visto: false, onbOculto: false};
+  const perfil = {tipo: "Municipio", comuna: c, agenda: (AGENDA[c] || []).slice(), sens: sensDe([c]), plan: "comunal", ...extra}, pr = proponer(perfil);
+  S.cuentas[c] = {perfil, temas: pr.base, sugeridos: pr.sugeridos, borradores: 0, caracterizada: false, visto: false, onbOculto: false, tv: TV};
   return c;
 }
 const munisCuenta = () => COMUNAS.concat(Object.keys(S.cuentas).filter(k => !COMUNAS.includes(k) && !esAut(S.cuentas[k])).sort((a, b) => a.localeCompare(b, "es")));

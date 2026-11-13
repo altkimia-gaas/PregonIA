@@ -24,6 +24,7 @@ Los datos de la demo se guardan en el navegador (localStorage, clave `pregonia-d
 - `src/base.js` constantes, planes y utilidades; recibe el catálogo de medios al compilar.
 - `src/corpus.js` noticias ficticias de la demo.
 - `src/app.js` motor de calce, métricas, vistas, informes, comunicados y ayuda.
+- `src/territorios.js` perfil de las 38 comunas y de cada distrito, circunscripción y circunscripción provincial: las ocho temáticas (agua, emergencias, seguridad, salud, educación, tránsito, aseo y economía) con el nombre, las palabras y los dolores de cada territorio, y la lente del cargo (municipio y concejo, consejo regional, parlamentarios). Las cuentas guardadas con la versión anterior se adaptan solas al abrirse, sin perder lo editado.
 - `assets/portada.jpg` foto de la portada; se embebe en `index.html` al compilar.
 - `data/catalogo_medios.csv` los medios con método de lectura, URL y estado (listo, requiere_ajuste, restringido).
 - `docs/especificacion.md` especificación funcional del MVP.
