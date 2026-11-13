@@ -51,7 +51,13 @@ async function leerCuenta(m){
   const j = await graph(`${m.usuario}/posts`, {fields: "message,permalink_url,created_time", limit: String(POR_CUENTA)});
   return (j.data || []).filter(p => p.message && p.permalink_url).map(p => ({titulo: titularDe(p.message), desc: p.message.replace(/\s+/g, " ").slice(0, 400), url: p.permalink_url, fecha: Date.parse(p.created_time), m, via: "facebook"})).filter(x => x.titulo);
 }
-/* Apify. Para pagar cada publicación una sola vez, cada pasada pide solo lo publicado desde la anterior y la lectura junta
+/* Apify cobra por publicación entregada (Facebook US$5 por mil, más US$2 por mil del filtro de fecha; Instagram US$1,70 por mil,
+   plan gratuito), no por pasada ni por cuenta revisada. Por eso: cada pasada pide exactamente desde el inicio de la anterior
+   (con 15 minutos de margen), una cuenta recibe su lectura de 14 días una sola vez en su vida, el tope por cuenta es solo
+   un resguardo, y la frecuencia puede ser alta sin costo extra (cada pasada cuesta US$0,001 de inicio).
+   Tope de gasto: con APIFY_PRESUPUESTO_USD (4,5 por defecto, bajo los US$5 del plan gratuito) no se lanzan pasadas nuevas
+   cuando el gasto del mes lo alcanza; se sigue mostrando lo ya leído.
+   Para pagar cada publicación una sola vez, cada pasada pide solo lo publicado desde la anterior y la lectura junta
    los resultados de las últimas pasadas (unos 7 días). Una cuenta que aún no aparece en ninguna pasada se pide con 14 días
    hacia atrás apenas se la ve por primera vez (una vez al día como máximo). La pasada de lo nuevo corre cada APIFY_CADA_HORAS (6).
    La lanzan la lectura programada y «Noticias reales»; los resultados llegan en la consulta siguiente (tarda unos minutos).
@@ -70,6 +76,10 @@ function itemAPost(red, it){
   const fecha = red === "instagram" ? Date.parse(it.timestamp) : (Number.isFinite(it.timestamp) ? it.timestamp * 1000 : Date.parse(it.time));
   const u = red === "instagram" ? (it.ownerUsername || usuarioDe("instagram", it.inputUrl)) : (usuarioDe("facebook", it.inputUrl) || usuarioDe("facebook", it.facebookUrl) || it.pageName);
   return texto && u ? {u: String(u).toLowerCase(), texto, url: it.url, fecha} : null;
+}
+/* Gasto del mes en Apify (US$). null si no se puede saber: en ese caso no se pausa. */
+async function gastoApify(){
+  try { const j = await apifyApi("users/me/limits", {ms: 6000}); const v = j && j.data && j.data.current && j.data.current.monthlyUsageUsd; return Number.isFinite(v) ? v : null; } catch(e) { return null; }
 }
 /* Registro en un almacén con nombre de Apify (se crea solo la primera vez). Si no se puede leer, se parte de cero: lo peor es pedir una lectura de más. */
 let ALMACEN = null;
@@ -90,9 +100,9 @@ async function leerApify(red, cuentas, reg){
   datos.map(it => itemAPost(red, it)).filter(Boolean).forEach(p => { if (vistos.has(p.url)) return; vistos.add(p.url); const k = clave(red, p.u); if (!porCuenta.has(k)) porCuenta.set(k, []); porCuenta.get(k).push(p); });
   // Pasadas nuevas (sin esperar a que terminen). El registro de cuándo se pidió qué vive en un almacén de Apify
   // («pregonia-redes»), para que una cuenta nueva se lea de inmediato sin repetir su lectura de 14 días en cada consulta.
-  const cada = Math.max(1, Number(process.env.APIFY_CADA_HORAS || 6)), limite = Math.max(1, Number(process.env.APIFY_MAX_POR_CUENTA || 10)), ahora = Date.now();
-  // Nueva: sin publicaciones en las pasadas leídas y sin lectura de 14 días pedida en el último día.
-  const nuevas = cuentas.filter(m => !porCuenta.has(clave(red, m.usuario)) && !(ahora - (reg.inicial[clave(red, m.usuario)] || 0) < 864e5));
+  const cada = Math.max(1, Number(process.env.APIFY_CADA_HORAS || 4)), limite = Math.max(1, Number(process.env.APIFY_MAX_POR_CUENTA || 30)), ahora = Date.now();
+  // Nueva: nunca pedida. Una cuenta sin publicaciones con texto (solo imágenes) no se vuelve a pedir con 14 días: la cubre la pasada de lo nuevo.
+  const nuevas = cuentas.filter(m => !porCuenta.has(clave(red, m.usuario)) && !reg.inicial[clave(red, m.usuario)]);
   // La pasada de lo nuevo omite las que acaban de recibir su lectura de 14 días: ya están cubiertas.
   const conocidas = cuentas.filter(m => !nuevas.includes(m) && !(ahora - (reg.inicial[clave(red, m.usuario)] || 0) < cada * 36e5));
   const entrada = (lista, desde) => red === "instagram"
@@ -100,14 +110,18 @@ async function leerApify(red, cuentas, reg){
     : {startUrls: lista.map(m => ({url: urlDe("facebook", m.usuario)})), resultsLimit: limite, onlyPostsNewerThan: desde, captionText: false};
   const lanzar = async (lista, desde) => { if (!lista.length) return false; try { await apifyApi(`acts/${ACTOR[red]()}/runs`, {method: "POST", body: JSON.stringify(entrada(lista, desde))}); return true; } catch(e) { return false; } };
   let lanzada = false;
-  if (nuevas.length && await lanzar(nuevas, "14 days")) { lanzada = true; reg.cambio = true; nuevas.forEach(m => { reg.inicial[clave(red, m.usuario)] = ahora; }); }
-  if (conocidas.length && ahora - (reg.incremental[red] || 0) > cada * 36e5 && await lanzar(conocidas, (cada + 2) + " hours")) { lanzada = true; reg.cambio = true; reg.incremental[red] = ahora; }
+  if (reg.pausa) { /* presupuesto del mes alcanzado: no se lanza nada */ }
+  else if (nuevas.length && await lanzar(nuevas, "14 days")) { lanzada = true; reg.cambio = true; nuevas.forEach(m => { reg.inicial[clave(red, m.usuario)] = ahora; }); }
+  // Ventana exacta: desde el inicio de la pasada anterior menos 15 minutos (sin la superposición de horas que se pagaba dos veces).
+  const desde = reg.incremental[red] ? new Date(reg.incremental[red] - 9e5).toISOString().slice(0, 19) : (cada + 2) + " hours";
+  if (!reg.pausa && conocidas.length && ahora - (reg.incremental[red] || 0) > cada * 36e5 && await lanzar(conocidas, desde)) { lanzada = true; reg.cambio = true; reg.incremental[red] = ahora; }
   const corriendo = runs.some(r => ["READY", "RUNNING"].includes(r.status));
   const fallo = runs[0] && ["FAILED", "TIMED-OUT", "ABORTED"].includes(runs[0].status);
   cuentas.forEach(m => {
     const posts = porCuenta.get(clave(red, m.usuario)) || [];
     posts.forEach(p => { const titulo = titularDe(p.texto); if (titulo) items.push({titulo, desc: p.texto.replace(/\s+/g, " ").slice(0, 400), url: p.url, fecha: p.fecha, m, via: red}); });
     if (posts.length) estado.push({id: m.id, ok: true, n: posts.length, via: "apify"});
+    else if (reg.pausa && !reg.inicial[clave(red, m.usuario)]) estado.push({id: m.id, ok: false, via: "apify", error: "Lectura pausada: se alcanzó el presupuesto mensual de Apify"});
     else if (fallo) estado.push({id: m.id, ok: false, via: "apify", error: "El lector de redes falló en su última pasada; se reintenta en la próxima"});
     else if (corriendo || lanzada || !ok.length || ahora - (reg.inicial[clave(red, m.usuario)] || 0) < 36e5) estado.push({id: m.id, ok: false, pendiente: true, via: "apify", primera: true, error: "Primera lectura en curso: sus publicaciones aparecen en unos minutos"});
     else estado.push({id: m.id, ok: true, n: 0, via: "apify"});  // leída, sin publicaciones en los últimos días
@@ -130,11 +144,14 @@ export async function leerRedes(cuentas){
   // Facebook e Instagram en paralelo, con un solo registro que se lee antes y se guarda después (si no, uno pisaría al otro).
   const conApify = Object.entries(porApify).filter(([, l]) => l.length), reg = conApify.length ? await registroApify() : {};
   reg.incremental ||= {}; reg.inicial ||= {};
+  if (conApify.length) { const g = await gastoApify(); reg.pausa = g !== null && g >= Number(process.env.APIFY_PRESUPUESTO_USD || 4.5); }
   await Promise.all(conApify.map(async ([red, l]) => {
     try { const r = await leerApify(red, l, reg); items.push(...r.items); estado.push(...r.estado); }
     catch(e) { l.forEach(m => estado.push({id: m.id, ok: false, via: "apify", error: "El lector de redes no respondió: " + String(e.message || e).slice(0, 80)})); }
   }));
+  const pausa = reg.pausa; delete reg.pausa;
   if (reg.cambio) { delete reg.cambio; await guardarRegistroApify(reg); }
+  if (pausa) estado.forEach(e => { if (e.via === "apify") e.pausa = true; });
   return {items, total: lista.filter(m => viaDe(m.red)).length, errores: estado.filter(s => !s.ok && !s.pendiente).map(s => (lista.find(m => m.id === s.id) || {}).nombre), estado};
 }
 /* Revisión al inscribir: que la cuenta exista y se pueda leer. Sin conexión con Meta responde que queda pendiente. */

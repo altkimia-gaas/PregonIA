@@ -121,14 +121,22 @@ Cómo se procesan:
 
 ### Opción rápida para la demostración: Apify (sin Meta)
 
-Con un token de Apify, Facebook e Instagram se leen solos, sin app de Meta ni revisión. Se usan los lectores oficiales de Apify (`apify/facebook-posts-scraper` y `apify/instagram-post-scraper`): solo páginas y cuentas públicas, sin iniciar sesión, sin comentarios. Cada 6 horas se lanza una pasada que pide solo lo publicado desde la anterior, de modo que cada publicación se paga una vez (una cuenta recién inscrita se pide con 14 días hacia atrás). La lanzan la lectura programada y «Noticias reales»; los resultados aparecen en la consulta siguiente, unos minutos después.
+Con un token de Apify, Facebook e Instagram se leen solos, sin app de Meta ni revisión. Se usan los lectores oficiales de Apify (`apify/facebook-posts-scraper` y `apify/instagram-post-scraper`): solo páginas y cuentas públicas, sin iniciar sesión, sin comentarios.
+
+Cómo se controla el gasto (Apify cobra por publicación entregada, no por pasada ni por cuenta revisada; plan gratuito: Facebook US$5 por mil más US$2 por mil del filtro de fecha, Instagram US$1,70 por mil, US$0,001 por pasada):
+
+- Cada pasada pide exactamente lo publicado desde el inicio de la anterior (con 15 minutos de margen): ninguna publicación se paga dos veces.
+- Una cuenta recibe su lectura de 14 días hacia atrás una sola vez, apenas se inscribe. Una cuenta que solo publica imágenes no se vuelve a pedir.
+- La pasada de lo nuevo corre cada 4 horas (`APIFY_CADA_HORAS`). Como se paga por publicación, una frecuencia más alta mejora la frescura casi sin costo.
+- Tope de gasto: con `APIFY_PRESUPUESTO_USD` (4,5 por defecto, bajo los US$5 gratis del mes) no se lanzan pasadas nuevas cuando el gasto del mes lo alcanza; Fuentes lo indica y se sigue mostrando lo ya leído.
+- `APIFY_MAX_POR_CUENTA` (30 por defecto) es solo un resguardo por cuenta y pasada: con la ventana exacta no encarece.
 
 1. Crear una cuenta en apify.com (con la de ALTKimia).
 2. En Apify › Settings › Billing, fijar un **límite de gasto mensual** (por ejemplo, US$20).
 3. Copiar el token en Apify › Settings › API & Integrations.
-4. En Vercel (Settings › Environment Variables): `APIFY_TOKEN` con ese token. Opcionales: `APIFY_CADA_HORAS` (por defecto 6) y `APIFY_MAX_POR_CUENTA` (publicaciones por cuenta en cada pasada, por defecto 10). Luego Redeploy.
+4. En Vercel (Settings › Environment Variables): `APIFY_TOKEN` con ese token. Opcionales: `APIFY_CADA_HORAS` (por defecto 4), `APIFY_MAX_POR_CUENTA` (por defecto 30) y `APIFY_PRESUPUESTO_USD` (por defecto 4,5). Luego Redeploy.
 
-Costo de referencia: desde US$2 por 1.000 publicaciones de Facebook y US$1 por 1.000 de Instagram; 20 cuentas que publican 4 veces al día son unas 2.400 publicaciones al mes, menos de US$10. Es una solución para la demostración: Meta bloquea estos lectores de vez en cuando (Fuentes lo muestra como «No se pudo leer») y antes del primer contrato pagado conviene pasar a la vía oficial. Si Meta queda configurado para una red, esa red se lee por Meta y deja de usar Apify.
+Costo de referencia (plan gratuito, nov 2026): las 8 cuentas del litoral publican unas 40 veces al día (la mayoría en Facebook, que cuesta cuatro veces más que Instagram), unos US$5 a 6 al mes; Canal 2 en Facebook es cerca de la mitad del gasto. Es una solución para la demostración: Meta bloquea estos lectores de vez en cuando (Fuentes lo muestra como «No se pudo leer») y antes del primer contrato pagado conviene pasar a la vía oficial. Si Meta queda configurado para una red, esa red se lee por Meta y deja de usar Apify.
 
 Conectar Meta (una vez, en la cuenta de ALTKimia):
 
