@@ -928,6 +928,60 @@ export const CATALOGO = [
 "estado": "red"
 },
 {
+"id": 111,
+"nombre": "Canal 2 San Antonio (Facebook)",
+"ambito": "local",
+"comuna": "San Antonio",
+"metodo": "facebook",
+"url": "https://www.facebook.com/canal2tvsanantonio",
+"estado": "red"
+},
+{
+"id": 112,
+"nombre": "Canal 2 San Antonio (Instagram)",
+"ambito": "local",
+"comuna": "San Antonio",
+"metodo": "instagram",
+"url": "https://www.instagram.com/canal2chilenasaborfm/",
+"estado": "red"
+},
+{
+"id": 113,
+"nombre": "Radio Galactika (Facebook)",
+"ambito": "local",
+"comuna": "San Antonio;El Tabo;El Quisco;Algarrobo;Santo Domingo",
+"metodo": "facebook",
+"url": "https://www.facebook.com/RadioGalactika",
+"estado": "red"
+},
+{
+"id": 114,
+"nombre": "Radio Galactika (Instagram)",
+"ambito": "local",
+"comuna": "San Antonio;El Tabo;El Quisco;Algarrobo;Santo Domingo",
+"metodo": "instagram",
+"url": "https://www.instagram.com/radiogalactikamedia/",
+"estado": "red"
+},
+{
+"id": 115,
+"nombre": "Santo News (Instagram)",
+"ambito": "local",
+"comuna": "Santo Domingo",
+"metodo": "instagram",
+"url": "https://www.instagram.com/santonewscl/",
+"estado": "red"
+},
+{
+"id": 116,
+"nombre": "Radio Quintay (Facebook)",
+"ambito": "local",
+"comuna": "Casablanca",
+"metodo": "facebook",
+"url": "https://www.facebook.com/radioquintay92.7",
+"estado": "red"
+},
+{
 "id": 103,
 "nombre": "MargaMargaTV",
 "ambito": "local",
