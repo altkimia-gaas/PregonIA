@@ -20,8 +20,8 @@ Los datos de la demo se guardan en el navegador (localStorage, clave `pregonia-d
 
 ## Privacidad, términos y uso de IA
 - `legal.html`: política de privacidad, términos de uso, uso de IA, proveedores y país, canal para medios y contacto. Operador: ALTKIMIA Consultoría y Tecnología SpA (RUT 77.508.685-8). Vigente desde el 13-nov-2026.
-- Se abre desde la portada, la ventana de ingreso al piloto y la Ayuda (sección «Privacidad y condiciones» y preguntas frecuentes).
-- Piloto: al ingresar se pide aceptar los documentos; queda registrado en la tabla `aceptaciones`. Al cambiar los textos, subir `LEGAL_VERSION` en `src/piloto.js`.
+- Se abre desde la portada, la ventana de ingreso al servicio y la Ayuda (sección «Privacidad y condiciones» y preguntas frecuentes).
+- Servicio con sesión: al ingresar se pide aceptar los documentos; queda registrado en la tabla `aceptaciones`. Al cambiar los textos, subir `LEGAL_VERSION` en `src/piloto.js`.
 - Estado de los 35 controles legales: `docs/CUMPLIMIENTO.md`.
 
 ## Estructura
