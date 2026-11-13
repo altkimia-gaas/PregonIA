@@ -73,7 +73,7 @@ function avBoton(){
 function avDispositivo(){
   const per = avPermiso(), push = avPushServidor(), ios = typeof esIOS !== "undefined" && esIOS, inst = typeof PWA !== "undefined" && PWA.instalada;
   if (per === "no") return `<p class="muted">Esta vista no permite avisos del navegador. Ábrelo en pregonia.vercel.app${ios ? " e instálala en la pantalla de inicio" : ""}.</p>`;
-  if (ios && !inst) return `<p class="muted">En iPhone los avisos llegan solo con PregonIA instalada: toca Compartir en Safari, luego «Agregar a inicio», y abre PregonIA desde ese ícono.</p>`;
+  if (ios && !inst) return `<p class="muted">En iPhone los avisos llegan solo con PregonIA instalada en la pantalla de inicio. Son dos toques.</p><button class="btn alt sm" type="button" data-act="guia-ios">Ver cómo instalarla</button>`;
   const instalar = !ios && !inst && typeof PWA !== "undefined" && PWA.aviso && typeof movil === "function" && movil()
     ? `<p class="cap-inst" style="margin:0 0 12px"><span>Instala PregonIA en este celular: queda como una app más, con su ícono y los avisos aunque esté cerrada.</span><button class="btn sm alt" type="button" data-act="instalar">Instalar PregonIA</button></p>` : "";
   return instalar + avDispositivoBase(per, push);

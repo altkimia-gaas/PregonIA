@@ -154,7 +154,7 @@ async function entrarPiloto(user){
   $("#org").disabled = true; $("#org").title = "En el piloto ves solo tu municipio";
   pintarAcceso();
   if (typeof avisosAlEntrar === "function") await avisosAlEntrar();
-  try { await cargarDatosPiloto(); toast(`Hola, ${(perfil.nombre || "").split(" ")[0] || "bienvenido"}. Estás en el piloto de ${PILOTO.muni.nombre}.`); }
+  try { await cargarDatosPiloto(); toast(`Hola, ${(perfil.nombre || "").split(" ")[0] || "bienvenido"}. Estás en el piloto de ${PILOTO.muni.nombre}.`); if (typeof guiaIOSAuto === "function") guiaIOSAuto(); }
   catch(e) { toast("No se pudieron cargar los datos del piloto: " + (e.message || e)); }
 }
 const capAFila = x => ({id: x.id, municipio_id: PILOTO.muni.id, medio_id: MED[x.m] && (x.m < FB_ID0 || x.m >= 10000) ? x.m : null, medio_nombre: MED[x.m] ? MED[x.m].n : "Página de Facebook", medio_ambito: MED[x.m] ? MED[x.m].a : "local",

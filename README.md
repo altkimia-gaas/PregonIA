@@ -113,7 +113,7 @@ PregonIA avisa de noticias críticas nuevas, de las que escalan a prensa regiona
 PregonIA se instala como app (PWA) desde el navegador, sin pasar por App Store ni Google Play:
 
 - **Android (Chrome):** la campana de avisos ofrece «Instalar PregonIA» cuando el navegador lo permite; también desde el menú ⋮ › Instalar app.
-- **iPhone (Safari):** Compartir › «Agregar a inicio». En iPhone los avisos con la app cerrada solo llegan con PregonIA instalada así.
+- **iPhone (Safari):** Compartir › «Agregar a inicio». En iPhone los avisos con la app cerrada solo llegan con PregonIA instalada así. Como Apple no permite un botón «Instalar», la app muestra una guía paso a paso: sola al entrar al piloto (si la persona elige «Ahora no», vuelve a los 3 días), desde la campana («Ver cómo instalarla») y con el enlace `https://pregonia.vercel.app/?instalar`, pensado para enviarlo por WhatsApp a una autoridad. Si se abre dentro de Facebook, Instagram u otra app, la guía pide primero abrirla en Safari.
 - **Atajos:** manteniendo presionado el ícono aparecen «Avisos» (abre la campana) y «Menciones» (en Android).
 - **Sin señal:** `sw.js` muestra `offline.html` en vez del error del navegador. La aplicación no se guarda en caché: con conexión siempre se carga la versión vigente.
 

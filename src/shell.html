@@ -153,6 +153,14 @@ body.vid-on{overflow:hidden}
 .cap-err.info{color:var(--muted);font-weight:500}
 .cap-inst{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--accent-soft);font-size:13px;color:var(--ink)}
 .cap-inst.ios{display:block;color:var(--muted)}
+/* Guía de instalación en iPhone */
+.vid.gi{width:min(460px,100%)}
+.gi-pasos{list-style:none;margin:0;padding:16px 18px 6px;display:grid;gap:12px}
+.gi-pasos li{display:grid;grid-template-columns:28px minmax(0,1fr) 30px;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);font-size:14.5px;line-height:1.45}
+.gi-n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--accent-bg);color:var(--accent-ink);font:700 13px Inter,system-ui,sans-serif}
+.gi-ic{width:30px;height:30px;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.gi-f{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px 16px}
+@media (max-width:560px){ .gi-back{align-items:end;padding-bottom:max(12px,env(safe-area-inset-bottom,0px))} .gi-f .btn{flex:1 1 0;min-height:44px} .gi-pasos{padding:14px 14px 4px} }
 .dg-acts2{display:flex;gap:6px;flex-wrap:wrap}
 .btn .ico{flex:none}
 /* Entrada por rol, zona y nombre */
