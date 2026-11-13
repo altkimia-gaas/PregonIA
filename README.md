@@ -108,6 +108,15 @@ PregonIA avisa de noticias críticas nuevas, de las que escalan a prensa regiona
   3. Correo (opcional): cuenta en Resend con el dominio verificado, y en Vercel `RESEND_API_KEY` y `AVISOS_REMITENTE` (por ejemplo `PregonIA <avisos@altkimia.com>`).
   4. Volver a desplegar. Cada persona activa los avisos en la campana de su celular.
 
+### App en el celular
+
+PregonIA se instala como app (PWA) desde el navegador, sin pasar por App Store ni Google Play:
+
+- **Android (Chrome):** la campana de avisos ofrece «Instalar PregonIA» cuando el navegador lo permite; también desde el menú ⋮ › Instalar app.
+- **iPhone (Safari):** Compartir › «Agregar a inicio». En iPhone los avisos con la app cerrada solo llegan con PregonIA instalada así.
+- **Atajos:** manteniendo presionado el ícono aparecen «Avisos» (abre la campana) y «Menciones» (en Android).
+- **Sin señal:** `sw.js` muestra `offline.html` en vez del error del navegador. La aplicación no se guarda en caché: con conexión siempre se carga la versión vigente.
+
 
 
 ## Cuentas de Facebook e Instagram de medios

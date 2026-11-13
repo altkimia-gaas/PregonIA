@@ -10,9 +10,24 @@
   "background_color": "#080B12",
   "theme_color": "#080B12",
   "icons": [
-    {"src": "/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
-    {"src": "/icono-mascara-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+    {
+      "src": "/icono-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icono-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icono-mascara-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "share_target": {
     "action": "/compartir",
@@ -22,7 +37,42 @@
       "title": "title",
       "text": "text",
       "url": "url",
-      "files": [{"name": "imagen", "accept": ["image/*"]}]
+      "files": [
+        {
+          "name": "imagen",
+          "accept": [
+            "image/*"
+          ]
+        }
+      ]
     }
-  }
+  },
+  "shortcuts": [
+    {
+      "name": "Avisos",
+      "short_name": "Avisos",
+      "description": "Lo urgente que salió en la prensa",
+      "url": "/?sin-portada&avisos=1#inicio",
+      "icons": [
+        {
+          "src": "/icono-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Menciones",
+      "short_name": "Menciones",
+      "description": "Todas las notas sobre tu institución o autoridad",
+      "url": "/?sin-portada#menciones",
+      "icons": [
+        {
+          "src": "/icono-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
 }
