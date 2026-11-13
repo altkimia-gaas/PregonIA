@@ -919,7 +919,7 @@ export const CATALOGO = [
 "estado": "captura_asistida"
 },
 {
-"id": 103,
+"id": 110,
 "nombre": "31TV Casablanca (Instagram)",
 "ambito": "local",
 "comuna": "Casablanca",

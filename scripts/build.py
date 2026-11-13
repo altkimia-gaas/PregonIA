@@ -15,6 +15,10 @@ def catalogo():
              "l": f["nivel"], "m": f["metodo"], "e": f["estado"], "o": f["observacion"], "u": f["url_lectura"]} for f in filas]
 
 def main():
+    # Un id repetido mezcla dos medios en la aplicación y rompe la semilla de la base: se detiene antes de generar nada.
+    ids = [f["id"] for f in csv.DictReader(open(DATA / "catalogo_medios.csv", encoding="utf-8"))]
+    rep = sorted({i for i in ids if ids.count(i) > 1})
+    if rep: raise SystemExit(f"catalogo_medios.csv tiene ids repetidos: {', '.join(rep)}")
     leer = lambda n: (SRC / n).read_text(encoding="utf-8")
     # Reglas de alerta: el mismo archivo va en la aplicación y en el servidor (api/_reglas.js), para que avisen lo mismo.
     (RAIZ / "api" / "_reglas.js").write_text("// Generado por scripts/build.py desde src/reglas.js. No editar a mano.\n" + leer("reglas.js") +
