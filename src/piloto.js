@@ -32,12 +32,12 @@ function dialogo(id, titulo, sub, cuerpo){
 }
 function cerrarDialogo(){ const o = $("#dlgBack"); if (!o) return; if (aceptacion.pend) { const r = aceptacion.pend; aceptacion.pend = null; r(false); } o.remove(); document.body.classList.remove("vid-on"); if (dialogo.origen && dialogo.origen.isConnected) dialogo.origen.focus(); }
 function abrirLogin(){
-  dialogo("login", "Ingresar a PregonIA", "Para los equipos municipales del piloto. Si aún no tienes cuenta, pide una invitación a ALTKimia.", `
+  dialogo("login", "Ingresar a PregonIA", "Para los equipos de las instituciones clientes. Si aún no tienes cuenta, pide una invitación a ALTKimia.", `
     <form class="cap-f" id="loginForm" novalidate>
       <label class="cap-l">Correo<input id="lgCorreo" type="email" autocomplete="username" inputmode="email" required></label>
       <label class="cap-l">Contraseña<input id="lgClave" type="password" autocomplete="current-password" required></label>
       <p class="cap-err" id="lgErr" role="alert" hidden></p>
-      <p class="hint" style="margin:0">El uso del piloto se rige por los <a href="/legal.html#terminos" target="_blank" rel="noopener">Términos de uso</a> y la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a>.</p>
+      <p class="hint" style="margin:0">El uso del servicio se rige por los <a href="/legal.html#terminos" target="_blank" rel="noopener">Términos de uso</a> y la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a>.</p>
       <div class="cap-acts"><button class="btn alt" type="submit" id="lgOk">Ingresar</button><button class="btn" type="button" data-act="dlg-close">Cancelar</button><button class="btn ghost" type="button" data-act="olvide">Olvidé mi contraseña</button></div>
     </form>`);
 }
@@ -93,7 +93,7 @@ async function aceptacion(user){
   if (error) { console.warn("PregonIA: falta la tabla aceptaciones; corre de nuevo supabase/esquema.sql.", error.message); return true; }
   if (data && data.length) return true;
   return new Promise(res => {
-    dialogo("legal", "Antes de continuar", "Para usar el piloto necesitamos que leas y aceptes los documentos que rigen el servicio.", `
+    dialogo("legal", "Antes de continuar", "Para usar el servicio necesitamos que leas y aceptes los documentos que lo rigen.", `
       <form class="cap-f" id="legalForm" novalidate>
         <p class="hint" style="margin:0">Lee los <a href="/legal.html#terminos" target="_blank" rel="noopener">Términos de uso</a> y la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a> (versión ${LEGAL_VERSION}). Se abren en una pestaña nueva.</p>
         <label class="cap-l" style="display:flex;align-items:flex-start;gap:10px;font-weight:500"><input id="lgAcepto" type="checkbox" style="width:20px;min-height:20px;height:20px;margin:1px 0 0;padding:0;flex:none;accent-color:var(--accent)"> He leído y acepto los Términos de uso y la Política de privacidad.</label>
