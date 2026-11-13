@@ -158,7 +158,7 @@ function vocTexto(){
   if (k.evitar.length) { L.push("", "*Evita decir*"); k.evitar.forEach(v => L.push("- " + v)); }
   L.push("", "*Preguntas probables*"); k.preguntas.forEach((q, i) => L.push(`${i + 1}. ${q.p}`, `   ${q.r}`));
   const ds = [...d.rel, ...d.resto]; if (ds.length) { L.push("", "*Datos que puedes citar*"); ds.forEach(l => L.push("- " + l)); }
-  L.push("", "Borrador preparado con PregonIA. Validar cifras y citas antes de usarlo.");
+  L.push("", "Borrador generado con IA por PregonIA. Validar cifras y citas antes de usarlo.");
   return L.filter((l, i, a) => !(l === "" && a[i - 1] === "")).join("\n");
 }
 function vocDoc(){ const t = vocTexto(); if (!t) return null; return {titulo: "Kit de vocería", sub: vocContexto().tema, texto: t, cuerpo: t.split("\n").slice(2).join("\n"), borrador: true}; }

@@ -30,13 +30,14 @@ function dialogo(id, titulo, sub, cuerpo){
   dialogo.origen = document.activeElement; document.body.appendChild(ov); document.body.classList.add("vid-on");
   const f = ov.querySelector("input, button.btn:not(.ghost)"); if (f) f.focus();
 }
-function cerrarDialogo(){ const o = $("#dlgBack"); if (!o) return; o.remove(); document.body.classList.remove("vid-on"); if (dialogo.origen && dialogo.origen.isConnected) dialogo.origen.focus(); }
+function cerrarDialogo(){ const o = $("#dlgBack"); if (!o) return; if (aceptacion.pend) { const r = aceptacion.pend; aceptacion.pend = null; r(false); } o.remove(); document.body.classList.remove("vid-on"); if (dialogo.origen && dialogo.origen.isConnected) dialogo.origen.focus(); }
 function abrirLogin(){
   dialogo("login", "Ingresar a PregonIA", "Para los equipos municipales del piloto. Si aún no tienes cuenta, pide una invitación a ALTKimia.", `
     <form class="cap-f" id="loginForm" novalidate>
       <label class="cap-l">Correo<input id="lgCorreo" type="email" autocomplete="username" inputmode="email" required></label>
       <label class="cap-l">Contraseña<input id="lgClave" type="password" autocomplete="current-password" required></label>
       <p class="cap-err" id="lgErr" role="alert" hidden></p>
+      <p class="hint" style="margin:0">El uso del piloto se rige por los <a href="/legal.html#terminos" target="_blank" rel="noopener">Términos de uso</a> y la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a>.</p>
       <div class="cap-acts"><button class="btn alt" type="submit" id="lgOk">Ingresar</button><button class="btn" type="button" data-act="dlg-close">Cancelar</button><button class="btn ghost" type="button" data-act="olvide">Olvidé mi contraseña</button></div>
     </form>`);
 }
@@ -83,6 +84,34 @@ function menuCuenta(b){
   document.body.appendChild(m); m._origen = b; ubicarMenu(); m.querySelector("button").focus({preventScroll: true});
 }
 
+/* Aceptación de Términos y Política de privacidad (control 6 y 12 del checklist legal).
+   Se pide una vez por versión de los documentos; la base guarda quién aceptó, qué versión y cuándo (tabla aceptaciones).
+   Si la tabla aún no existe (esquema sin actualizar), no bloquea el ingreso y lo deja anotado en la consola. */
+const LEGAL_VERSION = "2026-11-13";
+async function aceptacion(user){
+  const {data, error} = await PILOTO.sb.from("aceptaciones").select("id").eq("usuario", user.id).eq("version", LEGAL_VERSION).limit(1);
+  if (error) { console.warn("PregonIA: falta la tabla aceptaciones; corre de nuevo supabase/esquema.sql.", error.message); return true; }
+  if (data && data.length) return true;
+  return new Promise(res => {
+    dialogo("legal", "Antes de continuar", "Para usar el piloto necesitamos que leas y aceptes los documentos que rigen el servicio.", `
+      <form class="cap-f" id="legalForm" novalidate>
+        <p class="hint" style="margin:0">Lee los <a href="/legal.html#terminos" target="_blank" rel="noopener">Términos de uso</a> y la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a> (versión ${LEGAL_VERSION}). Se abren en una pestaña nueva.</p>
+        <label class="cap-l" style="display:flex;align-items:flex-start;gap:10px;font-weight:500"><input id="lgAcepto" type="checkbox" style="width:20px;min-height:20px;height:20px;margin:1px 0 0;padding:0;flex:none;accent-color:var(--accent)"> He leído y acepto los Términos de uso y la Política de privacidad.</label>
+        <p class="cap-err" id="lgaErr" role="alert" hidden></p>
+        <div class="cap-acts"><button class="btn alt" type="submit" id="lgaOk">Aceptar y continuar</button><button class="btn" type="button" data-act="dlg-close">No acepto</button></div>
+      </form>`);
+    aceptacion.pend = res;
+  });
+}
+async function registrarAceptacion(e){
+  e.preventDefault();
+  if (!$("#lgAcepto").checked) return errorEn("#lgaErr", "Para continuar, marca la casilla de aceptación.", "#lgAcepto");
+  const ok = $("#lgaOk"); ok.disabled = true; ok.textContent = "Guardando…";
+  const {error} = await PILOTO.sb.rpc("aceptar_documentos", {p_version: LEGAL_VERSION, p_agente: navigator.userAgent});
+  if (error) { ok.disabled = false; ok.textContent = "Aceptar y continuar"; return errorEn("#lgaErr", "No se pudo registrar la aceptación: " + error.message); }
+  const r = aceptacion.pend; aceptacion.pend = null; cerrarDialogo(); if (r) r(true);
+}
+
 /* Sesión */
 async function entrarPiloto(user){
   const sb = PILOTO.sb;
@@ -91,6 +120,7 @@ async function entrarPiloto(user){
     dialogo("sinmuni", "Tu cuenta aún no tiene municipio", "Ingresaste bien, pero falta asignarte un municipio y un rol. Pídeselo a ALTKimia o al administrador del piloto.", `<div class="cap-f"><p class="hint" style="margin:0">${esc(user.email)}</p><div class="cap-acts"><button class="btn" type="button" data-act="salir">Salir</button></div></div>`);
     return;
   }
+  if (!(await aceptacion(user))) { salir(); return; }
   Object.assign(PILOTO, {activo: true, user, perfil, muni: perfil.municipios, editor: ["admin", "comunicaciones"].includes(perfil.rol)});
   if (COMUNAS.includes(PILOTO.muni.comuna)) S.org = PILOTO.muni.comuna;
   $("#org").disabled = true; $("#org").title = "En el piloto ves solo tu municipio";
@@ -191,7 +221,7 @@ document.addEventListener("click", e => {
   if (a === "recargar-piloto") { cerrarMenu(); cargarDatosPiloto().then(() => toast("Datos actualizados.")).catch(er => toast("No se pudieron actualizar: " + er.message)); }
 });
 document.addEventListener("click", e => { if (e.target.id === "dlgBack") cerrarDialogo(); });
-document.addEventListener("submit", e => { if (e.target.id === "loginForm") ingresar(e); if (e.target.id === "claveForm") guardarClave(e); });
+document.addEventListener("submit", e => { if (e.target.id === "loginForm") ingresar(e); if (e.target.id === "claveForm") guardarClave(e); if (e.target.id === "legalForm") registrarAceptacion(e); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#dlgBack")) { e.preventDefault(); cerrarDialogo(); } });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && PILOTO.activo && !PILOTO.sinc && !PILOTO.timer) cargarDatosPiloto().catch(() => {}); });
 setInterval(() => { if (PILOTO.activo && (document.visibilityState === "visible" || ("Notification" in window && Notification.permission === "granted")) && !PILOTO.sinc) cargarDatosPiloto().catch(() => {}); }, 5 * 60000);

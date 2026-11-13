@@ -364,3 +364,39 @@ do $$ begin
   if exists (select 1 from pg_roles where rolname = 'authenticated') then execute 'revoke execute on function destinatarios_avisos(uuid) from authenticated'; end if;
   if exists (select 1 from pg_roles where rolname = 'service_role') then execute 'grant execute on function destinatarios_avisos(uuid) to service_role'; end if;
 end $$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Cumplimiento (Ley 19.628 reformada por Ley 21.719): registro de aceptación de
+-- Términos y Política de privacidad. Quién aceptó, qué versión y cuándo.
+-- Las filas no se editan ni se borran desde la aplicación: solo se agregan con
+-- aceptar_documentos(), que toma el usuario de la sesión (no del navegador).
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists aceptaciones (
+  id           bigint generated always as identity primary key,
+  usuario      uuid not null references auth.users (id) on delete cascade,
+  municipio_id uuid references municipios (id) on delete set null,
+  documento    text not null check (documento in ('terminos', 'privacidad')),
+  version      text not null,
+  aceptado_en  timestamptz not null default now(),
+  agente       text
+);
+create index if not exists aceptaciones_usuario on aceptaciones (usuario, version);
+alter table aceptaciones enable row level security;
+drop policy if exists aceptaciones_leer on aceptaciones;
+create policy aceptaciones_leer on aceptaciones for select to authenticated
+  using (usuario = auth.uid() or (municipio_id = mi_municipio() and mi_rol() = 'admin'));
+
+create or replace function aceptar_documentos(p_version text, p_agente text default null) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'Se requiere una sesión iniciada'; end if;
+  if coalesce(trim(p_version), '') = '' then raise exception 'Falta la versión de los documentos'; end if;
+  insert into aceptaciones (usuario, municipio_id, documento, version, agente)
+  select auth.uid(), mi_municipio(), d, left(trim(p_version), 20), left(p_agente, 300)
+  from unnest(array['terminos', 'privacidad']) as d;
+end $$;
+revoke execute on function aceptar_documentos(text, text) from public;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then execute 'revoke execute on function aceptar_documentos(text, text) from anon'; end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then execute 'grant execute on function aceptar_documentos(text, text) to authenticated'; end if;
+end $$;
