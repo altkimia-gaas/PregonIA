@@ -197,6 +197,36 @@ function mencionesPrevias(c, dias){
     const tonos = notas.map(n => n.tono); return {...m, notas, tono: tonos.includes("cri") ? "cri" : tonos.includes("pos") ? "pos" : "neu", alcance: notas.reduce((s, n) => s + PESO[MED[n.m].l], 0)}; }).filter(Boolean);
 }
 const delta = (a, b, hayPrev) => !hayPrev ? "" : `<span class="ini-d ${a > b ? "up" : a < b ? "down" : ""}">${ri(a > b ? "up" : a < b ? "down" : "flat")}${a === b ? "igual" : signo(a - b)}</span>`;
+/* Pulso del período: noticias por hora (24 horas) o por día (semana, 30 días), apiladas por tono.
+   Mismo criterio que la cifra «Noticias»: cada asunto una vez, en el momento de su última nota. El ancho se ajusta a la pantalla
+   para que en el teléfono se lea entero (el gráfico anterior quedaba cortado y escondía los últimos días). */
+function chartPulso(ms, per){
+  const n = per === 1 ? 24 : per, paso = per === 1 ? 3600e3 : DAY;
+  const W = Math.round(Math.max(320, Math.min(760, (document.querySelector("#view")?.clientWidth || innerWidth) - 40))), H = W < 520 ? 150 : 170, L = 26, B = 24, top = 18;
+  const bk = Array.from({length: n}, (_, i) => ({pos: 0, neu: 0, cri: 0, k: n - 1 - i}));
+  const hoy0 = new Date(NOW).setHours(0, 0, 0, 0);
+  // Por hora en 24 horas; por día calendario en semana y 30 días. Lo que cae justo en el borde va al tramo más antiguo, para que el total coincida con la cifra «Noticias».
+  ms.forEach(m => { const k = per === 1 ? Math.floor((NOW - m.last) / paso) : Math.round((hoy0 - new Date(m.last).setHours(0, 0, 0, 0)) / DAY); bk[n - 1 - Math.min(n - 1, Math.max(0, k))][m.tono]++; });
+  const tots = bk.map(x => x.pos + x.neu + x.cri), max = Math.max(2, ...tots), step = Math.max(1, Math.ceil(max / 2)), ymax = step * 2;
+  const slot = (W - L - 6) / n, bw = Math.max(3, Math.min(per === 7 ? 34 : 14, slot - 3)), y = v => top + (H - top - B) * (1 - v / ymax);
+  const etq = x => { const d = new Date(NOW - x.k * paso); return per === 1 ? d.toLocaleTimeString("es-CL", {hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).slice(0, 2) + " h" : per === 7 ? d.toLocaleDateString("es-CL", {weekday: "short", day: "numeric"}) : `${d.getDate()}/${d.getMonth() + 1}`; };
+  const largo = x => { const d = new Date(NOW - x.k * paso); return per === 1 ? "Entre " + d.toLocaleTimeString("es-CL", {hour: "2-digit", hourCycle: "h23"}) + ":00 y " + new Date(+d + 3600e3).toLocaleTimeString("es-CL", {hour: "2-digit", hourCycle: "h23"}) + ":00" : d.toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long"}); };
+  const cada = per === 1 ? (W < 520 ? 6 : 3) : per === 7 ? 1 : (W < 520 ? 7 : 5);
+  let g = "";
+  for (let v = 0; v <= ymax; v += step) g += `<line x1="${L}" x2="${W - 4}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${v}</text>`;
+  const imax = tots.indexOf(Math.max(...tots));
+  bk.forEach((x, i) => {
+    const X = L + 3 + i * slot + (slot - bw) / 2, tot = tots[i]; let acc = 0;
+    const segs = [["neu", "var(--neu)"], ["pos", "url(#pat-pos)"], ["cri", "var(--cri)"]].filter(([k]) => x[k]);
+    segs.forEach(([k, col], j) => { const y1 = y(acc + x[k]), y0 = y(acc) - (acc ? 2 : 0), last = j === segs.length - 1, r = Math.min(3, bw / 2);
+      g += last ? `<path d="M${X},${y0} V${y1 + r} Q${X},${y1} ${X + r},${y1} H${X + bw - r} Q${X + bw},${y1} ${X + bw},${y1 + r} V${y0} Z" fill="${col}"/>` : `<rect x="${X}" y="${y1}" width="${bw}" height="${Math.max(1, y0 - y1)}" fill="${col}"/>`; acc += x[k]; });
+    if (i === imax && tot) g += `<text x="${X + bw / 2}" y="${y(tot) - 5}" text-anchor="middle" class="pk">${tot}</text>`;
+    if ((n - 1 - i) % cada === 0) g += `<text x="${i === n - 1 ? Math.min(W - 2, X + bw) : X + bw / 2}" y="${H - 7}" text-anchor="${i === n - 1 ? "end" : "middle"}">${per === 1 && i === n - 1 ? "ahora" : etq(x)}</text>`;
+    g += `<rect class="hit" x="${L + 3 + i * slot}" y="${top - 8}" width="${slot}" height="${H - top - B + 8}" ${tipAttr(`${largo(x)}: ${tot ? [x.cri && plural(x.cri, "crítica", "críticas"), x.neu && plural(x.neu, "neutra", "neutras"), x.pos && plural(x.pos, "positiva", "positivas")].filter(Boolean).join(", ") : "sin noticias"}`)}/>`;
+  });
+  const total = tots.reduce((a, b) => a + b, 0), resumen = `${plural(total, "noticia", "noticias")} ${per === 1 ? "en 24 horas, por hora" : per === 7 ? "en 7 días, por día" : "en 30 días, por día"}; el máximo fue ${tots[imax]} (${largo(bk[imax]).toLowerCase()})`;
+  return `<svg class="chart ini-pulso-svg" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(resumen)}">${g}</svg>`;
+}
 function vInicio(){
   const c = cuenta(), per = tState.iniPer === "30" ? 30 : tState.iniPer === "1" ? 1 : 7, perTx = {1: "en 24 horas", 7: "esta semana", 30: "en 30 días"}[per], antTx = {1: "las 24 horas anteriores", 7: "la semana anterior", 30: "los 30 días anteriores"}[per];
   const ms = menciones(c, per), prev = mencionesPrevias(c, per), M = metricas(ms), P = metricas(prev), hayPrev = prev.length > 0 || menciones(c, per * 2).length > ms.length;
@@ -280,9 +310,10 @@ function vInicio(){
     <div class="ini-kpis">
       <button class="ini-kpi" data-act="goto" data-tono="todos" data-dias="${per}"><span class="l">Noticias ${perTx}</span><span class="v"><span class="mono">${M.vol}</span>${delta(M.vol, P.vol, hayPrev)}</span><span class="s">${hayPrev ? `frente a ${P.vol} ${per === 1 ? "en " : ""}${antTx}` : `sin datos de ${antTx} para comparar`} · en ${plural(Object.keys(med).length, "medio", "medios")}</span></button>
       <button class="ini-kpi" data-act="goto" data-tono="cri" data-dias="${per}"><span class="l">Tono ${per === 7 ? "de la semana" : perTx}</span><span class="v word ${v.k}">${v.n}</span>${segbar([{l: "Críticas", v: M.cri, c: "var(--cri)"}, {l: "Neutras", v: M.neu, c: "var(--neu)"}, {l: "Positivas", v: M.pos, c: "var(--pos)"}])}<span class="s">${conteoCorto(M)}${hayPrev && P.vol ? ` · antes: ${vP.n.toLowerCase()}` : ""}</span></button>
-      <button class="ini-kpi" data-act="goto" data-tono="todos" data-dias="${per}"><span class="l">Hasta dónde llegó</span><span class="v"><span class="mono">${fuera.length}</span><small>de ${M.vol}</small>${delta(fuera.length, fueraP, hayPrev)}</span><span class="s">salieron de la prensa comunal${nac.length ? `; ${nac.length} a medios nacionales, ${nacCri ? plural(nacCri, "crítica", "críticas") : "ninguna crítica"}` : ""}</span></button>
+      <button class="ini-kpi" data-act="goto" data-tono="todos" data-dias="${per}"><span class="l">Hasta dónde llegó</span><span class="v"><span class="mono">${fuera.length}</span><small>de ${M.vol}</small>${delta(fuera.length, fueraP, hayPrev)}</span>${segbar([{l: "Solo prensa comunal", v: M.vol - fuera.length, c: "var(--amb-l)"}, {l: "Llegó a prensa regional", v: fuera.length - nac.length, c: "var(--amb-r)"}, {l: "Llegó a prensa nacional", v: nac.length, c: "var(--amb-n)"}])}<span class="s">salieron de la prensa comunal${nac.length ? `; ${nac.length} a medios nacionales, ${nacCri ? plural(nacCri, "crítica", "críticas") : "ninguna crítica"}` : ""}</span></button>
       ${kTema ? `<button class="ini-kpi" data-act="goto-tema" data-id="${kTema.id}"><span class="l">${esc(kLbl)}</span><span class="v"><span class="mono">${MK.vol}</span><small>${MK.vol === 1 ? "mención" : "menciones"}</small>${delta(MK.vol, msKP.length, hayPrev)}</span><span class="s">${conteoCorto(MK)}</span></button>` : ""}
     </div>
+    ${M.vol ? `<div class="ini-pulso"><div class="ini-pulso-h"><h3>Cómo se movió la prensa ${perTx}</h3><div class="legend"><span><i style="background:var(--cri)"></i>Críticas</span><span><i style="background:var(--neu)"></i>Neutras</span><span><i style="background:var(--pos)"></i>Positivas</span></div></div>${chartPulso(ms, per)}</div>` : ""}
     <p class="ini-valor">${ri("reloj")}<span>Hoy leímos <b>${medN} medios</b> de la región y el país. De todo lo publicado, estas son las notas sobre ${esc(quien)} que importan y lo que conviene hacer con ellas.</span></p>
   </section>
   <section aria-labelledby="hoyT">
