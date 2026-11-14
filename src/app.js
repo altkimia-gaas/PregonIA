@@ -186,7 +186,7 @@ function onboarding(){
 /* Inicio: la portada responde cuatro preguntas, cada noticia una sola vez.
    ¿Cómo estamos? (veredicto y cifras frente al período anterior) · ¿Qué hago hoy? (responder y aprovechar)
    · ¿Qué está cambiando? (temas y asuntos sin tema) · ¿Qué viene? (calendario) · y quién marca la agenda.
-   El período se elige: semana (7 días) o 30 días; la comparación es contra el período anterior del mismo largo. */
+   El período se elige: 24 horas, semana (7 días) o 30 días; la comparación es contra el período anterior del mismo largo. */
 const NUM_TX = ["ningún", "un", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez"];
 const numTx = n => NUM_TX[n] || String(n);
 const sinTema = m => [...m.temas.values()].every(x => x.tema.origen === "Núcleo");
@@ -198,7 +198,7 @@ function mencionesPrevias(c, dias){
 }
 const delta = (a, b, hayPrev) => !hayPrev ? "" : `<span class="ini-d ${a > b ? "up" : a < b ? "down" : ""}">${ri(a > b ? "up" : a < b ? "down" : "flat")}${a === b ? "igual" : signo(a - b)}</span>`;
 function vInicio(){
-  const c = cuenta(), per = tState.iniPer === "30" ? 30 : 7, perTx = per === 7 ? "esta semana" : "en 30 días", antTx = per === 7 ? "la semana anterior" : "los 30 días anteriores";
+  const c = cuenta(), per = tState.iniPer === "30" ? 30 : tState.iniPer === "1" ? 1 : 7, perTx = {1: "en 24 horas", 7: "esta semana", 30: "en 30 días"}[per], antTx = {1: "las 24 horas anteriores", 7: "la semana anterior", 30: "los 30 días anteriores"}[per];
   const ms = menciones(c, per), prev = mencionesPrevias(c, per), M = metricas(ms), P = metricas(prev), hayPrev = prev.length > 0 || menciones(c, per * 2).length > ms.length;
   const v = veredicto(M), vP = veredicto(P), pend = pendientes(c), aut = esAut(), quien = aut ? c.perfil.nombre : S.org;
   const E = new Map(ms.map(m => [m.g, escalera(m.notas)]));
@@ -272,15 +272,14 @@ function vInicio(){
   const lado = x => x.cri * 2 > x.tot ? ["cri", "mayoría crítica"] : x.pos * 2 > x.tot ? ["pos", "mayoría positiva"] : ["", "mixta"];
   const agendaHtml = medTop.map(x => { const [k, l] = lado(x); return `<li><span class="ini-an"><b>${esc(MED[x.id].n)}</b><small class="${k}">${NIVS[nivIdx(MED[x.id].a)][1]} · ${l}</small></span>${segbar([{l: "Críticas", v: x.cri, c: "var(--cri)"}, {l: "Neutras", v: x.neu, c: "var(--neu)"}, {l: "Positivas", v: x.pos, c: "var(--pos)"}])}<span class="mono">${x.tot}</span></li>`; }).join("");
   const sec = (id, t, extra = "") => `<div class="ini-sec"><h2 id="${id}">${t}</h2><span class="ini-line"></span>${extra}</div>`;
-  return `${onboarding()}
-  <section class="ini-ver" aria-labelledby="verT">
+  return `<section class="ini-ver" aria-labelledby="verT">
     <div class="ini-ed"><span class="ini-ekick">Edición ${esc(S.org)} · ${new Date(NOW).toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long"})}</span>
-      <div class="ini-per" role="group" aria-label="Período">${[["7", "Semana"], ["30", "30 días"]].map(([k, l]) => `<button type="button" data-act="ini-per" data-v="${k}" aria-pressed="${String(per) === k}">${l}</button>`).join("")}</div></div>
+      <div class="ini-per" role="group" aria-label="Período">${[["1", "24 horas"], ["7", "Semana"], ["30", "30 días"]].map(([k, l]) => `<button type="button" data-act="ini-per" data-v="${k}" aria-pressed="${String(per) === k}">${l}</button>`).join("")}</div></div>
     <h2 id="verT" class="ini-tit" tabindex="-1">${titulo}</h2>
     ${balance || pesa ? `<p class="ini-lead">${balance}${pesa}</p>` : ""}
     <div class="ini-kpis">
-      <button class="ini-kpi" data-act="goto" data-tono="todos" data-dias="${per}"><span class="l">Noticias ${perTx}</span><span class="v"><span class="mono">${M.vol}</span>${delta(M.vol, P.vol, hayPrev)}</span><span class="s">${hayPrev ? `frente a ${P.vol} ${antTx}` : `sin datos de ${antTx} para comparar`} · en ${plural(Object.keys(med).length, "medio", "medios")}</span></button>
-      <button class="ini-kpi" data-act="goto" data-tono="cri" data-dias="${per}"><span class="l">Tono ${per === 7 ? "de la semana" : "en 30 días"}</span><span class="v word ${v.k}">${v.n}</span>${segbar([{l: "Críticas", v: M.cri, c: "var(--cri)"}, {l: "Neutras", v: M.neu, c: "var(--neu)"}, {l: "Positivas", v: M.pos, c: "var(--pos)"}])}<span class="s">${conteoCorto(M)}${hayPrev && P.vol ? ` · antes: ${vP.n.toLowerCase()}` : ""}</span></button>
+      <button class="ini-kpi" data-act="goto" data-tono="todos" data-dias="${per}"><span class="l">Noticias ${perTx}</span><span class="v"><span class="mono">${M.vol}</span>${delta(M.vol, P.vol, hayPrev)}</span><span class="s">${hayPrev ? `frente a ${P.vol} ${per === 1 ? "en " : ""}${antTx}` : `sin datos de ${antTx} para comparar`} · en ${plural(Object.keys(med).length, "medio", "medios")}</span></button>
+      <button class="ini-kpi" data-act="goto" data-tono="cri" data-dias="${per}"><span class="l">Tono ${per === 7 ? "de la semana" : perTx}</span><span class="v word ${v.k}">${v.n}</span>${segbar([{l: "Críticas", v: M.cri, c: "var(--cri)"}, {l: "Neutras", v: M.neu, c: "var(--neu)"}, {l: "Positivas", v: M.pos, c: "var(--pos)"}])}<span class="s">${conteoCorto(M)}${hayPrev && P.vol ? ` · antes: ${vP.n.toLowerCase()}` : ""}</span></button>
       <button class="ini-kpi" data-act="goto" data-tono="todos" data-dias="${per}"><span class="l">Hasta dónde llegó</span><span class="v"><span class="mono">${fuera.length}</span><small>de ${M.vol}</small>${delta(fuera.length, fueraP, hayPrev)}</span><span class="s">salieron de la prensa comunal${nac.length ? `; ${nac.length} a medios nacionales, ${nacCri ? plural(nacCri, "crítica", "críticas") : "ninguna crítica"}` : ""}</span></button>
       ${kTema ? `<button class="ini-kpi" data-act="goto-tema" data-id="${kTema.id}"><span class="l">${esc(kLbl)}</span><span class="v"><span class="mono">${MK.vol}</span><small>${MK.vol === 1 ? "mención" : "menciones"}</small>${delta(MK.vol, msKP.length, hayPrev)}</span><span class="s">${conteoCorto(MK)}</span></button>` : ""}
     </div>
@@ -295,12 +294,13 @@ function vInicio(){
   </section>
   <div class="ini-bajo">
     <section aria-labelledby="camT">
-      ${sec("camT", "Qué está cambiando", `<span class="ini-sub">${per === 7 ? "semana vs. la anterior" : "30 días vs. los anteriores"}</span>`)}
+      ${sec("camT", "Qué está cambiando", `<span class="ini-sub">${{1: "24 h vs. las 24 anteriores", 7: "semana vs. la anterior", 30: "30 días vs. los anteriores"}[per]}</span>`)}
+      ${!c.caracterizada && !c.onbOculto ? `<p class="ini-afina">${ri("pin")}<span>Estos temas los propuso PregonIA a partir del territorio. Afinarlos toma cinco preguntas y mejora toda la lectura.</span><a class="btn sm" href="#asistente">Afinar temas</a><button class="ini-link" type="button" data-act="onb-hide">Ocultar</button></p>` : ""}
       ${filasT.length || asuntos.length ? `<ul class="ini-lista">${filasT.map(filaT).join("")}${asuntos.map(filaA).join("")}</ul>` : `<p class="muted">Sin notas de tus temas ${perTx}.</p>`}
     </section>
     <div class="ini-der">
       ${vieneHtml ? `<section aria-labelledby="vieT">${sec("vieT", "Qué viene")}<ul class="ini-lista ini-viene">${vieneHtml}</ul></section>` : ""}
-      ${agendaHtml ? `<section aria-labelledby="ageT">${sec("ageT", "Quién marca la agenda", `<span class="ini-sub">${per === 7 ? "7 días" : "30 días"}</span>`)}<ul class="ini-lista ini-agenda">${agendaHtml}<li class="ini-mas"><a href="#reportes">Todos los medios y noticias por día, en Reportes →</a></li></ul></section>` : ""}
+      ${agendaHtml ? `<section aria-labelledby="ageT">${sec("ageT", "Quién marca la agenda", `<span class="ini-sub">${{1: "24 horas", 7: "7 días", 30: "30 días"}[per]}</span>`)}<ul class="ini-lista ini-agenda">${agendaHtml}<li class="ini-mas"><a href="#reportes">Todos los medios y noticias por día, en Reportes →</a></li></ul></section>` : ""}
     </div>
   </div>`;
 }
@@ -1166,7 +1166,7 @@ document.addEventListener("click", async e => {
   if (act === "f-amb") { tState.fuente.a = b.dataset.k; render(); }
   if (act === "fp") { const key = S.org + ":" + b.dataset.g; S.fp[key] = true; save(); render(); toast("Marcada como “no corresponde”. Servirá para afinar las exclusiones.", () => { delete S.fp[key]; save(); render(); }); }
   if (act === "fp-reset") { Object.keys(S.fp).filter(k => k.startsWith(S.org+":")).forEach(k => delete S.fp[k]); save(); render(); }
-  if (act === "onb-hide") { c.onbOculto = true; save(); render(); toast("Primeros pasos ocultos.", () => { c.onbOculto = false; save(); render(); }); }
+  if (act === "onb-hide") { c.onbOculto = true; save(); render(); toast("Aviso oculto. Puedes afinar tus temas cuando quieras en Ajustes.", () => { c.onbOculto = false; save(); render(); }); }
   if (act === "tema-open") { tState.open[b.dataset.id] = !tState.open[b.dataset.id]; render(); }
   if (act === "ctx-all") { tState.ctxAll[b.dataset.key] = true; render(); }
   if (act === "chip-del") { const t = c.temas.find(x => x.id === b.dataset.tema); if (t) { const k = b.dataset.k, i = Number(b.dataset.i), v = t[k][i]; t[k].splice(i, 1); save(); render(); toast(`Quitaste «${v}».`, () => { t[k].splice(i, 0, v); save(); render(); }); } }
@@ -1271,7 +1271,7 @@ async function lectura(btn){
 
 /* Ayuda: cómo se usa y preguntas frecuentes */
 const AYUDA_VISTA = {
-  inicio:["Inicio", "La portada responde cuatro preguntas. Arriba, cómo estamos: un veredicto y cuatro cifras comparadas con el período anterior; elige Semana o 30 días. Luego qué hacer hoy: las críticas por responder, con un dato que ayuda a contestar, y lo positivo para aprovechar. Más abajo, qué temas están cambiando (y asuntos que aún no sigues), qué viene en el calendario y qué medios marcan la agenda. Cada noticia aparece una sola vez."],
+  inicio:["Inicio", "La portada responde cuatro preguntas. Arriba, cómo estamos: un veredicto y cuatro cifras comparadas con el período anterior; elige 24 horas, Semana o 30 días. Luego qué hacer hoy: las críticas por responder, con un dato que ayuda a contestar, y lo positivo para aprovechar. Más abajo, qué temas están cambiando (y asuntos que aún no sigues), qué viene en el calendario y qué medios marcan la agenda. Cada noticia aparece una sola vez."],
   menciones:["Menciones", "Todas las noticias que calzaron con tus temas. Cada noticia aparece una vez aunque la publiquen varios medios. Filtra por tono, período, tema o palabra. \"¿Por qué aparece?\" muestra qué término calzó; \"No corresponde\" la descarta y ayuda a afinar las exclusiones."],
   comunicados:["Comunicados", "Prepara una respuesta en tres decisiones: a qué respondes, qué pieza necesitas y con qué enfoque. La IA redacta solo con la noticia y los datos del municipio; lo que falta queda marcado [completar]. Nada se publica: tú apruebas y difundes. Desde el borrador o la lista de aprobados lo envías en PDF por WhatsApp, por correo (Gmail, Outlook o tu programa) o lo guardas en PDF."],
   temas:["Mis temas", "Los temas que PregonIA vigila. Cada tema tiene términos (lo que se busca), contexto (palabras que deben acompañar) y exclusiones (lo que descarta). Tu plan define cuántos temas activos puedes tener."],
