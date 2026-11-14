@@ -272,8 +272,7 @@ function vInicio(){
   const lado = x => x.cri * 2 > x.tot ? ["cri", "mayoría crítica"] : x.pos * 2 > x.tot ? ["pos", "mayoría positiva"] : ["", "mixta"];
   const agendaHtml = medTop.map(x => { const [k, l] = lado(x); return `<li><span class="ini-an"><b>${esc(MED[x.id].n)}</b><small class="${k}">${NIVS[nivIdx(MED[x.id].a)][1]} · ${l}</small></span>${segbar([{l: "Críticas", v: x.cri, c: "var(--cri)"}, {l: "Neutras", v: x.neu, c: "var(--neu)"}, {l: "Positivas", v: x.pos, c: "var(--pos)"}])}<span class="mono">${x.tot}</span></li>`; }).join("");
   const sec = (id, t, extra = "") => `<div class="ini-sec"><h2 id="${id}">${t}</h2><span class="ini-line"></span>${extra}</div>`;
-  return `${onboarding()}
-  <section class="ini-ver" aria-labelledby="verT">
+  return `<section class="ini-ver" aria-labelledby="verT">
     <div class="ini-ed"><span class="ini-ekick">Edición ${esc(S.org)} · ${new Date(NOW).toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long"})}</span>
       <div class="ini-per" role="group" aria-label="Período">${[["7", "Semana"], ["30", "30 días"]].map(([k, l]) => `<button type="button" data-act="ini-per" data-v="${k}" aria-pressed="${String(per) === k}">${l}</button>`).join("")}</div></div>
     <h2 id="verT" class="ini-tit" tabindex="-1">${titulo}</h2>
@@ -296,6 +295,7 @@ function vInicio(){
   <div class="ini-bajo">
     <section aria-labelledby="camT">
       ${sec("camT", "Qué está cambiando", `<span class="ini-sub">${per === 7 ? "semana vs. la anterior" : "30 días vs. los anteriores"}</span>`)}
+      ${!c.caracterizada && !c.onbOculto ? `<p class="ini-afina">${ri("pin")}<span>Estos temas los propuso PregonIA a partir del territorio. Afinarlos toma cinco preguntas y mejora toda la lectura.</span><a class="btn sm" href="#asistente">Afinar temas</a><button class="ini-link" type="button" data-act="onb-hide">Ocultar</button></p>` : ""}
       ${filasT.length || asuntos.length ? `<ul class="ini-lista">${filasT.map(filaT).join("")}${asuntos.map(filaA).join("")}</ul>` : `<p class="muted">Sin notas de tus temas ${perTx}.</p>`}
     </section>
     <div class="ini-der">
@@ -1166,7 +1166,7 @@ document.addEventListener("click", async e => {
   if (act === "f-amb") { tState.fuente.a = b.dataset.k; render(); }
   if (act === "fp") { const key = S.org + ":" + b.dataset.g; S.fp[key] = true; save(); render(); toast("Marcada como “no corresponde”. Servirá para afinar las exclusiones.", () => { delete S.fp[key]; save(); render(); }); }
   if (act === "fp-reset") { Object.keys(S.fp).filter(k => k.startsWith(S.org+":")).forEach(k => delete S.fp[k]); save(); render(); }
-  if (act === "onb-hide") { c.onbOculto = true; save(); render(); toast("Primeros pasos ocultos.", () => { c.onbOculto = false; save(); render(); }); }
+  if (act === "onb-hide") { c.onbOculto = true; save(); render(); toast("Aviso oculto. Puedes afinar tus temas cuando quieras en Ajustes.", () => { c.onbOculto = false; save(); render(); }); }
   if (act === "tema-open") { tState.open[b.dataset.id] = !tState.open[b.dataset.id]; render(); }
   if (act === "ctx-all") { tState.ctxAll[b.dataset.key] = true; render(); }
   if (act === "chip-del") { const t = c.temas.find(x => x.id === b.dataset.tema); if (t) { const k = b.dataset.k, i = Number(b.dataset.i), v = t[k][i]; t[k].splice(i, 1); save(); render(); toast(`Quitaste «${v}».`, () => { t[k].splice(i, 0, v); save(); render(); }); } }
