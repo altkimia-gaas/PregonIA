@@ -20,15 +20,15 @@
 /* Identidad ALTKimia (manual de marca v1.0): oscura y técnica. Fondos Abyss/Void/Night, azul eléctrico solo para acción y énfasis
    (no más del 20% de la pantalla, nunca azul sobre azul), Inter para la interfaz y DM Mono para etiquetas y datos.
    Los titulares de prensa van en serif (Newsreader) para distinguir lo que publicó un medio de lo que analiza PregonIA.
-   El color de riesgo (crítico, neutro, favorable) está validado para daltonismo sobre ambos fondos. */
+   El color de tono es un semáforo (rojo crítico, amarillo neutro, verde favorable), validado para daltonismo sobre ambos fondos (separación ≥ 8 en todos los pares); el amarillo va siempre entre el rojo y el verde en las barras. */
 :root{
   --bg:#080B12; --surface:#111827; --surface-2:#0D1117; --ink:#F0F4FF; --muted:#8B9DC3; --line:#1E2D4A; --track:#1A2540;
   --top:#080B12; --top-ink:#F0F4FF; --top-muted:#8B9DC3; --top-line:#1E2D4A; --top-accent:#42A5F5; --live:#3DD6B5;
   --accent:#42A5F5; --accent-bg:#1976D2; --accent-bg-h:#1565C0; --accent-ink:#FFFFFF; --accent-soft:#0F2440;
   --bell:#E9A44C; --bell-soft:#2A1F0E;
-  --pos:#20A493; --pos-soft:#0F2E2B; --pos-ink:#5FD0C0;
-  --neu:#5F6E80; --neu-soft:#1A2433; --neu-ink:#A8B5C4;
-  --cri:#E0604A; --cri-soft:#3A1C16; --cri-ink:#F39582;
+  --pos:#3CC08A; --pos-soft:#0F2E22; --pos-ink:#6FD9A8;
+  --neu:#CFA02A; --neu-soft:#2E260F; --neu-ink:#EBC55E;
+  --cri:#D9443C; --cri-soft:#3A1715; --cri-ink:#F28B82;
   --amb-n:#90CAF9; --amb-r:#42A5F5; --amb-l:#1E5A96;
   --shadow:none; --dots:rgba(33,150,243,.10);
   --f-display:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -44,9 +44,9 @@
   --bg:#F4F4F0; --surface:#FFFFFF; --surface-2:#F8F7F2; --ink:#111827; --muted:#56627A; --line:#D8D4CC; --track:#E8E5DD;
   --accent:#1565C0; --accent-bg:#1565C0; --accent-bg-h:#0F4C9C; --accent-ink:#FFFFFF; --accent-soft:#E3F2FD;
   --bell:#8F560C; --bell-soft:#FBEFD9;
-  --pos:#00897B; --pos-soft:#DCF1EE; --pos-ink:#00695E;
-  --neu:#A3AEBB; --neu-soft:#EDF0F4; --neu-ink:#525F6E;
-  --cri:#C8412C; --cri-soft:#FBE7E2; --cri-ink:#A23422;
+  --pos:#2A9466; --pos-soft:#DDF2E8; --pos-ink:#1D6E4B;
+  --neu:#CC9A10; --neu-soft:#FBF1D6; --neu-ink:#7A5A00;
+  --cri:#B3261E; --cri-soft:#FBE6E3; --cri-ink:#9A1F17;
   --amb-n:#0D3C78; --amb-r:#1565C0; --amb-l:#90B4E0;
   --shadow:0 1px 2px rgba(17,24,39,.06),0 1px 3px rgba(17,24,39,.04); --dots:transparent;
   color-scheme:light;
@@ -75,7 +75,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .nav a{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;text-decoration:none;color:var(--ink);font-weight:500}
 .nav a:hover{background:var(--surface-2)}
 .nav a[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
-.nav .count,.bnav .count{margin-left:auto;font-family:var(--f-mono);font-size:11px;background:#C8412C;color:#fff;border-radius:99px;padding:1px 7px;font-weight:600}
+.nav .count,.bnav .count{margin-left:auto;font-family:var(--f-mono);font-size:11px;background:#B3261E;color:#fff;border-radius:99px;padding:1px 7px;font-weight:600}
 .usage{display:flex;flex-direction:column;gap:5px;margin:10px 6px 0}
 .usage .row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
 .usage a{font-size:11.5px;font-weight:600}
@@ -355,7 +355,7 @@ button.ini-fila:hover{background:var(--surface-2)}
 .ini-asunto{background:var(--surface-2)}
 .ini-afina{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:10px 14px;border:1px dashed var(--line);border-radius:12px;font-size:13px;color:var(--muted);line-height:1.45}
 .ini-afina > span{flex:1 1 240px}.ini-afina .ico{color:var(--accent);flex:none}
-.ini-sin{font-size:12px;font-weight:500;color:var(--bell);margin-left:6px}
+.ini-sin{font-size:12px;font-weight:500;color:var(--accent);margin-left:6px}
 .ini-viene li{padding:12px 16px;display:grid;gap:4px}
 .ini-vh{display:flex;justify-content:space-between;gap:10px}.ini-vh b{font-weight:600}.ini-vh > span{font-size:13px;color:var(--muted);white-space:nowrap}.ini-vh > span.pronto{color:var(--bell)}
 .ini-vm{font-size:13px;color:var(--muted)}.ini-vm b{color:var(--ink);font-weight:600}
@@ -2454,7 +2454,7 @@ function chartPulso(ms, per){
   const imax = tots.indexOf(Math.max(...tots));
   bk.forEach((x, i) => {
     const X = L + 3 + i * slot + (slot - bw) / 2, tot = tots[i]; let acc = 0;
-    const segs = [["neu", "var(--neu)"], ["pos", "url(#pat-pos)"], ["cri", "var(--cri)"]].filter(([k]) => x[k]);
+    const segs = [["pos", "url(#pat-pos)"], ["neu", "var(--neu)"], ["cri", "var(--cri)"]].filter(([k]) => x[k]);
     segs.forEach(([k, col], j) => { const y1 = y(acc + x[k]), y0 = y(acc) - (acc ? 2 : 0), last = j === segs.length - 1, r = Math.min(3, bw / 2);
       g += last ? `<path d="M${X},${y0} V${y1 + r} Q${X},${y1} ${X + r},${y1} H${X + bw - r} Q${X + bw},${y1} ${X + bw},${y1 + r} V${y0} Z" fill="${col}"/>` : `<rect x="${X}" y="${y1}" width="${bw}" height="${Math.max(1, y0 - y1)}" fill="${col}"/>`; acc += x[k]; });
     if (i === imax && tot) g += `<text x="${X + bw / 2}" y="${y(tot) - 5}" text-anchor="middle" class="pk">${tot}</text>`;
@@ -2742,7 +2742,7 @@ function chartDias(ms, n = 30){
   for (let v = 0; v <= ymax; v += step) g += `<line x1="${L}" x2="${W-4}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">${v}</text>`;
   days.forEach((x,i) => {
     const X = L + 4 + i*slot + (slot - bw)/2, dt = new Date(NOW - x.d*DAY), lbl = dt.toLocaleDateString("es-CL", {weekday:"short", day:"numeric", month:"short"});
-    const tot = x.pos + x.neu + x.cri; let acc = 0; const segs = [["neu","var(--neu)"],["pos","url(#pat-pos)"],["cri","var(--cri)"]].filter(([k]) => x[k]);
+    const tot = x.pos + x.neu + x.cri; let acc = 0; const segs = [["pos","url(#pat-pos)"],["neu","var(--neu)"],["cri","var(--cri)"]].filter(([k]) => x[k]);
     segs.forEach(([k,col], j) => { const y1 = y(acc + x[k]) + (j ? 0 : 0), y0 = y(acc) - (acc ? 2 : 0), h = Math.max(1, y0 - y1), last = j === segs.length - 1;
       g += last ? `<path d="M${X},${y0} V${y1+4} Q${X},${y1} ${X+4},${y1} H${X+bw-4} Q${X+bw},${y1} ${X+bw},${y1+4} V${y0} Z" fill="${col}"/>` : `<rect x="${X}" y="${y1}" width="${bw}" height="${h}" fill="${col}"/>`; acc += x[k]; });
     if (i % 5 === 4 || i === n-1) g += `<text x="${X + bw/2}" y="${H-8}" text-anchor="middle">${dt.getDate()}/${dt.getMonth()+1}</text>`;
@@ -3202,7 +3202,7 @@ const pdfCache = {};
 async function pdfDiario(){
   const {jsPDF} = await cargarJsPDF(), doc = new jsPDF({unit: "mm", format: "a4"}), W = 210, H = 297, M = 15, AN = W - 2 * M, PIE = H - 13;
   const d = diarioData(), C = {card: "#FFFFFF", line: "#D8D4CC", text: "#111827", muted: "#56627A", blue: "#1976D2", blueL: "#1565C0", track: "#ECEAE4",
-    cri: "#C8412C", pos: "#00897B", neu: "#6B7785", cris: "#FBE7E2", poss: "#DCF1EE", neus: "#EDF0F4"};
+    cri: "#B3261E", pos: "#2A9466", neu: "#CC9A10", cris: "#FBE6E3", poss: "#DDF2E8", neus: "#FBF1D6"};
   const T = s => pdfTxt(String(s ?? "")), tc = k => C[k] || C.neu, tsoft = k => C[k + "s"] || C.neus;
   const fondo = () => {}; // página blanca, sin color de fondo
   const fuente = (size, bold, font = "helvetica") => { doc.setFont(font, bold ? "bold" : "normal"); doc.setFontSize(size); };
@@ -4927,7 +4927,7 @@ setInterval(() => { if (PILOTO.activo && (document.visibilityState === "visible"
    Escenas dibujadas en canvas a partir de parteData(); se exporta a MP4 con WebCodecs + mp4-muxer
    (más rápido que tiempo real) y, si el navegador no lo permite, se graba con MediaRecorder. Todo en el navegador. */
 const VW = 1080, VH = 1920, VFPS = 30, VOUT = [720, 1280];
-const VC = {bg:"#080B12", card:"#111827", line:"#1E2D4A", text:"#F0F4FF", muted:"#8B9DC3", blue:"#2196F3", cri:"#EF6A50", pos:"#2BB3A3", neu:"#A3AEBB"};
+const VC = {bg:"#080B12", card:"#111827", line:"#1E2D4A", text:"#F0F4FF", muted:"#8B9DC3", blue:"#2196F3", cri:"#D9443C", pos:"#3CC08A", neu:"#CFA02A"};
 const VF = {h:'Inter, system-ui, sans-serif', b:'Inter, system-ui, sans-serif', n:'Newsreader, Georgia, serif'};
 const vtono = t => VC[t] || VC.neu;
 const vease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);

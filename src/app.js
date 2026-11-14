@@ -217,7 +217,7 @@ function chartPulso(ms, per){
   const imax = tots.indexOf(Math.max(...tots));
   bk.forEach((x, i) => {
     const X = L + 3 + i * slot + (slot - bw) / 2, tot = tots[i]; let acc = 0;
-    const segs = [["neu", "var(--neu)"], ["pos", "url(#pat-pos)"], ["cri", "var(--cri)"]].filter(([k]) => x[k]);
+    const segs = [["pos", "url(#pat-pos)"], ["neu", "var(--neu)"], ["cri", "var(--cri)"]].filter(([k]) => x[k]);
     segs.forEach(([k, col], j) => { const y1 = y(acc + x[k]), y0 = y(acc) - (acc ? 2 : 0), last = j === segs.length - 1, r = Math.min(3, bw / 2);
       g += last ? `<path d="M${X},${y0} V${y1 + r} Q${X},${y1} ${X + r},${y1} H${X + bw - r} Q${X + bw},${y1} ${X + bw},${y1 + r} V${y0} Z" fill="${col}"/>` : `<rect x="${X}" y="${y1}" width="${bw}" height="${Math.max(1, y0 - y1)}" fill="${col}"/>`; acc += x[k]; });
     if (i === imax && tot) g += `<text x="${X + bw / 2}" y="${y(tot) - 5}" text-anchor="middle" class="pk">${tot}</text>`;
@@ -505,7 +505,7 @@ function chartDias(ms, n = 30){
   for (let v = 0; v <= ymax; v += step) g += `<line x1="${L}" x2="${W-4}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">${v}</text>`;
   days.forEach((x,i) => {
     const X = L + 4 + i*slot + (slot - bw)/2, dt = new Date(NOW - x.d*DAY), lbl = dt.toLocaleDateString("es-CL", {weekday:"short", day:"numeric", month:"short"});
-    const tot = x.pos + x.neu + x.cri; let acc = 0; const segs = [["neu","var(--neu)"],["pos","url(#pat-pos)"],["cri","var(--cri)"]].filter(([k]) => x[k]);
+    const tot = x.pos + x.neu + x.cri; let acc = 0; const segs = [["pos","url(#pat-pos)"],["neu","var(--neu)"],["cri","var(--cri)"]].filter(([k]) => x[k]);
     segs.forEach(([k,col], j) => { const y1 = y(acc + x[k]) + (j ? 0 : 0), y0 = y(acc) - (acc ? 2 : 0), h = Math.max(1, y0 - y1), last = j === segs.length - 1;
       g += last ? `<path d="M${X},${y0} V${y1+4} Q${X},${y1} ${X+4},${y1} H${X+bw-4} Q${X+bw},${y1} ${X+bw},${y1+4} V${y0} Z" fill="${col}"/>` : `<rect x="${X}" y="${y1}" width="${bw}" height="${h}" fill="${col}"/>`; acc += x[k]; });
     if (i % 5 === 4 || i === n-1) g += `<text x="${X + bw/2}" y="${H-8}" text-anchor="middle">${dt.getDate()}/${dt.getMonth()+1}</text>`;
@@ -965,7 +965,7 @@ const pdfCache = {};
 async function pdfDiario(){
   const {jsPDF} = await cargarJsPDF(), doc = new jsPDF({unit: "mm", format: "a4"}), W = 210, H = 297, M = 15, AN = W - 2 * M, PIE = H - 13;
   const d = diarioData(), C = {card: "#FFFFFF", line: "#D8D4CC", text: "#111827", muted: "#56627A", blue: "#1976D2", blueL: "#1565C0", track: "#ECEAE4",
-    cri: "#C8412C", pos: "#00897B", neu: "#6B7785", cris: "#FBE7E2", poss: "#DCF1EE", neus: "#EDF0F4"};
+    cri: "#B3261E", pos: "#2A9466", neu: "#CC9A10", cris: "#FBE6E3", poss: "#DDF2E8", neus: "#FBF1D6"};
   const T = s => pdfTxt(String(s ?? "")), tc = k => C[k] || C.neu, tsoft = k => C[k + "s"] || C.neus;
   const fondo = () => {}; // página blanca, sin color de fondo
   const fuente = (size, bold, font = "helvetica") => { doc.setFont(font, bold ? "bold" : "normal"); doc.setFontSize(size); };
