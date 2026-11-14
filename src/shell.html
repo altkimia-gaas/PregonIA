@@ -7,15 +7,15 @@
 /* Identidad ALTKimia (manual de marca v1.0): oscura y técnica. Fondos Abyss/Void/Night, azul eléctrico solo para acción y énfasis
    (no más del 20% de la pantalla, nunca azul sobre azul), Inter para la interfaz y DM Mono para etiquetas y datos.
    Los titulares de prensa van en serif (Newsreader) para distinguir lo que publicó un medio de lo que analiza PregonIA.
-   El color de riesgo (crítico, neutro, favorable) está validado para daltonismo sobre ambos fondos. */
+   El color de tono es un semáforo (rojo crítico, amarillo neutro, verde favorable), validado para daltonismo sobre ambos fondos (separación ≥ 8 en todos los pares); el amarillo va siempre entre el rojo y el verde en las barras. */
 :root{
   --bg:#080B12; --surface:#111827; --surface-2:#0D1117; --ink:#F0F4FF; --muted:#8B9DC3; --line:#1E2D4A; --track:#1A2540;
   --top:#080B12; --top-ink:#F0F4FF; --top-muted:#8B9DC3; --top-line:#1E2D4A; --top-accent:#42A5F5; --live:#3DD6B5;
   --accent:#42A5F5; --accent-bg:#1976D2; --accent-bg-h:#1565C0; --accent-ink:#FFFFFF; --accent-soft:#0F2440;
   --bell:#E9A44C; --bell-soft:#2A1F0E;
-  --pos:#20A493; --pos-soft:#0F2E2B; --pos-ink:#5FD0C0;
-  --neu:#5F6E80; --neu-soft:#1A2433; --neu-ink:#A8B5C4;
-  --cri:#E0604A; --cri-soft:#3A1C16; --cri-ink:#F39582;
+  --pos:#3CC08A; --pos-soft:#0F2E22; --pos-ink:#6FD9A8;
+  --neu:#CFA02A; --neu-soft:#2E260F; --neu-ink:#EBC55E;
+  --cri:#D9443C; --cri-soft:#3A1715; --cri-ink:#F28B82;
   --amb-n:#90CAF9; --amb-r:#42A5F5; --amb-l:#1E5A96;
   --shadow:none; --dots:rgba(33,150,243,.10);
   --f-display:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -31,9 +31,9 @@
   --bg:#F4F4F0; --surface:#FFFFFF; --surface-2:#F8F7F2; --ink:#111827; --muted:#56627A; --line:#D8D4CC; --track:#E8E5DD;
   --accent:#1565C0; --accent-bg:#1565C0; --accent-bg-h:#0F4C9C; --accent-ink:#FFFFFF; --accent-soft:#E3F2FD;
   --bell:#8F560C; --bell-soft:#FBEFD9;
-  --pos:#00897B; --pos-soft:#DCF1EE; --pos-ink:#00695E;
-  --neu:#A3AEBB; --neu-soft:#EDF0F4; --neu-ink:#525F6E;
-  --cri:#C8412C; --cri-soft:#FBE7E2; --cri-ink:#A23422;
+  --pos:#2A9466; --pos-soft:#DDF2E8; --pos-ink:#1D6E4B;
+  --neu:#CC9A10; --neu-soft:#FBF1D6; --neu-ink:#7A5A00;
+  --cri:#B3261E; --cri-soft:#FBE6E3; --cri-ink:#9A1F17;
   --amb-n:#0D3C78; --amb-r:#1565C0; --amb-l:#90B4E0;
   --shadow:0 1px 2px rgba(17,24,39,.06),0 1px 3px rgba(17,24,39,.04); --dots:transparent;
   color-scheme:light;
@@ -62,7 +62,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .nav a{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;text-decoration:none;color:var(--ink);font-weight:500}
 .nav a:hover{background:var(--surface-2)}
 .nav a[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
-.nav .count,.bnav .count{margin-left:auto;font-family:var(--f-mono);font-size:11px;background:#C8412C;color:#fff;border-radius:99px;padding:1px 7px;font-weight:600}
+.nav .count,.bnav .count{margin-left:auto;font-family:var(--f-mono);font-size:11px;background:#B3261E;color:#fff;border-radius:99px;padding:1px 7px;font-weight:600}
 .usage{display:flex;flex-direction:column;gap:5px;margin:10px 6px 0}
 .usage .row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
 .usage a{font-size:11.5px;font-weight:600}
@@ -342,7 +342,7 @@ button.ini-fila:hover{background:var(--surface-2)}
 .ini-asunto{background:var(--surface-2)}
 .ini-afina{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:10px 14px;border:1px dashed var(--line);border-radius:12px;font-size:13px;color:var(--muted);line-height:1.45}
 .ini-afina > span{flex:1 1 240px}.ini-afina .ico{color:var(--accent);flex:none}
-.ini-sin{font-size:12px;font-weight:500;color:var(--bell);margin-left:6px}
+.ini-sin{font-size:12px;font-weight:500;color:var(--accent);margin-left:6px}
 .ini-viene li{padding:12px 16px;display:grid;gap:4px}
 .ini-vh{display:flex;justify-content:space-between;gap:10px}.ini-vh b{font-weight:600}.ini-vh > span{font-size:13px;color:var(--muted);white-space:nowrap}.ini-vh > span.pronto{color:var(--bell)}
 .ini-vm{font-size:13px;color:var(--muted)}.ini-vm b{color:var(--ink);font-weight:600}

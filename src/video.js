@@ -3,7 +3,7 @@
    Escenas dibujadas en canvas a partir de parteData(); se exporta a MP4 con WebCodecs + mp4-muxer
    (más rápido que tiempo real) y, si el navegador no lo permite, se graba con MediaRecorder. Todo en el navegador. */
 const VW = 1080, VH = 1920, VFPS = 30, VOUT = [720, 1280];
-const VC = {bg:"#080B12", card:"#111827", line:"#1E2D4A", text:"#F0F4FF", muted:"#8B9DC3", blue:"#2196F3", cri:"#EF6A50", pos:"#2BB3A3", neu:"#A3AEBB"};
+const VC = {bg:"#080B12", card:"#111827", line:"#1E2D4A", text:"#F0F4FF", muted:"#8B9DC3", blue:"#2196F3", cri:"#D9443C", pos:"#3CC08A", neu:"#CFA02A"};
 const VF = {h:'Inter, system-ui, sans-serif', b:'Inter, system-ui, sans-serif', n:'Newsreader, Georgia, serif'};
 const vtono = t => VC[t] || VC.neu;
 const vease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
