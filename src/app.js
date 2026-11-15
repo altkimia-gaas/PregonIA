@@ -1802,6 +1802,8 @@ document.addEventListener("click", e => {
   avisoLegal().then(ok => { if (ok) entAbrir(true); });  // la entrada se elige por rol, zona y nombre
 });
 window.addEventListener("hashchange", () => { if (location.hash === "#portada") mostrarPortada(true); });
+/* PRUEBA · Fecha del cabezal de la portada, como la de un diario. */
+(() => { const f = $("#ptFecha"); if (!f) return; const d = new Date().toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long", year: "numeric"}); f.textContent = d.charAt(0).toUpperCase() + d.slice(1); })();
 
 render();
 mostrarPortada(!/[?&]sin-portada\b/.test(location.search));

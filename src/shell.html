@@ -1741,64 +1741,66 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   :root[data-theme="editorial"] .vid.rep .vid-hint{color:var(--muted)}
   :root[data-theme="editorial"] .vid.rep .vid-h .btn{background:transparent;border:1.5px solid var(--frame);color:var(--ink)}
 }
-/* PRUEBA · Portada en Edición: papel, titular serif con filete y la foto como lámina enmarcada (no de fondo) */
-:root[data-theme="editorial"] .portada{background:var(--bg);color:var(--ink);color-scheme:inherit;overflow-y:auto;flex-direction:column;align-items:stretch}
-:root[data-theme="editorial"] .portada::after,:root[data-theme="editorial"] .pt-grid{display:none}
-:root[data-theme="editorial"] .portada::before{inset:28px 28px 28px 54%;border-radius:14px;border:1.5px solid var(--card-line);transform:none;animation:none;filter:none;background-color:var(--surface-2)}
-:root[data-theme="editorial"] .pt-in{margin:auto 0;max-width:none;padding-left:max(48px,env(safe-area-inset-left,0px));padding-right:calc(46% + 28px);gap:14px;padding-top:32px;padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
-:root[data-theme="editorial"] .pt-h{font-size:clamp(1.75rem,3vw,2.75rem)}
-:root[data-theme="editorial"] .pt-logo{font-family:var(--f-news);font-weight:700;letter-spacing:-.02em;color:var(--ink)}
-:root[data-theme="editorial"] .pt-logo b{color:var(--accent)}
-:root[data-theme="editorial"] .pt-logo .mk i{background:var(--accent)}
-:root[data-theme="editorial"] .pt-kick{color:var(--muted);font-weight:600;letter-spacing:.14em;font-size:.8125rem}
-:root[data-theme="editorial"] .pt-h{font-family:var(--f-news);font-weight:700;letter-spacing:-.015em;line-height:1.08;text-shadow:none;color:var(--ink);border-left:4px solid var(--rule);padding-left:18px;max-width:22ch}
-:root[data-theme="editorial"] .pt-h em{color:var(--accent)}
-:root[data-theme="editorial"] .pt-seg b{color:var(--muted);font-size:.8125rem}
-:root[data-theme="editorial"] .pt-seg span{color:var(--ink);background:var(--surface-2);border:1px solid var(--line);font-size:.875rem;font-weight:500}
-:root[data-theme="editorial"] .pt-sub{color:var(--muted);font-size:1rem;flex-direction:column;gap:8px}
-:root[data-theme="editorial"] .pt-sub span::before{background:var(--ink);box-shadow:none}
-:root[data-theme="editorial"] .pt-go{border-radius:999px;background:var(--accent-bg);color:var(--accent-ink);box-shadow:none;min-height:52px;padding:0 32px}
-:root[data-theme="editorial"] .pt-go:hover{background:var(--accent-bg-h);transform:none}
-:root[data-theme="editorial"] .pt-go:focus-visible{outline-color:var(--ink)}
-:root[data-theme="editorial"] .pt-by{color:var(--muted);font-size:.875rem}
-:root[data-theme="editorial"] .pt-by b{color:var(--ink)}
-:root[data-theme="editorial"] .pt-by b span{color:var(--accent)}
-:root[data-theme="editorial"] .pt-note{color:var(--muted);font-size:.8125rem;right:auto;left:max(48px,env(safe-area-inset-left,0px));text-align:left}
-@media (max-width:820px){
-  :root[data-theme="editorial"] .portada{align-items:flex-start}
-  :root[data-theme="editorial"] .portada::before{position:absolute;inset:16px 16px auto 16px;height:22vh;height:22dvh;background-position:66% 35%}
-  :root[data-theme="editorial"] .pt-in{padding-right:max(24px,env(safe-area-inset-right,0px));margin:calc(22dvh + 20px) 0 0;padding-top:8px;padding-bottom:24px;gap:12px}
-  :root[data-theme="editorial"] .pt-logo{font-size:2.5rem}
-  :root[data-theme="editorial"] .pt-h{font-size:1.625rem;padding-left:14px;max-width:none}
-  :root[data-theme="editorial"] .pt-logo{font-size:2.25rem}
-  :root[data-theme="editorial"] .pt-sub{font-size:.9375rem}
-  :root[data-theme="editorial"] .pt-note{position:static;margin:0;padding:0 24px calc(20px + env(safe-area-inset-bottom,0px))}
-}
-@media (prefers-reduced-motion: no-preference){ :root[data-theme="editorial"] .portada::before{animation:none} }
-/* Teléfonos bajos: el botón Empezar debe verse sin desplazar */
-@media (max-width:820px) and (max-height:760px){
-  :root[data-theme="editorial"] .portada::before{height:16vh;height:16dvh}
-  :root[data-theme="editorial"] .pt-in{margin-top:calc(16dvh + 18px)}
-  :root[data-theme="editorial"] .pt-sub{display:none}
-  :root[data-theme="editorial"] .pt-seg{gap:6px}
-  :root[data-theme="editorial"] .pt-seg span{font-size:.8125rem;padding:3px 10px}
-  :root[data-theme="editorial"] .pt-h{font-size:1.5rem}
+/* PRUEBA · Portada tipo diario: cabezal con fecha, nombre centrado, doble filete, antetítulo, titular, bajada y tres columnas. Sin foto. */
+:root[data-theme="editorial"] .portada{display:block;overflow-y:auto;background:var(--bg);color:var(--ink);color-scheme:inherit}
+:root[data-theme="editorial"] .portada::before,:root[data-theme="editorial"] .portada::after{display:none}
+.pd{max-width:1080px;margin:0 auto;padding:20px max(24px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px))}
+.pd-cab{border-bottom:1px solid var(--rule);padding-bottom:3px}
+.pd-cab::after{content:"";display:block;border-bottom:3px solid var(--rule)}
+.pd-fecha{margin:0;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 16px;padding-bottom:10px;border-bottom:1px solid var(--line);font-size:.8125rem;color:var(--muted)}
+.pd-nombre{margin:22px 0 4px;text-align:center;font-family:var(--f-news);font-weight:700;font-size:clamp(3.25rem,8vw,5.25rem);line-height:1;letter-spacing:-.025em}
+.pd-nombre b{font-weight:700;color:var(--accent)}
+.pd-lema{margin:0 0 16px;text-align:center;font-family:var(--f-news);font-style:italic;font-size:1.0625rem;color:var(--muted)}
+.pd-cuerpo{display:grid;justify-items:center;text-align:center}
+.pd-ante{margin:26px 0 12px;font-size:.8125rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.pd-titulo{margin:0;max-width:24ch;font-family:var(--f-news);font-weight:700;font-size:clamp(2rem,4vw,3rem);line-height:1.08;letter-spacing:-.015em;text-wrap:balance}
+.pd-bajada{margin:18px 0 0;max-width:54ch;font-family:var(--f-news);font-size:clamp(1.0625rem,1.6vw,1.25rem);line-height:1.5;color:var(--lead)}
+.pd-go{margin-top:26px;display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 34px;border:0;border-radius:999px;background:var(--accent-bg);color:var(--accent-ink);font:inherit;font-size:1.0625rem;font-weight:600;cursor:pointer}
+.pd-go:hover{background:var(--accent-bg-h)}
+.pd-go:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.pd-go .ico{width:19px;height:19px;stroke-width:2.2}
+.pd-cols{margin-top:34px;width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--rule);text-align:left}
+.pd-cols section{padding:16px 22px 4px;border-left:1px solid var(--line)}
+.pd-cols section:first-child{border-left:0;padding-left:0}
+.pd-cols section:last-child{padding-right:0}
+.pd-cols h2{margin:0 0 6px;font-family:var(--f-news);font-weight:700;font-size:1.25rem;line-height:1.2}
+.pd-cols p{margin:0;font-size:1rem;line-height:1.5;color:var(--muted)}
+.pd-pie{margin-top:36px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;justify-content:center;gap:4px 14px;font-size:.8125rem;color:var(--muted)}
+.pd-pie b{color:var(--ink)}.pd-pie b span{color:var(--accent)}
+.pd-pie a{color:inherit;text-underline-offset:2px}
+@media (max-width:700px){
+  .pd-fecha span + span{display:none}
+  .pd-nombre{margin-top:16px}
+  .pd-ante{margin-top:22px;letter-spacing:.08em}
+  .pd-titulo{font-size:1.75rem}
+  .pd-go{width:100%}
+  .pd-cols{grid-template-columns:minmax(0,1fr);margin-top:32px}
+  .pd-cols section,.pd-cols section:first-child{border-left:0;padding:14px 0;border-top:1px solid var(--line)}
+  .pd-cols section:first-child{border-top:0}
 }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="pat-pos" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" style="fill:var(--pos)"/></pattern></defs></svg>
 <section class="portada" id="portada" aria-labelledby="ptT" hidden>
-  <div class="pt-grid" aria-hidden="true"></div>
-  <div class="pt-in">
-    <p class="pt-logo" id="ptT"><span class="mk" aria-hidden="true"><i></i><i></i><i></i></span><span>Pregon<b>IA</b></span></p>
-    <p class="pt-kick">La prensa no espera. Tú tampoco.</p>
-    <h1 class="pt-h">Detecta lo que la prensa dice de tu gestión, mide hasta dónde llegó y responde <em>antes de que el tema escale.</em></h1>
-    <p class="pt-seg"><b>Para instituciones y autoridades públicas</b><span>Municipios y alcaldías</span><span>Concejos municipales</span><span>Consejos regionales</span><span>Diputados y senadores</span></p>
-    <p class="pt-sub"><span>Más de 100 medios nacionales, regionales y locales, y sus redes</span><span>Alertas e informes para quien decide</span><span>Respuestas redactadas con IA</span></p>
-    <button class="pt-go" id="ptGo" type="button">Empezar <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-    <p class="pt-by">Un producto de <b><span>ALT</span>Kimia</b></p>
+  <div class="pd">
+    <header class="pd-cab">
+      <p class="pd-fecha"><span id="ptFecha">Edición digital</span><span>Monitoreo de prensa para instituciones públicas</span></p>
+      <p class="pd-nombre" id="ptT">Pregon<b>IA</b></p>
+      <p class="pd-lema">La prensa no espera. Tú tampoco.</p>
+    </header>
+    <div class="pd-cuerpo">
+      <p class="pd-ante">Municipios · Concejos · Consejos regionales · Parlamentarios</p>
+      <h1 class="pd-titulo">Detecta lo que la prensa dice de tu gestión, mide hasta dónde llegó y responde antes de que el tema escale.</h1>
+      <p class="pd-bajada">PregonIA lee cada día más de 100 medios nacionales, regionales y locales, y sus redes, y entrega a quien decide alertas, informes y respuestas redactadas con IA.</p>
+      <button class="pd-go" id="ptGo" type="button">Empezar <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      <div class="pd-cols">
+        <section><h2>Lee</h2><p>Más de 100 medios digitales y sus cuentas en redes, con el tono de cada nota.</p></section>
+        <section><h2>Mide</h2><p>Hasta dónde llegó cada tema: prensa comunal, regional o nacional.</p></section>
+        <section><h2>Responde</h2><p>Comunicados, aclaraciones y mensajes clave listos para revisar. Nada se publica sin aprobación.</p></section>
+      </div>
+    </div>
+    <footer class="pd-pie"><span>Un producto de <b><span>ALT</span>Kimia</b></span><span>Prototipo con noticias ficticias</span><a href="/legal.html#privacidad">Privacidad</a><a href="/legal.html#terminos">Términos</a></footer>
   </div>
-  <p class="pt-note">Prototipo con noticias ficticias · Imagen ilustrativa generada con IA · <a href="/legal.html#privacidad">Privacidad</a> · <a href="/legal.html#terminos">Términos</a></p>
 </section>
 <button class="skip" type="button" data-act="skip">Ir al contenido</button>
 <div class="demo" id="demo" role="status" aria-live="polite"><b>Prototipo</b><span class="demo-mas">Noticias y cifras ficticias · catálogo de más de 100 medios real</span><span class="solo-movil">Datos ficticios</span></div>
