@@ -66,6 +66,8 @@ Voz del video resumen (opcional; sin ella el video sale sin narración):
 - `ELEVENLABS_SPEED` (opcional): velocidad de lectura, de 0,7 a 1,2 (por defecto 1,06).
 - `VOZ_LIMITE` (opcional): grabaciones por IP cada 10 minutos (por defecto 60). Un video usa de 6 a 8.
 
+Estado en producción (15 nov 2026): `ELEVENLABS_API_KEY` configurada como variable secreta de Production, con una clave de ElevenLabs llamada «PregonIA voz», sin vencimiento y con acceso solo a «De texto a voz» (la única API que usa `api/voz.js`). Las variables se aplican en la publicación siguiente: tras crear o cambiar una, hay que volver a publicar (Redeploy en Vercel o un cambio en `main`). Para comprobarla: `GET /api/voz` responde `{"ok": true}` y en el video resumen el recuadro «Voz» deja activo «Agregar voz». Si la clave se rota, se crea una nueva en ElevenLabs (Desarrolladores › Claves de API), se reemplaza el valor en Vercel y se borra la anterior.
+
 La función solo acepta pedidos desde el propio sitio, limita el largo del texto y las respuestas, y se niega a tareas ajenas a PregonIA. Sin la clave, la aplicación usa plantillas y lo indica en pantalla.
 
 ## Próximos pasos para producción
