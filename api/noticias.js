@@ -23,7 +23,9 @@ const CONTEXTO_ROL = {
   senador: '(senador OR senadora OR Senado OR Congreso OR Valparaíso OR Chile)',
   core: '(consejero OR consejera OR core OR "gobierno regional" OR Valparaíso)',
   concejal: '(concejal OR concejala OR concejo OR municipalidad OR comuna)',
-  alcalde: '(alcalde OR alcaldesa OR municipalidad OR municipio OR comuna)'
+  alcalde: '(alcalde OR alcaldesa OR municipalidad OR municipio OR comuna)',
+  gobernador: '(gobernador OR gobernadora OR "gobierno regional" OR Valparaíso)',
+  delegado: '(delegado OR delegada OR "delegación presidencial" OR Valparaíso OR provincia)'
 };
 const limpio = (s, n = 80) => String(s || "").replace(/[\u0000-\u001f"<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
 function sujetoDe(u){
@@ -37,7 +39,8 @@ const consulta = a => { const z = zonaDe(a.rol, a.zona); return `(${variantesNom
 /* Presencia en prensa de los pares: cuántas notas los nombran en la ventana, en cualquier medio que indexe Google News.
    Pares de una autoridad: mismo cargo y zona en la nómina. Pares de un alcalde: los alcaldes de su provincia. */
 async function paresDe(a, desde){
-  const mismo = a.rol === "alcalde" ? x => x.rol === "alcalde" && provinciaDe(x.zona) === provinciaDe(a.zona) : x => x.rol === a.rol && x.zona === a.zona;
+  // Delegados: el regional y los siete provinciales se comparan entre sí (cada zona tiene una sola persona).
+  const mismo = a.rol === "alcalde" ? x => x.rol === "alcalde" && provinciaDe(x.zona) === provinciaDe(a.zona) : a.rol === "delegado" ? x => x.rol === "delegado" : x => x.rol === a.rol && x.zona === a.zona;
   const lista = AUTORIDADES.filter(x => mismo(x) && x.id !== a.id).concat([a]);
   if (lista.length < 2) return [];
   return Promise.all(lista.map(async x => {

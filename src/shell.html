@@ -337,6 +337,14 @@ body.vid-on{overflow:hidden}
 .cob-l{list-style:none;margin:0;padding:0;display:grid;gap:2px}
 .cob-l li{display:grid;grid-template-columns:minmax(0,1fr) 32px auto;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
 .cob-l .mono{text-align:right}
+.cat-l li{display:block;padding:0}
+.cat-f{width:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(80px,160px) 32px;gap:12px;align-items:center;padding:8px 6px;border:0;background:transparent;color:var(--ink);font:inherit;text-align:left;border-radius:8px;cursor:pointer}
+.cat-f:hover:not([disabled]){background:var(--surface-2)}.cat-f[disabled]{cursor:default;opacity:.6}
+.cat-f .mono{text-align:right}
+@media (max-width:600px){.cat-f{grid-template-columns:minmax(0,1fr) 28px}.cat-s{grid-column:1 / -1;grid-row:2}}
+.item .clasif{display:flex;flex-wrap:wrap;gap:4px 6px;margin:6px 0 2px;padding:0;font-size:12px;color:var(--muted)}
+.item .clasif span{border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+.item .clasif .cl-cat{color:var(--ink);border-color:var(--accent)}
 .ini-lad{display:grid;gap:5px;margin-top:2px}
 .ini-lad-r{display:grid;grid-template-columns:86px minmax(0,1fr) 22px 34px;align-items:center;gap:8px;font-size:12.5px}
 .ini-lad-l{color:var(--muted);white-space:nowrap}
@@ -613,6 +621,8 @@ button.ini-fila:hover{background:var(--surface-2)}
 .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
 .filters select,.filters input{padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-height:36px}
 .filters input{min-width:0;flex:1 1 200px}
+.filters select{max-width:100%}
+@media (max-width:600px){.filters select{flex:1 1 calc(50% - 5px);min-width:0}.filters #fTema{flex-basis:100%}}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
 .seg button{border:0;background:none;padding:7px 11px;cursor:pointer;font-weight:600;font-size:12.5px;color:var(--muted);border-right:1px solid var(--line);min-height:36px;white-space:nowrap}
 .seg button:last-child{border-right:0}

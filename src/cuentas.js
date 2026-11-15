@@ -1,4 +1,5 @@
-/* Cuentas: municipios con su alcalde o alcaldesa (las 38 comunas de la región) y autoridades electas (diputados, senadores, consejeros regionales y concejales).
+/* Cuentas: municipios con su alcalde o alcaldesa (las 38 comunas de la región) y autoridades (diputados, senadores, consejeros regionales, concejales,
+   gobernador regional y delegados presidenciales).
    Una cuenta de autoridad funciona con la misma lógica que la de un municipio: temas, menciones, reportes, respuestas y avisos,
    pero sus temas base son la persona y su territorio, y sus piezas y reportes están pensados para su cargo y su equipo.
    La entrada al sistema se elige por rol, zona y nombre. Nunca se inventan noticias sobre personas reales:
@@ -77,8 +78,13 @@ const ENT_ROLES = [
   {k: "concejal", n: "Concejal o concejala", s: "Concejo Municipal", corto: "Concejal/a", ic: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"},
   {k: "diputado", n: "Diputado o diputada", s: "Cámara de Diputadas y Diputados", corto: "Diputado/a", ic: "M3 18a9 9 0 0 1 18 0M7 18a5 5 0 0 1 10 0M3 21h18"},
   {k: "senador", n: "Senador o senadora", s: "Senado", corto: "Senador/a", ic: "M3 21h18M4 10h16M12 3l9 5H3l9-5M6 10v8M10 10v8M14 10v8M18 10v8"},
-  {k: "core", n: "Consejero o consejera regional", s: "Consejo Regional de Valparaíso", corto: "Consejero/a regional", ic: "M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2M9 4v14M15 6v14"}
+  {k: "core", n: "Consejero o consejera regional", s: "Consejo Regional de Valparaíso", corto: "Consejero/a regional", ic: "M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2M9 4v14M15 6v14"},
+  {k: "gobernador", n: "Gobernador o gobernadora regional", s: "Gobierno Regional de Valparaíso", corto: "Gobernador/a", ic: "M5 21V4M5 4h12l-2.5 4L17 12H5"},
+  {k: "delegado", n: "Delegado o delegada presidencial", s: "Delegación regional o provincial", corto: "Delegado/a", ic: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"}
 ];
+/* Cargos con un solo territorio posible: la zona queda elegida y el paso 2 solo la confirma. */
+const ZONA_FIJA = {senador: "C6", gobernador: "REG"};
+const entFija = (rol = ENT.rol) => !!ZONA_FIJA[rol];
 const eIco = (d, cl = "ico") => `<svg class="${cl}" viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
 const I_ATR = "M15 18l-6-6 6-6", I_X = "M6 6l12 12M18 6L6 18", I_OK = "M5 12l5 5 9-10", I_BUS = "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16M21 21l-4.3-4.3", I_PIN = "M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5", I_SIG = "M9 6l6 6-6 6", I_LAP = "M4 20h4L19 9l-4-4L4 16v4";
 const entRolN = (rol = ENT.rol) => rol === "municipio" ? "alcalde" : rol;  // en un municipio, la persona que se elige es el alcalde
@@ -87,7 +93,8 @@ const unir = a => a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " y " 
 /* La zona electoral de cada cargo a partir de la comuna. */
 function zonaDeComuna(rol, c){
   if (rol === "municipio" || rol === "concejal") return c;
-  if (rol === "senador") return "C6";
+  if (ZONA_FIJA[rol]) return ZONA_FIJA[rol];
+  if (rol === "delegado") { const z = ZONAS.delegado.find(x => x.id !== "REG" && x.comunas.includes(c)); return z ? z.id : "REG"; }  // provincia de Valparaíso: la delegación regional
   const z = (ZONAS[rol] || []).find(x => x.comunas.includes(c)); return z ? z.id : "";
 }
 const entZona = () => ENT.rol === "municipio" || ENT.rol === "concejal" ? (COMUNAS_V.includes(ENT.zona) ? {id: ENT.zona, n: ENT.zona, comunas: [ENT.zona]} : null) : zonaDe(ENT.rol, ENT.zona);
@@ -96,13 +103,16 @@ const entPersona = () => ENT.sel && ENT.sel !== "__otra" ? AUTORIDADES.find(x =>
 const entLibre = () => ENT.libre.trim().replace(/\s+/g, " ");
 const entLibreOk = () => entLibre().length >= 5 && entLibre().split(" ").length >= 2;
 const entPersonaOk = () => !!entPersona() || ((ENT.sel === "__otra" || ENT.rol === "concejal") && entLibreOk());
-const entZonaCorta = (rol, zona) => rol === "alcalde" || rol === "municipio" || rol === "concejal" ? zona : rol === "senador" ? "Región de Valparaíso" : (zonaDe(rol, zona) || {}).n || "";
+const entZonaCorta = (rol, zona) => rol === "alcalde" || rol === "municipio" || rol === "concejal" ? zona : ZONA_FIJA[rol] || (rol === "delegado" && zona === "REG") ? "Región de Valparaíso" : (zonaDe(rol, zona) || {}).n || "";
 /* Texto del territorio: lo que la comuna elegida significa para ese cargo. */
 function entTerritorio(largo){
   const z = entZona(); if (!z) return "";
   const c = ENT.comuna, otras = z.comunas.filter(x => x !== c);
   if (ENT.rol === "municipio" || ENT.rol === "concejal") return `Comuna de ${z.n} · Provincia de ${provinciaDe(z.n)}`;
   if (ENT.rol === "senador") return "Circunscripción 6 · las 38 comunas de la Región de Valparaíso";
+  if (ENT.rol === "gobernador") return "Región de Valparaíso · 38 comunas · 8 provincias";
+  if (ENT.rol === "delegado") return z.id === "REG" ? (largo ? "Toda la Región de Valparaíso; gobierna en forma directa la provincia de Valparaíso: " + unir(PROVINCIAS["Valparaíso"]) + "." : "Delegación regional · 38 comunas")
+    : (largo ? `${z.n}: ${unir(z.comunas)}.` : `${z.n} · ${z.comunas.length} ${z.comunas.length === 1 ? "comuna" : "comunas"}`);
   if (ENT.rol === "diputado") return c ? `${c} pertenece al ${z.n}, que agrupa ${z.comunas.length} comunas.` : `${z.n} · ${z.comunas.length} comunas`;
   const cupos = AUTORIDADES.filter(a => a.rol === "core" && a.zona === z.id).length;
   if (!largo) return `${z.n} · ${unir(z.comunas)}`;
@@ -111,7 +121,7 @@ function entTerritorio(largo){
 function entChips(){
   const r = entRol(), ch = [];
   if (r) ch.push([1, r.corto]);
-  if (ENT.paso >= 3 && entZona()) ch.push([2, ENT.rol === "senador" ? "Región de Valparaíso" : ENT.rol === "diputado" ? (ENT.comuna ? ENT.comuna + " · " : "") + entZona().n : ENT.rol === "core" ? (ENT.comuna ? ENT.comuna + " · " : "") + entZona().n.replace(/ (Norte|Sur)$/, "") : entZona().n]);
+  if (ENT.paso >= 3 && entZona()) ch.push([2, entFija() || (ENT.rol === "delegado" && ENT.zona === "REG") ? "Región de Valparaíso" : ENT.rol === "delegado" ? entZona().n : ENT.rol === "diputado" ? (ENT.comuna ? ENT.comuna + " · " : "") + entZona().n : ENT.rol === "core" ? (ENT.comuna ? ENT.comuna + " · " : "") + entZona().n.replace(/ (Norte|Sur)$/, "") : entZona().n]);
   return ch.map(([n, t]) => `<button class="ent-chip" type="button" data-act="ent-ir" data-v="${n}" aria-label="Cambiar ${esc(t)}">${esc(t)}${eIco(I_LAP)}</button>`).join("");
 }
 /* Paso 1: búsqueda por nombre en toda la nómina, o el cargo. */
@@ -138,9 +148,11 @@ function entComunas(){
 function entTitulo(){
   const z = entZona(), r = entRol();
   if (ENT.paso === 1) return ["¿A quién quieres monitorear?", "Elige el cargo. Después definimos el territorio y la persona."];
+  if (ENT.paso === 2 && ENT.rol === "gobernador") return ["Territorio", "El gobierno regional responde por las 38 comunas, así que la región ya queda seleccionada."];
+  if (ENT.paso === 2 && ENT.rol === "delegado") return ["¿Qué delegación?", "La delegación regional cubre toda la región; cada provincia, salvo Valparaíso, tiene además su delegación provincial."];
   if (ENT.paso === 2) return ENT.rol === "senador" ? ["Territorio", "La Región de Valparaíso es una sola circunscripción senatorial, así que ya la dejamos seleccionada."]
     : ["¿En qué comuna?", {municipio: "Buscamos a su alcalde o alcaldesa.", concejal: "Buscamos su concejo municipal.", diputado: "Con la comuna deducimos el distrito. No necesitas saber cuál es.", core: "Con la comuna deducimos la circunscripción que elige a sus consejeros."}[ENT.rol]];
-  if (ENT.paso === 3) return [{municipio: "Alcaldía de " + (z && z.n), concejal: "Concejo Municipal de " + (z && z.n), diputado: "Diputados del " + (z && z.n), senador: "Senado · Circunscripción 6", core: "Consejo Regional · " + (z && z.n)}[ENT.rol], ENT.rol === "concejal" ? "Escribe el nombre de la persona que quieres seguir." : "Toca a la persona que quieres seguir."];
+  if (ENT.paso === 3) return [{municipio: "Alcaldía de " + (z && z.n), concejal: "Concejo Municipal de " + (z && z.n), diputado: "Diputados del " + (z && z.n), senador: "Senado · Circunscripción 6", core: "Consejo Regional · " + (z && z.n), gobernador: "Gobierno Regional de Valparaíso", delegado: z && z.id === "REG" ? "Delegación Presidencial Regional" : "Delegación Presidencial · " + (z && z.n)}[ENT.rol], ENT.rol === "concejal" ? "Escribe el nombre de la persona que quieres seguir." : "Toca a la persona que quieres seguir."];
   return ["Revisa y entra", "Puedes cambiar cualquier dato antes de entrar."];
 }
 const entGenero = () => `<div class="ent-gen" role="radiogroup" aria-label="Cargo"><label><input type="radio" name="entG" value="F" ${ENT.g === "F" ? "checked" : ""}> ${cargoDe(entRolN(), "F")}</label><label><input type="radio" name="entG" value="M" ${ENT.g === "M" ? "checked" : ""}> ${cargoDe(entRolN(), "M")}</label></div>`;
@@ -151,7 +163,8 @@ function entPaso(){
     <p class="ent-o" aria-hidden="true"><span>o elige el cargo</span></p>
     <div class="ent-roles">${ENT_ROLES.map(r => `<button type="button" class="ent-op ent-rol ${ENT.rol === r.k ? "on" : ""}" data-act="ent-rol" data-v="${r.k}" aria-pressed="${ENT.rol === r.k}"><span class="ent-ic">${eIco(r.ic)}</span><span class="ent-tx"><b>${r.n}</b><small>${r.s}</small></span>${eIco(I_SIG)}</button>`).join("")}</div>
     <p class="ent-nota">¿Tu cargo no aparece? <a href="mailto:soporte@altkimia.cl">Escríbenos</a> y lo sumamos.</p>`;
-  if (ENT.paso === 2 && ENT.rol === "senador") return `<div class="ent-op on ent-fija"><span class="ent-ic">${eIco(ENT_ROLES[4].ic)}</span><span class="ent-tx"><b>Región de Valparaíso</b><small>Circunscripción 6 · 38 comunas · 8 provincias</small></span>${eIco(I_OK, "ico ok")}</div>`;
+  if (ENT.paso === 2 && entFija()) return `<div class="ent-op on ent-fija"><span class="ent-ic">${eIco(entRol().ic)}</span><span class="ent-tx"><b>Región de Valparaíso</b><small>${ENT.rol === "senador" ? "Circunscripción 6 · " : ""}38 comunas · 8 provincias</small></span>${eIco(I_OK, "ico ok")}</div>`;
+  if (ENT.paso === 2 && ENT.rol === "delegado") return `<div class="ent-ops">${ZONAS.delegado.map(z => `<button type="button" class="ent-op ${ENT.zona === z.id ? "on" : ""}" data-act="ent-zona" data-v="${z.id}" aria-pressed="${ENT.zona === z.id}"><span class="ent-tx"><b>${esc(z.id === "REG" ? "Delegación regional" : z.n)}</b><small>${esc(z.id === "REG" ? "Toda la región · gobierna directamente la provincia de Valparaíso" : unir(z.comunas))}</small></span>${ENT.zona === z.id ? eIco(I_OK, "ico ok") : eIco(I_SIG)}</button>`).join("")}</div>`;
   if (ENT.paso === 2) return `<div class="ent-bloque"><label class="ent-campo" for="entQC">Buscar comuna</label><div class="ent-bus">${eIco(I_BUS)}<input id="entQC" class="ent-in" type="search" value="${esc(ENT.qc)}" placeholder="Ej: Casablanca" autocomplete="off"></div></div><div id="entRes" class="ent-lista">${entComunas()}</div>`;
   const banner = `<p class="ent-banner">${eIco(I_PIN)}<span>${esc(entTerritorio(true))}</span></p>`;
   if (ENT.paso === 3 && ENT.rol === "concejal") return banner + `<div class="ent-bloque">${entCampoLibre("Nombre del concejal o concejala")}<p class="ent-nota">La nómina de concejos aún no está precargada. Escribe el nombre como aparece en la prensa.</p></div>`;
@@ -173,15 +186,15 @@ function entPaso(){
     <button type="button" class="ent-link ent-otra-aut" data-act="ent-reset">Elegir otra autoridad</button>`;
 }
 function entPuede(){
-  if (ENT.paso === 2) return ENT.rol === "senador";
+  if (ENT.paso === 2) return entFija();
   if (ENT.paso === 3) return entPersonaOk();
   return ENT.paso === 4;
 }
 function entCuerpo(){
   if (ENT.paso === 3 && ENT.rol !== "concejal" && !ENT.sel) { const ns = entNombres(); if (ns.length === 1) ENT.sel = ns[0].id; }  // una sola persona posible (alcaldía): queda elegida
-  const [t, st] = entTitulo(), pie = ENT.paso >= 3 || (ENT.paso === 2 && ENT.rol === "senador"), ok = entPuede();
+  const [t, st] = entTitulo(), pie = ENT.paso >= 3 || (ENT.paso === 2 && entFija()), ok = entPuede();
   const rail = ["Cargo", "Territorio", "Persona", "Revisión"].map((l, i) => {
-    const n = i + 1, val = n === 1 ? (entRol() || {}).n : n === 2 ? (ENT.paso > 2 || (ENT.rol === "senador" && ENT.paso > 1) ? entTerritorio(false) : "") : n === 3 ? (ENT.paso > 3 ? (entPersona() || {}).c || entLibre() : "") : "";
+    const n = i + 1, val = n === 1 ? (entRol() || {}).n : n === 2 ? (ENT.paso > 2 || (entFija() && ENT.paso > 1) ? entTerritorio(false) : "") : n === 3 ? (ENT.paso > 3 ? (entPersona() || {}).c || entLibre() : "") : "";
     const est = ENT.paso > n ? "hecho" : ENT.paso === n ? "actual" : "";
     return `<li><button type="button" class="ent-r ${est}" data-act="ent-ir" data-v="${n}" ${n > ENT.paso ? "disabled" : ""} ${ENT.paso === n ? 'aria-current="step"' : ""}><span class="ent-rn">${ENT.paso > n ? eIco(I_OK) : n}</span><span class="ent-tx"><b>${l}</b><small>${esc(val || (ENT.paso === n ? "En curso" : "Pendiente"))}</small></span></button></li>`;
   }).join("");
@@ -264,8 +277,8 @@ document.addEventListener("click", e => {
     case "ent-ir": return entIr(+v);
     case "ent-reset": Object.assign(ENT, {rol: "", zona: "", comuna: "", sel: "", libre: "", qn: ""}); return entIr(1);
     case "ent-rol": {
-      if (v !== ENT.rol) Object.assign(ENT, {rol: v, sel: "", libre: "", zona: ENT.comuna ? zonaDeComuna(v, ENT.comuna) : v === "senador" ? "C6" : ""});
-      if (v === "senador") ENT.zona = "C6";
+      if (v !== ENT.rol) Object.assign(ENT, {rol: v, sel: "", libre: "", zona: ENT.comuna ? zonaDeComuna(v, ENT.comuna) : ZONA_FIJA[v] || ""});
+      if (ZONA_FIJA[v]) ENT.zona = ZONA_FIJA[v];
       return entIr(2);
     }
     case "ent-com": {
@@ -273,6 +286,7 @@ document.addEventListener("click", e => {
       if (v !== ENT.comuna || z !== ENT.zona) Object.assign(ENT, {comuna: v, zona: z, sel: z === ENT.zona ? ENT.sel : "", libre: ""});
       return entIr(3);
     }
+    case "ent-zona": { if (v !== ENT.zona) Object.assign(ENT, {zona: v, comuna: "", sel: "", libre: ""}); return entIr(3); }
     case "ent-n": { ENT.sel = v; entPintar(); if (v === "__otra") $("#entLibre")?.focus(); return; }
     case "ent-hit": {
       const a = AUTORIDADES.find(x => x.id === v); if (!a) return;

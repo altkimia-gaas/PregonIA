@@ -203,7 +203,9 @@ const NUM_TX = ["ningún", "un", "dos", "tres", "cuatro", "cinco", "seis", "siet
 const numTx = n => NUM_TX[n] || String(n);
 const sinTema = m => [...m.temas.values()].every(x => x.tema.origen === "Núcleo");
 /* Para explicar el tono: el tema propio de la noticia; si solo nombra a la cuenta, el área a la que corresponde. */
-const temaLectura = m => { const t = [...m.temas.values()].map(x => x.tema).find(t => t.origen !== "Núcleo"); return t ? t.nombre.split(":")[0] : (areaDe(m) || "Sin tema asignado"); };
+/* Lectura agregada (tono, impacto, partes): por categoría del cargo, para que cada noticia cuente una vez y nada quede «sin tema». */
+const temaLectura = m => categoriaDe(m).n;
+const catPorNombre = (n, c = cuenta()) => catsDe(c).find(x => x.n === n) || null;
 const temaCorto = m => { const t = [...m.temas.values()].map(x => x.tema).find(t => t.origen !== "Núcleo"); return (t ? t.nombre : temaDe(m)).split(":")[0]; };
 /* Menciones del período anterior: las notas entre `dias` y 2×`dias` atrás, agrupadas igual que las actuales. */
 function mencionesPrevias(c, dias){
@@ -329,11 +331,11 @@ function vInicio(){
   // Impacto por tema: alcance ponderado (cada publicación pesa 3, 2 o 1 según el tamaño del medio) de lo crítico frente a lo positivo, por tema
   // (o por área, si la noticia solo nombra a la cuenta). Cada noticia cuenta en un solo grupo.
   const impG = {}; ms.forEach(m => { const k = temaLectura(m), x = impG[k] = impG[k] || {k, cri: 0, pos: 0, neu: 0, n: 0, ms: []}; x[m.tono] += m.alcance; x.n++; x.ms.push(m); });
-  const impL = Object.values(impG).map(x => ({...x, bal: x.pos - x.cri, tot: x.pos + x.cri + x.neu, tema: c.temas.find(t => t.activo && t.nombre.split(":")[0] === x.k)})).sort((a, b) => (b.cri + b.pos) - (a.cri + a.pos) || b.tot - a.tot);
+  const impL = Object.values(impG).map(x => ({...x, bal: x.pos - x.cri, tot: x.pos + x.cri + x.neu, cat: catPorNombre(x.k, c)})).sort((a, b) => (b.cri + b.pos) - (a.cri + a.pos) || b.tot - a.tot);
   const impMax = Math.max(1, ...impL.map(x => Math.max(x.cri, x.pos))), peorImp = impL.filter(x => x.cri).sort((a, b) => a.bal - b.bal)[0], mejorImp = impL.filter(x => x.pos).sort((a, b) => b.bal - a.bal)[0];
   const filaImp = (x, link) => { const inner = `<span class="ini-imp-n">${esc(x.k)}<small>${plural(x.n, "noticia", "noticias")}</small></span><span class="ini-imp-b neg"><i style="width:${x.cri / impMax * 100}%"></i></span><span class="ini-imp-b pos"><i style="width:${x.pos / impMax * 100}%"></i></span><span class="mono ini-imp-v ${x.bal < 0 ? "c" : x.bal > 0 ? "p" : ""}">${signo(x.bal)}</span>`;
     const lbl = `${x.k}: impacto crítico ${x.cri}, positivo ${x.pos}, balance ${signo(x.bal)}`;
-    return link && x.tema ? `<li><button class="ini-imp-r" data-act="goto-tema" data-id="${x.tema.id}" aria-label="${esc(lbl)}">${inner}</button></li>` : `<li><div class="ini-imp-r" role="group" aria-label="${esc(lbl)}">${inner}</div></li>`; };
+    return link && x.cat ? `<li><button class="ini-imp-r" ${goA({fcat: x.cat.k})} aria-label="${esc(lbl)}">${inner}</button></li>` : `<li><div class="ini-imp-r" role="group" aria-label="${esc(lbl)}">${inner}</div></li>`; };
   // Críticas respondidas: cuántas críticas del período tienen respuesta aprobada y cuánto tardó, desde la primera nota.
   const criP = ms.filter(m => m.tono === "cri").sort((a, b) => respondida(a.g) - respondida(b.g) || a.first - b.first);
   const tResp = m => { const t = S.resp[S.org + ":" + m.g]; return typeof t === "number" ? Math.max(0, (t - m.first) / 36e5) : null; };
@@ -367,7 +369,7 @@ function vInicio(){
       const bloque = (k, lbl) => { const xs = ms.filter(m => m.tono === k), por = {}; xs.forEach(m => { const t = temaLectura(m); por[t] = (por[t] || 0) + 1; });
         const top = Object.entries(por).sort((a, b) => b[1] - a[1]).slice(0, 3);
         return `<section class="ini-tb ${k}"><button class="ini-tbh" ${goA({tono: k})}><span>${ri(k)} ${lbl}</span><span class="mono">${xs.length}<small>${prop(xs.length, M.vol)}</small></span></button>
-          ${top.length ? `<ul class="ini-dl">${top.map(([t, n]) => { const tm = c.temas.find(x => x.nombre.split(":")[0] === t); return fila(tm ? `data-act="goto" data-dias="${per}" data-tono="${k}" data-tema="${tm.id}"` : goA({tono: k}), esc(t), "", n); }).join("")}</ul>` : `<p class="ini-nota">Ninguna ${perTx}.</p>`}</section>`; };
+          ${top.length ? `<ul class="ini-dl">${top.map(([t, n]) => { const ct = catPorNombre(t, c); return fila(ct ? goA({tono: k, fcat: ct.k}) : goA({tono: k}), esc(t), "", n); }).join("")}</ul>` : `<p class="ini-nota">Ninguna ${perTx}.</p>`}</section>`; };
       const tC = Object.entries(ms.filter(m => m.tono === "cri").reduce((o, m) => (o[temaLectura(m)] = (o[temaLectura(m)] || 0) + 1, o), {})).sort((a, b) => b[1] - a[1])[0];
       const tP = Object.entries(ms.filter(m => m.tono === "pos").reduce((o, m) => (o[temaLectura(m)] = (o[temaLectura(m)] || 0) + 1, o), {})).sort((a, b) => b[1] - a[1])[0];
       body = `${tC || tP ? `<p class="ini-explica">${tC ? `Las críticas vienen sobre todo de <b>${esc(tC[0].toLowerCase())}</b> (${tC[1]} de ${M.cri})` : "No hubo críticas"}${tP ? `; lo positivo, de <b>${esc(tP[0].toLowerCase())}</b> (${tP[1]} de ${M.pos})` : ""}.</p>` : ""}<div class="ini-det-g tres">${bloque("cri", "Críticas")}${bloque("neu", "Neutras")}${bloque("pos", "Positivas")}</div>`;
@@ -448,9 +450,9 @@ document.addEventListener("click", e => {
   if (b.dataset.act === "ini-kpi") { const k = b.dataset.k, cerrar = tState.iniKpi === k; tState.iniKpi = cerrar ? null : k; render(); setTimeout(() => { const el = cerrar ? document.querySelector(`.ini-kpi[data-k="${k}"]`) : document.getElementById("iniDetT"); if (el) { if (!cerrar) { el.setAttribute("tabindex", "-1"); document.getElementById("iniDet")?.scrollIntoView({block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); } el.focus({preventScroll: !cerrar ? true : false}); } }, 0); }
   if (b.dataset.act === "ini-wa") { const m = menciones(cuenta(), 30).find(x => x.g === b.dataset.g); if (!m) return;
     const t = `«${m.lead.t}» · ${nomMedio(m.lead)}${m.lead.url ? "\n" + m.lead.url : ""}`; abrirEnlace("https://wa.me/?text=" + encodeURIComponent(t), true); }
-  if (b.dataset.act === "ini-tema") { const c = cuenta(), a = b.dataset.a, ar = AREAS.find(x => x[1] === a); if (!ar) return;
+  if (b.dataset.act === "ini-tema") { const c = cuenta(), a = b.dataset.a, ar = catPorNombre(a, c); if (!ar) return;
     const xs = menciones(c, 30).filter(m => sinTema(m) && areaDe(m) === a), hay = xs.map(m => m.notas.map(n => n.hay).join(" ")).join(" ");
-    const terms = [...new Set(ar[0].map(k => (hay.match(new RegExp("(^|[^a-z0-9])(" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[a-z]*)")) || [])[2]).filter(Boolean))].filter(t => !GENERICAS.has(norm(t)));  // las palabras genéricas atraparían notas de más
+    const terms = [...new Set(ar.t.map(k => (hay.match(new RegExp("(^|[^a-z0-9])(" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[a-z]*)")) || [])[2]).filter(Boolean))].filter(t => !GENERICAS.has(norm(t)));  // las palabras genéricas atraparían notas de más
     if (!terms.length) return;
     const t = T(a, "Agenda", terms, territorio(c).slice(0, 40)); c.temas.push({...t, ...puntaje(t)}); save(); render(true);
     toast(`Ahora sigues «${a}» como tema, con: ${terms.join(", ")}. Puedes ajustarlo en Ajustes.`); }
@@ -462,6 +464,7 @@ function itemHtml(m){
   const otros = m.notas.filter(n => n !== m.lead).map(n => n.url ? `<a class="ext" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(nomMedio(n))}</a>` : esc(nomMedio(n)));
   return `<article class="item ${resp?"resp":(m.critico?"cri":"")}">
     <div class="meta">${pillTono(m.tono)}${resp?'<span class="pill done">Respondida</span>':""}<span>${esc(medioN(m.lead))}</span><span>·</span><span title="${fecha(m.lead.ts)}">${ago(m.lead.ts)}</span>${m.notas.length>1?`<span>·</span><span>en ${m.notas.length} medios</span>`:""}</div>
+    <p class="clasif"><span class="cl-cat">${esc(categoriaDe(m).n)}</span><span>${esc(enfoqueDe(m).n)}</span><span>${esc(papelDe(m).n)}</span></p>
     <h4>${m.lead.url ? `<a class="ext" href="${esc(m.lead.url)}" target="_blank" rel="noopener">${esc(m.lead.t)}<span class="sr"> (abre el medio en otra pestaña)</span></a>` : esc(m.lead.t)}</h4>
     <p class="res">${esc(m.lead.res)}</p>
     <details><summary>¿Por qué aparece?</summary><p>${temas.map(x => `Tema <b>${esc(x.tema.nombre)}</b>: contiene «${[...x.found].map(esc).join("», «")}»${x.enTitulo?" en el titular":""}.`).join(" ")}${otros.length?` También la publicaron ${otros.join(", ")}.`:""}</p></details>
@@ -475,10 +478,13 @@ function vMenciones(){
   if (tState.q.trim()) { const q = norm(tState.q); base = base.filter(m => m.notas.some(n => n.hay.includes(q))); }
   if (tState.llego != null) base = base.filter(m => escalera(m.notas).max === Number(tState.llego));
   if (tState.medio != null) base = base.filter(m => m.notas.some(n => String(n.m) === String(tState.medio)));
+  if (tState.fcat) base = base.filter(m => categoriaDe(m, c).k === tState.fcat);
+  if (tState.fenf) base = base.filter(m => enfoqueDe(m).k === tState.fenf);
+  if (tState.fpap) base = base.filter(m => papelDe(m).k === tState.fpap);
   const cnt = k => k === "todos" ? base.length : base.filter(m => m.tono === k).length;
   const ms = tState.tono === "todos" ? base : base.filter(m => m.tono === tState.tono);
   const fps = Object.keys(S.fp).filter(k => k.startsWith(S.org+":")).length;
-  const activos = (tState.tema!=="todos") + (tState.tono!=="todos") + !!tState.q.trim() + (tState.llego != null) + (tState.medio != null);
+  const activos = (tState.tema!=="todos") + (tState.tono!=="todos") + !!tState.q.trim() + (tState.llego != null) + (tState.medio != null) + !!tState.fcat + !!tState.fenf + !!tState.fpap;
   const chipsX = (tState.llego != null ? `<button class="btn sm fchip" data-act="f-x" data-k="llego" aria-label="Quitar filtro: ${esc(["Solo prensa comunal","Llegó a prensa regional","Llegó a prensa nacional"][tState.llego])}">${esc(["Solo prensa comunal","Llegó a prensa regional","Llegó a prensa nacional"][tState.llego])} ✕</button>` : "") + (tState.medio != null && MED[tState.medio] ? `<button class="btn sm fchip" data-act="f-x" data-k="medio" aria-label="Quitar filtro: ${esc(MED[tState.medio].n)}">${esc(MED[tState.medio].n)} ✕</button>` : "");
   let html = "", last = "";
   ms.forEach(m => { const d = dia(m.last); if (d !== last) { html += `<h3 class="day">${d}</h3>`; last = d; } html += itemHtml(m); });
@@ -487,6 +493,9 @@ function vMenciones(){
     <div class="seg" role="group" aria-label="Tono">${["todos","cri","neu","pos"].map(k => `<button data-act="f-tono" data-k="${k}" aria-pressed="${tState.tono===k}">${k==="todos"?"Todas":tonoPl[k]}<span class="c">${cnt(k)}</span></button>`).join("")}</div>
     
     <select id="fTema" aria-label="Tema"><option value="todos">Todos los temas</option>${c.temas.filter(t=>t.activo).map(t => `<option value="${t.id}" ${tState.tema===t.id?"selected":""}>${esc(t.nombre)}</option>`).join("")}</select>
+    <select id="fCat" aria-label="Categoría"><option value="">Categoría</option>${catsDe(c).concat([CAT_OTROS]).map(x => `<option value="${x.k}" ${tState.fcat === x.k ? "selected" : ""}>${esc(x.n)}</option>`).join("")}</select>
+    <select id="fEnf" aria-label="Enfoque"><option value="">Enfoque</option>${ENF_NOTA.map(x => `<option value="${x.k}" ${tState.fenf === x.k ? "selected" : ""}>${esc(x.n)}</option>`).join("")}</select>
+    <select id="fPap" aria-label="${esAut() ? "Papel de la autoridad" : "Papel del municipio"}"><option value="">${esAut() ? "Cualquier papel de la autoridad" : "Cualquier papel del municipio"}</option>${Object.entries(PAPELES).map(([k, n]) => `<option value="${k}" ${tState.fpap === k ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>
     <input id="fQ" type="search" placeholder="Buscar una palabra" value="${esc(tState.q)}" aria-label="Buscar en las menciones">
   </div>
   <div class="active" aria-live="polite"><span>${ms.length} ${ms.length===1?"noticia":"noticias"}</span>${chipsX}${activos?`<button class="btn ghost sm" data-act="f-reset">Quitar filtros</button>`:""}${fps?`<span>· ${fps} marcadas como “no corresponde”</span><button class="btn ghost sm" data-act="fp-reset">Restaurar</button>`:""}</div>
@@ -506,17 +515,31 @@ function chipEd(t, k, label, hint, limit){
 function coberturaTemas(c){
   const ms = menciones(c, 30); if (!ms.length) return "";
   const fuera = ms.filter(sinTema), dentro = ms.length - fuera.length, p = pct(dentro, ms.length), k = p >= 70 ? "pos" : p >= 50 ? "neu" : "cri";
-  const grupos = {}; fuera.forEach(m => { const a = areaDe(m) || "Sin área identificable"; (grupos[a] = grupos[a] || []).push(m); });
-  const filas = Object.entries(grupos).sort((a, b) => b[1].length - a[1].length).map(([a, xs]) => `<li><span class="ini-dn">${esc(a)}<small>${esc(xs[0].lead.t)}${xs.length > 1 ? ` y ${xs.length - 1} más` : ""}</small></span><span class="mono">${xs.length}</span>${AREAS.some(x => x[1] === a) ? `<button class="btn sm" data-act="ini-tema" data-a="${esc(a)}">Seguir como tema</button>` : `<span></span>`}</li>`).join("");
+  const grupos = {}; fuera.forEach(m => { const a = areaDe(m) || "Otros asuntos"; (grupos[a] = grupos[a] || []).push(m); });
+  const filas = Object.entries(grupos).sort((a, b) => b[1].length - a[1].length).map(([a, xs]) => `<li><span class="ini-dn">${esc(a)}<small>${esc(xs[0].lead.t)}${xs.length > 1 ? ` y ${xs.length - 1} más` : ""}</small></span><span class="mono">${xs.length}</span>${catPorNombre(a) ? `<button class="btn sm" data-act="ini-tema" data-a="${esc(a)}">Seguir como tema</button>` : `<span></span>`}</li>`).join("");
   return `<section class="card cob" aria-labelledby="cobT"><div class="cob-h"><div><h3 id="cobT">Cobertura de tus temas</h3><p class="cob-v"><span class="mono ${k}">${p}%</span> de lo publicado en 30 días calza con algún tema propio (${dentro} de ${plural(ms.length, "noticia", "noticias")}).</p></div></div>
     <p class="ini-para"><b>Para qué sirve:</b> indica qué parte de la prensa lee PregonIA con tus temas. Si es baja, el tono por tema, los cambios y los avisos se apoyan en pocas noticias, y conviene sumar temas.</p>
     <p class="ini-quien"><b>Quién lo usa:</b> quien administra la cuenta${esAut() ? "" : " en el municipio"}.</p>
     ${fuera.length ? `<p class="cob-s">Las ${fuera.length} restantes solo nombran ${esAut() ? "a la autoridad o su territorio" : "a la comuna, la municipalidad o el alcalde"}. Por área:</p><ul class="cob-l">${filas}</ul>` : ""}</section>`;
 }
+/* Categorías del cargo: el set fijo con que se clasifica toda la prensa de la cuenta, sin consumir temas del plan. */
+function categoriasCard(c){
+  const ms = menciones(c, 30); if (!ms.length) return "";
+  const cs = catsDe(c).concat([CAT_OTROS]), por = new Map(cs.map(x => [x.k, []])); ms.forEach(m => por.get(categoriaDe(m, c).k).push(m));
+  const otros = por.get("otros").length, p = pct(ms.length - otros, ms.length), k = p >= 95 ? "pos" : p >= 85 ? "neu" : "cri", cargo = esAut() ? cargoCuenta().toLowerCase() : "municipio";
+  const filas = cs.map(x => { const xs = por.get(x.k), X = metricas(xs); if (!xs.length && x.k === "otros") return "";
+    return `<li><button class="cat-f" data-act="goto" data-dias="30" data-fcat="${x.k}" ${xs.length ? "" : "disabled"}><span class="ini-dn">${esc(x.n)}<small>${x.r.length ? "Responde: " + esc(x.r.join(" · ")) : "No calza con ninguna categoría del cargo"}</small></span>
+      <span class="cat-s">${xs.length ? segbar([{l: "Críticas", v: X.cri, c: "var(--cri)"}, {l: "Neutras", v: X.neu, c: "var(--neu)"}, {l: "Positivas", v: X.pos, c: "var(--pos)"}]) : ""}</span><span class="mono">${xs.length}</span></button></li>`; }).join("");
+  return `<section class="card cob" aria-labelledby="catT"><div class="cob-h"><div><h3 id="catT">Categorías de ${esc(cargo)}</h3><p class="cob-v"><span class="mono ${k}">${p}%</span> de lo publicado en 30 días cae en una categoría del cargo${otros ? ` (${plural(otros, "noticia queda", "noticias quedan")} en «Otros asuntos»)` : ""}.</p></div></div>
+    <p class="ini-para"><b>Para qué sirve:</b> ordena toda la prensa de la cuenta con un set fijo pensado para ${esAut() ? "este cargo" : "un municipio"}, y no gasta temas del plan. Cada noticia lleva además su enfoque (gestión, reclamo, emergencia, probidad, política, judicial u opinión) y el papel ${esAut() ? "de la autoridad" : "del municipio"} en ella. Los temas de abajo son seguimientos finos con avisos.</p>
+    <p class="ini-quien"><b>Quién lo usa:</b> quien administra la cuenta, para revisar que la prensa quede bien leída; toca una categoría para ver sus noticias.</p>
+    <ul class="cob-l cat-l">${filas}</ul></section>`;
+}
 function vTemas(){
   const c = cuenta(), pl = PLANES[c.perfil.plan], act = c.temas.filter(t => t.activo).length;
   return `<div class="head"><div><h2 tabindex="-1">Mis temas</h2><p>Usas ${act} de los ${pl.temas} temas del plan ${pl.nombre}. Abre un tema para ajustar qué palabras lo activan; el conteo se actualiza al instante.</p></div><a class="btn" href="#asistente">Rehacer con el asistente</a></div>
   ${subtabs()}
+  ${categoriasCard(c)}
   ${coberturaTemas(c)}
   <div class="feed">${c.temas.map(t => { const p = puntaje(t), open = !!tState.open[t.id]; return `<div class="tema">
     <div class="top"><div><span class="origin">${esc(t.origen)}</span><h4>${esc(t.nombre)}</h4></div><span class="cnt muted" style="font-size:12.5px"><b class="mono" style="color:var(--ink)">${p.vol}</b> noticias en 30 días${p.cri?` · <span style="color:var(--cri)">${p.cri} críticas</span>`:""}</span><button class="btn sm" data-act="tema-open" data-id="${t.id}" aria-expanded="${open}">${open?"Cerrar":"Editar"}</button></div>
@@ -682,14 +705,13 @@ function escHtml(e, big){
 const ruta = e => e.r.filter(x => x.n).sort((a,b) => a.first - b.first).map(x => x.l + " " + hora(x.first)).join(" → ");
 
 /* Quién se hace cargo */
-const AREAS = [[["incendio","emergencia","senapred","bomberos","marejada","temporal"],"Emergencias"],[["agua","sequia","hidric","apr","aljibe","pozo","estero"],"Operaciones"],[["cesfam","salud","consultorio","hospital"],"Salud"],[["colegio","escuela","liceo","educacion","daem","matricula"],"Educación"],[["robo","delito","seguridad","carabineros","delincuencia"],"Seguridad pública"],[["obra","calle","vereda","bache","pavimento","plan regulador","permiso","polideportivo","construccion"],"Obras y Secplan"],[["turismo","feria","fiesta","temporada","vino","vina","vendimia","ocupacion","costumbrista"],"Fomento y turismo"],[["basura","residuos","aseo","microbasural"],"Aseo y ornato"],[["adultos mayores","talleres","subsidio","vivienda"],"Dideco"]];
-/* Las claves calzan al inicio de palabra («incendio» en «incendios»); las de tres letras o menos, solo como palabra completa («apr» no calza en «aprueba»). */
-function areaDe(m){ const h = m.notas.map(n => n.hay).join(" "); const a = AREAS.find(([ks]) => ks.some(k => (k.length <= 3 ? termRe(k) : kwRe(k)).test(h))); return a ? a[1] : null; }
+/* Área de una noticia: su categoría del cargo (src/categorias.js), o null si no calza con ninguna. */
+function areaDe(m){ const x = categoriaDe(m); return x.k === "otros" ? null : x.n; }
 const temaDe = m => [...m.temas.values()].map(x => x.tema.nombre).filter(n => !/\(comuna\)$/.test(n))[0] || "General";
 function riesgo(m){ const e = escalera(m.notas); return (m.tono === "cri" ? 10 : m.tono === "neu" ? 2 : 0) * (1 + e.max) + m.notas.length + (respondida(m.g) ? -6 : 0) + (NOW - m.last < 2*DAY ? 2 : 0); }
 function accion(m){
   if (esAut()) return accionAut(m);
-  const e = escalera(m.notas), area = areaDe(m); let a, r;
+  const e = escalera(m.notas), cat = categoriaDe(m), area = cat.r.length ? cat.r.join(" · ") : null; let a, r;
   if (m.tono === "cri") {
     if (respondida(m.g)) { a = "La respuesta ya está aprobada. Seguir el tema y avisar si aparece en otro medio."; r = ["Comunicaciones"]; }
     else if (e.max === 2) { a = "Vocería del alcalde hoy, con datos oficiales y una sola versión."; r = ["Alcalde","Comunicaciones",area]; }
@@ -697,7 +719,7 @@ function accion(m){
     else { a = "Responder en el medio comunal y contactar a los vecinos afectados."; r = [area || "Dirección del área","Comunicaciones"]; }
   } else if (m.tono === "neu") { a = "Preparar información para los vecinos en los canales municipales, por si el tema crece."; r = ["Comunicaciones",area]; }
   else { a = e.max === 0 ? "Llevarla a medios regionales: hasta ahora solo la publicó la prensa comunal." : "Difundirla en redes municipales y usarla en la próxima vocería."; r = ["Comunicaciones",area]; }
-  return {a, r: [...new Set(r.filter(Boolean))].join(" · ")};
+  return {a, r: [...new Set(r.filter(Boolean).join(" · ").split(" · "))].join(" · ")};
 }
 /* Para una autoridad, la acción depende de si la noticia la nombra o solo ocurre en su territorio. */
 function accionAut(m){
@@ -710,7 +732,9 @@ function accionAut(m){
     else { a = "Responder en el mismo medio y conversar con quienes reclaman en el territorio."; r = ["Equipo territorial", "Prensa"]; }
   } else if (m.tono === "neu") { a = propia ? "Seguir el tema y tener una posición lista por si le consultan." : "Seguir el tema: puede convertirse en una gestión o una consulta de vecinos."; r = ["Prensa", "Equipo territorial"]; }
   else { a = propia ? (e.max === 0 ? "Llevarla a medios regionales y amplificarla en redes." : "Amplificarla en redes y usarla en la próxima entrevista.") : "Sumarse con un reconocimiento si corresponde a su agenda."; r = ["Prensa"]; }
-  return {a, r: [...new Set(r.filter(Boolean))].join(" · ")};
+  // Responsables propios de la categoría (por ejemplo, Equipo legislativo o Gestión de emergencias), sin repetir y en un máximo de tres.
+  const cat = categoriaDe(m), rc = cat.r.map(x => /^(Concejal o concejala|Consejero o consejera)$/.test(x) ? cargoCuenta() : x);
+  return {a, r: [...new Set(r.concat(rc).filter(Boolean))].slice(0, 3).join(" · ")};
 }
 const enMedios = m => { const k = new Set(m.notas.map(n => n.m)).size; return esc(nomMedio(m.lead)) + (k > 1 ? ` y ${k - 1} ${k === 2 ? "medio más" : "medios más"}` : ""); };
 const rango = (d0, d1) => new Date(d0).toLocaleDateString("es-CL",{day:"numeric", month:"short"}) + " al " + new Date(d1).toLocaleDateString("es-CL",{day:"numeric", month:"short", year:"numeric"});
@@ -1278,11 +1302,12 @@ function render(focus){
 window.addEventListener("hashchange", () => { render(true); window.scrollTo(0,0); });
 $("#org").addEventListener("change", e => { if (e.target.value === "__entrar") { e.target.value = S.org; entAbrir(false); return; } S.org = e.target.value; tState = {...tState, tema:"todos", draft:null, from:null, pieza:null, enf:null, open:{}}; propuesta = null; lecturaTxt = {}; save(); render(true); toast(esAut() ? "Ahora ves la cuenta de " + inst() + ". Cada cuenta ve solo sus datos." : "Ahora ves " + S.org + ". Cada municipio ve solo sus datos."); });
 function perGuardar(v){ if (!["1", "7", "30"].includes(String(v))) return; tState.dias = String(v); try { localStorage.setItem(PER_KEY, tState.dias); } catch(e) {} }
-function goMenciones(patch){ Object.assign(tState, {tema:"todos", tono:"todos", q:"", llego:null, medio:null}, patch); if (patch && patch.dias) perGuardar(patch.dias); if (route() === "menciones") render(true); else location.hash = "menciones"; }
+function goMenciones(patch){ Object.assign(tState, {tema:"todos", tono:"todos", q:"", llego:null, medio:null, fcat:null, fenf:null, fpap:null}, patch); if (patch && patch.dias) perGuardar(patch.dias); if (route() === "menciones") render(true); else location.hash = "menciones"; }
 
 document.addEventListener("change", e => {
   const id = e.target.id;
   if (id === "fTema") { tState.tema = e.target.value; render(); }
+  if (id === "fCat" || id === "fEnf" || id === "fPap") { tState[{fCat: "fcat", fEnf: "fenf", fPap: "fpap"}[id]] = e.target.value || null; render(); }
   if (id === "kBase") { cuenta().base = e.target.value; save(); }
   if (id === "kMen") { tState.draft = e.target.value || null; tState.pieza = null; tState.enf = null; render(); }
   if (e.target.name === "pieza") tState.pieza = e.target.value;
@@ -1324,12 +1349,12 @@ document.addEventListener("click", async e => {
   const b = e.target.closest("[data-act]"); if (!b) return;
   const act = b.dataset.act, c = cuenta();
   if (act === "responder") { e.preventDefault(); tState.draft = b.dataset.g; tState.from = b.dataset.from || null; tState.pieza = null; tState.enf = null; if (route() === "comunicados") render(true); else location.hash = "comunicados"; }
-  if (act === "goto") goMenciones(Object.fromEntries(["tono", "dias", "tema", "llego", "medio"].filter(k => b.dataset[k] != null).map(k => [k, b.dataset[k]])));
+  if (act === "goto") goMenciones(Object.fromEntries(["tono", "dias", "tema", "llego", "medio", "fcat", "fenf", "fpap"].filter(k => b.dataset[k] != null).map(k => [k, b.dataset[k]])));
   if (act === "goto-tema") goMenciones({tema: b.dataset.id});
   if (act === "ver-criticas") { e.preventDefault(); goMenciones({tono:"cri", dias:"7"}); }
   if (act === "f-tono") { tState.tono = b.dataset.k; render(); }
   if (act === "f-dias" || act === "per") { perGuardar(b.dataset.k || b.dataset.v); render(); setTimeout(() => document.querySelector(`#${innerWidth <= 820 ? "view" : "perG"} [data-act="per"][data-v="${tState.dias}"]`)?.focus(), 0); }
-  if (act === "f-reset") { Object.assign(tState, {tema:"todos", tono:"todos", q:"", llego:null, medio:null}); render(); }
+  if (act === "f-reset") { Object.assign(tState, {tema:"todos", tono:"todos", q:"", llego:null, medio:null, fcat:null, fenf:null, fpap:null}); render(); }
   if (act === "f-x") { tState[b.dataset.k] = null; render(); }
   if (act === "f-est") { tState.fuente.e = b.dataset.k; render(); }
   if (act === "f-amb") { tState.fuente.a = b.dataset.k; render(); }
@@ -1484,6 +1509,7 @@ const FAQ = [
   ]],
   ["Lectura de los resultados", [
     ["¿Cómo se decide si una noticia es crítica, neutra o positiva?", "Una IA clasifica el tono de cada noticia respecto del tema vigilado, no del medio en general. Si no estás de acuerdo, puedes marcarlo; esas correcciones sirven para mejorar la clasificación."],
+    ["¿Cómo se ordenan las noticias por categoría, enfoque y papel?", "Cada cargo tiene un set fijo de categorías (por ejemplo, un diputado tiene «Proyectos de ley» y «Fiscalización»; un delegado, «Orden público» y «Emergencias»). Cada noticia cae en la categoría con más palabras calzadas, y las del titular pesan el triple; no gasta temas del plan. Además lleva su enfoque (gestión, reclamo, emergencia, probidad, política, judicial u opinión) y el papel de la autoridad: protagonista si la nombra el titular, fuente citada si la cita el texto, mencionada o solo su territorio. Puedes filtrar por las tres en Menciones."],
     ["¿Qué significa \"favorable\" o \"desfavorable\"?", "Es el veredicto del período en cinco niveles, de muy desfavorable a muy favorable. Compara las noticias positivas con las críticas sobre el total: si se compensan, la cobertura es equilibrada. Siempre va con los conteos para que veas de dónde sale."],
     ["¿Qué es \"hasta dónde llegó\"?", "Las tres barras muestran el nivel de prensa más alto que alcanzó una noticia o un tema: comunal, regional o nacional. Un tema que nace en un medio comunal y aparece después en uno regional es una señal temprana de riesgo: todavía se puede contener."],
     ["¿Qué es el alcance?", "Un puntaje que pesa más una nota en un medio nacional que en uno local: nacional vale 3, regional 2 y local 1."],
@@ -1508,7 +1534,7 @@ const FAQ = [
     ["¿Cómo envío o guardo una respuesta?", "Bajo el borrador está la barra Compartir. En el celular, WhatsApp y Correo abren la hoja de compartir con el PDF adjunto: eliges la app y el contacto. En el computador, WhatsApp abre el chat y guarda el PDF para que lo adjuntes con el clip; Correo te deja elegir Gmail, Outlook o el programa de correo del equipo, con asunto y texto listos. Nada se envía solo: tú eliges a quién."]
   ]],
   ["Autoridades", [
-    ["¿Para quién es la versión de autoridades?", "Para alcaldesas y alcaldes, diputadas y diputados, senadoras y senadores, consejeras y consejeros regionales y concejales de la Región de Valparaíso, y sus equipos de prensa. Se entra eligiendo el cargo, la zona (distrito, circunscripción o comuna) y el nombre."],
+    ["¿Para quién es la versión de autoridades?", "Para alcaldesas y alcaldes, diputadas y diputados, senadoras y senadores, consejeras y consejeros regionales, concejales, el gobernador regional y las delegaciones presidenciales de la Región de Valparaíso, y sus equipos de prensa. Se entra eligiendo el cargo, la zona (distrito, circunscripción o comuna) y el nombre."],
     ["¿Puedo seguir cualquier municipio de la región?", "Sí. En «Municipio / alcaldía» están las 38 comunas de la Región de Valparaíso, por provincia, con su alcalde o alcaldesa del período 2024-2028. La cuenta sigue a la municipalidad, a la comuna y a la persona por su nombre, y con noticias reales la compara con los alcaldes de su provincia. La demostración trae noticias ficticias solo del litoral central."],
     ["¿De dónde sale la lista de nombres?", "Parlamentarios, consejeros regionales y alcaldes vienen precargados según la nómina vigente al " + NOMINA_CORTE + ". Si falta alguien o cambió, elige «Otra persona» y escribe el nombre. Los concejales escriben el suyo."],
     ["¿Qué noticias ve una autoridad?", "Con «Noticias reales», las que la nombran en los medios leídos y en Google News de los últimos 14 días; la IA descarta homónimos y mide el tono respecto de su imagen y su trabajo. En la demostración solo hay noticias ficticias del territorio."],
