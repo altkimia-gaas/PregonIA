@@ -202,6 +202,8 @@ function onboarding(){
 const NUM_TX = ["ningún", "un", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez"];
 const numTx = n => NUM_TX[n] || String(n);
 const sinTema = m => [...m.temas.values()].every(x => x.tema.origen === "Núcleo");
+/* Para explicar el tono: el tema propio de la noticia; si solo nombra a la cuenta, el área a la que corresponde. */
+const temaLectura = m => { const t = [...m.temas.values()].map(x => x.tema).find(t => t.origen !== "Núcleo"); return t ? t.nombre.split(":")[0] : (areaDe(m) || "Sin tema asignado"); };
 const temaCorto = m => { const t = [...m.temas.values()].map(x => x.tema).find(t => t.origen !== "Núcleo"); return (t ? t.nombre : temaDe(m)).split(":")[0]; };
 /* Menciones del período anterior: las notas entre `dias` y 2×`dias` atrás, agrupadas igual que las actuales. */
 function mencionesPrevias(c, dias){
@@ -313,6 +315,48 @@ function vInicio(){
   const medTop = Object.values(med).sort((a, b) => b.tot - a.tot || b.cri - a.cri).slice(0, 4);
   const lado = x => x.cri * 2 > x.tot ? ["cri", "mayoría crítica"] : x.pos * 2 > x.tot ? ["pos", "mayoría positiva"] : ["", "mixta"];
   const agendaHtml = medTop.map(x => { const [k, l] = lado(x); return `<li><span class="ini-an"><b>${esc(MED[x.id].n)}</b><small class="${k}">${NIVS[nivIdx(MED[x.id].a)][1]} · ${l}</small></span>${segbar([{l: "Críticas", v: x.cri, c: "var(--cri)"}, {l: "Neutras", v: x.neu, c: "var(--neu)"}, {l: "Positivas", v: x.pos, c: "var(--pos)"}])}<span class="mono">${x.tot}</span></li>`; }).join("");
+  // Segundo nivel de los indicadores: para qué sirve, para quién, y el total agregado según el criterio que informa.
+  const abierto = ["vol", "tono", "lejos", "pers"].includes(tState.iniKpi) && (tState.iniKpi !== "pers" || kTema) ? tState.iniKpi : null;
+  const kAttr = k => `type="button" data-act="ini-kpi" data-k="${k}" aria-expanded="${abierto === k}" aria-controls="iniDet"${abierto === k ? ' data-on="1"' : ""}`;
+  const mini = X => segbar([{l: "Críticas", v: X.cri, c: "var(--cri)"}, {l: "Neutras", v: X.neu, c: "var(--neu)"}, {l: "Positivas", v: X.pos, c: "var(--pos)"}]);
+  const fila = (attrs, nombre, sub, n, extra = "") => `<li><button class="ini-dr" ${attrs}><span class="ini-dn">${nombre}${sub ? `<small>${sub}</small>` : ""}</span>${extra}<span class="mono ini-dv">${n}</span>${ri("sig", "ini-dg")}</button></li>`;
+  const goA = o => `data-act="goto" data-dias="${per}"` + Object.entries(o).map(([k, v]) => ` data-${k}="${esc(String(v))}"`).join("");
+  const prop = (n, t) => t ? `${pct(n, t)}%` : "";
+  function detalleKpi(){
+    if (!abierto) return "";
+    const head = (t, para, quien) => `<div class="ini-det-h"><div><h3 id="iniDetT">${t}</h3><p class="ini-para"><b>Para qué sirve:</b> ${para}</p><p class="ini-quien"><b>Quién lo usa:</b> ${quien}</p></div><button class="ini-x" type="button" data-act="ini-kpi" data-k="${abierto}" aria-label="Cerrar detalle">${ri("x")}</button></div>`;
+    let body = "";
+    if (abierto === "vol") {
+      const temasT = c.temas.filter(t => t.activo && t.origen !== "Núcleo").map(t => { const sub = ms.filter(m => m.temas.has(t.id)); return {t, sub, X: metricas(sub), np: prev.filter(m => m.temas.has(t.id)).length}; }).filter(x => x.sub.length).sort((a, b) => b.sub.length - a.sub.length);
+      const sin = ms.filter(sinTema), medR = Object.values(med).sort((a, b) => b.tot - a.tot).slice(0, 6);
+      body = `<div class="ini-det-g"><section><h4>Por tema</h4><ul class="ini-dl">${temasT.map(x => fila(`data-act="goto-tema" data-id="${x.t.id}"`, esc(x.t.nombre), hayPrev ? `${x.np} ${antTx}` : "", x.sub.length, mini(x.X))).join("")}${sin.length ? fila(goA({tono: "todos"}), "Sin tema asignado", "solo nombran a " + esc(quien), sin.length, mini(metricas(sin))) : ""}</ul><p class="ini-nota">Una noticia puede tocar más de un tema; por eso la suma puede superar el total.</p></section>
+        <section><h4>Por medio</h4><ul class="ini-dl">${medR.map(x => fila(goA({medio: x.id}), esc(MED[x.id].n), NIVS[nivIdx(MED[x.id].a)][1], x.tot, mini(x))).join("")}</ul><p class="ini-nota">Cuenta publicaciones: una misma noticia en tres medios suma en los tres.</p></section></div>`;
+      return `<section class="ini-det" id="iniDet" aria-labelledby="iniDetT">${head(`Noticias ${perTx}: ${M.vol}`, `muestra cuánto ocupa ${esc(quien)} la agenda y si eso sube o baja. Un salto sin un anuncio propio que lo explique suele anticipar un problema.`, aut ? "el equipo de prensa de la oficina, para decidir si reforzar o bajar el perfil." : "el encargado de comunicaciones, para decidir si reforzar o bajar el perfil.")}${body}</section>`;
+    }
+    if (abierto === "tono") {
+      const bloque = (k, lbl) => { const xs = ms.filter(m => m.tono === k), por = {}; xs.forEach(m => { const t = temaLectura(m); por[t] = (por[t] || 0) + 1; });
+        const top = Object.entries(por).sort((a, b) => b[1] - a[1]).slice(0, 3);
+        return `<section class="ini-tb ${k}"><button class="ini-tbh" ${goA({tono: k})}><span>${ri(k)} ${lbl}</span><span class="mono">${xs.length}<small>${prop(xs.length, M.vol)}</small></span></button>
+          ${top.length ? `<ul class="ini-dl">${top.map(([t, n]) => { const tm = c.temas.find(x => x.nombre.split(":")[0] === t); return fila(tm ? `data-act="goto" data-dias="${per}" data-tono="${k}" data-tema="${tm.id}"` : goA({tono: k}), esc(t), "", n); }).join("")}</ul>` : `<p class="ini-nota">Ninguna ${perTx}.</p>`}</section>`; };
+      const tC = Object.entries(ms.filter(m => m.tono === "cri").reduce((o, m) => (o[temaLectura(m)] = (o[temaLectura(m)] || 0) + 1, o), {})).sort((a, b) => b[1] - a[1])[0];
+      const tP = Object.entries(ms.filter(m => m.tono === "pos").reduce((o, m) => (o[temaLectura(m)] = (o[temaLectura(m)] || 0) + 1, o), {})).sort((a, b) => b[1] - a[1])[0];
+      body = `${tC || tP ? `<p class="ini-explica">${tC ? `Las críticas vienen sobre todo de <b>${esc(tC[0].toLowerCase())}</b> (${tC[1]} de ${M.cri})` : "No hubo críticas"}${tP ? `; lo positivo, de <b>${esc(tP[0].toLowerCase())}</b> (${tP[1]} de ${M.pos})` : ""}.</p>` : ""}<div class="ini-det-g tres">${bloque("cri", "Críticas")}${bloque("neu", "Neutras")}${bloque("pos", "Positivas")}</div>`;
+      return `<section class="ini-det" id="iniDet" aria-labelledby="iniDetT">${head(`Tono ${perTx}: ${v.n.toLowerCase()}`, `resume si la prensa trata a ${esc(quien)} a favor o en contra, y qué temas lo explican. Sirve para decidir dónde defender y qué amplificar.`, aut ? "la autoridad y su equipo de prensa." : "el alcalde y el encargado de comunicaciones.")}${body}</section>`;
+    }
+    if (abierto === "lejos") {
+      const nivel = (i, lbl) => { const xs = ms.filter(m => E.get(m.g).max === i).sort((a, b) => (b.tono === "cri") - (a.tono === "cri") || b.notas.length - a.notas.length), X = metricas(xs);
+        return `<section class="ini-tb lv${i}"><button class="ini-tbh" ${goA({llego: i})}><span>${lbl}</span><span class="mono">${xs.length}${X.cri ? `<small class="c">${plural(X.cri, "crítica", "críticas")}</small>` : ""}</span></button>
+          ${xs.length ? `<ul class="ini-dl">${xs.slice(0, 3).map(m => fila(goA({llego: i, tono: m.tono}), esc(m.lead.t), esc(nomMedio(m.lead)) + (m.notas.length > 1 ? ` y ${m.notas.length - 1} más` : ""), pillTono(m.tono))).join("")}</ul>${xs.length > 3 ? `<button class="ini-mas2" ${goA({llego: i})}>Ver las ${xs.length}</button>` : ""}` : `<p class="ini-nota">Ninguna ${perTx}.</p>`}</section>`; };
+      const sub = ms.filter(m => E.get(m.g).subio).length;
+      body = `${sub ? `<p class="ini-explica"><b>${plural(sub, "noticia empezó", "noticias empezaron")}</b> en un medio de menor alcance y ${sub === 1 ? "subió" : "subieron"} de nivel ${perTx}: son las que más conviene vigilar.</p>` : ""}<div class="ini-det-g tres">${nivel(2, "Prensa nacional")}${nivel(1, "Prensa regional")}${nivel(0, "Solo prensa comunal")}</div>`;
+      return `<section class="ini-det" id="iniDet" aria-labelledby="iniDetT">${head(`Hasta dónde llegó: ${fuera.length} de ${M.vol}`, "muestra qué noticias salieron del ámbito comunal. Una crítica que llega a prensa regional o nacional ya no se resuelve solo en el territorio: pide vocería y coordinación con otras autoridades.", aut ? "la autoridad y su equipo de prensa, para priorizar." : "el alcalde, comunicaciones y la jefatura del área afectada, para priorizar.")}${body}</section>`;
+    }
+    const xs = msK.slice().sort((a, b) => b.last - a.last), por = {}; xs.forEach(m => { const t = temaLectura(m); por[t] = (por[t] || 0) + 1; });
+    body = xs.length ? `<div class="ini-det-g"><section><h4>Qué se publicó</h4><ul class="ini-dl">${xs.slice(0, 5).map(m => fila(`data-act="goto-tema" data-id="${kTema.id}"`, esc(m.lead.t), esc(nomMedio(m.lead)) + " · " + ago(m.last), pillTono(m.tono))).join("")}</ul></section>
+      <section><h4>En qué temas</h4><ul class="ini-dl">${Object.entries(por).sort((a, b) => b[1] - a[1]).map(([t, n]) => fila(`data-act="goto-tema" data-id="${kTema.id}"`, esc(t), "", n)).join("")}</ul><p class="ini-nota">${MK.cri ? `${plural(MK.cri, "nota crítica", "notas críticas")} lo nombran: revisar si conviene que responda en persona.` : "Ninguna nota crítica lo nombra en el período."}</p></section></div>`
+      : `<p class="ini-nota">Ninguna nota lo nombra ${perTx}.</p>`;
+    return `<section class="ini-det" id="iniDet" aria-labelledby="iniDetT">${head(`${esc(kLbl)}: ${MK.vol}`, aut ? `muestra cuánto se habla del territorio que representa ${esc(quien)} y con qué tono, más allá de lo que se dice de la persona.` : `separa la exposición personal ${c.perfil.g === "F" ? "de la alcaldesa" : "del alcalde"} de la del municipio: qué se dice de ${c.perfil.g === "F" ? "ella" : "él"}, en qué temas y con qué tono.`, aut ? "la autoridad, para conectar su agenda con los problemas de su territorio." : `${c.perfil.g === "F" ? "la alcaldesa" : "el alcalde"} y quien lleva su agenda de prensa.`)}${body}</section>`;
+  }
   const sec = (id, t, extra = "") => `<div class="ini-sec"><h2 id="${id}">${t}</h2><span class="ini-line"></span>${extra}</div>`;
   return `<section class="ini-ver" aria-labelledby="verT">
     <div class="ini-ed"><span class="ini-ekick">Edición ${esc(S.org)} · ${new Date(NOW).toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long"})}</span>
@@ -320,11 +364,12 @@ function vInicio(){
     <h2 id="verT" class="ini-tit" tabindex="-1">${titulo}</h2>
     ${balance || pesa ? `<p class="ini-lead">${balance}${pesa}</p>` : ""}
     <div class="ini-kpis">
-      <button class="ini-kpi" data-act="goto" data-tono="todos" data-dias="${per}"><span class="l">Noticias ${perTx}</span><span class="v"><span class="mono">${M.vol}</span>${delta(M.vol, P.vol, hayPrev)}</span><span class="s">${hayPrev ? `frente a ${P.vol} ${per === 1 ? "en " : ""}${antTx}` : `sin datos de ${antTx} para comparar`} · en ${plural(Object.keys(med).length, "medio", "medios")}</span></button>
-      <button class="ini-kpi" data-act="goto" data-tono="cri" data-dias="${per}"><span class="l">Tono ${per === 7 ? "de la semana" : perTx}</span><span class="v word ${v.k}">${v.n}</span>${segbar([{l: "Críticas", v: M.cri, c: "var(--cri)"}, {l: "Neutras", v: M.neu, c: "var(--neu)"}, {l: "Positivas", v: M.pos, c: "var(--pos)"}])}<span class="s">${conteoCorto(M)}${hayPrev && P.vol ? ` · antes: ${vP.n.toLowerCase()}` : ""}</span></button>
-      <button class="ini-kpi" data-act="goto" data-tono="todos" data-dias="${per}"><span class="l">Hasta dónde llegó</span><span class="v"><span class="mono">${fuera.length}</span><small>de ${M.vol}</small>${delta(fuera.length, fueraP, hayPrev)}</span>${segbar([{l: "Solo prensa comunal", v: M.vol - fuera.length, c: "var(--amb-l)"}, {l: "Llegó a prensa regional", v: fuera.length - nac.length, c: "var(--amb-r)"}, {l: "Llegó a prensa nacional", v: nac.length, c: "var(--amb-n)"}])}<span class="s">salieron de la prensa comunal${nac.length ? `; ${nac.length} a medios nacionales, ${nacCri ? plural(nacCri, "crítica", "críticas") : "ninguna crítica"}` : ""}</span></button>
-      ${kTema ? `<button class="ini-kpi" data-act="goto-tema" data-id="${kTema.id}"><span class="l">${esc(kLbl)}</span><span class="v"><span class="mono">${MK.vol}</span><small>${MK.vol === 1 ? "mención" : "menciones"}</small>${delta(MK.vol, msKP.length, hayPrev)}</span><span class="s">${conteoCorto(MK)}</span></button>` : ""}
+      <button class="ini-kpi" ${kAttr("vol")}><span class="l">Noticias ${perTx}</span><span class="v"><span class="mono">${M.vol}</span>${delta(M.vol, P.vol, hayPrev)}</span><span class="s">${hayPrev ? `frente a ${P.vol} ${per === 1 ? "en " : ""}${antTx}` : `sin datos de ${antTx} para comparar`} · en ${plural(Object.keys(med).length, "medio", "medios")}</span></button>
+      <button class="ini-kpi" ${kAttr("tono")}><span class="l">Tono ${per === 7 ? "de la semana" : perTx}</span><span class="v word ${v.k}">${v.n}</span>${segbar([{l: "Críticas", v: M.cri, c: "var(--cri)"}, {l: "Neutras", v: M.neu, c: "var(--neu)"}, {l: "Positivas", v: M.pos, c: "var(--pos)"}])}<span class="s">${conteoCorto(M)}${hayPrev && P.vol ? ` · antes: ${vP.n.toLowerCase()}` : ""}</span></button>
+      <button class="ini-kpi" ${kAttr("lejos")}><span class="l">Hasta dónde llegó</span><span class="v"><span class="mono">${fuera.length}</span><small>de ${M.vol}</small>${delta(fuera.length, fueraP, hayPrev)}</span>${segbar([{l: "Solo prensa comunal", v: M.vol - fuera.length, c: "var(--amb-l)"}, {l: "Llegó a prensa regional", v: fuera.length - nac.length, c: "var(--amb-r)"}, {l: "Llegó a prensa nacional", v: nac.length, c: "var(--amb-n)"}])}<span class="s">salieron de la prensa comunal${nac.length ? `; ${nac.length} a medios nacionales, ${nacCri ? plural(nacCri, "crítica", "críticas") : "ninguna crítica"}` : ""}</span></button>
+      ${kTema ? `<button class="ini-kpi" ${kAttr("pers")}><span class="l">${esc(kLbl)}</span><span class="v"><span class="mono">${MK.vol}</span><small>${MK.vol === 1 ? "mención" : "menciones"}</small>${delta(MK.vol, msKP.length, hayPrev)}</span><span class="s">${conteoCorto(MK)}</span></button>` : ""}
     </div>
+    ${detalleKpi()}
     ${M.vol ? `<div class="ini-pulso"><div class="ini-pulso-h"><h3>Cómo se movió la prensa ${perTx}</h3><div class="legend"><span><i style="background:var(--cri)"></i>Críticas</span><span><i style="background:var(--neu)"></i>Neutras</span><span><i style="background:var(--pos)"></i>Positivas</span></div></div>${chartPulso(ms, per)}</div>` : ""}
     <p class="ini-valor">${ri("reloj")}<span>Hoy leímos <b>${medN} medios</b> de la región y el país. De todo lo publicado, estas son las notas sobre ${esc(quien)} que importan y lo que conviene hacer con ellas.</span></p>
   </section>
@@ -350,6 +395,7 @@ function vInicio(){
 /* Acciones de la portada */
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-act]"); if (!b) return;
+  if (b.dataset.act === "ini-kpi") { const k = b.dataset.k, cerrar = tState.iniKpi === k; tState.iniKpi = cerrar ? null : k; render(); setTimeout(() => { const el = cerrar ? document.querySelector(`.ini-kpi[data-k="${k}"]`) : document.getElementById("iniDetT"); if (el) { if (!cerrar) { el.setAttribute("tabindex", "-1"); document.getElementById("iniDet")?.scrollIntoView({block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); } el.focus({preventScroll: !cerrar ? true : false}); } }, 0); }
   if (b.dataset.act === "ini-wa") { const m = menciones(cuenta(), 30).find(x => x.g === b.dataset.g); if (!m) return;
     const t = `«${m.lead.t}» · ${nomMedio(m.lead)}${m.lead.url ? "\n" + m.lead.url : ""}`; abrirEnlace("https://wa.me/?text=" + encodeURIComponent(t), true); }
   if (b.dataset.act === "ini-tema") { const c = cuenta(), a = b.dataset.a, ar = AREAS.find(x => x[1] === a); if (!ar) return;
@@ -377,10 +423,13 @@ function vMenciones(){
   let base = menciones(c, Number(tState.dias));
   if (tState.tema !== "todos") base = base.filter(m => m.temas.has(tState.tema));
   if (tState.q.trim()) { const q = norm(tState.q); base = base.filter(m => m.notas.some(n => n.hay.includes(q))); }
+  if (tState.llego != null) base = base.filter(m => escalera(m.notas).max === Number(tState.llego));
+  if (tState.medio != null) base = base.filter(m => m.notas.some(n => String(n.m) === String(tState.medio)));
   const cnt = k => k === "todos" ? base.length : base.filter(m => m.tono === k).length;
   const ms = tState.tono === "todos" ? base : base.filter(m => m.tono === tState.tono);
   const fps = Object.keys(S.fp).filter(k => k.startsWith(S.org+":")).length;
-  const activos = (tState.tema!=="todos") + (tState.tono!=="todos") + !!tState.q.trim();
+  const activos = (tState.tema!=="todos") + (tState.tono!=="todos") + !!tState.q.trim() + (tState.llego != null) + (tState.medio != null);
+  const chipsX = (tState.llego != null ? `<button class="btn sm fchip" data-act="f-x" data-k="llego" aria-label="Quitar filtro: ${esc(["Solo prensa comunal","Llegó a prensa regional","Llegó a prensa nacional"][tState.llego])}">${esc(["Solo prensa comunal","Llegó a prensa regional","Llegó a prensa nacional"][tState.llego])} ✕</button>` : "") + (tState.medio != null && MED[tState.medio] ? `<button class="btn sm fchip" data-act="f-x" data-k="medio" aria-label="Quitar filtro: ${esc(MED[tState.medio].n)}">${esc(MED[tState.medio].n)} ✕</button>` : "");
   let html = "", last = "";
   ms.forEach(m => { const d = dia(m.last); if (d !== last) { html += `<h3 class="day">${d}</h3>`; last = d; } html += itemHtml(m); });
   return `<div class="head"><div><h2 tabindex="-1">Menciones</h2><p>Cada noticia aparece una vez aunque la publiquen varios medios. El resumen es propio; el texto del medio no se reproduce.</p></div><button class="btn alt" type="button" data-act="cap-open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Agregar publicación</button></div>
@@ -390,7 +439,7 @@ function vMenciones(){
     <select id="fTema" aria-label="Tema"><option value="todos">Todos los temas</option>${c.temas.filter(t=>t.activo).map(t => `<option value="${t.id}" ${tState.tema===t.id?"selected":""}>${esc(t.nombre)}</option>`).join("")}</select>
     <input id="fQ" type="search" placeholder="Buscar una palabra" value="${esc(tState.q)}" aria-label="Buscar en las menciones">
   </div>
-  <div class="active" aria-live="polite"><span>${ms.length} ${ms.length===1?"noticia":"noticias"}</span>${activos?`<button class="btn ghost sm" data-act="f-reset">Quitar filtros</button>`:""}${fps?`<span>· ${fps} marcadas como “no corresponde”</span><button class="btn ghost sm" data-act="fp-reset">Restaurar</button>`:""}</div>
+  <div class="active" aria-live="polite"><span>${ms.length} ${ms.length===1?"noticia":"noticias"}</span>${chipsX}${activos?`<button class="btn ghost sm" data-act="f-reset">Quitar filtros</button>`:""}${fps?`<span>· ${fps} marcadas como “no corresponde”</span><button class="btn ghost sm" data-act="fp-reset">Restaurar</button>`:""}</div>
   <div class="feed">${html || `<div class="card"><b>No hay noticias con estos filtros.</b><p class="muted" style="margin:4px 0 0">Prueba con un período más largo o <button class="btn ghost sm" data-act="f-reset">quita los filtros</button>.</p></div>`}</div>`;
 }
 
@@ -460,6 +509,7 @@ function vFuentes(){
 
 /* Reportes: cada resultado se lee como gráfico y como cifra */
 const RI = {
+  sig:'<path d="M9 6l6 6-6 6"/>', x:'<path d="M6 6l12 12M18 6L6 18"/>',
   cri:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.4h.01"/>',
   pos:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.2 9.6"/>',
   neu:'<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>',
@@ -1154,7 +1204,7 @@ function render(focus){
 window.addEventListener("hashchange", () => { render(true); window.scrollTo(0,0); });
 $("#org").addEventListener("change", e => { if (e.target.value === "__entrar") { e.target.value = S.org; entAbrir(false); return; } S.org = e.target.value; tState = {...tState, tema:"todos", draft:null, from:null, pieza:null, enf:null, open:{}}; propuesta = null; lecturaTxt = {}; save(); render(true); toast(esAut() ? "Ahora ves la cuenta de " + inst() + ". Cada cuenta ve solo sus datos." : "Ahora ves " + S.org + ". Cada municipio ve solo sus datos."); });
 function perGuardar(v){ if (!["1", "7", "30"].includes(String(v))) return; tState.dias = String(v); try { localStorage.setItem(PER_KEY, tState.dias); } catch(e) {} }
-function goMenciones(patch){ Object.assign(tState, {tema:"todos", tono:"todos", q:""}, patch); if (patch && patch.dias) perGuardar(patch.dias); if (route() === "menciones") render(true); else location.hash = "menciones"; }
+function goMenciones(patch){ Object.assign(tState, {tema:"todos", tono:"todos", q:"", llego:null, medio:null}, patch); if (patch && patch.dias) perGuardar(patch.dias); if (route() === "menciones") render(true); else location.hash = "menciones"; }
 
 document.addEventListener("change", e => {
   const id = e.target.id;
@@ -1200,12 +1250,13 @@ document.addEventListener("click", async e => {
   const b = e.target.closest("[data-act]"); if (!b) return;
   const act = b.dataset.act, c = cuenta();
   if (act === "responder") { e.preventDefault(); tState.draft = b.dataset.g; tState.from = b.dataset.from || null; tState.pieza = null; tState.enf = null; if (route() === "comunicados") render(true); else location.hash = "comunicados"; }
-  if (act === "goto") goMenciones({tono: b.dataset.tono, dias: b.dataset.dias});
+  if (act === "goto") goMenciones(Object.fromEntries(["tono", "dias", "tema", "llego", "medio"].filter(k => b.dataset[k] != null).map(k => [k, b.dataset[k]])));
   if (act === "goto-tema") goMenciones({tema: b.dataset.id});
   if (act === "ver-criticas") { e.preventDefault(); goMenciones({tono:"cri", dias:"7"}); }
   if (act === "f-tono") { tState.tono = b.dataset.k; render(); }
   if (act === "f-dias" || act === "per") { perGuardar(b.dataset.k || b.dataset.v); render(); setTimeout(() => document.querySelector(`#${innerWidth <= 820 ? "view" : "perG"} [data-act="per"][data-v="${tState.dias}"]`)?.focus(), 0); }
-  if (act === "f-reset") { Object.assign(tState, {tema:"todos", tono:"todos", q:""}); render(); }
+  if (act === "f-reset") { Object.assign(tState, {tema:"todos", tono:"todos", q:"", llego:null, medio:null}); render(); }
+  if (act === "f-x") { tState[b.dataset.k] = null; render(); }
   if (act === "f-est") { tState.fuente.e = b.dataset.k; render(); }
   if (act === "f-amb") { tState.fuente.a = b.dataset.k; render(); }
   if (act === "fp") { const key = S.org + ":" + b.dataset.g; S.fp[key] = true; save(); render(); toast("Marcada como “no corresponde”. Servirá para afinar las exclusiones.", () => { delete S.fp[key]; save(); render(); }); }
