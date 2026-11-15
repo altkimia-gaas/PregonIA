@@ -134,7 +134,10 @@ const CONFIG = [["temas","Mis temas"],["asistente","Asistente de temas"],["fuent
 const ALIAS = {panel:"inicio", caracterizacion:"asistente"};
 const route = () => { const k = (location.hash || "#inicio").slice(1); return ALIAS[k] || k; };
 const isConfig = k => CONFIG.some(([x]) => x === k);
-let tState = {tema:"todos", tono:"todos", dias:"30", q:"", rep:"alcalde", draft:null, from:null, pieza:null, enf:null, open:{}, ctxAll:{}, refocus:null, fuente:{a:"todos", e:"todos"}};
+/* Período global (24 horas, semana o 30 días): uno solo para todas las pestañas, recordado entre sesiones. */
+const PER_KEY = "pregonia-periodo";
+const PER0 = (() => { try { const v = localStorage.getItem(PER_KEY); return ["1", "7", "30"].includes(v) ? v : "7"; } catch(e) { return "7"; } })();
+let tState = {tema:"todos", tono:"todos", dias:PER0, q:"", rep:"alcalde", draft:null, from:null, pieza:null, enf:null, open:{}, ctxAll:{}, refocus:null, fuente:{a:"todos", e:"todos"}};
 let toastUndo = null;
 function toast(msg, undo){
   $("#toastMsg").textContent = msg; const b = $("#toastAct");
@@ -157,8 +160,17 @@ const VER = [[40,"Muy favorable","claramente más a favor que en contra","Muy a 
 function veredicto(M){ if (!M.vol) return {n:"Sin noticias", f:"no hubo noticias en el período", c:"Sin datos", k:"neu", i:-1}; const i = VER.findIndex(x => M.neto >= x[0]), v = VER[i]; return {n:v[1], f:v[2], c:v[3], k: i <= 1 ? "pos" : i >= 3 ? "cri" : "neu", i}; }
 const conteo = M => `${plural(M.pos,"positiva","positivas")} · ${plural(M.neu,"neutra","neutras")} · ${plural(M.cri,"crítica","críticas")}`;
 
+const PER_OPS = [["1", "24 horas"], ["7", "Semana"], ["30", "30 días"]];
+const perAplica = () => !isConfig(route());
+function perNota(){
+  if (route() !== "reportes" || tState.rep === "gestion") return "";
+  const f = {alcalde: "semanal", diario: "diario", mesa: "diario", crisis: "últimos 7 días", calendario: "próximos 12 meses"}[tState.rep];
+  return f ? `<span class="per-nota">Este informe tiene período fijo (${f})</span>` : "";
+}
+const perCtl = () => `<div class="perg" role="group" aria-label="Período">${PER_OPS.map(([k, l]) => `<button type="button" data-act="per" data-v="${k}" aria-pressed="${tState.dias === k}">${l}</button>`).join("")}</div>${perNota()}`;
 function renderChrome(){
   const k = route(), cfg = isConfig(k);
+  const pg = $("#perG"); if (pg) pg.innerHTML = perAplica() ? perCtl() : "";
   $("#org").innerHTML = opcionesCuenta();
   const c = cuenta(), pl = PLANES[c.perfil.plan];
   $("#planLbl").textContent = "Plan " + pl.nombre + " · " + clp(pl.precio) + "/mes";
@@ -228,7 +240,7 @@ function chartPulso(ms, per){
   return `<svg class="chart ini-pulso-svg" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(resumen)}">${g}</svg>`;
 }
 function vInicio(){
-  const c = cuenta(), per = tState.iniPer === "30" ? 30 : tState.iniPer === "1" ? 1 : 7, perTx = {1: "en 24 horas", 7: "esta semana", 30: "en 30 días"}[per], antTx = {1: "las 24 horas anteriores", 7: "la semana anterior", 30: "los 30 días anteriores"}[per];
+  const c = cuenta(), per = Number(tState.dias) || 7, perTx = {1: "en 24 horas", 7: "esta semana", 30: "en 30 días"}[per], antTx = {1: "las 24 horas anteriores", 7: "la semana anterior", 30: "los 30 días anteriores"}[per];
   const ms = menciones(c, per), prev = mencionesPrevias(c, per), M = metricas(ms), P = metricas(prev), hayPrev = prev.length > 0 || menciones(c, per * 2).length > ms.length;
   const v = veredicto(M), vP = veredicto(P), pend = pendientes(c), aut = esAut(), quien = aut ? c.perfil.nombre : S.org;
   const E = new Map(ms.map(m => [m.g, escalera(m.notas)]));
@@ -304,7 +316,7 @@ function vInicio(){
   const sec = (id, t, extra = "") => `<div class="ini-sec"><h2 id="${id}">${t}</h2><span class="ini-line"></span>${extra}</div>`;
   return `<section class="ini-ver" aria-labelledby="verT">
     <div class="ini-ed"><span class="ini-ekick">Edición ${esc(S.org)} · ${new Date(NOW).toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long"})}</span>
-      <div class="ini-per" role="group" aria-label="Período">${[["1", "24 horas"], ["7", "Semana"], ["30", "30 días"]].map(([k, l]) => `<button type="button" data-act="ini-per" data-v="${k}" aria-pressed="${String(per) === k}">${l}</button>`).join("")}</div></div>
+</div>
     <h2 id="verT" class="ini-tit" tabindex="-1">${titulo}</h2>
     ${balance || pesa ? `<p class="ini-lead">${balance}${pesa}</p>` : ""}
     <div class="ini-kpis">
@@ -338,7 +350,6 @@ function vInicio(){
 /* Acciones de la portada */
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-act]"); if (!b) return;
-  if (b.dataset.act === "ini-per") { tState.iniPer = b.dataset.v; render(true); setTimeout(() => document.querySelector(`[data-act="ini-per"][data-v="${b.dataset.v}"]`)?.focus(), 0); }
   if (b.dataset.act === "ini-wa") { const m = menciones(cuenta(), 30).find(x => x.g === b.dataset.g); if (!m) return;
     const t = `«${m.lead.t}» · ${nomMedio(m.lead)}${m.lead.url ? "\n" + m.lead.url : ""}`; abrirEnlace("https://wa.me/?text=" + encodeURIComponent(t), true); }
   if (b.dataset.act === "ini-tema") { const c = cuenta(), a = b.dataset.a, ar = AREAS.find(x => x[1] === a); if (!ar) return;
@@ -369,13 +380,13 @@ function vMenciones(){
   const cnt = k => k === "todos" ? base.length : base.filter(m => m.tono === k).length;
   const ms = tState.tono === "todos" ? base : base.filter(m => m.tono === tState.tono);
   const fps = Object.keys(S.fp).filter(k => k.startsWith(S.org+":")).length;
-  const activos = (tState.tema!=="todos") + (tState.tono!=="todos") + (tState.dias!=="30") + !!tState.q.trim();
+  const activos = (tState.tema!=="todos") + (tState.tono!=="todos") + !!tState.q.trim();
   let html = "", last = "";
   ms.forEach(m => { const d = dia(m.last); if (d !== last) { html += `<h3 class="day">${d}</h3>`; last = d; } html += itemHtml(m); });
   return `<div class="head"><div><h2 tabindex="-1">Menciones</h2><p>Cada noticia aparece una vez aunque la publiquen varios medios. El resumen es propio; el texto del medio no se reproduce.</p></div><button class="btn alt" type="button" data-act="cap-open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Agregar publicación</button></div>
   <div class="filters">
     <div class="seg" role="group" aria-label="Tono">${["todos","cri","neu","pos"].map(k => `<button data-act="f-tono" data-k="${k}" aria-pressed="${tState.tono===k}">${k==="todos"?"Todas":tonoPl[k]}<span class="c">${cnt(k)}</span></button>`).join("")}</div>
-    <div class="seg" role="group" aria-label="Período">${[["1","24 h"],["7","7 días"],["30","30 días"]].map(([v,l]) => `<button data-act="f-dias" data-k="${v}" aria-pressed="${tState.dias===v}">${l}</button>`).join("")}</div>
+    
     <select id="fTema" aria-label="Tema"><option value="todos">Todos los temas</option>${c.temas.filter(t=>t.activo).map(t => `<option value="${t.id}" ${tState.tema===t.id?"selected":""}>${esc(t.nombre)}</option>`).join("")}</select>
     <input id="fQ" type="search" placeholder="Buscar una palabra" value="${esc(tState.q)}" aria-label="Buscar en las menciones">
   </div>
@@ -723,17 +734,18 @@ function diarioTexto(){
 
 /* 3. Informe de gestión: mensual, para el alcalde y su equipo */
 let lecturaTxt = {};
+const GP = () => { const d = Number(tState.dias) || 30; return {d, en: {1: "en las últimas 24 horas", 7: "en los últimos 7 días", 30: "en los últimos 30 días"}[d], del: {1: "de las últimas 24 horas", 7: "de la semana", 30: "del mes"}[d], este: {1: "en estas 24 horas", 7: "esta semana", 30: "este mes"}[d]}; };
 function repGestion(){
-  const c = cuenta(), ms = menciones(c), M = metricas(ms);
-  if (!ms.length) return `<div class="allgood">Ningún medio publicó sobre ${esc(S.org)} en los últimos 30 días.</div>`;
-  const rec = ms.filter(m => NOW - m.last < 15*DAY), ant = ms.filter(m => NOW - m.last >= 15*DAY), Mr = metricas(rec), Ma = metricas(ant);
+  const P = GP(), c = cuenta(), ms = menciones(c, P.d), M = metricas(ms);
+  if (!ms.length) return `<div class="allgood">Ningún medio publicó sobre ${esc(S.org)} ${P.en}.</div>`;
+  const rec = ms.filter(m => NOW - m.last < P.d * DAY / 2), ant = ms.filter(m => NOW - m.last >= P.d * DAY / 2), Mr = metricas(rec), Ma = metricas(ant);
   const porTema = c.temas.filter(t => t.activo).map(t => { const sub = ms.filter(m => m.temas.has(t.id)); return {t, ...metricas(sub), e: escalera(sub.flatMap(m => m.notas))}; }).sort((a,b) => b.vol - a.vol);
   const esp = porTema.filter(x => !/\(comuna\)$/.test(x.t.nombre)), conDatos = esp.filter(x => x.vol);
   const topCri = esp.slice().sort((a,b) => b.cri - a.cri)[0], topPos = esp.slice().sort((a,b) => b.pos - a.pos)[0], nac = conDatos.filter(x => x.e.max === 2);
   const finds = [
-    [veredicto(M).k, `La cobertura del mes fue <b>${veredicto(M).n.toLowerCase()}</b>: ${veredicto(M).f}, con ${conteo(M)}.`],
+    [veredicto(M).k, `La cobertura ${P.del} fue <b>${veredicto(M).n.toLowerCase()}</b>: ${veredicto(M).f}, con ${conteo(M)}.`],
     topCri && topCri.cri ? ["cri", `<b>${esc(topCri.t.nombre)}</b> concentró las críticas: ${topCri.cri} de ${M.cri}.`] : null,
-    nac.length ? ["neu", `${nac.length === 1 ? "Un tema llegó" : nac.length + " temas llegaron"} a la prensa nacional: <b>${nac.map(x => esc(x.t.nombre)).join(", ")}</b>.`] : ["pos", "Ningún tema específico llegó a la prensa nacional este mes."],
+    nac.length ? ["neu", `${nac.length === 1 ? "Un tema llegó" : nac.length + " temas llegaron"} a la prensa nacional: <b>${nac.map(x => esc(x.t.nombre)).join(", ")}</b>.`] : ["pos", `Ningún tema específico llegó a la prensa nacional ${P.este}.`],
     topPos && topPos.pos ? ["pos", `<b>${esc(topPos.t.nombre)}</b> aportó la mayor cobertura positiva (${plural(topPos.pos,"noticia","noticias")}).`] : null
   ].filter(Boolean);
   const maxSide = Math.max(1, ...porTema.map(x => Math.max(x.cri + x.neu/2, x.pos + x.neu/2))), w = v => (v / maxSide * 100).toFixed(2) + "%";
@@ -743,7 +755,7 @@ function repGestion(){
   <div class="rgrid r4">
     ${tile({icon:"noticias", label:"Noticias", value:M.vol, delta: deltaHtml(Mr.vol, Ma.vol, null), viz: sparkline(serieDias(ms)), sub:"sin contar réplicas de la misma noticia"})}
     ${tile({icon:"clima", tone: veredicto(M).k === "neu" ? "" : veredicto(M).k, label:"Tono de la cobertura", value:`<span class="word">${veredicto(M).n}</span>`, delta: deltaVer(Mr, Ma), viz: escala(veredicto(M).i), sub: conteo(M)})}
-    ${tile({icon:"alcance", label:"Temas en prensa nacional", value: nac.length, unit:"de " + conDatos.length, sub:"temas con noticias este mes que llegaron a medios nacionales"})}
+    ${tile({icon:"alcance", label:"Temas en prensa nacional", value: nac.length, unit:"de " + conDatos.length, sub:`temas con noticias ${P.este} que llegaron a medios nacionales`})}
     ${tile({icon:"cri", tone:"cri", label:"Noticias críticas", value: M.cri, unit: pct(M.cri, M.vol) + "% del total", delta: deltaHtml(Mr.cri, Ma.cri, false), viz:`<div class="meter" ${tipAttr(M.cri + " de " + M.vol + " noticias")}><i style="width:${pct(M.cri, M.vol)}%"></i></div>`})}
   </div>
   <div class="card" style="margin-top:14px"><h3>Tono y alcance por tema</h3>
@@ -760,17 +772,17 @@ function repGestion(){
     <div class="card"><h3>Noticias por día</h3>${chartDias(ms)}</div>
     ${esAut() ? paresAutCard() : paresCard()}
   </div>
-  <div class="card" style="margin-top:14px;display:grid;gap:10px"><h3 style="margin:0">Lectura del analista</h3><p class="hint" style="margin:0">Redactada por IA con las cifras y los resúmenes del mes. Revísala antes de usarla.</p>
+  <div class="card" style="margin-top:14px;display:grid;gap:10px"><h3 style="margin:0">Lectura del analista</h3><p class="hint" style="margin:0">Redactada por IA con las cifras y los resúmenes ${P.del}. Revísala antes de usarla.</p>
     <div id="lectura" class="draft" style="min-height:90px">${esc(lecturaTxt.gestion || lecturaBase(M, porTema))}</div>
     <div><button class="btn primary" data-act="lectura">Redactar con IA</button></div></div>
-  <details class="card resp" style="margin-top:14px"><summary>Respaldo: las ${notas.length} notas del mes</summary>
+  <details class="card resp" style="margin-top:14px"><summary>Respaldo: las ${notas.length} notas ${P.del}</summary>
     <div class="scroll"><table><thead><tr><th>Fecha</th><th>Medio</th><th>Nivel</th><th>Tono</th><th>Titular</th></tr></thead><tbody>${notas.map(({n}) => `<tr><td class="mono">${hora(n.ts)}</td><td>${esc(nomMedio(n))}</td><td>${NIVS[nivIdx(MED[n.m].a)][1]}</td><td>${tonoLbl[n.tono]}</td><td>${esc(n.t)}</td></tr>`).join("")}</tbody></table></div>
     <p class="hint" style="margin:10px 0 0">En producción cada fila enlaza a la nota original en el sitio del medio.</p></details>
   ${muestra(M.vol)}`;
 }
 function lecturaBase(M, porTema){
   const esp = porTema.filter(x => !/\(comuna\)$/.test(x.t.nombre)), top = esp.slice().sort((a,b) => b.vol - a.vol)[0], crit = esp.slice().sort((a,b) => b.cri - a.cri)[0];
-  return `${S.org} sumó ${plural(M.vol, "noticia", "noticias")} en 30 días, con una cobertura ${veredicto(M).n.toLowerCase()} (${conteo(M)}). El tema con más presencia fue ${top?top.t.nombre:"—"} y el que concentró más notas críticas fue ${crit&&crit.cri?crit.t.nombre + " (" + llego(crit.e).toLowerCase() + ")":"ninguno"}. Usa el botón para una lectura interpretativa con recomendaciones para el equipo.`;
+  return `${S.org} sumó ${plural(M.vol, "noticia", "noticias")} ${GP().en.replace("en los últimos", "en").replace("en las últimas", "en")}, con una cobertura ${veredicto(M).n.toLowerCase()} (${conteo(M)}). El tema con más presencia fue ${top?top.t.nombre:"—"} y el que concentró más notas críticas fue ${crit&&crit.cri?crit.t.nombre + " (" + llego(crit.e).toLowerCase() + ")":"ninguno"}. Usa el botón para una lectura interpretativa con recomendaciones para el equipo.`;
 }
 function paresCard(){
   const pr = MODO && MODO.tipo === "real" && MODO.info && MODO.info.pares, pa = cuenta().perfil, prov = provinciaDe(S.org);
@@ -849,7 +861,7 @@ const recPieza = m => !m ? "comunicado" : m.tono === "cri" ? "declaracion" : "co
 const recEnf = m => !m ? "anunciar" : m.tono === "cri" ? "datos" : m.tono === "pos" ? "anunciar" : "contextualizar";
 const baseConocimiento = () => `[Ejemplo] Teléfono de emergencias municipales: 800 000 000 (ficticio).\n[Ejemplo] El municipio dispone de 2 camiones aljibe propios.\n[Ejemplo] Vocero autorizado: encargado(a) de comunicaciones.\n[Completar] Agrega cifras oficiales, documentos y decisiones del municipio.`;
 function vComunicados(){
-  const c = cuenta(), ms = menciones(c), m = tState.draft && ms.find(x => x.g === tState.draft), pl = PLANES[c.perfil.plan];
+  const c = cuenta(), ms = menciones(c, Number(tState.dias)), m = tState.draft && menciones(c, 32).find(x => x.g === tState.draft), pl = PLANES[c.perfil.plan];
   const pieza = tState.pieza || recPieza(m), enf = tState.enf || recEnf(m), rp = recPieza(m), re = recEnf(m);
   const draft = (c.drafts||{})[tState.draft || "_"] || "";
   const back = tState.from ? `<a class="back" href="#${tState.from}">← Volver a ${({inicio:"Inicio", menciones:"Menciones", reportes:"Reportes"})[tState.from]}</a>` : "";
@@ -858,7 +870,7 @@ function vComunicados(){
   <div class="grid two">
     <form id="comForm" class="card stepper" novalidate>
       <section><h3><span class="n">1</span>¿A qué respondes?</h3>
-        <select id="kMen" aria-label="Noticia de origen" class="field" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-height:36px"><option value="">Nada: es un anuncio propio</option>${ms.map(x => `<option value="${x.g}" ${m&&m.g===x.g?"selected":""}>${tonoLbl[x.tono]} · ${esc(x.lead.t.slice(0,80))}${x.lead.t.length>80?"…":""}</option>`).join("")}</select>
+        <select id="kMen" aria-label="Noticia de origen" class="field" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-height:36px"><option value="">Nada: es un anuncio propio</option>${(m && !ms.some(x => x.g === m.g) ? [m].concat(ms) : ms).map(x => `<option value="${x.g}" ${m&&m.g===x.g?"selected":""}>${tonoLbl[x.tono]} · ${esc(x.lead.t.slice(0,80))}${x.lead.t.length>80?"…":""}</option>`).join("")}</select>
         ${m ? `<div class="mini"><div class="meta" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted)">${pillTono(m.tono)}<span>${esc(medioN(m.lead))} · ${ago(m.lead.ts)}</span></div><b>${esc(m.lead.t)}</b><span class="muted" style="font-size:12.5px">${esc(m.lead.res)}</span></div>` : ""}
       </section>
       <section><h3><span class="n">2</span>¿Qué necesitas?</h3>
@@ -1134,14 +1146,15 @@ async function compartir(b){
 /* Render y navegación */
 const VIEWFN = {inicio:vInicio, menciones:vMenciones, reportes:vReportes, comunicados:vComunicados, temas:vTemas, asistente:vAsistente, fuentes:vFuentes};
 function render(focus){
-  renderChrome(); $("#view").innerHTML = (VIEWFN[route()] || vInicio)();
+  renderChrome(); $("#view").innerHTML = (perAplica() ? `<div class="perbar">${perCtl()}</div>` : "") + (VIEWFN[route()] || vInicio)();
   cerrarMenu(); if ($("#view .shr")) cargarJsPDF().catch(() => {});
   if (focus) { const h = $("#view h2"); if (h) h.focus({preventScroll:true}); }
   if (tState.refocus) { const el = document.querySelector(`[data-chipin="${tState.refocus}"]`); if (el) el.focus(); tState.refocus = null; }
 }
 window.addEventListener("hashchange", () => { render(true); window.scrollTo(0,0); });
 $("#org").addEventListener("change", e => { if (e.target.value === "__entrar") { e.target.value = S.org; entAbrir(false); return; } S.org = e.target.value; tState = {...tState, tema:"todos", draft:null, from:null, pieza:null, enf:null, open:{}}; propuesta = null; lecturaTxt = {}; save(); render(true); toast(esAut() ? "Ahora ves la cuenta de " + inst() + ". Cada cuenta ve solo sus datos." : "Ahora ves " + S.org + ". Cada municipio ve solo sus datos."); });
-function goMenciones(patch){ Object.assign(tState, {tema:"todos", tono:"todos", dias:"30", q:""}, patch); if (route() === "menciones") render(true); else location.hash = "menciones"; }
+function perGuardar(v){ if (!["1", "7", "30"].includes(String(v))) return; tState.dias = String(v); try { localStorage.setItem(PER_KEY, tState.dias); } catch(e) {} }
+function goMenciones(patch){ Object.assign(tState, {tema:"todos", tono:"todos", q:""}, patch); if (patch && patch.dias) perGuardar(patch.dias); if (route() === "menciones") render(true); else location.hash = "menciones"; }
 
 document.addEventListener("change", e => {
   const id = e.target.id;
@@ -1191,8 +1204,8 @@ document.addEventListener("click", async e => {
   if (act === "goto-tema") goMenciones({tema: b.dataset.id});
   if (act === "ver-criticas") { e.preventDefault(); goMenciones({tono:"cri", dias:"7"}); }
   if (act === "f-tono") { tState.tono = b.dataset.k; render(); }
-  if (act === "f-dias") { tState.dias = b.dataset.k; render(); }
-  if (act === "f-reset") { Object.assign(tState, {tema:"todos", tono:"todos", dias:"30", q:""}); render(); }
+  if (act === "f-dias" || act === "per") { perGuardar(b.dataset.k || b.dataset.v); render(); setTimeout(() => document.querySelector(`#${innerWidth <= 820 ? "view" : "perG"} [data-act="per"][data-v="${tState.dias}"]`)?.focus(), 0); }
+  if (act === "f-reset") { Object.assign(tState, {tema:"todos", tono:"todos", q:""}); render(); }
   if (act === "f-est") { tState.fuente.e = b.dataset.k; render(); }
   if (act === "f-amb") { tState.fuente.a = b.dataset.k; render(); }
   if (act === "fp") { const key = S.org + ":" + b.dataset.g; S.fp[key] = true; save(); render(); toast("Marcada como “no corresponde”. Servirá para afinar las exclusiones.", () => { delete S.fp[key]; save(); render(); }); }
@@ -1285,7 +1298,7 @@ async function generar(){
   } finally { btn.disabled = false; stop.hidden = true; }
 }
 async function lectura(btn){
-  const c = cuenta(), ms = menciones(c), M = metricas(ms), el = $("#lectura");
+  const c = cuenta(), ms = menciones(c, GP().d), M = metricas(ms), el = $("#lectura");
   const sample = await samplePromise;
   if (!sample) { el.textContent = "La IA no está disponible en esta vista. Abre la página en Claude para redactar la lectura."; return; }
   btn.disabled = true; el.textContent = "Redactando…";

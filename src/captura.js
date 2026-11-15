@@ -118,7 +118,7 @@ async function capGuardar(e){
     hay: norm(t + " " + res + " " + x + " " + texto.slice(0, 600) + " " + (esAut() ? cuenta().perfil.variantes[0] : S.org + " comuna"))};
   capImgBlob = null;
   S.capturas.push(c); save(); refrescarNotas(); capCerrar();
-  tState.tono = "todos"; tState.dias = "30"; tState.tema = "todos"; tState.q = "";
+  tState.tono = "todos"; tState.tema = "todos"; tState.q = "";
   if (route() !== "menciones") location.hash = "menciones"; else render(true);
   const unida = g !== id ? " Se sumó a una noticia que ya publicaron otros medios." : "";
   toast(sinIA ? "Agregada sin análisis de IA: revisa el tono y el resumen." : `Agregada como ${({cri: "crítica", neu: "neutra", pos: "positiva"})[tono]}.${unida}${r && r.rel === false ? ` Ojo: la IA cree que no trata de ${S.org}.` : ""}`, () => { S.capturas = S.capturas.filter(z => z.id !== id); save(); refrescarNotas(); render(); });
