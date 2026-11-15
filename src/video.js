@@ -57,7 +57,7 @@ function guionBase(plan){
   return plan.scenes.map(s => {
     if (s.k === "intro") return P.dias === 1 ? `Parte de prensa de ${plan.inst}, de las últimas 24 horas.` : `Parte de prensa de ${plan.inst}, del ${fechaHablada(NOW - (P.dias - 1) * DAY)} al ${fechaHablada(NOW)}.`;
     if (s.k === "veredicto") return `La prensa fue ${v.n.toLowerCase()} ${P.tx}, con ${plural(M.vol, "noticia", "noticias")}: ${plural(M.pos, "positiva", "positivas")}, ${plural(M.neu, "neutra", "neutras")} y ${plural(M.cri, "crítica", "críticas")}. ${comp}`;
-    if (s.k === "trato") return `Hasta dónde llegaron: ${niv[2].n} a prensa nacional, ${niv[1].n} a regional y ${niv[0].n} se quedaron en la prensa comunal. ${criTot ? `De ${plural(criTot, "crítica", "críticas")}, ${rsp === criTot ? (criTot === 1 ? "la crítica fue respondida" : "todas fueron respondidas") : rsp ? `${rsp} ${rsp === 1 ? "fue respondida" : "fueron respondidas"}` : "ninguna ha sido respondida"}.` : "No hubo noticias críticas."}`;
+    if (s.k === "trato") return `Hasta dónde llegaron: ${niv[2].n} a prensa nacional, ${niv[1].n} a regional y ${niv[0].n} se quedaron en la prensa comunal. ${criTot ? `De ${plural(criTot, "crítica que exigía respuesta", "críticas que exigían respuesta")}, ${rsp === criTot ? (criTot === 1 ? "la crítica fue atendida" : "todas fueron atendidas") : rsp ? `${rsp} ${rsp === 1 ? "fue atendida" : "fueron atendidas"}` : criTot === 1 ? "aún no ha sido atendida" : "ninguna ha sido atendida"}.` : "Ninguna crítica exigía respuesta."}`;
     if (s.k === "impacto") { const T = s.temas.filter(x => x.k !== "Sin tema asignado"), peor = T.filter(x => x.bal < 0).sort((a, b) => a.bal - b.bal)[0], mejor = T.filter(x => x.bal > 0).sort((a, b) => b.bal - a.bal)[0];
       return [peor ? `El tema que más resta es ${peor.k.toLowerCase()}.` : "Ningún tema resta.", mejor ? `El que más suma es ${mejor.k.toLowerCase()}.` : "", "Pesan más las notas en medios grandes."].filter(Boolean).join(" "); }
     if (s.k === "asunto") { const f = s.f; return `${ORD[s.i]} asunto: ${frase(minus(f.m.lead.res))} Salió en ${plural(f.medios.length, "medio", "medios")} y ${llego(f.e).toLowerCase().replace(/^solo/, "se quedó solo en la")}. Recomendación: ${frase(minus(f.ac.a))} Responsable: ${resp(f.ac.r)}.`; }
@@ -181,14 +181,14 @@ const VESC = {
     });
     const fuera = niv[1].cri + niv[2].cri;
     vtexto(ctx, !criTot ? "Ninguna noticia crítica en el período." : !fuera ? (criTot === 1 ? "La crítica se quedó en la prensa comunal." : `Las ${criTot} críticas se quedaron en la prensa comunal.`) : `${fuera} de ${plural(criTot, "crítica", "críticas")} ${fuera === 1 ? "salió" : "salieron"} de la prensa comunal.`, 90, 1130, {px: 42, w: 600, color: fuera ? VC.cri : VC.muted, a: vin(l, 1.8), max: 2});
-    vkicker(ctx, "Críticas respondidas", 1330, VC.muted, vin(l, 2.3));
+    vkicker(ctx, "Críticas atendidas", 1330, VC.muted, vin(l, 2.3));
     if (criTot) {
       const a = vin(l, 2.5), col = rsp === criTot ? VC.pos : VC.cri;
       const x2 = vtexto(ctx, String(rsp), 90, 1500, {px: 150, w: 700, fam: VF.h, color: col, a});
       vfont(ctx, 700, 150, VF.h); const w = ctx.measureText(String(rsp)).width;
       vtexto(ctx, `de ${criTot}`, 90 + w + 24, 1500, {px: 60, w: 600, color: VC.muted, a});
-      vtexto(ctx, rsp === criTot ? "Todas tienen respuesta." : `${plural(criTot - rsp, "sigue", "siguen")} sin respuesta. Una crítica sin réplica marca el tono de la cobertura.`, 90, 1580, {px: 38, w: 500, color: VC.muted, a: vin(l, 2.8), max: 2});
-    } else vtexto(ctx, "No hubo críticas que responder.", 90, 1440, {px: 52, w: 600, color: VC.pos, a: vin(l, 2.5)});
+      vtexto(ctx, rsp === criTot ? "Todas tienen respuesta o una decisión tomada." : `${plural(criTot - rsp, "sigue", "siguen")} sin decisión. Una crítica que nadie atiende marca el tono de la cobertura.`, 90, 1580, {px: 38, w: 500, color: VC.muted, a: vin(l, 2.8), max: 2});
+    } else vtexto(ctx, "Ninguna crítica exigía respuesta.", 90, 1440, {px: 52, w: 600, color: VC.pos, a: vin(l, 2.5)});
   },
   impacto(ctx, s, l, plan){
     const W = VW - 180, cx = VW / 2, half = W / 2 - 8, max = Math.max(1, ...s.temas.map(x => Math.max(x.cri, x.pos)));
@@ -211,12 +211,12 @@ const VESC = {
     const {m, e, ac, tema, medios, pubs} = s.f, W = VW - 180;
     vkicker(ctx, kicker, 320, color, vin(l, 0));
     // etiqueta de tema y tono
-    const ta = vin(l, 0.2), etq = `${tema.split(":")[0]} · ${tonoLbl[m.tono]}`; vfont(ctx, 700, 34, VF.b); const ew = ctx.measureText(etq).width + 56;
+    const ta = vin(l, 0.2), etq = `${categoriaDe(m).n} · ${m.grave ? "Hecho grave" : tonoLbl[m.tono]}`; vfont(ctx, 700, 34, VF.b); const ew = ctx.measureText(etq).width + 56;
     ctx.save(); ctx.globalAlpha *= ta; ctx.fillStyle = color + "33"; vrr(ctx, 90, 360, ew, 64, 32); ctx.fill(); ctx.restore();
     vtexto(ctx, etq, 118, 404, {px: 34, w: 700, color, a: ta});
     let y = vtexto(ctx, m.lead.res, 90, 530, {px: 68, w: 600, fam: VF.n, lh: 82, a: vin(l, 0.45, 0.8), max: 4});
     // dónde se publicó
-    y = vtexto(ctx, `Publicado en ${plural(medios.length, "medio", "medios")} · ${plural(pubs, "publicación", "publicaciones")}${m.tono === "cri" ? (respondida(m.g) ? " · ya respondida" : " · aún sin respuesta") : ""}`, 90, y + 30, {px: 36, w: 500, color: VC.muted, a: vin(l, 1)});
+    y = vtexto(ctx, `Publicado en ${plural(medios.length, "medio", "medios")} · ${plural(pubs, "publicación", "publicaciones")}${m.tono === "cri" ? (atendida(m.g) ? " · ya atendida" : " · aún sin decisión") : ""}`, 90, y + 30, {px: 36, w: 500, color: VC.muted, a: vin(l, 1)});
     const ca = vin(l, 1.2); let cx = 90, cy = y - 8; vfont(ctx, 600, 32, VF.b);
     const chips = medios.slice(0, 4).concat(medios.length > 4 ? [`+${medios.length - 4} más`] : []);
     ctx.save(); ctx.globalAlpha *= ca;

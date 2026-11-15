@@ -85,7 +85,7 @@ ${notas.map((n, k) => linea(n, base + k)).join("\n")}
 Para cada nota devuelve un objeto con:
 - "i": su número.
 - "rel": true solo si trata de la comuna de ${comuna} en Chile, su municipio, sus autoridades o hechos ocurridos allí; false si es otro lugar con el mismo nombre, si la comuna aparece solo de pasada o si solo es el lugar de una cárcel, un tribunal, una carretera o un trámite judicial y el hecho no afecta a los vecinos ni al municipio.
-- "tono": "cri" si es negativa o riesgosa para la gestión o la imagen del municipio o la comuna (reclamos, emergencias, conflictos, críticas), "pos" si la favorece (logros, inversiones, eventos exitosos), "neu" si es informativa.
+- "tono": la postura de la nota hacia el municipio y su gestión. "cri" si lo critica, lo cuestiona o recoge reclamos contra él (servicios que fallan, demoras, denuncias, conflictos con vecinos); "pos" si lo favorece (logros, inversiones, eventos exitosos); "neu" si es informativa. Una emergencia o un accidente que solo se informa, sin reclamos ni cuestionamientos al municipio, es "neu".
 - "res": un resumen propio de una frase, de máximo 20 palabras, en español de Chile, sin copiar frases del medio.
 - "x": entre 3 y 6 palabras clave en minúsculas separadas por espacios (temas, lugares, instituciones).
 
@@ -101,7 +101,7 @@ ${notas.map((n, k) => linea(n, base + k)).join("\n")}
 Para cada nota devuelve un objeto con:
 - "i": su número.
 - "rel": true solo si la nota nombra a ${a.nombre} como ${a.cargo.toLowerCase()} o trata directamente de su labor; false si es otra persona con un nombre parecido o si no la nombra.
-- "tono": "cri" si es negativa o riesgosa para la imagen o el trabajo de ${a.nombre} (críticas, cuestionamientos, polémicas, denuncias), "pos" si la favorece (iniciativas, logros, reconocimientos), "neu" si es informativa o solo la cita.
+- "tono": la postura de la nota hacia ${a.nombre}, no lo grave del hecho. "cri" si la critica, la cuestiona o la vincula a una polémica o denuncia; "pos" si la favorece (iniciativas, logros, reconocimientos); "neu" si es informativa, solo la cita o informa un hecho grave sin cuestionarla.
 - "res": un resumen propio de una frase, de máximo 20 palabras, en español de Chile, sin copiar frases del medio.
 - "x": entre 3 y 6 palabras clave en minúsculas separadas por espacios (temas, lugares, instituciones).
 

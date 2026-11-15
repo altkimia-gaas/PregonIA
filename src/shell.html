@@ -419,7 +419,13 @@ button.ini-imp-r{cursor:pointer;border-radius:8px;padding:6px 6px}button.ini-imp
 .ini-colt{margin:0;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700}
 .ini-colt.cri{color:var(--cri-ink)}.ini-colt.pos{color:var(--pos-ink)}
 .ini-card{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;gap:9px}
-.ini-card.cri{border-top-color:var(--cri)}.ini-card.pos{border-top-color:var(--pos)}
+.ini-card.cri{border-top-color:var(--cri)}.ini-card.pos{border-top-color:var(--pos)}.ini-card.grave{border-top-color:var(--neu)}
+.ini-colt.neu{color:var(--neu-ink,var(--ink));margin-top:14px}
+details.nr{margin-top:8px;font-size:13px}details.nr summary{cursor:pointer;color:var(--muted);list-style:none;display:inline-flex;align-items:center;gap:6px;padding:4px 0}
+details.nr summary::-webkit-details-marker{display:none}details.nr summary::before{content:"▸";font-size:11px}details.nr[open] summary::before{content:"▾"}
+.nr-ops{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.pill.grave{background:color-mix(in srgb,var(--neu) 18%,transparent);color:var(--neu-ink,var(--ink));border-color:var(--neu)}
+.seg.alc{margin:0 0 10px;display:flex;flex-wrap:wrap}.seg.alc button{flex:1 1 auto}
 .ini-kick{margin:0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
 .ini-kick.cri{color:var(--cri-ink)}.ini-kick.pos{color:var(--pos-ink)}
 .ini-h{margin:0;font-family:var(--f-news);font-weight:600;font-size:21px;line-height:1.22}
