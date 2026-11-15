@@ -1731,6 +1731,16 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   :root[data-theme="editorial"] .live,:root[data-theme="editorial"] .planbox summary,:root[data-theme="editorial"] .helpbtn{font-size:.8125rem}
   :root[data-theme="editorial"] .org label{font-size:.75rem}
 }
+/* PRUEBA · Reproductor del video con los colores de Edición */
+:root[data-theme="editorial"] .vid-stage canvas{background:var(--bg);outline:1.5px solid var(--card-line)}
+:root[data-theme="editorial"] .vid-prog .bar i{background:var(--accent-bg)}
+@media (max-width:700px){
+  :root[data-theme="editorial"] .vid.rep,:root[data-theme="editorial"] .vid.rep .vid-stage{background:var(--bg)}
+  :root[data-theme="editorial"] .vid.rep .vid-stage canvas{outline:0}
+  :root[data-theme="editorial"] .vid.rep .vid-h{background:var(--paper);color:var(--ink);border-bottom:1.5px solid var(--card-line)}
+  :root[data-theme="editorial"] .vid.rep .vid-hint{color:var(--muted)}
+  :root[data-theme="editorial"] .vid.rep .vid-h .btn{background:transparent;border:1.5px solid var(--frame);color:var(--ink)}
+}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="pat-pos" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" style="fill:var(--pos)"/></pattern></defs></svg>
