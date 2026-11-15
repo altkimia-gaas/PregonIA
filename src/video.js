@@ -308,10 +308,10 @@ let VID = null;
 function videoAbrir(){
   const plan = videoPlan();
   const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "vidBack";
-  ov.innerHTML = `<section class="vid" role="dialog" aria-modal="true" aria-labelledby="vidT">
-    <header class="vid-h"><div><h2 id="vidT">Video resumen</h2><p>Parte semanal · ${esc(plan.org)} · ${esc(plan.per)}</p></div><button class="btn ghost" type="button" data-act="vid-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+  ov.innerHTML = `<section class="vid rep" role="dialog" aria-modal="true" aria-labelledby="vidT">
+    <header class="vid-h"><div><h2 id="vidT">Video resumen</h2><p>Parte semanal · ${esc(plan.org)} · ${esc(plan.per)}</p><span class="vid-hint" aria-hidden="true">Toca para pausar · desliza para compartir</span></div><button class="btn ghost" type="button" data-act="vid-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
     <div class="vid-b">
-      <div class="vid-stage"><canvas id="vidCv" width="${VOUT[0]}" height="${VOUT[1]}" role="img" aria-label="Vista previa del video: resultado de la semana, temas, asuntos que se pueden complicar con qué hacer, y la buena noticia."></canvas></div>
+      <div class="vid-stage" id="vidStage"><canvas id="vidCv" width="${VOUT[0]}" height="${VOUT[1]}" role="img" aria-label="Vista previa del video: resultado de la semana, temas, asuntos que se pueden complicar con qué hacer, y la buena noticia."></canvas><span class="vid-pausa" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></span></div>
       <div class="vid-side">
         <p class="vid-meta">${Math.round(plan.total)} segundos · vertical, para ver en el celular · ${plan.scenes.length} escenas armadas con el análisis de temas y publicaciones de la semana.</p>
         <div class="vid-ctrl"><button class="btn" type="button" data-act="vid-play" id="vidPlay">Pausa</button><button class="btn" type="button" data-act="vid-replay">Desde el inicio</button></div>
@@ -342,9 +342,13 @@ function videoAbrir(){
     VID.last = now; vdibujar(ctx, Math.max(0, Math.min(VID.t, pl.total - 0.001)), pl); VID.raf = requestAnimationFrame(loop);
   };
   VID.raf = requestAnimationFrame(loop);
-  $("#vidPlay").textContent = VID.play ? "Pausa" : "Reproducir";
+  vidEstado();
+  // Tocar el video lo pausa o lo reanuda, como en cualquier reproductor del celular.
+  cv.addEventListener("click", () => vidAlternar());
   ov.querySelector('[data-act="vid-close"]').focus();
 }
+function vidEstado(){ const b = $("#vidPlay"); if (b) b.textContent = VID.play ? "Pausa" : "Reproducir"; $("#vidStage")?.classList.toggle("pausa", !VID.play); }
+function vidAlternar(){ if (!VID) return; VID.play = !VID.play; VID.last = null; vidEstado(); if (VID.play) vozSonar(); else vozCallar(); }
 function videoCerrar(){
   if (!VID) return; cancelAnimationFrame(VID.raf); VID.ctl?.abort(); VID.vctl?.abort(); vozCallar(); VID.ac?.close().catch(() => {}); const o = VID.origen; VID = null;
   $("#vidBack")?.remove(); document.body.classList.remove("vid-on"); if (o && o.isConnected) o.focus();
@@ -389,8 +393,8 @@ document.addEventListener("click", e => {
   if (a === "vid-open") videoAbrir();
   if (!VID) return;
   if (a === "vid-close") videoCerrar();
-  if (a === "vid-play") { VID.play = !VID.play; VID.last = null; b.textContent = VID.play ? "Pausa" : "Reproducir"; if (VID.play) vozSonar(); else vozCallar(); }
-  if (a === "vid-replay") { VID.t = 0; VID.play = true; VID.last = null; $("#vidPlay").textContent = "Pausa"; vozSonar(); }
+  if (a === "vid-play") vidAlternar();
+  if (a === "vid-replay") { VID.t = 0; VID.play = true; VID.last = null; vidEstado(); vozSonar(); }
   if (a === "voz-add") vozAgregar(false);
   if (a === "voz-regrabar") vozAgregar(true);
   if (a === "vid-make") videoPreparar();
