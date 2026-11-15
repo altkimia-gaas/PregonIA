@@ -6199,6 +6199,7 @@ async function vozDisponible(){
 async function vozGrabar(texto, ac, signal){
   const r = await fetch("/api/voz", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({texto}), signal});
   if (!r.ok) { let m = ""; try { m = (await r.json()).error; } catch(e) {} throw {code: r.status === 429 ? "rate_limited" : "voz", message: m || "El servicio de voz no respondió"}; }
+  if (r.headers.get("x-voz") === "estandar" && VID) VID.vozEstandar = true;  // la cuenta de ElevenLabs no permite la voz chilena
   const buf = await r.arrayBuffer();
   return await new Promise((ok, no) => { const p = ac.decodeAudioData(buf, ok, no); if (p && p.then) p.then(ok, no); });
 }
@@ -6570,7 +6571,7 @@ async function vozAgregar(regrabar){
   }
   VID.blob = null; $("#vidOut").hidden = true; $("#vidMake").textContent = "Preparar video MP4";
   $(".vid-meta").textContent = `${Math.round(plan.total)} segundos con voz · vertical, para ver en el celular · ${plan.scenes.length} escenas con las noticias ${plan.P.de}: tono, hasta dónde llegaron, respuestas y temas.`;
-  st.textContent = `Voz lista · ${Math.round(plan.total)} segundos`; btn.disabled = false; btn.lastChild.textContent = "Escribir y grabar de nuevo";
+  st.textContent = `Voz lista · ${Math.round(plan.total)} segundos${VID.vozEstandar ? " · voz estándar (la chilena requiere un plan pagado de ElevenLabs)" : ""}`; btn.disabled = false; btn.lastChild.textContent = "Escribir y grabar de nuevo";
   VID.t = 0; VID.play = true; VID.last = null; $("#vidPlay").textContent = "Pausa"; vozSonar();
 }
 
