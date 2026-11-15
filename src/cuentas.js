@@ -200,7 +200,7 @@ function entCuerpo(){
   }).join("");
   return `<header class="ent-h">
       <button class="ent-ib ent-atras" type="button" data-act="ent-atras" aria-label="Volver al paso anterior" ${ENT.paso === 1 ? "hidden" : ""}>${eIco(I_ATR)}</button>
-      <div class="ent-marca"><b>Pregon<span>IA</span></b><small>La prensa no espera. Tú tampoco.</small></div>
+      <div class="ent-marca"><b>${icoPeriodico(26, true)}Pregon<span>IA</span></b><small>La prensa no espera. Tú tampoco.</small></div>
       <span class="ent-pasoN" aria-live="polite">${ENT.paso <= 3 ? `Paso ${ENT.paso} de 3` : "Revisión"}</span>
       <button class="ent-ib" type="button" data-act="ent-cerrar" aria-label="Cerrar">${eIco(I_X)}</button></header>
     <div class="ent-prog" aria-hidden="true">${[1, 2, 3].map(i => `<i class="${ENT.paso >= i ? "on" : ""}"></i>`).join("")}</div>

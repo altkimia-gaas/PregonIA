@@ -1,7 +1,7 @@
 /* Service worker de PregonIA: hace instalable la aplicación y recibe lo que se comparte desde otras apps del celular.
    No guarda la aplicación en caché (siempre se carga la versión vigente); solo atiende el envío a /compartir
    y, si no hay señal al abrirla, muestra una pantalla propia de «Sin conexión» en vez del error del navegador. */
-const CACHE = "pregonia-compartir", CACHE_OFF = "pregonia-sin-conexion-v1", OFFLINE = "/offline.html";
+const CACHE = "pregonia-compartir", CACHE_OFF = "pregonia-sin-conexion-v2", OFFLINE = "/offline.html";
 self.addEventListener("install", e => e.waitUntil(caches.open(CACHE_OFF).then(c => c.addAll([OFFLINE, "/icono-192.png"])).catch(() => {}).then(() => self.skipWaiting())));
 self.addEventListener("activate", e => e.waitUntil((async () => {
   for (const k of await caches.keys()) if (k.startsWith("pregonia-sin-conexion-") && k !== CACHE_OFF) await caches.delete(k);

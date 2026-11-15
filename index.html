@@ -201,7 +201,7 @@ body.vid-on{overflow:hidden}
 .ent .ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .ent-h{display:flex;align-items:center;gap:8px;padding:8px 10px 8px 22px;border-bottom:1px solid var(--line);min-height:60px;box-sizing:border-box}
 .ent-marca{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-right:auto}
-.ent-marca b{font-size:20px;font-weight:800;letter-spacing:-.02em}.ent-marca b span{color:var(--accent)}
+.ent-marca b{font-size:20px;font-weight:800;letter-spacing:-.02em}.ent-marca .ico-per{width:26px;height:26px;vertical-align:-6px;margin-right:8px}.ent-marca b span{color:var(--accent)}
 .ent-marca small{color:var(--muted);font-size:13px}
 .ent-pasoN{display:none;font-size:14px;font-weight:600;color:var(--muted)}
 .ent-ib{width:44px;height:44px;display:grid;place-items:center;border:0;background:transparent;color:var(--muted);border-radius:10px;cursor:pointer;flex:none}
@@ -535,17 +535,19 @@ button.ini-fila:hover{background:var(--surface-2)}
 @keyframes vocgira{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.voc-spin{animation:none}}
 /* Ícono animado: periódico que da vuelta sus páginas */
-.ico-per{flex:none;--tinta:var(--accent);--papel:#FFFFFF;overflow:visible}
-.ico-per .ip-p{fill:var(--papel);stroke:var(--tinta);stroke-width:2.2;stroke-linejoin:round}
-.ico-per .ip-t{stroke:var(--tinta);stroke-width:3.4;stroke-linecap:round}
-.ico-per .ip-l{stroke:var(--tinta);stroke-width:1.9;stroke-linecap:round;opacity:.5}
-.ico-per .ip-f{fill:var(--tinta);opacity:.35}
-.ico-per .ip-lomo{stroke:var(--tinta);stroke-width:2.2;stroke-linecap:round}
+.ico-per{flex:none;overflow:visible}
+.ico-per .ip-p{fill:var(--papel,#FFFFFF);stroke:var(--tinta,var(--accent));stroke-width:2.2;stroke-linejoin:round}
+.ico-per .ip-t{stroke:var(--tinta,var(--accent));stroke-width:3.4;stroke-linecap:round}
+.ico-per .ip-l{stroke:var(--tinta,var(--accent));stroke-width:1.9;stroke-linecap:round;opacity:.5}
+.ico-per .ip-f{fill:var(--tinta,var(--accent));opacity:.35}
+.ico-per .ip-lomo{stroke:var(--tinta,var(--accent));stroke-width:2.2;stroke-linecap:round}
 .ico-per .ip-izq{transform-box:view-box;transform-origin:32px 32px;transform:scaleX(-1)}
 .ico-per .ip-hoja{transform-box:view-box;transform-origin:32px 32px;animation:ipPasar 2.4s cubic-bezier(.45,.05,.35,1) infinite}
-.ico-per .ip-som{fill:var(--tinta);opacity:0;animation:ipSombra 2.4s cubic-bezier(.45,.05,.35,1) infinite}
+.ico-per .ip-som{fill:var(--tinta,var(--accent));opacity:0;animation:ipSombra 2.4s cubic-bezier(.45,.05,.35,1) infinite}
 @keyframes ipPasar{0%{transform:scaleX(1) skewY(0)}22%{transform:scaleX(.1) skewY(-10deg)}45%,100%{transform:scaleX(-1) skewY(0)}}
 @keyframes ipSombra{0%,45%,100%{opacity:0}20%{opacity:.14}}
+.ico-per.quieto .ip-hoja,.ico-per.quieto .ip-som{animation-play-state:paused;animation-delay:-1.08s}
+a:hover .ico-per.quieto .ip-hoja,a:hover .ico-per.quieto .ip-som,html.leyendo .ico-per.quieto .ip-hoja,html.leyendo .ico-per.quieto .ip-som{animation-play-state:running;animation-delay:0s}
 @media (prefers-reduced-motion:reduce){.ico-per .ip-hoja,.ico-per .ip-som{animation:none}}
 /* Pantalla de lectura de medios: mismo lenguaje de la portada (tarjeta, kicker azul, titular serif) */
 .pr{min-height:min(80vh,740px);display:grid;place-content:center;justify-items:center;text-align:center;gap:10px;padding:28px 18px}
@@ -555,37 +557,25 @@ button.ini-fila:hover{background:var(--surface-2)}
 /* La órbita gira y cada diario gira al revés para quedar derecho */
 .pr-orbita{position:absolute;inset:0;animation:prOrb 26s linear infinite}
 @keyframes prOrb{to{transform:rotate(360deg)}}
-.pr-o{position:absolute;left:50%;top:50%;width:40px;height:50px;margin:-25px 0 0 -20px;transform:rotate(var(--a)) translateY(-112px) rotate(calc(-1 * var(--a)))}
-.pr-oi{position:relative;display:block;width:40px;height:50px;animation:prOrb 26s linear infinite reverse;transition:opacity .4s}
-.pr-oi svg{width:40px;height:50px;display:block;filter:drop-shadow(0 3px 6px rgba(0,0,0,.25));transition:transform .4s}
-.pr-o.leyendo .pr-oi svg{transform:scale(1.25);filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent) 70%,transparent))}
+.pr-o{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;transform:rotate(var(--a)) translateY(-112px) rotate(calc(-1 * var(--a)))}
+.pr-oi{position:relative;display:block;width:44px;height:44px;animation:prOrb 26s linear infinite reverse;transition:opacity .4s}
+.pr-mini{display:block;width:44px;height:44px;--papel:#FFFFFF;filter:drop-shadow(0 3px 6px rgba(0,0,0,.25));transition:transform .4s,filter .4s}.pr-mini .ico-per{width:44px;height:44px;display:block}
+.pr-o.leyendo .pr-mini{transform:scale(1.25);filter:drop-shadow(0 0 10px color-mix(in srgb,var(--tinta) 70%,transparent))}
 .pr-o:not(.leyendo):not(.leido) .pr-oi{opacity:.92}
 .pr-ok{position:absolute;right:-7px;top:-7px;width:18px;height:18px;border-radius:50%;background:var(--pos);color:#fff;font:700 11px/18px system-ui,sans-serif;text-align:center;opacity:0;transform:scale(.4);transition:opacity .3s,transform .3s;box-shadow:0 0 0 2px var(--bg,var(--surface))}
 .pr-o.leido .pr-ok{opacity:1;transform:none}
 /* Centro: el diario que se está leyendo, abierto, con las páginas dando vuelta */
 .pr-centro{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);perspective:600px}
-.pr-libro{width:124px;animation:prEntra .45s ease-out}
+.pr-libro{display:grid;justify-items:center;gap:2px;--papel:#FFFFFF;animation:prEntra .45s ease-out}.pr-libro .ico-per{width:150px;height:150px;display:block;filter:drop-shadow(0 10px 18px rgba(0,0,0,.3))}
+.pr-nom{font:700 11px var(--f-display);letter-spacing:.14em;color:var(--tinta);margin-top:-14px}
 @keyframes prEntra{from{opacity:0;transform:scale(.6) rotate(-8deg)}to{opacity:1;transform:none}}
-.pr-cab{height:16px;background:var(--c);border-radius:4px 4px 0 0;display:grid;place-items:center}
-.pr-cab span{font:700 9px Georgia,serif;letter-spacing:.06em;color:#fff}
-.pr-abierto{position:relative;display:flex;height:76px;background:var(--p);border:1.5px solid var(--c);border-top:0;border-radius:0 0 4px 4px;box-shadow:0 8px 18px rgba(0,0,0,.3);transform-style:preserve-3d}
-.pr-abierto::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:color-mix(in srgb,var(--c) 45%,transparent)}
-.pr-pag{flex:1;display:grid;align-content:start;gap:5px;padding:8px 7px}
-.pr-pag i{display:block;height:3px;border-radius:2px;background:#2B3445;opacity:.45}
-.pr-pag i:first-child{height:12px;background:var(--c);opacity:.8;width:100% !important}
-.pr-hoja{position:absolute;left:50%;top:0;width:50%;height:100%;transform-origin:left center;transform-style:preserve-3d;animation:prPagina .87s ease-in-out infinite}
-.pr-cara{position:absolute;inset:0;background:var(--p);backface-visibility:hidden;display:flex}
-.pr-cara.fr{border-left:1px solid color-mix(in srgb,var(--c) 30%,transparent)}
-.pr-cara.re{transform:rotateY(180deg)}
-.pr-cara .pr-pag{flex:1}
-@keyframes prPagina{0%{transform:rotateY(0)}70%,100%{transform:rotateY(-180deg)}}
 .pr-t{margin:2px 0 0;font-family:var(--f-news);font-weight:600;font-size:clamp(26px,3.4vw,38px);line-height:1.12;letter-spacing:-.01em}
 .pr-t:focus{outline:none}
 .pr-s{margin:0;max-width:560px;color:var(--muted);font-size:15px;line-height:1.5}.pr-s b{color:var(--ink)}
 .pr-paso{margin:10px 0 0;display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-weight:600;font-size:14px;color:var(--ink)}
 .pr-nota{margin:0;font-size:12.5px;color:var(--muted)}
 @media (max-width:420px){.pr-centro{transform:translate(-50%,-50%) scale(.8)}.pr-circ{width:256px;height:256px}.pr-pista{inset:28px}.pr-o{transform:rotate(var(--a)) translateY(-99px) rotate(calc(-1 * var(--a)))}}
-@media (prefers-reduced-motion:reduce){.pr-orbita,.pr-oi,.pr-hoja,.pr-libro{animation:none}}
+@media (prefers-reduced-motion:reduce){.pr-orbita,.pr-oi,.pr-libro{animation:none}}
 .voc-f{display:grid;gap:8px;padding:12px 18px 16px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--surface)}
 .voc-f2{display:flex;gap:8px;flex-wrap:wrap}
 .voc-f .hint{margin:0}
@@ -920,9 +910,8 @@ body{font-size:14.5px}
 .top-in{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding-block:12px}
 .logo{display:inline-flex;align-items:center;gap:9px;margin:0;font-size:21px;font-weight:800;letter-spacing:-.02em;color:var(--top-ink);text-decoration:none;line-height:1}
 .logo b{color:var(--top-accent);font-weight:800}
-.logo .mk{display:inline-flex;align-items:flex-end;gap:2px;height:18px}
-.logo .mk i{width:5px;border-radius:1.5px;background:var(--top-accent)}
-.logo .mk i:nth-child(1){height:7px;opacity:.55}.logo .mk i:nth-child(2){height:12px;opacity:.8}.logo .mk i:nth-child(3){height:18px}
+.logo .mk{display:inline-flex;width:30px;height:30px;margin:-4px 0}
+.logo .mk .ico-per{width:100%;height:100%;--tinta:var(--top-accent);--papel:#FFFFFF}
 .slogan{font-family:var(--f-news);font-style:italic;font-size:14px;color:var(--top-muted)}
 .org{display:inline-flex;align-items:center;gap:8px}
 .org label{margin:0;color:var(--top-muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em}
@@ -1211,9 +1200,8 @@ body.hp-on{overflow:hidden}
 .pt-in{position:relative;z-index:1;width:100%;max-width:1240px;margin:0 auto;display:grid;gap:18px;justify-items:start;padding-top:24px;padding-bottom:calc(56px + env(safe-area-inset-bottom,0px));padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
 .pt-logo{margin:0;display:inline-flex;align-items:center;gap:14px;font-size:clamp(40px,5.6vw,64px);font-weight:700;letter-spacing:-.04em;line-height:1}
 .pt-logo b{color:var(--alt-blue);font-weight:700}
-.pt-logo .mk{display:inline-flex;align-items:flex-end;gap:4px;height:.8em}
-.pt-logo .mk i{width:.17em;border-radius:3px;background:var(--alt-blue)}
-.pt-logo .mk i:nth-child(1){height:38%;opacity:.5}.pt-logo .mk i:nth-child(2){height:68%;opacity:.78}.pt-logo .mk i:nth-child(3){height:100%}
+.pt-logo .mk{display:inline-flex;width:1.12em;height:1.12em}
+.pt-logo .mk .ico-per{width:100%;height:100%;--tinta:var(--alt-blue);--papel:#FFFFFF}
 .pt-kick{margin:0;font-size:12.5px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--alt-blue)}
 .pt-h{margin:6px 0 0;max-width:24ch;font-family:var(--f-ui);font-weight:700;font-size:clamp(28px,3.7vw,50px);line-height:1.08;letter-spacing:-.035em;text-wrap:balance;text-shadow:0 2px 24px rgba(0,0,0,.4)}
 .pt-h em{font-style:normal;color:var(--alt-blue)}
@@ -1350,7 +1338,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
 <section class="portada" id="portada" aria-labelledby="ptT" hidden>
   <div class="pt-grid" aria-hidden="true"></div>
   <div class="pt-in">
-    <p class="pt-logo" id="ptT"><span class="mk" aria-hidden="true"><i></i><i></i><i></i></span><span>Pregon<b>IA</b></span></p>
+    <p class="pt-logo" id="ptT"><span class="mk" aria-hidden="true"><svg class="ico-per" viewBox="0 0 64 64" aria-hidden="true"><g class="ip-izq"><path class="ip-p" d="M32 14H54.5a1.5 1.5 0 0 1 1.5 1.5v33a1.5 1.5 0 0 1-1.5 1.5H32Z"/><line class="ip-t" x1="36" y1="19.5" x2="52" y2="19.5"/><line class="ip-l" x1="36" y1="26" x2="42.5" y2="26"/><line class="ip-l" x1="36" y1="30.5" x2="42.5" y2="30.5"/><line class="ip-l" x1="36" y1="35" x2="42.5" y2="35"/><line class="ip-l" x1="36" y1="39.5" x2="42.5" y2="39.5"/><line class="ip-l" x1="36" y1="44" x2="41" y2="44"/><line class="ip-l" x1="45.5" y1="26" x2="52" y2="26"/><line class="ip-l" x1="45.5" y1="30.5" x2="52" y2="30.5"/><rect class="ip-f" x="45.5" y="34" width="6.5" height="11" rx="1.2"/></g><g><path class="ip-p" d="M32 14H54.5a1.5 1.5 0 0 1 1.5 1.5v33a1.5 1.5 0 0 1-1.5 1.5H32Z"/><line class="ip-t" x1="36" y1="19.5" x2="52" y2="19.5"/><line class="ip-l" x1="36" y1="26" x2="42.5" y2="26"/><line class="ip-l" x1="36" y1="30.5" x2="42.5" y2="30.5"/><line class="ip-l" x1="36" y1="35" x2="42.5" y2="35"/><line class="ip-l" x1="36" y1="39.5" x2="42.5" y2="39.5"/><line class="ip-l" x1="36" y1="44" x2="41" y2="44"/><line class="ip-l" x1="45.5" y1="26" x2="52" y2="26"/><line class="ip-l" x1="45.5" y1="30.5" x2="52" y2="30.5"/><rect class="ip-f" x="45.5" y="34" width="6.5" height="11" rx="1.2"/></g><path class="ip-som" d="M32 14H56V50H32Z"/><g class="ip-hoja"><path class="ip-p" d="M32 14H54.5a1.5 1.5 0 0 1 1.5 1.5v33a1.5 1.5 0 0 1-1.5 1.5H32Z"/><line class="ip-t" x1="36" y1="19.5" x2="52" y2="19.5"/><line class="ip-l" x1="36" y1="26" x2="42.5" y2="26"/><line class="ip-l" x1="36" y1="30.5" x2="42.5" y2="30.5"/><line class="ip-l" x1="36" y1="35" x2="42.5" y2="35"/><line class="ip-l" x1="36" y1="39.5" x2="42.5" y2="39.5"/><line class="ip-l" x1="36" y1="44" x2="41" y2="44"/><line class="ip-l" x1="45.5" y1="26" x2="52" y2="26"/><line class="ip-l" x1="45.5" y1="30.5" x2="52" y2="30.5"/><rect class="ip-f" x="45.5" y="34" width="6.5" height="11" rx="1.2"/></g><line class="ip-lomo" x1="32" y1="14" x2="32" y2="50"/></svg></span><span>Pregon<b>IA</b></span></p>
     <p class="pt-kick">La prensa no espera. Tú tampoco.</p>
     <h1 class="pt-h">Detecta lo que la prensa dice de tu gestión, mide hasta dónde llegó y responde <em>antes de que el tema escale.</em></h1>
     <p class="pt-seg"><b>Para instituciones y autoridades públicas</b><span>Municipios y alcaldías</span><span>Concejos municipales</span><span>Consejos regionales</span><span>Diputados y senadores</span></p>
@@ -1365,7 +1353,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
 <div class="app">
   <header class="topbar">
     <div class="top-in">
-      <a class="logo" href="#portada" aria-label="PregonIA, portada"><span class="mk" aria-hidden="true"><i></i><i></i><i></i></span><span>Pregon<b>IA</b></span></a>
+      <a class="logo" href="#portada" aria-label="PregonIA, portada"><span class="mk" aria-hidden="true"><svg class="ico-per quieto" viewBox="0 0 64 64" aria-hidden="true"><g class="ip-izq"><path class="ip-p" d="M32 14H54.5a1.5 1.5 0 0 1 1.5 1.5v33a1.5 1.5 0 0 1-1.5 1.5H32Z"/><line class="ip-t" x1="36" y1="19.5" x2="52" y2="19.5"/><line class="ip-l" x1="36" y1="26" x2="42.5" y2="26"/><line class="ip-l" x1="36" y1="30.5" x2="42.5" y2="30.5"/><line class="ip-l" x1="36" y1="35" x2="42.5" y2="35"/><line class="ip-l" x1="36" y1="39.5" x2="42.5" y2="39.5"/><line class="ip-l" x1="36" y1="44" x2="41" y2="44"/><line class="ip-l" x1="45.5" y1="26" x2="52" y2="26"/><line class="ip-l" x1="45.5" y1="30.5" x2="52" y2="30.5"/><rect class="ip-f" x="45.5" y="34" width="6.5" height="11" rx="1.2"/></g><g><path class="ip-p" d="M32 14H54.5a1.5 1.5 0 0 1 1.5 1.5v33a1.5 1.5 0 0 1-1.5 1.5H32Z"/><line class="ip-t" x1="36" y1="19.5" x2="52" y2="19.5"/><line class="ip-l" x1="36" y1="26" x2="42.5" y2="26"/><line class="ip-l" x1="36" y1="30.5" x2="42.5" y2="30.5"/><line class="ip-l" x1="36" y1="35" x2="42.5" y2="35"/><line class="ip-l" x1="36" y1="39.5" x2="42.5" y2="39.5"/><line class="ip-l" x1="36" y1="44" x2="41" y2="44"/><line class="ip-l" x1="45.5" y1="26" x2="52" y2="26"/><line class="ip-l" x1="45.5" y1="30.5" x2="52" y2="30.5"/><rect class="ip-f" x="45.5" y="34" width="6.5" height="11" rx="1.2"/></g><path class="ip-som" d="M32 14H56V50H32Z"/><g class="ip-hoja"><path class="ip-p" d="M32 14H54.5a1.5 1.5 0 0 1 1.5 1.5v33a1.5 1.5 0 0 1-1.5 1.5H32Z"/><line class="ip-t" x1="36" y1="19.5" x2="52" y2="19.5"/><line class="ip-l" x1="36" y1="26" x2="42.5" y2="26"/><line class="ip-l" x1="36" y1="30.5" x2="42.5" y2="30.5"/><line class="ip-l" x1="36" y1="35" x2="42.5" y2="35"/><line class="ip-l" x1="36" y1="39.5" x2="42.5" y2="39.5"/><line class="ip-l" x1="36" y1="44" x2="41" y2="44"/><line class="ip-l" x1="45.5" y1="26" x2="52" y2="26"/><line class="ip-l" x1="45.5" y1="30.5" x2="52" y2="30.5"/><rect class="ip-f" x="45.5" y="34" width="6.5" height="11" rx="1.2"/></g><line class="ip-lomo" x1="32" y1="14" x2="32" y2="50"/></svg></span><span>Pregon<b>IA</b></span></a>
       <span class="slogan">La prensa no espera. Tú tampoco.</span>
       <div class="org"><label for="org">Cuenta</label><select id="org" aria-label="Cuenta"></select></div>
       <span class="live"><i class="dot" aria-hidden="true"></i><span id="fecha"></span></span>
@@ -2487,7 +2475,7 @@ function entCuerpo(){
   }).join("");
   return `<header class="ent-h">
       <button class="ent-ib ent-atras" type="button" data-act="ent-atras" aria-label="Volver al paso anterior" ${ENT.paso === 1 ? "hidden" : ""}>${eIco(I_ATR)}</button>
-      <div class="ent-marca"><b>Pregon<span>IA</span></b><small>La prensa no espera. Tú tampoco.</small></div>
+      <div class="ent-marca"><b>${icoPeriodico(26, true)}Pregon<span>IA</span></b><small>La prensa no espera. Tú tampoco.</small></div>
       <span class="ent-pasoN" aria-live="polite">${ENT.paso <= 3 ? `Paso ${ENT.paso} de 3` : "Revisión"}</span>
       <button class="ent-ib" type="button" data-act="ent-cerrar" aria-label="Cerrar">${eIco(I_X)}</button></header>
     <div class="ent-prog" aria-hidden="true">${[1, 2, 3].map(i => `<i class="${ENT.paso >= i ? "on" : ""}"></i>`).join("")}</div>
@@ -3789,7 +3777,13 @@ async function pdfDiario(){
   const recorta = (s, w, size, bold) => { let x = T(s); if (ancho(x, size, bold) <= w) return x; while (x.length > 3 && ancho(x + "…", size, bold) > w) x = x.slice(0, -1); return x.trim() + "…"; };
   const tarjeta = (x, y, w, h) => { doc.setFillColor(C.card); doc.setDrawColor(C.line); doc.setLineWidth(0.25); doc.roundedRect(x, y, w, h, 2, 2, "FD"); };
   const ceja = (s, x, y, color = C.blueL) => txt(String(s).toUpperCase(), x, y, {size: 6.8, bold: true, color, cs: 0.35});
-  const marca = (x, yb, s) => { doc.setFillColor("#2196F3"); [0.42, 0.7, 1].forEach((h, i) => doc.roundedRect(x + i * s * 0.55, yb - s * h, s * 0.38, s * h, s * 0.07, s * 0.07, "F")); return x + s * 1.6; };
+  // Marca: periódico abierto de línea (dos páginas con titular, columnas y foto), como el ícono de la aplicación.
+  const marca = (x, yb, s) => { const k = s * 1.15 / 36, X = u => x + (u - 8) * k, Y = u => yb - (50 - u) * k;
+    doc.setDrawColor("#2196F3"); doc.setFillColor("#FFFFFF"); doc.setLineWidth(2.2 * k); doc.rect(X(8), Y(14), 48 * k, 36 * k, "FD"); doc.line(X(32), Y(14), X(32), Y(50));
+    doc.setLineWidth(3 * k); doc.line(X(12), Y(19.5), X(28), Y(19.5)); doc.line(X(36), Y(19.5), X(52), Y(19.5));
+    doc.setDrawColor("#90C6F5"); doc.setLineWidth(1.7 * k); [26, 30.5, 35, 39.5].forEach(y => { doc.line(X(36), Y(y), X(42.5), Y(y)); doc.line(X(21.5), Y(y), X(28), Y(y)); }); [26, 30.5].forEach(y => { doc.line(X(45.5), Y(y), X(52), Y(y)); doc.line(X(12), Y(y), X(18.5), Y(y)); });
+    doc.setFillColor("#B5D8F8"); doc.rect(X(45.5), Y(34), 6.5 * k, 11 * k, "F"); doc.rect(X(12), Y(34), 6.5 * k, 11 * k, "F");
+    return X(56) + s * 0.25; };
   const logo = (x, y, size) => { const x2 = marca(x, y, size * 0.33) + 0.6; txt("Pregon", x2, y, {size, bold: true}); txt("IA", x2 + ancho("Pregon", size, true), y, {size, bold: true, color: "#2196F3"}); };
   const barra = (x, y, w, frac, color = C.blue) => { doc.setFillColor(C.track); doc.roundedRect(x, y, w, 1.8, 0.9, 0.9, "F"); if (frac > 0) { doc.setFillColor(color); doc.roundedRect(x, y, Math.max(1.8, w * frac), 1.8, 0.9, 0.9, "F"); } };
   const senal = (x, yb, nivel, color) => [1.4, 2.3, 3.2].forEach((h, i) => { doc.setFillColor(i <= nivel ? color : C.track); doc.roundedRect(x + i * 1.6, yb - h, 1.1, h, 0.3, 0.3, "F"); });
@@ -4271,6 +4265,7 @@ const NOTAS_DEMO = NOTAS.slice(), MODO_KEY = "pregonia-modo";
 let MODO = {tipo: "demo", info: null, cargando: false, disponible: false};
 const horaCorta = iso => new Date(iso).toLocaleTimeString("es-CL", {hour: "2-digit", minute: "2-digit", hourCycle: "h23"});
 function pintarModo(){
+  document.documentElement.classList.toggle("leyendo", !!MODO.cargando);  // la marca del encabezado pasa páginas mientras se leen los medios
   const el = $("#demo"); if (!el) return;
   if (PILOTO && PILOTO.activo) return pintarPiloto();
   const real = MODO.tipo === "real" && MODO.info, i = MODO.info;
@@ -4305,7 +4300,7 @@ async function cargarReales(force, silencioso){
 /* Ícono animado de carga: un periódico abierto que da vuelta sus páginas (el mismo de assets/periodico-animado.svg).
    La página izquierda es el reflejo exacto de la derecha, así la hoja que pasa calza sin salto. */
 const IP_PAG = '<path class="ip-p" d="M32 14H54.5a1.5 1.5 0 0 1 1.5 1.5v33a1.5 1.5 0 0 1-1.5 1.5H32Z"/><line class="ip-t" x1="36" y1="19.5" x2="52" y2="19.5"/><line class="ip-l" x1="36" y1="26" x2="42.5" y2="26"/><line class="ip-l" x1="36" y1="30.5" x2="42.5" y2="30.5"/><line class="ip-l" x1="36" y1="35" x2="42.5" y2="35"/><line class="ip-l" x1="36" y1="39.5" x2="42.5" y2="39.5"/><line class="ip-l" x1="36" y1="44" x2="41" y2="44"/><line class="ip-l" x1="45.5" y1="26" x2="52" y2="26"/><line class="ip-l" x1="45.5" y1="30.5" x2="52" y2="30.5"/><rect class="ip-f" x="45.5" y="34" width="6.5" height="11" rx="1.2"/>';
-const icoPeriodico = (px = 20) => `<svg class="ico-per" viewBox="0 0 64 64" width="${px}" height="${px}" aria-hidden="true"><g class="ip-izq">${IP_PAG}</g><g>${IP_PAG}</g><path class="ip-som" d="M32 14H56V50H32Z"/><g class="ip-hoja">${IP_PAG}</g><line class="ip-lomo" x1="32" y1="14" x2="32" y2="50"/></svg>`;
+const icoPeriodico = (px = 20, quieto = false) => `<svg class="ico-per${quieto ? " quieto" : ""}" viewBox="0 0 64 64" width="${px}" height="${px}" aria-hidden="true"><g class="ip-izq">${IP_PAG}</g><g>${IP_PAG}</g><path class="ip-som" d="M32 14H56V50H32Z"/><g class="ip-hoja">${IP_PAG}</g><line class="ip-lomo" x1="32" y1="14" x2="32" y2="50"/></svg>`;
 /* Pantalla de lectura: posiciona a PregonIA mientras el servidor lee los medios y la IA clasifica.
    Siete diarios de colores giran en órbita; uno a la vez pasa al centro, se abre y se le dan vuelta las páginas;
    al terminar queda con visto en la órbita y entra el siguiente. Sin movimiento si el sistema lo pide. */
@@ -4313,21 +4308,14 @@ const DIARIOS = [
   {n: "DIARIO", c: "#1976D2", p: "#E3F0FB"}, {n: "NOTICIAS", c: "#D9443C", p: "#FBE7E5"}, {n: "CRÓNICA", c: "#2E9E6B", p: "#E2F4EA"},
   {n: "GACETA", c: "#C98A0B", p: "#FBF0D9"}, {n: "EL PREGÓN", c: "#7B4BC4", p: "#EFE7FA"}, {n: "SEMANARIO", c: "#0F8C99", p: "#DDF2F4"}, {n: "LA VOZ", c: "#E0598B", p: "#FBE5EE"}
 ];
-const PR_ORB = 7, PR_MS = 2600;  // 3 páginas por diario
-function diarioMini(d, i){
-  const ln = (y, w) => `<rect x="5" y="${y}" width="${w}" height="2" rx="1" fill="#2B3445" opacity=".5"/>`;
-  return `<svg viewBox="0 0 40 50" aria-hidden="true"><rect x=".75" y=".75" width="38.5" height="48.5" rx="3" fill="${d.p}" stroke="${d.c}" stroke-width="1.5"/><rect x=".75" y=".75" width="38.5" height="10" rx="3" fill="${d.c}"/><rect x=".75" y="6" width="38.5" height="4.75" fill="${d.c}"/>
-    <rect x="5" y="15" width="${i % 2 ? 30 : 14}" height="${i % 2 ? 10 : 14}" rx="1.5" fill="${d.c}" opacity=".8"/>${i % 2 ? ln(29, 30) + ln(33, 26) : ln(16, 12) + ln(20, 12) + ln(24, 10)}${ln(37, 30)}${ln(41, 24)}</svg>`;
-}
-const prPagina = lado => `<div class="pr-pag ${lado}">${[0, 1, 2, 3, 4, 5].map(k => `<i style="width:${[86, 70, 92, 64, 88, 74][(k + (lado === "der" ? 2 : 0)) % 6]}%"></i>`).join("")}</div>`;
-function prLibro(d){
-  return `<div class="pr-libro" style="--c:${d.c};--p:${d.p}"><div class="pr-cab"><span>${d.n}</span></div>
-    <div class="pr-abierto">${prPagina("izq")}${prPagina("der")}<div class="pr-hoja"><div class="pr-cara fr">${prPagina("der")}</div><div class="pr-cara re">${prPagina("izq")}</div></div></div></div>`;
-}
+const PR_ORB = 7, PR_MS = 4800;  // dos páginas por diario (el ícono pasa una cada 2,4 s)
+/* Órbita y centro con la marca de PregonIA (periódico de línea), cada diario en su color. */
+const diarioMini = d => `<span class="pr-mini" style="--tinta:${d.c}">${icoPeriodico(44, true)}</span>`;
+const prLibro = d => `<div class="pr-libro" style="--tinta:${d.c}">${icoPeriodico(150)}<span class="pr-nom">${d.n}</span></div>`;
 const PR_PASOS = [[0, "Leyendo los medios nacionales, regionales y locales…"], [8, "Juntando la misma noticia publicada en varios medios…"], [18, "La IA está leyendo el tono y escribiendo resúmenes propios…"], [32, "Ordenando por alcance y preparando qué conviene hacer…"], [55, "Unos segundos más: hay muchas fuentes para revisar…"]];
 function procesandoHtml(){
   const quien = esAut() ? cuenta().perfil.nombre : S.org, hoy = new Date(NOW).toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long"});
-  const orbita = DIARIOS.map((d, i) => `<span class="pr-o${i ? "" : " leyendo"}" style="--a:${i * 360 / PR_ORB}deg"><span class="pr-oi">${diarioMini(d, i)}<span class="pr-ok">✓</span></span></span>`).join("");
+  const orbita = DIARIOS.map((d, i) => `<span class="pr-o${i ? "" : " leyendo"}" style="--a:${i * 360 / PR_ORB}deg"><span class="pr-oi">${diarioMini(d)}<span class="pr-ok">✓</span></span></span>`).join("");
   return `<section class="pr" role="status" aria-live="polite" aria-labelledby="prT">
     <div class="pr-circ" aria-hidden="true"><span class="pr-pista"></span><div class="pr-orbita">${orbita}</div><div class="pr-centro" id="prCentro">${prLibro(DIARIOS[0])}</div></div>
     <span class="ini-ekick">Leyendo la prensa · ${esc(hoy)}</span>
@@ -5677,12 +5665,33 @@ function vtexto(ctx, txt, x, y, o){
   return y + (L.length - 1) * lh + lh;
 }
 function vrr(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
-function vmarca(ctx, x, yBase, s, a){ ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = VC.blue; [0.42, 0.7, 1].forEach((h, i) => { vrr(ctx, x + i * s * 0.55, yBase - s * h, s * 0.38, s * h, s * 0.07); ctx.fill(); }); ctx.restore(); return x + s * 1.55; }
-function vlogo(ctx, cx, y, px, a){
-  vfont(ctx, 700, px, VF.h); vspacing(ctx, -px * 0.03); const w1 = ctx.measureText("Pregon").width, w2 = ctx.measureText("IA").width, s = px * 0.78, total = s * 1.55 + px * 0.18 + w1 + w2;
-  let x = cx - total / 2; x = vmarca(ctx, x, y, s, a) + px * 0.18;
+/* Marca de PregonIA: periódico abierto de línea (el mismo ícono de la app). Con «t» (segundos), la hoja derecha pasa a la izquierda cada 2,4 s. */
+function vpagina(ctx, k){
+  ctx.lineJoin = "round"; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(32 * k, 14 * k); ctx.lineTo(54.5 * k, 14 * k); ctx.arcTo(56 * k, 14 * k, 56 * k, 15.5 * k, 1.5 * k); ctx.lineTo(56 * k, 48.5 * k); ctx.arcTo(56 * k, 50 * k, 54.5 * k, 50 * k, 1.5 * k); ctx.lineTo(32 * k, 50 * k); ctx.closePath();
+  ctx.fillStyle = "#FFFFFF"; ctx.fill(); ctx.strokeStyle = VC.blue; ctx.lineWidth = 2.2 * k; ctx.stroke();
+  const ln = (x1, y, x2, w, al) => { ctx.save(); ctx.globalAlpha *= al; ctx.lineWidth = w * k; ctx.beginPath(); ctx.moveTo(x1 * k, y * k); ctx.lineTo(x2 * k, y * k); ctx.stroke(); ctx.restore(); };
+  ln(36, 19.5, 52, 3.4, 1); [26, 30.5, 35, 39.5].forEach(y => ln(36, y, 42.5, 1.9, .5)); ln(36, 44, 41, 1.9, .5); ln(45.5, 26, 52, 1.9, .5); ln(45.5, 30.5, 52, 1.9, .5);
+  ctx.save(); ctx.globalAlpha *= .35; ctx.fillStyle = VC.blue; vrr(ctx, 45.5 * k, 34 * k, 6.5 * k, 11 * k, 1.2 * k); ctx.fill(); ctx.restore();
+}
+function vmarca(ctx, x, yBase, s, a, t){
+  const k = s / 36, ox = x - 8 * k, oy = yBase - 50 * k + s * 0.04;  // el contenido del ícono va de 8 a 56 en x y de 14 a 50 en y
+  let sx = -1, sk = 0, som = 0;
+  if (t != null) { const p = (t % 2.4) / 2.4; if (p < 0.45) { const u = p / 0.45, e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2; sx = Math.cos(e * Math.PI); sk = -0.18 * Math.sin(e * Math.PI); som = 0.14 * Math.sin(e * Math.PI); } }
+  ctx.save(); ctx.globalAlpha *= a; ctx.translate(ox, oy);
+  ctx.save(); ctx.translate(32 * k, 0); ctx.scale(-1, 1); ctx.translate(-32 * k, 0); vpagina(ctx, k); ctx.restore();  // izquierda: reflejo de la derecha
+  vpagina(ctx, k);
+  if (som) { ctx.save(); ctx.globalAlpha *= som; ctx.fillStyle = VC.blue; ctx.fillRect(32 * k, 14 * k, 24 * k, 36 * k); ctx.restore(); }
+  if (t != null && sx > -1) { ctx.save(); ctx.translate(32 * k, 32 * k); ctx.transform(sx, sk * (sx >= 0 ? 1 : -1), 0, 1, 0, 0); ctx.translate(-32 * k, -32 * k); vpagina(ctx, k); ctx.restore(); }
+  ctx.strokeStyle = VC.blue; ctx.lineWidth = 2.2 * k; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(32 * k, 14 * k); ctx.lineTo(32 * k, 50 * k); ctx.stroke();
+  ctx.restore(); return x + 48 * k;
+}
+function vlogo(ctx, cx, y, px, a, t){
+  vfont(ctx, 700, px, VF.h); vspacing(ctx, -px * 0.03); const w1 = ctx.measureText("Pregon").width, w2 = ctx.measureText("IA").width, s = px * 0.86, mw = s * 48 / 36, total = mw + px * 0.22 + w1 + w2;
+  let x = cx - total / 2; x = vmarca(ctx, x, y, s, a, t) + px * 0.22;
   ctx.save(); ctx.globalAlpha *= a; ctx.textAlign = "left"; ctx.fillStyle = VC.text; ctx.fillText("Pregon", x, y); ctx.fillStyle = VC.blue; ctx.fillText("IA", x + w1, y); ctx.restore(); vspacing(ctx, 0);
 }
+
 let vgrid = null;
 function vfondo(ctx){
   ctx.fillStyle = VC.bg; ctx.fillRect(0, 0, VW, VH);
@@ -5695,7 +5704,8 @@ function vprogreso(ctx, plan, t){
   plan.scenes.forEach((s, i) => { const p = Math.min(1, Math.max(0, (t - s.t0) / s.dur)); const x = x0 + i * (w + gap); ctx.fillStyle = "rgba(240,244,255,.22)"; vrr(ctx, x, 60, w, 8, 4); ctx.fill(); if (p > 0) { ctx.fillStyle = "rgba(240,244,255,.92)"; vrr(ctx, x, 60, Math.max(8, w * p), 8, 4); ctx.fill(); } });
 }
 function vcabecera(ctx, plan){
-  vfont(ctx, 700, 40, VF.h); ctx.textAlign = "left"; ctx.fillStyle = VC.text; ctx.fillText("Pregon", 60, 140); const w = ctx.measureText("Pregon").width; ctx.fillStyle = VC.blue; ctx.fillText("IA", 60 + w, 140);
+  const xm = vmarca(ctx, 60, 140, 32, 1) + 10;
+  vfont(ctx, 700, 40, VF.h); ctx.textAlign = "left"; ctx.fillStyle = VC.text; ctx.fillText("Pregon", xm, 140); const w = ctx.measureText("Pregon").width; ctx.fillStyle = VC.blue; ctx.fillText("IA", xm + w, 140);
   vfont(ctx, 500, 30, VF.b); ctx.textAlign = "right"; ctx.fillStyle = VC.muted; ctx.fillText(plan.org + " · " + plan.per, VW - 60, 138);
 }
 function vpie(ctx){ vfont(ctx, 400, 26, VF.b); ctx.textAlign = "center"; ctx.fillStyle = "rgba(139,157,195,.8)"; ctx.fillText(typeof MODO !== "undefined" && MODO.tipo !== "demo" ? "PregonIA · Noticias reales de medios digitales" : "PregonIA · Prototipo con noticias ficticias", VW / 2, VH - 60); }
@@ -5704,7 +5714,7 @@ function vkicker(ctx, txt, y, color, a){ return vtexto(ctx, txt.toUpperCase(), 9
 /* Escenas */
 const VESC = {
   intro(ctx, s, l, plan){
-    vlogo(ctx, VW / 2, 860, 150, vin(l, 0.1, 0.8));
+    vlogo(ctx, VW / 2, 860, 150, vin(l, 0.1, 0.8), l);
     vtexto(ctx, plan.P.rotulo + " del alcalde", VW / 2, 1000, {px: 50, w: 500, fam: VF.h, color: VC.muted, a: vin(l, 0.5), align: "center"});
     vtexto(ctx, plan.inst, VW / 2, 1090, {px: 62, w: 700, fam: VF.h, a: vin(l, 0.75), align: "center"});
     vtexto(ctx, plan.per, VW / 2, 1175, {px: 42, w: 500, color: VC.blue, a: vin(l, 1), align: "center"});
@@ -5808,7 +5818,7 @@ const VESC = {
     const sig = plan.sig, txt = sig ? sig.ac.a : "Mantener el monitoreo y aprovechar la buena noticia en la próxima vocería.";
     let y = vtexto(ctx, txt, 90, 470, {px: 72, w: 700, fam: VF.h, lh: 86, a: vin(l, 0.25, 0.8), ls: -1.5, max: 6});
     if (sig) vtexto(ctx, "Responsable: " + sig.ac.r, 90, y + 30, {px: 42, w: 600, color: VC.muted, a: vin(l, 0.8), max: 2});
-    vlogo(ctx, VW / 2, 1500, 96, vin(l, 1.4));
+    vlogo(ctx, VW / 2, 1500, 96, vin(l, 1.4), l);
     vtexto(ctx, "La prensa no espera. Tú tampoco.", VW / 2, 1590, {px: 38, w: 500, color: VC.blue, a: vin(l, 1.7), align: "center"});
     vtexto(ctx, "Un producto de ALTKimia", VW / 2, 1660, {px: 32, w: 500, color: VC.muted, a: vin(l, 1.9), align: "center"});
     if (plan.audio) vtexto(ctx, "Guion y voz sintética generados con IA", VW / 2, 1730, {px: 28, w: 500, color: VC.muted, a: vin(l, 2.1), align: "center"});

@@ -120,12 +120,33 @@ function vtexto(ctx, txt, x, y, o){
   return y + (L.length - 1) * lh + lh;
 }
 function vrr(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
-function vmarca(ctx, x, yBase, s, a){ ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = VC.blue; [0.42, 0.7, 1].forEach((h, i) => { vrr(ctx, x + i * s * 0.55, yBase - s * h, s * 0.38, s * h, s * 0.07); ctx.fill(); }); ctx.restore(); return x + s * 1.55; }
-function vlogo(ctx, cx, y, px, a){
-  vfont(ctx, 700, px, VF.h); vspacing(ctx, -px * 0.03); const w1 = ctx.measureText("Pregon").width, w2 = ctx.measureText("IA").width, s = px * 0.78, total = s * 1.55 + px * 0.18 + w1 + w2;
-  let x = cx - total / 2; x = vmarca(ctx, x, y, s, a) + px * 0.18;
+/* Marca de PregonIA: periódico abierto de línea (el mismo ícono de la app). Con «t» (segundos), la hoja derecha pasa a la izquierda cada 2,4 s. */
+function vpagina(ctx, k){
+  ctx.lineJoin = "round"; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(32 * k, 14 * k); ctx.lineTo(54.5 * k, 14 * k); ctx.arcTo(56 * k, 14 * k, 56 * k, 15.5 * k, 1.5 * k); ctx.lineTo(56 * k, 48.5 * k); ctx.arcTo(56 * k, 50 * k, 54.5 * k, 50 * k, 1.5 * k); ctx.lineTo(32 * k, 50 * k); ctx.closePath();
+  ctx.fillStyle = "#FFFFFF"; ctx.fill(); ctx.strokeStyle = VC.blue; ctx.lineWidth = 2.2 * k; ctx.stroke();
+  const ln = (x1, y, x2, w, al) => { ctx.save(); ctx.globalAlpha *= al; ctx.lineWidth = w * k; ctx.beginPath(); ctx.moveTo(x1 * k, y * k); ctx.lineTo(x2 * k, y * k); ctx.stroke(); ctx.restore(); };
+  ln(36, 19.5, 52, 3.4, 1); [26, 30.5, 35, 39.5].forEach(y => ln(36, y, 42.5, 1.9, .5)); ln(36, 44, 41, 1.9, .5); ln(45.5, 26, 52, 1.9, .5); ln(45.5, 30.5, 52, 1.9, .5);
+  ctx.save(); ctx.globalAlpha *= .35; ctx.fillStyle = VC.blue; vrr(ctx, 45.5 * k, 34 * k, 6.5 * k, 11 * k, 1.2 * k); ctx.fill(); ctx.restore();
+}
+function vmarca(ctx, x, yBase, s, a, t){
+  const k = s / 36, ox = x - 8 * k, oy = yBase - 50 * k + s * 0.04;  // el contenido del ícono va de 8 a 56 en x y de 14 a 50 en y
+  let sx = -1, sk = 0, som = 0;
+  if (t != null) { const p = (t % 2.4) / 2.4; if (p < 0.45) { const u = p / 0.45, e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2; sx = Math.cos(e * Math.PI); sk = -0.18 * Math.sin(e * Math.PI); som = 0.14 * Math.sin(e * Math.PI); } }
+  ctx.save(); ctx.globalAlpha *= a; ctx.translate(ox, oy);
+  ctx.save(); ctx.translate(32 * k, 0); ctx.scale(-1, 1); ctx.translate(-32 * k, 0); vpagina(ctx, k); ctx.restore();  // izquierda: reflejo de la derecha
+  vpagina(ctx, k);
+  if (som) { ctx.save(); ctx.globalAlpha *= som; ctx.fillStyle = VC.blue; ctx.fillRect(32 * k, 14 * k, 24 * k, 36 * k); ctx.restore(); }
+  if (t != null && sx > -1) { ctx.save(); ctx.translate(32 * k, 32 * k); ctx.transform(sx, sk * (sx >= 0 ? 1 : -1), 0, 1, 0, 0); ctx.translate(-32 * k, -32 * k); vpagina(ctx, k); ctx.restore(); }
+  ctx.strokeStyle = VC.blue; ctx.lineWidth = 2.2 * k; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(32 * k, 14 * k); ctx.lineTo(32 * k, 50 * k); ctx.stroke();
+  ctx.restore(); return x + 48 * k;
+}
+function vlogo(ctx, cx, y, px, a, t){
+  vfont(ctx, 700, px, VF.h); vspacing(ctx, -px * 0.03); const w1 = ctx.measureText("Pregon").width, w2 = ctx.measureText("IA").width, s = px * 0.86, mw = s * 48 / 36, total = mw + px * 0.22 + w1 + w2;
+  let x = cx - total / 2; x = vmarca(ctx, x, y, s, a, t) + px * 0.22;
   ctx.save(); ctx.globalAlpha *= a; ctx.textAlign = "left"; ctx.fillStyle = VC.text; ctx.fillText("Pregon", x, y); ctx.fillStyle = VC.blue; ctx.fillText("IA", x + w1, y); ctx.restore(); vspacing(ctx, 0);
 }
+
 let vgrid = null;
 function vfondo(ctx){
   ctx.fillStyle = VC.bg; ctx.fillRect(0, 0, VW, VH);
@@ -138,7 +159,8 @@ function vprogreso(ctx, plan, t){
   plan.scenes.forEach((s, i) => { const p = Math.min(1, Math.max(0, (t - s.t0) / s.dur)); const x = x0 + i * (w + gap); ctx.fillStyle = "rgba(240,244,255,.22)"; vrr(ctx, x, 60, w, 8, 4); ctx.fill(); if (p > 0) { ctx.fillStyle = "rgba(240,244,255,.92)"; vrr(ctx, x, 60, Math.max(8, w * p), 8, 4); ctx.fill(); } });
 }
 function vcabecera(ctx, plan){
-  vfont(ctx, 700, 40, VF.h); ctx.textAlign = "left"; ctx.fillStyle = VC.text; ctx.fillText("Pregon", 60, 140); const w = ctx.measureText("Pregon").width; ctx.fillStyle = VC.blue; ctx.fillText("IA", 60 + w, 140);
+  const xm = vmarca(ctx, 60, 140, 32, 1) + 10;
+  vfont(ctx, 700, 40, VF.h); ctx.textAlign = "left"; ctx.fillStyle = VC.text; ctx.fillText("Pregon", xm, 140); const w = ctx.measureText("Pregon").width; ctx.fillStyle = VC.blue; ctx.fillText("IA", xm + w, 140);
   vfont(ctx, 500, 30, VF.b); ctx.textAlign = "right"; ctx.fillStyle = VC.muted; ctx.fillText(plan.org + " · " + plan.per, VW - 60, 138);
 }
 function vpie(ctx){ vfont(ctx, 400, 26, VF.b); ctx.textAlign = "center"; ctx.fillStyle = "rgba(139,157,195,.8)"; ctx.fillText(typeof MODO !== "undefined" && MODO.tipo !== "demo" ? "PregonIA · Noticias reales de medios digitales" : "PregonIA · Prototipo con noticias ficticias", VW / 2, VH - 60); }
@@ -147,7 +169,7 @@ function vkicker(ctx, txt, y, color, a){ return vtexto(ctx, txt.toUpperCase(), 9
 /* Escenas */
 const VESC = {
   intro(ctx, s, l, plan){
-    vlogo(ctx, VW / 2, 860, 150, vin(l, 0.1, 0.8));
+    vlogo(ctx, VW / 2, 860, 150, vin(l, 0.1, 0.8), l);
     vtexto(ctx, plan.P.rotulo + " del alcalde", VW / 2, 1000, {px: 50, w: 500, fam: VF.h, color: VC.muted, a: vin(l, 0.5), align: "center"});
     vtexto(ctx, plan.inst, VW / 2, 1090, {px: 62, w: 700, fam: VF.h, a: vin(l, 0.75), align: "center"});
     vtexto(ctx, plan.per, VW / 2, 1175, {px: 42, w: 500, color: VC.blue, a: vin(l, 1), align: "center"});
@@ -251,7 +273,7 @@ const VESC = {
     const sig = plan.sig, txt = sig ? sig.ac.a : "Mantener el monitoreo y aprovechar la buena noticia en la próxima vocería.";
     let y = vtexto(ctx, txt, 90, 470, {px: 72, w: 700, fam: VF.h, lh: 86, a: vin(l, 0.25, 0.8), ls: -1.5, max: 6});
     if (sig) vtexto(ctx, "Responsable: " + sig.ac.r, 90, y + 30, {px: 42, w: 600, color: VC.muted, a: vin(l, 0.8), max: 2});
-    vlogo(ctx, VW / 2, 1500, 96, vin(l, 1.4));
+    vlogo(ctx, VW / 2, 1500, 96, vin(l, 1.4), l);
     vtexto(ctx, "La prensa no espera. Tú tampoco.", VW / 2, 1590, {px: 38, w: 500, color: VC.blue, a: vin(l, 1.7), align: "center"});
     vtexto(ctx, "Un producto de ALTKimia", VW / 2, 1660, {px: 32, w: 500, color: VC.muted, a: vin(l, 1.9), align: "center"});
     if (plan.audio) vtexto(ctx, "Guion y voz sintética generados con IA", VW / 2, 1730, {px: 28, w: 500, color: VC.muted, a: vin(l, 2.1), align: "center"});

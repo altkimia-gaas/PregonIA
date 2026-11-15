@@ -1184,7 +1184,13 @@ async function pdfDiario(){
   const recorta = (s, w, size, bold) => { let x = T(s); if (ancho(x, size, bold) <= w) return x; while (x.length > 3 && ancho(x + "…", size, bold) > w) x = x.slice(0, -1); return x.trim() + "…"; };
   const tarjeta = (x, y, w, h) => { doc.setFillColor(C.card); doc.setDrawColor(C.line); doc.setLineWidth(0.25); doc.roundedRect(x, y, w, h, 2, 2, "FD"); };
   const ceja = (s, x, y, color = C.blueL) => txt(String(s).toUpperCase(), x, y, {size: 6.8, bold: true, color, cs: 0.35});
-  const marca = (x, yb, s) => { doc.setFillColor("#2196F3"); [0.42, 0.7, 1].forEach((h, i) => doc.roundedRect(x + i * s * 0.55, yb - s * h, s * 0.38, s * h, s * 0.07, s * 0.07, "F")); return x + s * 1.6; };
+  // Marca: periódico abierto de línea (dos páginas con titular, columnas y foto), como el ícono de la aplicación.
+  const marca = (x, yb, s) => { const k = s * 1.15 / 36, X = u => x + (u - 8) * k, Y = u => yb - (50 - u) * k;
+    doc.setDrawColor("#2196F3"); doc.setFillColor("#FFFFFF"); doc.setLineWidth(2.2 * k); doc.rect(X(8), Y(14), 48 * k, 36 * k, "FD"); doc.line(X(32), Y(14), X(32), Y(50));
+    doc.setLineWidth(3 * k); doc.line(X(12), Y(19.5), X(28), Y(19.5)); doc.line(X(36), Y(19.5), X(52), Y(19.5));
+    doc.setDrawColor("#90C6F5"); doc.setLineWidth(1.7 * k); [26, 30.5, 35, 39.5].forEach(y => { doc.line(X(36), Y(y), X(42.5), Y(y)); doc.line(X(21.5), Y(y), X(28), Y(y)); }); [26, 30.5].forEach(y => { doc.line(X(45.5), Y(y), X(52), Y(y)); doc.line(X(12), Y(y), X(18.5), Y(y)); });
+    doc.setFillColor("#B5D8F8"); doc.rect(X(45.5), Y(34), 6.5 * k, 11 * k, "F"); doc.rect(X(12), Y(34), 6.5 * k, 11 * k, "F");
+    return X(56) + s * 0.25; };
   const logo = (x, y, size) => { const x2 = marca(x, y, size * 0.33) + 0.6; txt("Pregon", x2, y, {size, bold: true}); txt("IA", x2 + ancho("Pregon", size, true), y, {size, bold: true, color: "#2196F3"}); };
   const barra = (x, y, w, frac, color = C.blue) => { doc.setFillColor(C.track); doc.roundedRect(x, y, w, 1.8, 0.9, 0.9, "F"); if (frac > 0) { doc.setFillColor(color); doc.roundedRect(x, y, Math.max(1.8, w * frac), 1.8, 0.9, 0.9, "F"); } };
   const senal = (x, yb, nivel, color) => [1.4, 2.3, 3.2].forEach((h, i) => { doc.setFillColor(i <= nivel ? color : C.track); doc.roundedRect(x + i * 1.6, yb - h, 1.1, h, 0.3, 0.3, "F"); });
@@ -1666,6 +1672,7 @@ const NOTAS_DEMO = NOTAS.slice(), MODO_KEY = "pregonia-modo";
 let MODO = {tipo: "demo", info: null, cargando: false, disponible: false};
 const horaCorta = iso => new Date(iso).toLocaleTimeString("es-CL", {hour: "2-digit", minute: "2-digit", hourCycle: "h23"});
 function pintarModo(){
+  document.documentElement.classList.toggle("leyendo", !!MODO.cargando);  // la marca del encabezado pasa páginas mientras se leen los medios
   const el = $("#demo"); if (!el) return;
   if (PILOTO && PILOTO.activo) return pintarPiloto();
   const real = MODO.tipo === "real" && MODO.info, i = MODO.info;
@@ -1700,7 +1707,7 @@ async function cargarReales(force, silencioso){
 /* Ícono animado de carga: un periódico abierto que da vuelta sus páginas (el mismo de assets/periodico-animado.svg).
    La página izquierda es el reflejo exacto de la derecha, así la hoja que pasa calza sin salto. */
 const IP_PAG = '<path class="ip-p" d="M32 14H54.5a1.5 1.5 0 0 1 1.5 1.5v33a1.5 1.5 0 0 1-1.5 1.5H32Z"/><line class="ip-t" x1="36" y1="19.5" x2="52" y2="19.5"/><line class="ip-l" x1="36" y1="26" x2="42.5" y2="26"/><line class="ip-l" x1="36" y1="30.5" x2="42.5" y2="30.5"/><line class="ip-l" x1="36" y1="35" x2="42.5" y2="35"/><line class="ip-l" x1="36" y1="39.5" x2="42.5" y2="39.5"/><line class="ip-l" x1="36" y1="44" x2="41" y2="44"/><line class="ip-l" x1="45.5" y1="26" x2="52" y2="26"/><line class="ip-l" x1="45.5" y1="30.5" x2="52" y2="30.5"/><rect class="ip-f" x="45.5" y="34" width="6.5" height="11" rx="1.2"/>';
-const icoPeriodico = (px = 20) => `<svg class="ico-per" viewBox="0 0 64 64" width="${px}" height="${px}" aria-hidden="true"><g class="ip-izq">${IP_PAG}</g><g>${IP_PAG}</g><path class="ip-som" d="M32 14H56V50H32Z"/><g class="ip-hoja">${IP_PAG}</g><line class="ip-lomo" x1="32" y1="14" x2="32" y2="50"/></svg>`;
+const icoPeriodico = (px = 20, quieto = false) => `<svg class="ico-per${quieto ? " quieto" : ""}" viewBox="0 0 64 64" width="${px}" height="${px}" aria-hidden="true"><g class="ip-izq">${IP_PAG}</g><g>${IP_PAG}</g><path class="ip-som" d="M32 14H56V50H32Z"/><g class="ip-hoja">${IP_PAG}</g><line class="ip-lomo" x1="32" y1="14" x2="32" y2="50"/></svg>`;
 /* Pantalla de lectura: posiciona a PregonIA mientras el servidor lee los medios y la IA clasifica.
    Siete diarios de colores giran en órbita; uno a la vez pasa al centro, se abre y se le dan vuelta las páginas;
    al terminar queda con visto en la órbita y entra el siguiente. Sin movimiento si el sistema lo pide. */
@@ -1708,21 +1715,14 @@ const DIARIOS = [
   {n: "DIARIO", c: "#1976D2", p: "#E3F0FB"}, {n: "NOTICIAS", c: "#D9443C", p: "#FBE7E5"}, {n: "CRÓNICA", c: "#2E9E6B", p: "#E2F4EA"},
   {n: "GACETA", c: "#C98A0B", p: "#FBF0D9"}, {n: "EL PREGÓN", c: "#7B4BC4", p: "#EFE7FA"}, {n: "SEMANARIO", c: "#0F8C99", p: "#DDF2F4"}, {n: "LA VOZ", c: "#E0598B", p: "#FBE5EE"}
 ];
-const PR_ORB = 7, PR_MS = 2600;  // 3 páginas por diario
-function diarioMini(d, i){
-  const ln = (y, w) => `<rect x="5" y="${y}" width="${w}" height="2" rx="1" fill="#2B3445" opacity=".5"/>`;
-  return `<svg viewBox="0 0 40 50" aria-hidden="true"><rect x=".75" y=".75" width="38.5" height="48.5" rx="3" fill="${d.p}" stroke="${d.c}" stroke-width="1.5"/><rect x=".75" y=".75" width="38.5" height="10" rx="3" fill="${d.c}"/><rect x=".75" y="6" width="38.5" height="4.75" fill="${d.c}"/>
-    <rect x="5" y="15" width="${i % 2 ? 30 : 14}" height="${i % 2 ? 10 : 14}" rx="1.5" fill="${d.c}" opacity=".8"/>${i % 2 ? ln(29, 30) + ln(33, 26) : ln(16, 12) + ln(20, 12) + ln(24, 10)}${ln(37, 30)}${ln(41, 24)}</svg>`;
-}
-const prPagina = lado => `<div class="pr-pag ${lado}">${[0, 1, 2, 3, 4, 5].map(k => `<i style="width:${[86, 70, 92, 64, 88, 74][(k + (lado === "der" ? 2 : 0)) % 6]}%"></i>`).join("")}</div>`;
-function prLibro(d){
-  return `<div class="pr-libro" style="--c:${d.c};--p:${d.p}"><div class="pr-cab"><span>${d.n}</span></div>
-    <div class="pr-abierto">${prPagina("izq")}${prPagina("der")}<div class="pr-hoja"><div class="pr-cara fr">${prPagina("der")}</div><div class="pr-cara re">${prPagina("izq")}</div></div></div></div>`;
-}
+const PR_ORB = 7, PR_MS = 4800;  // dos páginas por diario (el ícono pasa una cada 2,4 s)
+/* Órbita y centro con la marca de PregonIA (periódico de línea), cada diario en su color. */
+const diarioMini = d => `<span class="pr-mini" style="--tinta:${d.c}">${icoPeriodico(44, true)}</span>`;
+const prLibro = d => `<div class="pr-libro" style="--tinta:${d.c}">${icoPeriodico(150)}<span class="pr-nom">${d.n}</span></div>`;
 const PR_PASOS = [[0, "Leyendo los medios nacionales, regionales y locales…"], [8, "Juntando la misma noticia publicada en varios medios…"], [18, "La IA está leyendo el tono y escribiendo resúmenes propios…"], [32, "Ordenando por alcance y preparando qué conviene hacer…"], [55, "Unos segundos más: hay muchas fuentes para revisar…"]];
 function procesandoHtml(){
   const quien = esAut() ? cuenta().perfil.nombre : S.org, hoy = new Date(NOW).toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long"});
-  const orbita = DIARIOS.map((d, i) => `<span class="pr-o${i ? "" : " leyendo"}" style="--a:${i * 360 / PR_ORB}deg"><span class="pr-oi">${diarioMini(d, i)}<span class="pr-ok">✓</span></span></span>`).join("");
+  const orbita = DIARIOS.map((d, i) => `<span class="pr-o${i ? "" : " leyendo"}" style="--a:${i * 360 / PR_ORB}deg"><span class="pr-oi">${diarioMini(d)}<span class="pr-ok">✓</span></span></span>`).join("");
   return `<section class="pr" role="status" aria-live="polite" aria-labelledby="prT">
     <div class="pr-circ" aria-hidden="true"><span class="pr-pista"></span><div class="pr-orbita">${orbita}</div><div class="pr-centro" id="prCentro">${prLibro(DIARIOS[0])}</div></div>
     <span class="ini-ekick">Leyendo la prensa · ${esc(hoy)}</span>
