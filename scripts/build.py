@@ -4,7 +4,7 @@
 Uso: python3 scripts/build.py
 Orden del script embebido: base.js (constantes y catálogo) → corpus.js (noticias ficticias) → calendario.js (fechas de riesgo; antes de app.js porque la portada lo usa al primer dibujo) → autoridades.js + territorios.js (temas por territorio y cargo) + categorias.js (categoría, enfoque y papel de cada noticia) + cuentas.js (municipios y autoridades electas; antes de app.js por la misma razón) → app.js (aplicación) → captura.js → cuentasred.js + redes.js (cuentas de Facebook e Instagram) → vocero.js (kit de vocería) → compartir.js (app instalable y Compartir) → reglas.js + alertas.js (avisos) → piloto.js → video.js.
 """
-import base64, csv, json, pathlib
+import csv, json, pathlib
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 SRC, DATA = RAIZ / "src", RAIZ / "data"
@@ -31,13 +31,12 @@ def main():
         "export { usuarioDe, urlDe };\n", encoding="utf-8")
     js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("calendario.js") + "\n" + leer("autoridades.js") + "\n" + leer("territorios.js") + "\n" + leer("categorias.js") + "\n" + leer("cuentas.js") + "\n" + leer("app.js") + "\n" + leer("captura.js") + "\n" + leer("cuentasred.js") + "\n" + leer("redes.js") + "\n" + leer("vocero.js") + "\n" + leer("compartir.js") + "\n" + leer("reglas.js") + "\n" + leer("alertas.js") + "\n" + leer("piloto.js") + "\n" + leer("video.js")
     js = js.replace("/*CATALOG*/", json.dumps(catalogo(), ensure_ascii=False, separators=(",", ":")), 1)
-    foto = "data:image/jpeg;base64," + base64.b64encode((RAIZ / "assets" / "portada.jpg").read_bytes()).decode()
-    cuerpo = leer("shell.html").replace("assets/portada.jpg", foto) + "<script>\n" + js + "\n</script>\n"
+    cuerpo = leer("shell.html") + "<script>\n" + js + "\n</script>\n"
     # Documento completo para Vercel o GitHub Pages: sin charset ni viewport el celular lo mostraría como escritorio.
     cabeza = ('<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n'
               '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
               '<meta name="description" content="PregonIA: qué dice la prensa de tu institución o autoridad pública, hasta dónde ha llegado y qué responder.">\n'
-              '<link rel="manifest" href="/manifest.json">\n<meta name="theme-color" content="#080B12">\n'
+              '<link rel="manifest" href="/manifest.json">\n<meta name="theme-color" content="#FFFFFF">\n'
               '<link rel="icon" type="image/png" sizes="192x192" href="/icono-192.png">\n<link rel="apple-touch-icon" href="/icono-180.png">\n'
               '<meta name="apple-mobile-web-app-title" content="PregonIA">\n'
               '</head>\n<body>\n')

@@ -3,7 +3,7 @@
    Escenas dibujadas en canvas a partir de parteData(); se exporta a MP4 con WebCodecs + mp4-muxer
    (más rápido que tiempo real) y, si el navegador no lo permite, se graba con MediaRecorder. Todo en el navegador. */
 const VW = 1080, VH = 1920, VFPS = 30, VOUT = [720, 1280];
-/* PRUEBA · Paleta Edición. El video sale siempre en claro: es una pieza para compartir y todos deben recibir la misma.
+/* Edición · Paleta Edición. El video sale siempre en claro: es una pieza para compartir y todos deben recibir la misma.
    La paleta oscura queda definida por si más adelante se quiere ofrecer como opción. */
 const VPALETA = {
   claro: {bg:"#FFFFFF", card:"#FFFFFF", line:"#141414", text:"#141414", muted:"#555555", blue:"#2B4BE0", cri:"#B3261E", pos:"#1E6B3F", neu:"#6E737B", grave:"#9A5B00",

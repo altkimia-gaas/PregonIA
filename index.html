@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="PregonIA: qué dice la prensa de tu institución o autoridad pública, hasta dónde ha llegado y qué responder.">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#080B12">
+<meta name="theme-color" content="#FFFFFF">
 <link rel="icon" type="image/png" sizes="192x192" href="/icono-192.png">
 <link rel="apple-touch-icon" href="/icono-180.png">
 <meta name="apple-mobile-web-app-title" content="PregonIA">
@@ -51,8 +51,8 @@
   --shadow:0 1px 2px rgba(17,24,39,.06),0 1px 3px rgba(17,24,39,.04); --dots:transparent;
   color-scheme:light;
 }
-/* PRUEBA · Tema Edición: lenguaje del boletín semanal (papel blanco, filete negro, titulares serif en color, botones píldora).
-   Se elige con el botón de tema; en esta rama es el tema por defecto. */
+/* Edición · Tema Edición: lenguaje del boletín semanal (papel blanco, filete negro, titulares serif en color, botones píldora).
+   Es el diseño de la app; claro u oscuro según el teléfono o el botón de tema. */
 :root[data-theme="editorial"]{
   --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#F5F5F2; --ink:#141414; --muted:#555555; --line:#DADADA; --track:#C9C9C4;
   --frame:#141414; --card-line:#141414; --paper:#FFFFFF; --sel:#141414; --on-sel:#FFFFFF; --rule:#141414; --lead:#2A2A2A;
@@ -1362,7 +1362,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   .top-in{gap:8px 10px}
 }
 @media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto!important} .live .dot{animation:none} }
-/* PRUEBA · Edición oscuro: el mismo lenguaje invertido. Sigue la configuración del teléfono; el botón de tema la fuerza. */
+/* Edición · Edición oscuro: el mismo lenguaje invertido. Sigue la configuración del teléfono; el botón de tema la fuerza. */
 :root[data-theme="editorial"][data-modo="oscuro"]{
   --bg:#121212; --surface:#1A1A1A; --surface-2:#232323; --ink:#EDEDED; --muted:#A8A8A8; --line:#2E2E2E; --track:#3A3A3A;
   --frame:#6B6B6B; --card-line:#3A3A3A; --paper:#121212; --sel:#EDEDED; --on-sel:#121212; --rule:#EDEDED; --lead:#D6D6D6;
@@ -1376,7 +1376,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   --amb-n:#C7D0FF; --amb-r:#8FA2FF; --amb-l:#5A6FD6;
   color-scheme:dark;
 }
-/* PRUEBA · Tema Edición: componentes */
+/* Edición · Tema Edición: componentes */
 :root[data-theme="editorial"] .topbar{border-bottom:1.5px solid var(--frame)}
 :root[data-theme="editorial"] .logo{font-family:var(--f-news);font-weight:700;letter-spacing:-.01em;font-size:23px}
 :root[data-theme="editorial"] .logo b{font-weight:700}
@@ -1419,7 +1419,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
 :root[data-theme="editorial"] .bnav{background:var(--paper);border-top:1.5px solid var(--frame)}
 :root[data-theme="editorial"] .bnav a[aria-current="page"]{color:var(--ink);background:transparent;box-shadow:inset 0 3px 0 var(--accent);border-radius:0}
 :root[data-theme="editorial"] .ini-lista{border:1.5px solid var(--card-line)}
-/* PRUEBA · Piso de lectura: generado desde las reglas de arriba (≤12px→13, 12,5–13,5→14, 14–15,5→16). Contadores y gráficos quedan fuera. */
+/* Edición · Piso de lectura: generado desde las reglas de arriba (≤12px→13, 12,5–13,5→14, 14–15,5→16). Contadores y gráficos quedan fuera. */
 :root[data-theme="editorial"] body{font-size:1rem}
 :root[data-theme="editorial"] .demo{font-size:0.875rem}
 :root[data-theme="editorial"] .brand p{font-size:0.8125rem}
@@ -1708,11 +1708,11 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
 :root[data-theme="editorial"] .card > h3,:root[data-theme="editorial"] .sec{font-size:0.8125rem}
 :root[data-theme="editorial"] .slogan{font-size:0.875rem}
 :root[data-theme="editorial"] .kbd{font-size:0.8125rem}
-/* PRUEBA · Ajustes UX: "grave" e "Informar" en ámbar propio (el amarillo ya no significa neutro) */
+/* Edición · Ajustes UX: "grave" e "Informar" en ámbar propio (el amarillo ya no significa neutro) */
 :root[data-theme="editorial"] .pill.grave{background:var(--grave-soft);color:var(--grave-ink);border-color:var(--grave)}
 :root[data-theme="editorial"] .ini-colt.neu{color:var(--grave-ink)}
 :root[data-theme="editorial"] .dg-ficha{border-top-color:var(--grave)}
-/* PRUEBA · Escala tipográfica (celular primero; en rem para respetar el tamaño de letra del navegador) */
+/* Edición · Escala tipográfica (celular primero; en rem para respetar el tamaño de letra del navegador) */
 :root[data-theme="editorial"] body{font-size:1rem;line-height:1.5}
 :root[data-theme="editorial"] .ini-tit{font-size:clamp(1.75rem,3.2vw,2.5rem);line-height:1.1}
 :root[data-theme="editorial"] .ini-h{font-size:1.1875rem}
@@ -1728,10 +1728,12 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   :root[data-theme="editorial"] .item h4{font-size:1.1875rem}
   :root[data-theme="editorial"] .ini-lead{font-size:1.125rem}
 }
-/* PRUEBA · Ajustes de calce con la letra más grande */
+/* Edición · Ajustes de calce con la letra más grande */
 :root[data-theme="editorial"] .ini-imp-ej,:root[data-theme="editorial"] .ini-imp-r{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) 58px;gap:0 8px}
 @media (max-width:759px){
   :root[data-theme="editorial"] .filters .seg{flex-wrap:nowrap;gap:0;background:var(--surface)}
+  /* Con cinco opciones o más, la fila puede pasar a dos líneas: el contorno deja de ser píldora para no cortar texto */
+  :root[data-theme="editorial"] .filters .seg:has(button:nth-child(5)){flex-wrap:wrap;border-radius:22px}
   :root[data-theme="editorial"] .filters .seg button{flex:1 1 auto;padding:0 6px;min-height:40px;background:transparent}
   :root[data-theme="editorial"] .filters .seg button[aria-pressed="true"]{background:var(--sel);color:var(--on-sel)}
 }
@@ -1744,7 +1746,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   :root[data-theme="editorial"] .live,:root[data-theme="editorial"] .planbox summary,:root[data-theme="editorial"] .helpbtn{font-size:.8125rem}
   :root[data-theme="editorial"] .org label{font-size:.75rem}
 }
-/* PRUEBA · Reproductor del video con los colores de Edición */
+/* Edición · Reproductor del video con los colores de Edición */
 :root[data-theme="editorial"] .vid-stage canvas{background:var(--bg);outline:1.5px solid var(--card-line)}
 :root[data-theme="editorial"] .vid-prog .bar i{background:var(--accent-bg)}
 @media (max-width:700px){
@@ -1754,7 +1756,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   :root[data-theme="editorial"] .vid.rep .vid-hint{color:var(--muted)}
   :root[data-theme="editorial"] .vid.rep .vid-h .btn{background:transparent;border:1.5px solid var(--frame);color:var(--ink)}
 }
-/* PRUEBA · Portada tipo diario: cabezal con fecha, nombre centrado, doble filete, antetítulo, titular, bajada y tres columnas. Sin foto. */
+/* Edición · Portada tipo diario: cabezal con fecha, nombre centrado, doble filete, antetítulo, titular, bajada y tres columnas. Sin foto. */
 :root[data-theme="editorial"] .portada{display:block;overflow-y:auto;background:var(--bg);color:var(--ink);color-scheme:inherit}
 :root[data-theme="editorial"] .portada::before,:root[data-theme="editorial"] .portada::after{display:none}
 .pd{max-width:1080px;margin:0 auto;padding:20px max(24px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px))}
@@ -1791,7 +1793,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   .pd-cols section,.pd-cols section:first-child{border-left:0;padding:14px 0;border-top:1px solid var(--line)}
   .pd-cols section:first-child{border-top:0}
 }
-/* PRUEBA · La "foto" de la portada es la edición del día: de ejemplo sin sesión; la propia con sesión del piloto (nunca la de otro municipio). */
+/* Edición · La "foto" de la portada es la edición del día: de ejemplo sin sesión; la propia con sesión del piloto (nunca la de otro municipio). */
 .pd-foto{margin:30px 0 0;width:100%;max-width:640px;display:grid;gap:8px}
 .pd-mini{position:relative;text-align:left;border:1.5px solid var(--card-line);border-radius:14px;padding:18px 20px 16px;background:var(--surface);display:grid;gap:12px}
 .pd-mini-k{margin:0;font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-right:120px}
@@ -1815,7 +1817,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   .pd-mini-c > div{padding:10px 8px 0}
   .pd-mini-c > div small.cnt{display:none}
 }
-/* PRUEBA · Pantalla de lectura en Edición: diarios en blanco y negro, sin brillos ni sombras; el que se lee, con anillo azul. */
+/* Edición · Pantalla de lectura en Edición: diarios en blanco y negro, sin brillos ni sombras; el que se lee, con anillo azul. */
 .dm-papel{fill:var(--surface);stroke:var(--card-line);stroke-width:1.5}
 .dm-cab{fill:var(--ink)}
 .dm-filete{fill:var(--ink);opacity:.6}
@@ -4818,7 +4820,7 @@ const DIARIOS = [
 ];
 const PR_ORB = 7, PR_MS = 2600;  // 3 páginas por diario
 function diarioMini(d, i){
-  // PRUEBA · Edición: diarios en blanco y negro (papel, cabezal en tinta, foto gris); los colores salen del modo claro u oscuro.
+  // Edición · Edición: diarios en blanco y negro (papel, cabezal en tinta, foto gris); los colores salen del modo claro u oscuro.
   const ln = (y, w) => `<rect class="dm-l" x="5" y="${y}" width="${w}" height="2" rx="1"/>`;
   return `<svg viewBox="0 0 40 50" aria-hidden="true"><rect class="dm-papel" x=".75" y=".75" width="38.5" height="48.5" rx="3"/><rect class="dm-cab" x="5" y="4.5" width="30" height="3.5" rx="1"/><rect class="dm-filete" x="5" y="10" width="30" height="1"/>
     <rect class="dm-foto" x="5" y="15" width="${i % 2 ? 30 : 14}" height="${i % 2 ? 10 : 14}" rx="1.5"/>${i % 2 ? ln(29, 30) + ln(33, 26) : ln(16, 12) + ln(20, 12) + ln(24, 10)}${ln(37, 30)}${ln(41, 24)}</svg>`;
@@ -4865,7 +4867,7 @@ $("#org").addEventListener("change", () => { if ($("#entBack")) return; pintarMo
   if (pref === "real") cargarReales();
 })();
 
-/* PRUEBA: un solo diseño (Edición) en versión clara y oscura. Sin preferencia guardada sigue al teléfono; el botón la fija. */
+/* Edición: un solo diseño (Edición) en versión clara y oscura. Sin preferencia guardada sigue al teléfono; el botón la fija. */
 const TEMA_KEY = "pregonia-modo", ICO_TEMA = {sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>', luna: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'};
 const mqOscuro = matchMedia("(prefers-color-scheme: dark)");
 function modoGuardado(){ try { const m = localStorage.getItem(TEMA_KEY); return m === "oscuro" || m === "claro" ? m : null; } catch(e) { return null; } }
@@ -4901,7 +4903,7 @@ document.addEventListener("keydown", e => {
 /* Portada de bienvenida: aparece cada vez que se abre o recarga la aplicación, y con #portada o el logo.
    "Empezar" lleva a la sección de la dirección si había una (enlaces compartidos); si no, a Inicio. */
 
-/* PRUEBA · Miniatura de la edición del día en la portada.
+/* Edición · Miniatura de la edición del día en la portada.
    Sin sesión del piloto: siempre "Comuna de Ejemplo" con datos de ejemplo (nunca un municipio real, ni el de la demo).
    Con sesión: la edición del municipio de esa persona, con sus datos; mientras cargan, un bloque de espera. */
 function miniPortadaHtml(M, pend, kick, sello){
@@ -4937,7 +4939,7 @@ document.addEventListener("click", e => {
   avisoLegal().then(ok => { if (ok) entAbrir(true); });  // la entrada se elige por rol, zona y nombre
 });
 window.addEventListener("hashchange", () => { if (location.hash === "#portada") mostrarPortada(true); });
-/* PRUEBA · Fecha del cabezal de la portada, como la de un diario. */
+/* Edición · Fecha del cabezal de la portada, como la de un diario. */
 (() => { const f = $("#ptFecha"); if (!f) return; const d = new Date().toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long", year: "numeric"}); f.textContent = d.charAt(0).toUpperCase() + d.slice(1); })();
 
 render();
@@ -6097,7 +6099,7 @@ setInterval(() => { if (PILOTO.activo && (document.visibilityState === "visible"
    Escenas dibujadas en canvas a partir de parteData(); se exporta a MP4 con WebCodecs + mp4-muxer
    (más rápido que tiempo real) y, si el navegador no lo permite, se graba con MediaRecorder. Todo en el navegador. */
 const VW = 1080, VH = 1920, VFPS = 30, VOUT = [720, 1280];
-/* PRUEBA · Paleta Edición. El video sale siempre en claro: es una pieza para compartir y todos deben recibir la misma.
+/* Edición · Paleta Edición. El video sale siempre en claro: es una pieza para compartir y todos deben recibir la misma.
    La paleta oscura queda definida por si más adelante se quiere ofrecer como opción. */
 const VPALETA = {
   claro: {bg:"#FFFFFF", card:"#FFFFFF", line:"#141414", text:"#141414", muted:"#555555", blue:"#2B4BE0", cri:"#B3261E", pos:"#1E6B3F", neu:"#6E737B", grave:"#9A5B00",

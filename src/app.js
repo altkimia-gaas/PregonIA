@@ -1711,7 +1711,7 @@ const DIARIOS = [
 ];
 const PR_ORB = 7, PR_MS = 2600;  // 3 páginas por diario
 function diarioMini(d, i){
-  // PRUEBA · Edición: diarios en blanco y negro (papel, cabezal en tinta, foto gris); los colores salen del modo claro u oscuro.
+  // Edición · Edición: diarios en blanco y negro (papel, cabezal en tinta, foto gris); los colores salen del modo claro u oscuro.
   const ln = (y, w) => `<rect class="dm-l" x="5" y="${y}" width="${w}" height="2" rx="1"/>`;
   return `<svg viewBox="0 0 40 50" aria-hidden="true"><rect class="dm-papel" x=".75" y=".75" width="38.5" height="48.5" rx="3"/><rect class="dm-cab" x="5" y="4.5" width="30" height="3.5" rx="1"/><rect class="dm-filete" x="5" y="10" width="30" height="1"/>
     <rect class="dm-foto" x="5" y="15" width="${i % 2 ? 30 : 14}" height="${i % 2 ? 10 : 14}" rx="1.5"/>${i % 2 ? ln(29, 30) + ln(33, 26) : ln(16, 12) + ln(20, 12) + ln(24, 10)}${ln(37, 30)}${ln(41, 24)}</svg>`;
@@ -1758,7 +1758,7 @@ $("#org").addEventListener("change", () => { if ($("#entBack")) return; pintarMo
   if (pref === "real") cargarReales();
 })();
 
-/* PRUEBA: un solo diseño (Edición) en versión clara y oscura. Sin preferencia guardada sigue al teléfono; el botón la fija. */
+/* Edición: un solo diseño (Edición) en versión clara y oscura. Sin preferencia guardada sigue al teléfono; el botón la fija. */
 const TEMA_KEY = "pregonia-modo", ICO_TEMA = {sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>', luna: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'};
 const mqOscuro = matchMedia("(prefers-color-scheme: dark)");
 function modoGuardado(){ try { const m = localStorage.getItem(TEMA_KEY); return m === "oscuro" || m === "claro" ? m : null; } catch(e) { return null; } }
@@ -1794,7 +1794,7 @@ document.addEventListener("keydown", e => {
 /* Portada de bienvenida: aparece cada vez que se abre o recarga la aplicación, y con #portada o el logo.
    "Empezar" lleva a la sección de la dirección si había una (enlaces compartidos); si no, a Inicio. */
 
-/* PRUEBA · Miniatura de la edición del día en la portada.
+/* Edición · Miniatura de la edición del día en la portada.
    Sin sesión del piloto: siempre "Comuna de Ejemplo" con datos de ejemplo (nunca un municipio real, ni el de la demo).
    Con sesión: la edición del municipio de esa persona, con sus datos; mientras cargan, un bloque de espera. */
 function miniPortadaHtml(M, pend, kick, sello){
@@ -1830,7 +1830,7 @@ document.addEventListener("click", e => {
   avisoLegal().then(ok => { if (ok) entAbrir(true); });  // la entrada se elige por rol, zona y nombre
 });
 window.addEventListener("hashchange", () => { if (location.hash === "#portada") mostrarPortada(true); });
-/* PRUEBA · Fecha del cabezal de la portada, como la de un diario. */
+/* Edición · Fecha del cabezal de la portada, como la de un diario. */
 (() => { const f = $("#ptFecha"); if (!f) return; const d = new Date().toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long", year: "numeric"}); f.textContent = d.charAt(0).toUpperCase() + d.slice(1); })();
 
 render();
