@@ -1791,6 +1791,30 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   .pd-cols section,.pd-cols section:first-child{border-left:0;padding:14px 0;border-top:1px solid var(--line)}
   .pd-cols section:first-child{border-top:0}
 }
+/* PRUEBA · La "foto" de la portada es la edición del día: de ejemplo sin sesión; la propia con sesión del piloto (nunca la de otro municipio). */
+.pd-foto{margin:30px 0 0;width:100%;max-width:640px;display:grid;gap:8px}
+.pd-mini{position:relative;text-align:left;border:1.5px solid var(--card-line);border-radius:14px;padding:18px 20px 16px;background:var(--surface);display:grid;gap:12px}
+.pd-mini-k{margin:0;font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-right:120px}
+.pd-mini-t{margin:0;font-family:var(--f-news);font-weight:700;font-size:1.375rem;line-height:1.15;border-left:3px solid var(--rule);padding-left:12px}
+.pd-mini-c{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line)}
+.pd-mini-c > div{padding:10px 12px 0;border-left:1px solid var(--line);display:grid;gap:4px;align-content:start}
+.pd-mini-c > div:first-child{border-left:0;padding-left:0}
+.pd-mini-c b{font-family:var(--f-news);font-weight:700;font-size:1.5rem;line-height:1}
+.pd-mini-c b.pos{color:var(--pos-ink)}.pd-mini-c b.cri{color:var(--cri-ink)}.pd-mini-c b.neu{color:var(--neu-ink)}
+.pd-mini-c small{font-size:.8125rem;color:var(--muted);line-height:1.3}
+.pd-mini .segbar{height:6px;margin-top:2px}
+.pd-sello{position:absolute;top:14px;right:14px;font-size:.75rem;font-weight:600;color:var(--muted);border:1px dashed var(--muted);border-radius:999px;padding:2px 10px}
+.pd-mini.espera{min-height:178px;background:var(--surface-2);border-style:dashed;place-items:center;color:var(--muted);font-size:.875rem}
+.pd-foto figcaption{font-family:var(--f-news);font-style:italic;font-size:.9375rem;color:var(--muted);text-align:left}
+@media (max-width:700px){
+  .pd-foto{margin-top:24px}
+  .pd-mini{padding:16px}
+  .pd-mini-t{font-size:1.1875rem}
+  .pd-mini-c b{font-size:1.25rem}
+  .pd-mini-c{grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr) minmax(0,1fr)}
+  .pd-mini-c > div{padding:10px 8px 0}
+  .pd-mini-c > div small.cnt{display:none}
+}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="pat-pos" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" style="fill:var(--pos)"/></pattern></defs></svg>
@@ -1806,6 +1830,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
       <h1 class="pd-titulo">Detecta lo que la prensa dice de tu gestión, mide hasta dónde llegó y responde antes de que el tema escale.</h1>
       <p class="pd-bajada">PregonIA lee cada día más de 100 medios nacionales, regionales y locales, y sus redes, y entrega a quien decide alertas, informes y respuestas redactadas con IA.</p>
       <button class="pd-go" id="ptGo" type="button">Empezar <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      <figure class="pd-foto"><div class="pd-mini" id="ptMini"></div><figcaption id="ptMiniPie"></figcaption></figure>
       <div class="pd-cols">
         <section><h2>Lee</h2><p>Más de 100 medios digitales y sus cuentas en redes, con el tono de cada nota.</p></section>
         <section><h2>Mide</h2><p>Hasta dónde llegó cada tema: prensa comunal, regional o nacional.</p></section>
@@ -4407,6 +4432,7 @@ function render(focus){
   if (MODO.cargando && !isConfig(route())) { renderChrome(); $("#view").innerHTML = procesandoHtml(); cerrarMenu(); procesandoPaso(); return; }
   renderChrome(); $("#view").innerHTML = (perAplica() ? `<div class="perbar">${perCtl()}</div>` : "") + (VIEWFN[route()] || vInicio)();
   cerrarMenu(); if ($("#view .shr")) cargarJsPDF().catch(() => {});
+  { const pt = $("#portada"); if (pt && !pt.hidden) pintarMini(); }
   if (focus) { const h = $("#view h2"); if (h) h.focus({preventScroll:true}); }
   if (tState.refocus) { const el = document.querySelector(`[data-chipin="${tState.refocus}"]`); if (el) el.focus(); tState.refocus = null; }
 }
@@ -4851,8 +4877,34 @@ document.addEventListener("keydown", e => {
 
 /* Portada de bienvenida: aparece cada vez que se abre o recarga la aplicación, y con #portada o el logo.
    "Empezar" lleva a la sección de la dirección si había una (enlaces compartidos); si no, a Inicio. */
+
+/* PRUEBA · Miniatura de la edición del día en la portada.
+   Sin sesión del piloto: siempre "Comuna de Ejemplo" con datos de ejemplo (nunca un municipio real, ni el de la demo).
+   Con sesión: la edición del municipio de esa persona, con sus datos; mientras cargan, un bloque de espera. */
+function miniPortadaHtml(M, pend, kick, sello){
+  const v = veredicto(M), tit = M.vol ? `Cobertura ${v.n.toLowerCase()} hoy${pend ? ", con " + plural(pend, "crítica por responder", "críticas por responder") : ""}.` : "Sin noticias en las últimas 24 horas.";
+  return `${sello ? '<span class="pd-sello">Datos de ejemplo</span>' : ""}<p class="pd-mini-k">${esc(kick)}</p><p class="pd-mini-t">${esc(tit)}</p>
+    <div class="pd-mini-c"><div><b>${M.vol}</b><small>${M.vol === 1 ? "noticia" : "noticias"} en 24 horas</small></div>
+    <div><b class="${v.k}">${esc(v.c)}</b>${segbar([{l: "Críticas", v: M.cri, c: "var(--cri)"}, {l: "Neutras", v: M.neu, c: "var(--neu)"}, {l: "Positivas", v: M.pos, c: "var(--pos)"}])}<small class="cnt">${esc(conteo(M))}</small></div>
+    <div><b class="${pend ? "cri" : "pos"}">${pend}</b><small>${pend === 1 ? "crítica" : "críticas"} por responder</small></div></div>`;
+}
+function pintarMini(){
+  const box = $("#ptMini"), pie = $("#ptMiniPie"); if (!box) return;
+  const piloto = typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo;
+  if (piloto && (MODO.cargando || MODO.tipo !== "piloto")) { box.className = "pd-mini espera"; box.textContent = "Preparando tu edición de hoy…"; pie.textContent = ""; return; }
+  box.className = "pd-mini";
+  if (piloto) {
+    const c = cuenta(), ms = sobreCuenta(menciones(c, 1), c), M = metricas(ms), pend = pendientes(c).length;
+    box.innerHTML = miniPortadaHtml(M, pend, `Edición ${S.org} · hoy`, false);
+    pie.textContent = `Tu edición de hoy, con las noticias de ${S.org}.`;
+  } else {
+    box.innerHTML = miniPortadaHtml({vol: 12, pos: 7, neu: 4, cri: 1, neto: 50}, 1, "Edición Comuna de Ejemplo · hoy", true);
+    pie.textContent = "Así se ve la edición de cada día para un municipio. Comuna y cifras de ejemplo.";
+  }
+}
 function mostrarPortada(on){
   const p = $("#portada"); if (!p) return;
+  if (on) pintarMini();
   p.hidden = !on; document.body.classList.toggle("pt-on", on);
   if (on) { window.scrollTo(0, 0); setTimeout(() => $("#ptGo").focus({preventScroll:true}), 60); }
 }

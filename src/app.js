@@ -1347,6 +1347,7 @@ function render(focus){
   if (MODO.cargando && !isConfig(route())) { renderChrome(); $("#view").innerHTML = procesandoHtml(); cerrarMenu(); procesandoPaso(); return; }
   renderChrome(); $("#view").innerHTML = (perAplica() ? `<div class="perbar">${perCtl()}</div>` : "") + (VIEWFN[route()] || vInicio)();
   cerrarMenu(); if ($("#view .shr")) cargarJsPDF().catch(() => {});
+  { const pt = $("#portada"); if (pt && !pt.hidden) pintarMini(); }
   if (focus) { const h = $("#view h2"); if (h) h.focus({preventScroll:true}); }
   if (tState.refocus) { const el = document.querySelector(`[data-chipin="${tState.refocus}"]`); if (el) el.focus(); tState.refocus = null; }
 }
@@ -1791,8 +1792,34 @@ document.addEventListener("keydown", e => {
 
 /* Portada de bienvenida: aparece cada vez que se abre o recarga la aplicación, y con #portada o el logo.
    "Empezar" lleva a la sección de la dirección si había una (enlaces compartidos); si no, a Inicio. */
+
+/* PRUEBA · Miniatura de la edición del día en la portada.
+   Sin sesión del piloto: siempre "Comuna de Ejemplo" con datos de ejemplo (nunca un municipio real, ni el de la demo).
+   Con sesión: la edición del municipio de esa persona, con sus datos; mientras cargan, un bloque de espera. */
+function miniPortadaHtml(M, pend, kick, sello){
+  const v = veredicto(M), tit = M.vol ? `Cobertura ${v.n.toLowerCase()} hoy${pend ? ", con " + plural(pend, "crítica por responder", "críticas por responder") : ""}.` : "Sin noticias en las últimas 24 horas.";
+  return `${sello ? '<span class="pd-sello">Datos de ejemplo</span>' : ""}<p class="pd-mini-k">${esc(kick)}</p><p class="pd-mini-t">${esc(tit)}</p>
+    <div class="pd-mini-c"><div><b>${M.vol}</b><small>${M.vol === 1 ? "noticia" : "noticias"} en 24 horas</small></div>
+    <div><b class="${v.k}">${esc(v.c)}</b>${segbar([{l: "Críticas", v: M.cri, c: "var(--cri)"}, {l: "Neutras", v: M.neu, c: "var(--neu)"}, {l: "Positivas", v: M.pos, c: "var(--pos)"}])}<small class="cnt">${esc(conteo(M))}</small></div>
+    <div><b class="${pend ? "cri" : "pos"}">${pend}</b><small>${pend === 1 ? "crítica" : "críticas"} por responder</small></div></div>`;
+}
+function pintarMini(){
+  const box = $("#ptMini"), pie = $("#ptMiniPie"); if (!box) return;
+  const piloto = typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo;
+  if (piloto && (MODO.cargando || MODO.tipo !== "piloto")) { box.className = "pd-mini espera"; box.textContent = "Preparando tu edición de hoy…"; pie.textContent = ""; return; }
+  box.className = "pd-mini";
+  if (piloto) {
+    const c = cuenta(), ms = sobreCuenta(menciones(c, 1), c), M = metricas(ms), pend = pendientes(c).length;
+    box.innerHTML = miniPortadaHtml(M, pend, `Edición ${S.org} · hoy`, false);
+    pie.textContent = `Tu edición de hoy, con las noticias de ${S.org}.`;
+  } else {
+    box.innerHTML = miniPortadaHtml({vol: 12, pos: 7, neu: 4, cri: 1, neto: 50}, 1, "Edición Comuna de Ejemplo · hoy", true);
+    pie.textContent = "Así se ve la edición de cada día para un municipio. Comuna y cifras de ejemplo.";
+  }
+}
 function mostrarPortada(on){
   const p = $("#portada"); if (!p) return;
+  if (on) pintarMini();
   p.hidden = !on; document.body.classList.toggle("pt-on", on);
   if (on) { window.scrollTo(0, 0); setTimeout(() => $("#ptGo").focus({preventScroll:true}), 60); }
 }
