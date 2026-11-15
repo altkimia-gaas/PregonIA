@@ -164,7 +164,7 @@ const PER_OPS = [["1", "24 horas"], ["7", "Semana"], ["30", "30 días"]];
 const perAplica = () => !isConfig(route());
 function perNota(){
   if (route() !== "reportes" || tState.rep === "gestion") return "";
-  const f = {alcalde: "semanal", diario: "diario", mesa: "diario", crisis: "últimos 7 días", calendario: "próximos 12 meses"}[tState.rep];
+  const f = {diario: "diario", mesa: "diario", crisis: "últimos 7 días", calendario: "próximos 12 meses"}[tState.rep];
   return f ? `<span class="per-nota">Este informe tiene período fijo (${f})</span>` : "";
 }
 const perCtl = () => `<div class="perg" role="group" aria-label="Período">${PER_OPS.map(([k, l]) => `<button type="button" data-act="per" data-v="${k}" aria-pressed="${tState.dias === k}">${l}</button>`).join("")}</div>${perNota()}`;
@@ -716,32 +716,43 @@ const enMedios = m => { const k = new Set(m.notas.map(n => n.m)).size; return es
 const rango = (d0, d1) => new Date(d0).toLocaleDateString("es-CL",{day:"numeric", month:"short"}) + " al " + new Date(d1).toLocaleDateString("es-CL",{day:"numeric", month:"short", year:"numeric"});
 
 /* 1. Parte del alcalde: semanal, una pantalla */
+/* El parte sigue el período elegido arriba (24 horas, semana o 30 días) y se compara con el período anterior de igual largo. */
+const PER_PARTE = {
+  1: {sust: "24 horas", tx: "en las últimas 24 horas", ant: "las 24 horas anteriores", de: "de las últimas 24 horas", rotulo: "Parte de 24 horas"},
+  7: {sust: "semana", tx: "esta semana", ant: "la semana anterior", de: "de la semana", rotulo: "Parte semanal"},
+  30: {sust: "30 días", tx: "en los últimos 30 días", ant: "los 30 días anteriores", de: "de los últimos 30 días", rotulo: "Parte de 30 días"}};
+function partePer(){ const dias = [1, 7, 30].includes(Number(tState.dias)) ? Number(tState.dias) : 7; return {dias, ...PER_PARTE[dias]}; }
 function parteData(){
-  const all = menciones(cuenta(), 14), sem = all.filter(m => NOW - m.last < 7*DAY), ant = all.filter(m => NOW - m.last >= 7*DAY);
+  const P = partePer(), all = menciones(cuenta(), 2 * P.dias), sem = all.filter(m => NOW - m.last < P.dias*DAY), ant = all.filter(m => NOW - m.last >= P.dias*DAY);
   const M = metricas(sem), Ma = metricas(ant), v = veredicto(M), va = veredicto(Ma);
   const cand = sem.filter(m => m.tono !== "pos").sort((a,b) => riesgo(b) - riesgo(a)), asuntos = [], vistos = new Set();
   cand.forEach(m => { if (asuntos.length < 3 && riesgo(m) >= 4 && (m.tono === "cri" || (areaDe(m) && riesgo(m) >= 6)) && !vistos.has(temaDe(m))) { asuntos.push(m); vistos.add(temaDe(m)); } });
   cand.forEach(m => { if (asuntos.length < 3 && !asuntos.includes(m) && riesgo(m) >= 12) asuntos.push(m); });
   const buena = sem.filter(m => m.tono === "pos").sort((a,b) => escalera(b.notas).max - escalera(a.notas).max || b.notas.length - a.notas.length)[0];
-  const comp = va.i < 0 ? "No hay datos de la semana anterior para comparar." : va.i === v.i ? `Igual que la semana anterior.` : `La semana anterior fue ${va.n.toLowerCase()}: ${v.i < va.i ? "mejoró" : "empeoró"}.`;
-  return {sem, M, v, comp, asuntos, buena, per: rango(NOW - 6*DAY, NOW)};
+  const comp = va.i < 0 ? `No hay datos de ${P.ant} para comparar.` : va.i === v.i ? `Igual que en ${P.ant}.` : `En ${P.ant} fue ${va.n.toLowerCase()}: ${v.i < va.i ? "mejoró" : "empeoró"}.`;
+  // Tratamiento de las noticias: hasta dónde llegaron, si las críticas se respondieron y qué temas restan o suman (alcance ponderado por tamaño del medio).
+  const E = new Map(sem.map(m => [m.g, escalera(m.notas)])), niv = [0, 1, 2].map(i => { const xs = sem.filter(m => E.get(m.g).max === i); return {n: xs.length, cri: xs.filter(m => m.tono === "cri").length}; });
+  const cris = sem.filter(m => m.tono === "cri"), resp = cris.filter(m => respondida(m.g)).length;
+  const impG = {}; sem.forEach(m => { const k = temaLectura(m), x = impG[k] = impG[k] || {k, cri: 0, pos: 0, neu: 0, n: 0, c: {pos: 0, neu: 0, cri: 0}}; x[m.tono] += m.alcance; x.c[m.tono]++; x.n++; });
+  const imp = Object.values(impG).map(x => ({...x, bal: x.pos - x.cri})).sort((a, b) => (b.cri + b.pos) - (a.cri + a.pos) || b.n - a.n);
+  return {P, sem, M, v, comp, asuntos, buena, niv, criTot: cris.length, resp, imp, per: rango(NOW - (P.dias === 1 ? 1 : P.dias - 1)*DAY, NOW)};
 }
 function repAlcalde(){
-  const d = parteData();
-  if (!d.sem.length) return `<div class="allgood">${ri("ok")} Ningún medio publicó sobre ${esc(S.org)} en los últimos 7 días.</div>`;
+  const d = parteData(), P = d.P;
+  if (!d.sem.length) return `<div class="allgood">${ri("ok")} Ningún medio publicó sobre ${esc(S.org)} ${P.tx}.</div>`;
   const item = (m, i) => { const e = escalera(m.notas), ac = accion(m); return `<li class="${m.tono}"><span class="n">${i + 1}</span><div class="bd"><span class="kick">${esc(temaDe(m))} · ${tonoLbl[m.tono]}${respondida(m.g) ? " · respondida" : ""}</span><b class="t">${esc(m.lead.res)}</b><span class="sub">${enMedios(m)} · ${ago(m.last)}</span><div class="lleg">${escHtml(e)}</div><p class="acc"><b>Qué hacer</b>${ac.a}</p><p class="rsp"><b>Responsable</b>${ac.r}</p></div></li>`; };
-  return `<div class="rhead"><h3>${esc(S.org)} · parte semanal</h3><span class="per">${ri("cal")} ${d.per}</span></div>
+  return `<div class="rhead"><h3>${esc(S.org)} · ${P.rotulo.toLowerCase()}</h3><span class="per">${ri("cal")} ${d.per}</span></div>
   <div class="parte">
-    <section class="ver"><span class="kick">Cómo ${esAut() && cuenta().perfil.g === "F" ? "la" : "lo"} trató la prensa esta semana</span><p class="vbig ${d.v.k}">${d.v.n}</p><p class="vtx">${d.v.f.charAt(0).toUpperCase() + d.v.f.slice(1)}: ${conteo(d.M)}. ${d.comp}</p>${escala(d.v.i)}</section>
-    <section><h4>Lo que se puede complicar</h4>${d.asuntos.length ? `<ol class="asuntos">${d.asuntos.map(item).join("")}</ol>` : `<p class="vtx">Ningún asunto de riesgo esta semana.</p>`}</section>
+    <section class="ver"><span class="kick">Cómo ${esAut() && cuenta().perfil.g === "F" ? "la" : "lo"} trató la prensa ${P.tx}</span><p class="vbig ${d.v.k}">${d.v.n}</p><p class="vtx">${d.v.f.charAt(0).toUpperCase() + d.v.f.slice(1)}: ${conteo(d.M)}. ${d.comp}</p>${escala(d.v.i)}<p class="vtx trato">Hasta dónde llegaron: ${d.niv[2].n} a prensa nacional, ${d.niv[1].n} a regional y ${d.niv[0].n} solo comunal. ${d.criTot ? `Críticas respondidas: ${d.resp} de ${d.criTot}.` : "Sin críticas en el período."}</p></section>
+    <section><h4>Lo que se puede complicar</h4>${d.asuntos.length ? `<ol class="asuntos">${d.asuntos.map(item).join("")}</ol>` : `<p class="vtx">Ningún asunto de riesgo ${P.tx}.</p>`}</section>
     ${d.buena ? `<section class="cap"><h4>Para aprovechar</h4><ol class="asuntos">${item(d.buena, -1).replace('<span class="n">0</span>', `<span class="n">${ri("pos")}</span>`)}</ol></section>` : ""}
-    <div class="acts"><button class="btn alt" data-act="vid-open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l4.8-2.8z"/></svg>Video resumen</button><button class="btn primary" data-act="copiar-parte">Copiar texto</button><button class="btn" data-act="goto" data-tono="todos" data-dias="7">Ver las noticias de la semana</button></div>
+    <div class="acts"><button class="btn alt" data-act="vid-open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l4.8-2.8z"/></svg>Video resumen</button><button class="btn primary" data-act="copiar-parte">Copiar texto</button><button class="btn" data-act="goto" data-tono="todos" data-dias="${P.dias}">Ver las noticias ${P.de}</button></div>
     ${shareBar("parte")}
   </div>
   ${muestra(d.M.vol)}`;
 }
 function parteTexto(){
-  const d = parteData(), L = [`*PregonIA · Parte semanal · ${S.org}*`, d.per, "", `*Prensa de la semana: ${d.v.n.toLowerCase()}.* ${conteo(d.M)}. ${d.comp}`, ""];
+  const d = parteData(), P = d.P, L = [`*PregonIA · ${P.rotulo} · ${S.org}*`, d.per, "", `*Prensa ${P.de}: ${d.v.n.toLowerCase()}.* ${conteo(d.M)}. ${d.comp}`, `Hasta dónde llegaron: ${d.niv[2].n} a prensa nacional, ${d.niv[1].n} a regional y ${d.niv[0].n} solo comunal.${d.criTot ? ` Críticas respondidas: ${d.resp} de ${d.criTot}.` : ""}`, ""];
   if (d.asuntos.length) { L.push("*Lo que se puede complicar*"); d.asuntos.forEach((m, i) => { const ac = accion(m); L.push(`${i + 1}. ${m.lead.res} (${llego(escalera(m.notas)).toLowerCase()})`, `   Qué hacer: ${ac.a}`, `   Responsable: ${ac.r}`); }); L.push(""); }
   if (d.buena) { const ac = accion(d.buena); L.push("*Para aprovechar*", `${d.buena.lead.res}`, `   ${ac.a}`); }
   return L.join("\n");
@@ -1023,7 +1034,7 @@ function shareDoc(src, i){
   }
   if (src === "vocero") return vocDoc();
   if (src === "diario") { const t = diarioTexto(), d = diarioData(); return {titulo: "Informe diario de prensa", sub: d.etiqueta, sinFecha: true, tipo: "diario", texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
-  if (src === "parte") { const t = parteTexto(); return {titulo: esAut() ? "Parte semanal · " + inst() : "Parte semanal del alcalde", sub: "Semana del " + parteData().per, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
+  if (src === "parte") { const t = parteTexto(); return {titulo: esAut() ? partePer().rotulo + " · " + inst() : partePer().rotulo + " del alcalde", sub: "Período: " + parteData().per, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "aprob") { const x = S.comunicados.filter(y => y.org === S.org)[i]; return x && x.texto ? {titulo: x.pieza, sub: "Responde a: " + x.origen + " · aprobado el " + fecha(x.ts), texto: x.texto, cuerpo: x.texto} : null; }
   return null;
 }
