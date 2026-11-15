@@ -521,32 +521,45 @@ button.ini-fila:hover{background:var(--surface-2)}
 .voc-spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:vocgira .8s linear infinite}
 @keyframes vocgira{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.voc-spin{animation:none}}
-/* Pantalla de lectura de medios */
-.pr{min-height:min(78vh,720px);display:grid;place-content:center;justify-items:center;text-align:center;gap:10px;padding:32px 18px}
-.pr-circ{position:relative;width:220px;height:220px;margin-bottom:6px}
-@media (min-width:900px){.pr-circ{transform:scale(1.15);margin:14px 0 18px}}
-.pr-anillo{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
-.pr-arco{animation:prArco 1.6s linear infinite;transform-origin:110px 110px}
-@keyframes prArco{to{transform:rotate(360deg)}}
-.pr-ventana{position:absolute;inset:14px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 40%,var(--surface-2),var(--surface));box-shadow:inset 0 0 0 1px var(--line)}
-.pr-mitad{position:absolute;top:0;bottom:0;overflow:hidden}.pr-der{left:50%;right:0}.pr-izq{left:0;right:50%}
-.pr-cinta{position:absolute;top:50%;display:flex;gap:16px;transform:translateY(-50%);animation:prCinta 11s linear infinite;will-change:transform}
-.pr-der .pr-cinta{left:-96px}.pr-izq .pr-cinta{left:0}
-/* Las dos copias recorren lo mismo; la derecha arranca desplazada media ventana para quedar alineada con la izquierda. */
-@keyframes prCinta{from{transform:translate(96px,-50%)}to{transform:translate(-478px,-50%)}}
-.pr-p{position:relative;flex:0 0 66px;height:82px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25))}
-.pr-diario{width:66px;height:82px;display:block}
-
-.pr-ok{position:absolute;right:-6px;top:-6px;width:22px;height:22px;border-radius:50%;background:#3CC08A;color:#fff;font:700 13px/22px system-ui,sans-serif;display:none;box-shadow:0 0 0 2px var(--surface)}
-.leidos .pr-ok{display:block}
-.pr-linea{position:absolute;top:10%;bottom:10%;left:calc(50% - 1px);width:2px;background:linear-gradient(transparent,#2196F3,transparent);box-shadow:0 0 12px 3px rgba(33,150,243,.55);animation:prLuz 1.4s ease-in-out infinite alternate}
-@keyframes prLuz{from{opacity:.55}to{opacity:1}}
-.pr-marca{margin:4px 0 0;font:700 15px var(--f-display,inherit);letter-spacing:.02em;color:var(--muted)}.pr-marca span{color:var(--accent)}
-.pr-t{margin:0;font-size:clamp(22px,4.4vw,30px);letter-spacing:-.01em}
-.pr-s{margin:0;max-width:540px;color:var(--muted);font-size:15px;line-height:1.5}
-.pr-paso{margin:8px 0 0;font-weight:600;color:var(--ink);min-height:1.4em}
+/* Pantalla de lectura de medios: mismo lenguaje de la portada (tarjeta, kicker azul, titular serif) */
+.pr{min-height:min(80vh,740px);display:grid;place-content:center;justify-items:center;text-align:center;gap:10px;padding:28px 18px}
+.pr-circ{position:relative;width:284px;height:284px;margin-bottom:6px}
+.pr-pista{position:absolute;inset:30px;border-radius:50%;border:1.5px dashed var(--line)}
+.pr-pista::after{content:"";position:absolute;inset:34px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 14%,transparent),transparent 70%)}
+/* La órbita gira y cada diario gira al revés para quedar derecho */
+.pr-orbita{position:absolute;inset:0;animation:prOrb 26s linear infinite}
+@keyframes prOrb{to{transform:rotate(360deg)}}
+.pr-o{position:absolute;left:50%;top:50%;width:40px;height:50px;margin:-25px 0 0 -20px;transform:rotate(var(--a)) translateY(-112px) rotate(calc(-1 * var(--a)))}
+.pr-oi{position:relative;display:block;width:40px;height:50px;animation:prOrb 26s linear infinite reverse;transition:opacity .4s}
+.pr-oi svg{width:40px;height:50px;display:block;filter:drop-shadow(0 3px 6px rgba(0,0,0,.25));transition:transform .4s}
+.pr-o.leyendo .pr-oi svg{transform:scale(1.25);filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent) 70%,transparent))}
+.pr-o:not(.leyendo):not(.leido) .pr-oi{opacity:.92}
+.pr-ok{position:absolute;right:-7px;top:-7px;width:18px;height:18px;border-radius:50%;background:var(--pos);color:#fff;font:700 11px/18px system-ui,sans-serif;text-align:center;opacity:0;transform:scale(.4);transition:opacity .3s,transform .3s;box-shadow:0 0 0 2px var(--bg,var(--surface))}
+.pr-o.leido .pr-ok{opacity:1;transform:none}
+/* Centro: el diario que se está leyendo, abierto, con las páginas dando vuelta */
+.pr-centro{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);perspective:600px}
+.pr-libro{width:124px;animation:prEntra .45s ease-out}
+@keyframes prEntra{from{opacity:0;transform:scale(.6) rotate(-8deg)}to{opacity:1;transform:none}}
+.pr-cab{height:16px;background:var(--c);border-radius:4px 4px 0 0;display:grid;place-items:center}
+.pr-cab span{font:700 9px Georgia,serif;letter-spacing:.06em;color:#fff}
+.pr-abierto{position:relative;display:flex;height:76px;background:var(--p);border:1.5px solid var(--c);border-top:0;border-radius:0 0 4px 4px;box-shadow:0 8px 18px rgba(0,0,0,.3);transform-style:preserve-3d}
+.pr-abierto::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:color-mix(in srgb,var(--c) 45%,transparent)}
+.pr-pag{flex:1;display:grid;align-content:start;gap:5px;padding:8px 7px}
+.pr-pag i{display:block;height:3px;border-radius:2px;background:#2B3445;opacity:.45}
+.pr-pag i:first-child{height:12px;background:var(--c);opacity:.8;width:100% !important}
+.pr-hoja{position:absolute;left:50%;top:0;width:50%;height:100%;transform-origin:left center;transform-style:preserve-3d;animation:prPagina .87s ease-in-out infinite}
+.pr-cara{position:absolute;inset:0;background:var(--p);backface-visibility:hidden;display:flex}
+.pr-cara.fr{border-left:1px solid color-mix(in srgb,var(--c) 30%,transparent)}
+.pr-cara.re{transform:rotateY(180deg)}
+.pr-cara .pr-pag{flex:1}
+@keyframes prPagina{0%{transform:rotateY(0)}70%,100%{transform:rotateY(-180deg)}}
+.pr-t{margin:2px 0 0;font-family:var(--f-news);font-weight:600;font-size:clamp(26px,3.4vw,38px);line-height:1.12;letter-spacing:-.01em}
+.pr-t:focus{outline:none}
+.pr-s{margin:0;max-width:560px;color:var(--muted);font-size:15px;line-height:1.5}.pr-s b{color:var(--ink)}
+.pr-paso{margin:10px 0 0;display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-weight:600;font-size:14px;color:var(--ink)}
 .pr-nota{margin:0;font-size:12.5px;color:var(--muted)}
-@media (prefers-reduced-motion:reduce){.pr-cinta,.pr-arco,.pr-linea{animation:none}.pr-der .pr-cinta,.pr-izq .pr-cinta{transform:translate(-20px,-50%)}}
+@media (max-width:420px){.pr-centro{transform:translate(-50%,-50%) scale(.8)}.pr-circ{width:256px;height:256px}.pr-pista{inset:28px}.pr-o{transform:rotate(var(--a)) translateY(-99px) rotate(calc(-1 * var(--a)))}}
+@media (prefers-reduced-motion:reduce){.pr-orbita,.pr-oi,.pr-hoja,.pr-libro{animation:none}}
 .voc-f{display:grid;gap:8px;padding:12px 18px 16px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--surface)}
 .voc-f2{display:flex;gap:8px;flex-wrap:wrap}
 .voc-f .hint{margin:0}

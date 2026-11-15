@@ -1698,40 +1698,47 @@ async function cargarReales(force, silencioso){
   } catch(e) { MODO.cargando = false; pintarModo(); render(); if (!silencioso) toast("No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
 }
 /* Pantalla de lectura: posiciona a PregonIA mientras el servidor lee los medios y la IA clasifica.
-   Un círculo por el que pasan diarios de colores: a la derecha esperan, al cruzar la línea de lectura quedan leídos (con visto).
-   Las dos mitades son la misma cinta animada; la izquierda lleva el visto. Sin movimiento si el sistema lo pide. */
+   Siete diarios de colores giran en órbita; uno a la vez pasa al centro, se abre y se le dan vuelta las páginas;
+   al terminar queda con visto en la órbita y entra el siguiente. Sin movimiento si el sistema lo pide. */
 const DIARIOS = [
-  {n: "DIARIO", c: "#1976D2", p: "#E3F0FB", f: "izq"}, {n: "NOTICIAS", c: "#D9443C", p: "#FBE7E5", f: "arr"}, {n: "CRÓNICA", c: "#2E9E6B", p: "#E2F4EA", f: "der"},
-  {n: "GACETA", c: "#C98A0B", p: "#FBF0D9", f: "arr"}, {n: "EL PREGÓN", c: "#7B4BC4", p: "#EFE7FA", f: "izq"}, {n: "SEMANARIO", c: "#0F8C99", p: "#DDF2F4", f: "der"}, {n: "LA VOZ", c: "#E0598B", p: "#FBE5EE", f: "arr"}
+  {n: "DIARIO", c: "#1976D2", p: "#E3F0FB"}, {n: "NOTICIAS", c: "#D9443C", p: "#FBE7E5"}, {n: "CRÓNICA", c: "#2E9E6B", p: "#E2F4EA"},
+  {n: "GACETA", c: "#C98A0B", p: "#FBF0D9"}, {n: "EL PREGÓN", c: "#7B4BC4", p: "#EFE7FA"}, {n: "SEMANARIO", c: "#0F8C99", p: "#DDF2F4"}, {n: "LA VOZ", c: "#E0598B", p: "#FBE5EE"}
 ];
-function diarioSvg(d){
-  const L = (y, w) => `<rect x="${7}" y="${y}" width="${w}" height="2.6" rx="1.3" fill="#2B3445" opacity=".55"/>`;
-  const foto = d.f === "arr" ? `<rect x="7" y="26" width="52" height="20" rx="2" fill="${d.c}" opacity=".85"/>` : `<rect x="${d.f === "izq" ? 7 : 35}" y="26" width="24" height="22" rx="2" fill="${d.c}" opacity=".85"/>`;
-  const col = d.f === "arr" ? [50, 55, 60, 65, 70].map((y, i) => L(y, i % 2 ? 44 : 52)).join("") : [27, 32, 37, 42, 47].map(y => `<rect x="${d.f === "izq" ? 35 : 7}" y="${y}" width="24" height="2.6" rx="1.3" fill="#2B3445" opacity=".55"/>`).join("") + [53, 58, 63, 68].map((y, i) => L(y, i % 2 ? 40 : 52)).join("");
-  return `<svg class="pr-diario" viewBox="0 0 66 82" aria-hidden="true"><rect x="1" y="1" width="64" height="80" rx="4" fill="${d.p}" stroke="${d.c}" stroke-width="1.5"/><rect x="1" y="1" width="64" height="15" rx="4" fill="${d.c}"/><rect x="1" y="10" width="64" height="6" fill="${d.c}"/>
-    <text x="33" y="11.5" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="${d.n.length > 8 ? 7 : 8.5}" fill="#fff" letter-spacing=".4">${d.n}</text>${L(20, 52).replace('opacity=".55"', 'opacity=".9"')}${foto}${col}</svg>`;
+const PR_ORB = 7, PR_MS = 2600;  // 3 páginas por diario
+function diarioMini(d, i){
+  const ln = (y, w) => `<rect x="5" y="${y}" width="${w}" height="2" rx="1" fill="#2B3445" opacity=".5"/>`;
+  return `<svg viewBox="0 0 40 50" aria-hidden="true"><rect x=".75" y=".75" width="38.5" height="48.5" rx="3" fill="${d.p}" stroke="${d.c}" stroke-width="1.5"/><rect x=".75" y=".75" width="38.5" height="10" rx="3" fill="${d.c}"/><rect x=".75" y="6" width="38.5" height="4.75" fill="${d.c}"/>
+    <rect x="5" y="15" width="${i % 2 ? 30 : 14}" height="${i % 2 ? 10 : 14}" rx="1.5" fill="${d.c}" opacity=".8"/>${i % 2 ? ln(29, 30) + ln(33, 26) : ln(16, 12) + ln(20, 12) + ln(24, 10)}${ln(37, 30)}${ln(41, 24)}</svg>`;
+}
+const prPagina = lado => `<div class="pr-pag ${lado}">${[0, 1, 2, 3, 4, 5].map(k => `<i style="width:${[86, 70, 92, 64, 88, 74][(k + (lado === "der" ? 2 : 0)) % 6]}%"></i>`).join("")}</div>`;
+function prLibro(d){
+  return `<div class="pr-libro" style="--c:${d.c};--p:${d.p}"><div class="pr-cab"><span>${d.n}</span></div>
+    <div class="pr-abierto">${prPagina("izq")}${prPagina("der")}<div class="pr-hoja"><div class="pr-cara fr">${prPagina("der")}</div><div class="pr-cara re">${prPagina("izq")}</div></div></div></div>`;
 }
 const PR_PASOS = [[0, "Leyendo los medios nacionales, regionales y locales…"], [8, "Juntando la misma noticia publicada en varios medios…"], [18, "La IA está leyendo el tono y escribiendo resúmenes propios…"], [32, "Ordenando por alcance y preparando qué conviene hacer…"], [55, "Unos segundos más: hay muchas fuentes para revisar…"]];
 function procesandoHtml(){
-  const quien = esAut() ? cuenta().perfil.nombre : S.org, cinta = DIARIOS.concat(DIARIOS).map((d, i) => `<span class="pr-p" style="transform:rotate(${[-4, 3, -1, 2, -3, 4, -2][i % 7]}deg)">${diarioSvg(d)}<span class="pr-ok" aria-hidden="true">✓</span></span>`).join("");
+  const quien = esAut() ? cuenta().perfil.nombre : S.org, hoy = new Date(NOW).toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long"});
+  const orbita = DIARIOS.map((d, i) => `<span class="pr-o${i ? "" : " leyendo"}" style="--a:${i * 360 / PR_ORB}deg"><span class="pr-oi">${diarioMini(d, i)}<span class="pr-ok">✓</span></span></span>`).join("");
   return `<section class="pr" role="status" aria-live="polite" aria-labelledby="prT">
-    <div class="pr-circ" aria-hidden="true">
-      <svg class="pr-anillo" viewBox="0 0 220 220"><defs><linearGradient id="prG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2196F3"/><stop offset="1" stop-color="#3CC08A"/></linearGradient></defs><circle cx="110" cy="110" r="104" fill="none" stroke="var(--track)" stroke-width="6"/><circle class="pr-arco" cx="110" cy="110" r="104" fill="none" stroke="url(#prG)" stroke-width="6" stroke-linecap="round" stroke-dasharray="170 484"/></svg>
-      <div class="pr-ventana"><div class="pr-mitad pr-der"><div class="pr-cinta">${cinta}</div></div><div class="pr-mitad pr-izq leidos"><div class="pr-cinta">${cinta}</div></div><span class="pr-linea"></span></div>
-    </div>
-    <p class="pr-marca">Pregon<span>IA</span></p>
+    <div class="pr-circ" aria-hidden="true"><span class="pr-pista"></span><div class="pr-orbita">${orbita}</div><div class="pr-centro" id="prCentro">${prLibro(DIARIOS[0])}</div></div>
+    <span class="ini-ekick">Leyendo la prensa · ${esc(hoy)}</span>
     <h2 id="prT" class="pr-t" tabindex="-1">Estamos leyendo la prensa por ti</h2>
-    <p class="pr-s">Más de 100 medios nacionales, regionales y locales en una sola lectura: qué se dice de ${esc(quien)}, hasta dónde llegó y qué conviene hacer.</p>
-    <p class="pr-paso" id="prPaso">${PR_PASOS[0][1]}</p>
+    <p class="pr-s">Más de 100 medios nacionales, regionales y locales en una sola lectura: qué se dice de <b>${esc(quien)}</b>, hasta dónde llegó y qué conviene hacer.</p>
+    <p class="pr-paso"><span class="voc-spin" aria-hidden="true"></span><span id="prPaso">${PR_PASOS[0][1]}</span></p>
     <p class="pr-nota" id="prNota">Suele tardar menos de un minuto.</p>
   </section>`;
 }
 function procesandoPaso(){
-  clearInterval(procesandoPaso.t);
+  clearInterval(procesandoPaso.t); clearInterval(procesandoPaso.l);
   const tick = () => { const el = $("#prPaso"); if (!el || !MODO.cargando) { clearInterval(procesandoPaso.t); return; }
     const seg = Math.round((Date.now() - (MODO.inicio || Date.now())) / 1000), p = PR_PASOS.filter(x => seg >= x[0]).pop()[1];
     if (el.textContent !== p) el.textContent = p; const n = $("#prNota"); if (n) n.textContent = seg < 5 ? "Suele tardar menos de un minuto." : `Llevamos ${seg} s · suele tardar menos de un minuto.`; };
-  tick(); procesandoPaso.t = setInterval(tick, 1000);
+  // Un diario a la vez: el leído queda con visto en la órbita y el siguiente pasa al centro. Al completar la vuelta, empieza otra tanda.
+  let i = 0; const leer = () => { const c = $("#prCentro"); if (!c || !MODO.cargando) { clearInterval(procesandoPaso.l); return; }
+    const os = [...document.querySelectorAll(".pr-o")]; os[i].classList.remove("leyendo"); os[i].classList.add("leido");
+    i = (i + 1) % PR_ORB; if (!i) os.forEach(o => o.classList.remove("leido"));
+    os[i].classList.add("leyendo"); c.innerHTML = prLibro(DIARIOS[i]); };
+  tick(); procesandoPaso.t = setInterval(tick, 1000); procesandoPaso.l = setInterval(leer, PR_MS);
 }
 function usarDemo(){ if (MODO.tipo === "demo") return; MODO = {...MODO, tipo: "demo", info: null}; refrescarNotas(NOTAS_DEMO); try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
 document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; if (b.dataset.act === "modo-real") cargarReales(); if (b.dataset.act === "modo-demo") usarDemo(); });
