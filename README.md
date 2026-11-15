@@ -8,7 +8,7 @@ Producto de ALTKimia. Piloto: Casablanca, Algarrobo, El Quisco, El Tabo, Cartage
 Versión de demostración: el catálogo de medios es real; las noticias, cifras y fechas son ficticias.
 
 ## Qué incluye el prototipo
-- **Portada:** logo, propuesta de valor y botón Empezar sobre la foto de un punto de prensa frente a un edificio público (imagen ilustrativa generada con IA en Canva). Aparece cada vez que se abre o recarga la aplicación, con `#portada` y al tocar el logo; "Empezar" lleva a la sección de la dirección o a Inicio. Para abrir sin portada: `?sin-portada`.
+- **Portada:** como la de un diario: cabezal con la fecha, nombre y lema, doble filete, titular con la propuesta de valor, botón Empezar, la miniatura de la edición del día y tres columnas (Lee, Mide, Responde). Sin sesión la miniatura es siempre de "Comuna de Ejemplo", con datos de ejemplo; con sesión del piloto es la del municipio de esa persona, nunca la de otro. Aparece cada vez que se abre o recarga la aplicación, con `#portada` y al tocar el logo; "Empezar" lleva a la sección de la dirección o a Inicio. Para abrir sin portada: `?sin-portada`.
 - **Entrada (¿Para quién es PregonIA?):** en pasos: cargo, comuna, persona y revisión. Siempre se pide la comuna y de ella se deducen el distrito, la circunscripción o la circunscripción provincial del consejo regional. También se puede buscar directo por nombre en toda la nómina. En el teléfono es una decisión por pantalla, a pantalla completa; desde 760 px suma un riel con los pasos. La contraseña de la demo se pide en la revisión.
 - **Inicio:** portada que responde cuatro preguntas, con período a elegir (24 horas, Semana o 30 días) comparado con el período anterior: cómo estamos (veredicto en una frase y cuatro cifras: noticias, tono, hasta dónde llegó y el alcalde o el territorio en la prensa), qué hacer hoy (críticas por responder, con un «dato para la respuesta» cuando hay una nota positiva del mismo asunto, y notas positivas para aprovechar), qué está cambiando (temas con tendencia y asuntos sin tema que se pueden seguir con un toque), qué viene en el calendario y quién marca la agenda. Cada noticia aparece una sola vez; el gráfico por día está en Reportes.
 - **Menciones:** cada noticia una vez aunque la publiquen varios medios; filtros por tono, período, tema y palabra; "¿Por qué aparece?" y "No corresponde".
@@ -19,14 +19,19 @@ Versión de demostración: el catálogo de medios es real; las noticias, cifras 
 
 Los datos de la demo se guardan en el navegador (localStorage, clave `pregonia-demo-v2`).
 
+## Diseño (Edición)
+Lenguaje de diario: papel blanco, filete negro, titulares de prensa en serif (Source Serif 4) y la interfaz en Inter. El azul (#2B4BE0) queda solo para lo que se toca. Semáforo de tono: verde favorable, gris neutro y rojo crítico; el ámbar se reserva para "Hecho grave". Texto base de 16 px, mínimo 13 px, tamaños en rem.
+- **Claro u oscuro:** sigue la configuración del teléfono; el botón de tema la fija (clave `pregonia-modo` en el navegador).
+- **Video resumen:** sale siempre en claro, para que todos reciban la misma pieza.
+- **Pantalla de lectura:** siete diarios en blanco y negro en órbita; el que se lee, con anillo azul.
+
 ## Estructura
 - `index.html` versión autónoma lista para publicar (se abre con doble clic; JS y CSS embebidos).
-- `src/shell.html` estilos (sistema de diseño "sala de situación", modo claro y oscuro) y estructura de la página.
+- `src/shell.html` estilos (diseño "Edición", en versión clara y oscura) y estructura de la página.
 - `src/base.js` constantes, planes y utilidades; recibe el catálogo de medios al compilar.
 - `src/corpus.js` noticias ficticias de la demo.
 - `src/app.js` motor de calce, métricas, vistas, informes, comunicados y ayuda.
 - `src/territorios.js` perfil de las 38 comunas y de cada distrito, circunscripción y circunscripción provincial: las ocho temáticas (agua, emergencias, seguridad, salud, educación, tránsito, aseo y economía) con el nombre, las palabras y los dolores de cada territorio, y la lente del cargo (municipio y concejo, consejo regional, parlamentarios). Las cuentas guardadas con la versión anterior se adaptan solas al abrirse, sin perder lo editado.
-- `assets/portada.jpg` foto de la portada; se embebe en `index.html` al compilar.
 - `data/catalogo_medios.csv` los medios con método de lectura, URL y estado (listo, requiere_ajuste, restringido).
 - `docs/especificacion.md` especificación funcional del MVP.
 - `api/ia.js` función de servidor (Vercel Edge) que conecta la IA con la clave en el servidor.

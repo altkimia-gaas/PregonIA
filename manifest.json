@@ -7,8 +7,8 @@
   "start_url": "/?sin-portada#inicio",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#080B12",
-  "theme_color": "#080B12",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
   "icons": [
     {
       "src": "/icono-192.png",

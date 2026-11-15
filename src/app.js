@@ -1347,6 +1347,7 @@ function render(focus){
   if (MODO.cargando && !isConfig(route())) { renderChrome(); $("#view").innerHTML = procesandoHtml(); cerrarMenu(); procesandoPaso(); return; }
   renderChrome(); $("#view").innerHTML = (perAplica() ? `<div class="perbar">${perCtl()}</div>` : "") + (VIEWFN[route()] || vInicio)();
   cerrarMenu(); if ($("#view .shr")) cargarJsPDF().catch(() => {});
+  { const pt = $("#portada"); if (pt && !pt.hidden) pintarMini(); }
   if (focus) { const h = $("#view h2"); if (h) h.focus({preventScroll:true}); }
   if (tState.refocus) { const el = document.querySelector(`[data-chipin="${tState.refocus}"]`); if (el) el.focus(); tState.refocus = null; }
 }
@@ -1609,7 +1610,7 @@ function renderHelp(){
   const [t, d] = ayudaVista();
   el.querySelector(".hp-body").innerHTML = `
     <section class="hp-here"><span class="kick">Estás en</span><h3>${esc(t)}</h3><p>${esc(d)}</p></section>
-    <section class="hp-apar"><h3 class="hp-h">Apariencia</h3><button class="btn sm" type="button" data-act="tema" id="temaAyuda">${temaActual() === "light" ? "Usar modo oscuro" : "Usar modo claro"}</button></section>
+    <section class="hp-apar"><h3 class="hp-h">Apariencia</h3><button class="btn sm" type="button" data-act="tema" id="temaAyuda">${textoTema()}</button></section>
     <section><h3 class="hp-h">Cómo se usa, en cinco pasos</h3><ol class="hp-guia">${GUIA.map(([a, b]) => `<li><b>${a}</b><span>${b}</span></li>`).join("")}</ol></section>
     <section><h3 class="hp-h">Preguntas frecuentes</h3><input id="helpQ" class="hp-q" type="search" placeholder="Busca, por ejemplo: tono, WhatsApp, límite" aria-label="Buscar en las preguntas frecuentes" value="${esc(helpQ)}"><div id="faqOut">${faqHtml()}</div></section>
     <section class="hp-teclado"><h3 class="hp-h">Atajos de teclado</h3><dl class="hp-atajos"><dt><span class="kbd">1</span> a <span class="kbd">5</span></dt><dd>Ir a Inicio, Menciones, Reportes, Comunicados o Ajustes</dd><dt><span class="kbd">/</span></dt><dd>Buscar en las menciones</dd><dt><span class="kbd">?</span></dt><dd>Abrir o cerrar esta ayuda</dd><dt><span class="kbd">Esc</span></dt><dd>Cerrar ventanas y menús</dd></dl></section>
@@ -1710,13 +1711,14 @@ const DIARIOS = [
 ];
 const PR_ORB = 7, PR_MS = 2600;  // 3 páginas por diario
 function diarioMini(d, i){
-  const ln = (y, w) => `<rect x="5" y="${y}" width="${w}" height="2" rx="1" fill="#2B3445" opacity=".5"/>`;
-  return `<svg viewBox="0 0 40 50" aria-hidden="true"><rect x=".75" y=".75" width="38.5" height="48.5" rx="3" fill="${d.p}" stroke="${d.c}" stroke-width="1.5"/><rect x=".75" y=".75" width="38.5" height="10" rx="3" fill="${d.c}"/><rect x=".75" y="6" width="38.5" height="4.75" fill="${d.c}"/>
-    <rect x="5" y="15" width="${i % 2 ? 30 : 14}" height="${i % 2 ? 10 : 14}" rx="1.5" fill="${d.c}" opacity=".8"/>${i % 2 ? ln(29, 30) + ln(33, 26) : ln(16, 12) + ln(20, 12) + ln(24, 10)}${ln(37, 30)}${ln(41, 24)}</svg>`;
+  // Edición · Edición: diarios en blanco y negro (papel, cabezal en tinta, foto gris); los colores salen del modo claro u oscuro.
+  const ln = (y, w) => `<rect class="dm-l" x="5" y="${y}" width="${w}" height="2" rx="1"/>`;
+  return `<svg viewBox="0 0 40 50" aria-hidden="true"><rect class="dm-papel" x=".75" y=".75" width="38.5" height="48.5" rx="3"/><rect class="dm-cab" x="5" y="4.5" width="30" height="3.5" rx="1"/><rect class="dm-filete" x="5" y="10" width="30" height="1"/>
+    <rect class="dm-foto" x="5" y="15" width="${i % 2 ? 30 : 14}" height="${i % 2 ? 10 : 14}" rx="1.5"/>${i % 2 ? ln(29, 30) + ln(33, 26) : ln(16, 12) + ln(20, 12) + ln(24, 10)}${ln(37, 30)}${ln(41, 24)}</svg>`;
 }
 const prPagina = lado => `<div class="pr-pag ${lado}">${[0, 1, 2, 3, 4, 5].map(k => `<i style="width:${[86, 70, 92, 64, 88, 74][(k + (lado === "der" ? 2 : 0)) % 6]}%"></i>`).join("")}</div>`;
 function prLibro(d){
-  return `<div class="pr-libro" style="--c:${d.c};--p:${d.p}"><div class="pr-cab"><span>${d.n}</span></div>
+  return `<div class="pr-libro" style="--c:var(--ink);--p:var(--surface)"><div class="pr-cab"><span>${d.n}</span></div>
     <div class="pr-abierto">${prPagina("izq")}${prPagina("der")}<div class="pr-hoja"><div class="pr-cara fr">${prPagina("der")}</div><div class="pr-cara re">${prPagina("izq")}</div></div></div></div>`;
 }
 const PR_PASOS = [[0, "Leyendo los medios nacionales, regionales y locales…"], [8, "Juntando la misma noticia publicada en varios medios…"], [18, "La IA está leyendo el tono y escribiendo resúmenes propios…"], [32, "Ordenando por alcance y preparando qué conviene hacer…"], [55, "Unos segundos más: hay muchas fuentes para revisar…"]];
@@ -1756,19 +1758,24 @@ $("#org").addEventListener("change", () => { if ($("#entBack")) return; pintarMo
   if (pref === "real") cargarReales();
 })();
 
-/* Tema: la marca es oscura; el modo claro es una opción que se recuerda en este navegador. */
-const TEMA_KEY = "pregonia-tema", ICO_TEMA = {sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>', luna: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'};
-function temaActual(){ return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"; }
-function pintarTema(){ const claro = temaActual() === "light", b = $("#temaBtn"), ba = $("#temaAyuda"); if (ba) ba.textContent = claro ? "Usar modo oscuro" : "Usar modo claro"; if (!b) return; $("#temaIco").innerHTML = claro ? ICO_TEMA.luna : ICO_TEMA.sol; b.setAttribute("aria-label", claro ? "Cambiar a modo oscuro" : "Cambiar a modo claro"); b.title = claro ? "Modo oscuro" : "Modo claro"; }
-try { const t = localStorage.getItem(TEMA_KEY); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch(e) {}
+/* Edición: un solo diseño (Edición) en versión clara y oscura. Sin preferencia guardada sigue al teléfono; el botón la fija. */
+const TEMA_KEY = "pregonia-modo", ICO_TEMA = {sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>', luna: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'};
+const mqOscuro = matchMedia("(prefers-color-scheme: dark)");
+function modoGuardado(){ try { const m = localStorage.getItem(TEMA_KEY); return m === "oscuro" || m === "claro" ? m : null; } catch(e) { return null; } }
+function modoActual(){ return document.documentElement.getAttribute("data-modo") === "oscuro" ? "oscuro" : "claro"; }
+function textoTema(){ return "Usar modo " + (modoActual() === "oscuro" ? "claro" : "oscuro"); }
+function aplicarModo(m){ const r = document.documentElement; r.setAttribute("data-theme", "editorial"); r.setAttribute("data-modo", m); const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.setAttribute("content", m === "oscuro" ? "#121212" : "#FFFFFF"); }
+function pintarTema(){ const osc = modoActual() === "oscuro", b = $("#temaBtn"), ba = $("#temaAyuda"); if (ba) ba.textContent = textoTema(); if (!b) return; $("#temaIco").innerHTML = osc ? ICO_TEMA.sol : ICO_TEMA.luna; b.setAttribute("aria-label", "Cambiar a modo " + (osc ? "claro" : "oscuro")); b.title = "Cambiar a modo " + (osc ? "claro" : "oscuro"); }
+aplicarModo(modoGuardado() || (mqOscuro.matches ? "oscuro" : "claro"));
 pintarTema();
-new MutationObserver(pintarTema).observe(document.documentElement, {attributes: true, attributeFilter: ["data-theme"]});
+try { mqOscuro.addEventListener("change", e => { if (!modoGuardado()) aplicarModo(e.matches ? "oscuro" : "claro"); }); } catch(e) {}
+new MutationObserver(pintarTema).observe(document.documentElement, {attributes: true, attributeFilter: ["data-modo"]});
 /* Volver arriba: aparece en páginas largas, por encima de la barra inferior en el celular. */
 addEventListener("scroll", () => { const b = $("#arriba"); if (b) b.hidden = scrollY < innerHeight * 0.9 || document.body.classList.contains("pt-on"); }, {passive: true});
 function irAlContenido(){ const h = $("#view h2") || $("#view"); h.setAttribute("tabindex", "-1"); h.focus({preventScroll: true}); }
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-act]"); if (!b) return; const a = b.dataset.act;
-  if (a === "tema") { const n = temaActual() === "light" ? "dark" : "light"; document.documentElement.setAttribute("data-theme", n); try { localStorage.setItem(TEMA_KEY, n); } catch(err) {} toast(n === "light" ? "Modo claro activado." : "Modo oscuro activado."); }
+  if (a === "tema") { const n = modoActual() === "oscuro" ? "claro" : "oscuro"; aplicarModo(n); try { localStorage.setItem(TEMA_KEY, n); } catch(err) {} toast("Modo " + n + " activado."); }
   if (a === "skip") irAlContenido();
   if (a === "arriba") { scrollTo({top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); irAlContenido(); }
 });
@@ -1786,8 +1793,34 @@ document.addEventListener("keydown", e => {
 
 /* Portada de bienvenida: aparece cada vez que se abre o recarga la aplicación, y con #portada o el logo.
    "Empezar" lleva a la sección de la dirección si había una (enlaces compartidos); si no, a Inicio. */
+
+/* Edición · Miniatura de la edición del día en la portada.
+   Sin sesión del piloto: siempre "Comuna de Ejemplo" con datos de ejemplo (nunca un municipio real, ni el de la demo).
+   Con sesión: la edición del municipio de esa persona, con sus datos; mientras cargan, un bloque de espera. */
+function miniPortadaHtml(M, pend, kick, sello){
+  const v = veredicto(M), tit = M.vol ? `Cobertura ${v.n.toLowerCase()} hoy${pend ? ", con " + plural(pend, "crítica por responder", "críticas por responder") : ""}.` : "Sin noticias en las últimas 24 horas.";
+  return `${sello ? '<span class="pd-sello">Datos de ejemplo</span>' : ""}<p class="pd-mini-k">${esc(kick)}</p><p class="pd-mini-t">${esc(tit)}</p>
+    <div class="pd-mini-c"><div><b>${M.vol}</b><small>${M.vol === 1 ? "noticia" : "noticias"} en 24 horas</small></div>
+    <div><b class="${v.k}">${esc(v.c)}</b>${segbar([{l: "Críticas", v: M.cri, c: "var(--cri)"}, {l: "Neutras", v: M.neu, c: "var(--neu)"}, {l: "Positivas", v: M.pos, c: "var(--pos)"}])}<small class="cnt">${esc(conteo(M))}</small></div>
+    <div><b class="${pend ? "cri" : "pos"}">${pend}</b><small>${pend === 1 ? "crítica" : "críticas"} por responder</small></div></div>`;
+}
+function pintarMini(){
+  const box = $("#ptMini"), pie = $("#ptMiniPie"); if (!box) return;
+  const piloto = typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo;
+  if (piloto && (MODO.cargando || MODO.tipo !== "piloto")) { box.className = "pd-mini espera"; box.textContent = "Preparando tu edición de hoy…"; pie.textContent = ""; return; }
+  box.className = "pd-mini";
+  if (piloto) {
+    const c = cuenta(), ms = sobreCuenta(menciones(c, 1), c), M = metricas(ms), pend = pendientes(c).length;
+    box.innerHTML = miniPortadaHtml(M, pend, `Edición ${S.org} · hoy`, false);
+    pie.textContent = `Tu edición de hoy, con las noticias de ${S.org}.`;
+  } else {
+    box.innerHTML = miniPortadaHtml({vol: 12, pos: 7, neu: 4, cri: 1, neto: 50}, 1, "Edición Comuna de Ejemplo · hoy", true);
+    pie.textContent = "Así se ve la edición de cada día para un municipio. Comuna y cifras de ejemplo.";
+  }
+}
 function mostrarPortada(on){
   const p = $("#portada"); if (!p) return;
+  if (on) pintarMini();
   p.hidden = !on; document.body.classList.toggle("pt-on", on);
   if (on) { window.scrollTo(0, 0); setTimeout(() => $("#ptGo").focus({preventScroll:true}), 60); }
 }
@@ -1797,6 +1830,8 @@ document.addEventListener("click", e => {
   avisoLegal().then(ok => { if (ok) entAbrir(true); });  // la entrada se elige por rol, zona y nombre
 });
 window.addEventListener("hashchange", () => { if (location.hash === "#portada") mostrarPortada(true); });
+/* Edición · Fecha del cabezal de la portada, como la de un diario. */
+(() => { const f = $("#ptFecha"); if (!f) return; const d = new Date().toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long", year: "numeric"}); f.textContent = d.charAt(0).toUpperCase() + d.slice(1); })();
 
 render();
 mostrarPortada(!/[?&]sin-portada\b/.test(location.search));

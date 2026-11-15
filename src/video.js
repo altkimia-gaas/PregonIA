@@ -3,8 +3,17 @@
    Escenas dibujadas en canvas a partir de parteData(); se exporta a MP4 con WebCodecs + mp4-muxer
    (más rápido que tiempo real) y, si el navegador no lo permite, se graba con MediaRecorder. Todo en el navegador. */
 const VW = 1080, VH = 1920, VFPS = 30, VOUT = [720, 1280];
-const VC = {bg:"#080B12", card:"#111827", line:"#1E2D4A", text:"#F0F4FF", muted:"#8B9DC3", blue:"#2196F3", cri:"#D9443C", pos:"#3CC08A", neu:"#CFA02A"};
-const VF = {h:'Inter, system-ui, sans-serif', b:'Inter, system-ui, sans-serif', n:'Newsreader, Georgia, serif'};
+/* Edición · Paleta Edición. El video sale siempre en claro: es una pieza para compartir y todos deben recibir la misma.
+   La paleta oscura queda definida por si más adelante se quiere ofrecer como opción. */
+const VPALETA = {
+  claro: {bg:"#FFFFFF", card:"#FFFFFF", line:"#141414", text:"#141414", muted:"#555555", blue:"#2B4BE0", cri:"#B3261E", pos:"#1E6B3F", neu:"#6E737B", grave:"#9A5B00",
+          track:"#ECECE9", soft:"#F5F5F2", progBg:"#D6D6D2", prog:"#141414", rule:"#141414", ambN:"#14217A", ambR:"#2B4BE0", ambL:"#6F86E8"},
+  oscuro: {bg:"#121212", card:"#1A1A1A", line:"#3A3A3A", text:"#EDEDED", muted:"#A8A8A8", blue:"#8FA2FF", cri:"#E5534B", pos:"#4CC38A", neu:"#A9ADB4", grave:"#F0C46A",
+          track:"#2A2A2A", soft:"#232323", progBg:"#3A3A3A", prog:"#EDEDED", rule:"#EDEDED", ambN:"#C7D0FF", ambR:"#8FA2FF", ambL:"#5A6FD6"}
+};
+let VC = VPALETA.claro;
+function vpaleta(){ VC = VPALETA.claro; }
+const VF = {h:'"Source Serif 4", Newsreader, Georgia, serif', b:'Inter, system-ui, sans-serif', n:'"Source Serif 4", Newsreader, Georgia, serif'};
 const vtono = t => VC[t] || VC.neu;
 const vease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
 const vin = (l, t0, d = 0.6) => vease((l - t0) / d);
@@ -126,23 +135,17 @@ function vlogo(ctx, cx, y, px, a){
   let x = cx - total / 2; x = vmarca(ctx, x, y, s, a) + px * 0.18;
   ctx.save(); ctx.globalAlpha *= a; ctx.textAlign = "left"; ctx.fillStyle = VC.text; ctx.fillText("Pregon", x, y); ctx.fillStyle = VC.blue; ctx.fillText("IA", x + w1, y); ctx.restore(); vspacing(ctx, 0);
 }
-let vgrid = null;
-function vfondo(ctx){
-  ctx.fillStyle = VC.bg; ctx.fillRect(0, 0, VW, VH);
-  if (!vgrid) { vgrid = document.createElement("canvas"); vgrid.width = VW; vgrid.height = VH; const g = vgrid.getContext("2d"); g.fillStyle = "rgba(33,150,243,.16)"; for (let y = 30; y < VH; y += 60) for (let x = 30; x < VW; x += 60) { g.beginPath(); g.arc(x, y, 2.2, 0, 7); g.fill(); } }
-  ctx.drawImage(vgrid, 0, 0);
-  const gr = ctx.createRadialGradient(VW * 0.15, VH * 0.05, 40, VW * 0.15, VH * 0.05, VH * 0.75); gr.addColorStop(0, "rgba(33,150,243,.20)"); gr.addColorStop(1, "rgba(8,11,18,0)"); ctx.fillStyle = gr; ctx.fillRect(0, 0, VW, VH);
-}
+function vfondo(ctx){ ctx.fillStyle = VC.bg; ctx.fillRect(0, 0, VW, VH); }
 function vprogreso(ctx, plan, t){
   const n = plan.scenes.length, x0 = 60, W = VW - 120, gap = 10, w = (W - gap * (n - 1)) / n;
-  plan.scenes.forEach((s, i) => { const p = Math.min(1, Math.max(0, (t - s.t0) / s.dur)); const x = x0 + i * (w + gap); ctx.fillStyle = "rgba(240,244,255,.22)"; vrr(ctx, x, 60, w, 8, 4); ctx.fill(); if (p > 0) { ctx.fillStyle = "rgba(240,244,255,.92)"; vrr(ctx, x, 60, Math.max(8, w * p), 8, 4); ctx.fill(); } });
+  plan.scenes.forEach((s, i) => { const p = Math.min(1, Math.max(0, (t - s.t0) / s.dur)); const x = x0 + i * (w + gap); ctx.fillStyle = VC.progBg; vrr(ctx, x, 60, w, 8, 4); ctx.fill(); if (p > 0) { ctx.fillStyle = VC.prog; vrr(ctx, x, 60, Math.max(8, w * p), 8, 4); ctx.fill(); } });
 }
 function vcabecera(ctx, plan){
   vfont(ctx, 700, 40, VF.h); ctx.textAlign = "left"; ctx.fillStyle = VC.text; ctx.fillText("Pregon", 60, 140); const w = ctx.measureText("Pregon").width; ctx.fillStyle = VC.blue; ctx.fillText("IA", 60 + w, 140);
   vfont(ctx, 500, 30, VF.b); ctx.textAlign = "right"; ctx.fillStyle = VC.muted; ctx.fillText(plan.org + " · " + plan.per, VW - 60, 138);
 }
-function vpie(ctx){ vfont(ctx, 400, 26, VF.b); ctx.textAlign = "center"; ctx.fillStyle = "rgba(139,157,195,.8)"; ctx.fillText(typeof MODO !== "undefined" && MODO.tipo !== "demo" ? "PregonIA · Noticias reales de medios digitales" : "PregonIA · Prototipo con noticias ficticias", VW / 2, VH - 60); }
-function vkicker(ctx, txt, y, color, a){ return vtexto(ctx, txt.toUpperCase(), 90, y, {px: 32, w: 700, fam: VF.h, color, a, ls: 5}); }
+function vpie(ctx){ vfont(ctx, 400, 26, VF.b); ctx.textAlign = "center"; ctx.fillStyle = VC.muted; ctx.fillText(typeof MODO !== "undefined" && MODO.tipo !== "demo" ? "PregonIA · Noticias reales de medios digitales" : "PregonIA · Prototipo con noticias ficticias", VW / 2, VH - 60); }
+function vkicker(ctx, txt, y, color, a){ return vtexto(ctx, txt.toUpperCase(), 90, y, {px: 32, w: 700, fam: VF.b, color, a, ls: 5}); }
 
 /* Escenas */
 const VESC = {
@@ -159,7 +162,7 @@ const VESC = {
     vtexto(ctx, v.n, 90, 500, {px, w: 700, fam: VF.h, color: vtono(v.k), a: vin(l, 0.25, 0.7), ls: -px * 0.03});
     vtexto(ctx, plural(M.vol, "noticia", "noticias") + " " + plan.P.tx, 90, 600, {px: 46, w: 500, a: vin(l, 0.5)});
     const g = vin(l, 0.8, 1.4), W = VW - 180; let x = 90; const tot = Math.max(1, M.vol);
-    ctx.fillStyle = "rgba(240,244,255,.08)"; vrr(ctx, 90, 680, W, 72, 14); ctx.fill();
+    ctx.fillStyle = VC.track; vrr(ctx, 90, 680, W, 72, 14); ctx.fill();
     [["pos", M.pos], ["neu", M.neu], ["cri", M.cri]].forEach(([k, n]) => { if (!n) return; const w = (W * n / tot) * g; if (w > 2) { ctx.fillStyle = vtono(k); vrr(ctx, x, 680, Math.max(4, w - 6), 72, 12); ctx.fill(); } x += W * n / tot * g; });
     [["pos", M.pos, "positiva", "positivas"], ["neu", M.neu, "neutra", "neutras"], ["cri", M.cri, "crítica", "críticas"]].forEach(([k, n, a1, a2], i) => {
       const a = vin(l, 1.4 + i * 0.25), y = 880 + i * 92; ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = vtono(k); ctx.beginPath(); ctx.arc(110, y - 15, 16, 0, 7); ctx.fill(); ctx.restore();
@@ -171,11 +174,11 @@ const VESC = {
     const {niv, criTot, resp: rsp} = plan.d, W = VW - 180, max = Math.max(1, ...niv.map(x => x.n));
     vkicker(ctx, "Tratamiento de las noticias", 330, VC.blue, vin(l, 0));
     vtexto(ctx, "Hasta dónde llegaron", 90, 440, {px: 76, w: 700, fam: VF.h, a: vin(l, 0.2), ls: -2});
-    [[2, "Prensa nacional", VC.blue], [1, "Prensa regional", "#64B5F6"], [0, "Solo prensa comunal", VC.muted]].forEach(([k, lbl, col], i) => {
+    [[2, "Prensa nacional", VC.ambN], [1, "Prensa regional", VC.ambR], [0, "Solo prensa comunal", VC.ambL]].forEach(([k, lbl, col], i) => {
       const y = 580 + i * 170, a = vin(l, 0.5 + i * 0.3), g = vin(l, 0.7 + i * 0.3, 0.9), x = niv[k];
       vtexto(ctx, lbl, 90, y, {px: 44, w: 600, a});
       vtexto(ctx, String(x.n), VW - 90, y, {px: 56, w: 700, fam: VF.h, a, align: "right"});
-      ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = "rgba(240,244,255,.08)"; vrr(ctx, 90, y + 28, W, 30, 10); ctx.fill();
+      ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = VC.track; vrr(ctx, 90, y + 28, W, 30, 10); ctx.fill();
       if (x.n && g > 0) { ctx.fillStyle = col; vrr(ctx, 90, y + 28, Math.max(12, W * x.n / max * g), 30, 10); ctx.fill(); } ctx.restore();
       if (x.cri) vtexto(ctx, `incluye ${plural(x.cri, "crítica", "críticas")}`, 90, y + 102, {px: 32, w: 600, color: VC.cri, a: vin(l, 0.9 + i * 0.3)});
     });
@@ -199,7 +202,7 @@ const VESC = {
       const y = 760 + i * 225, a = vin(l, 0.6 + i * 0.35), g = vin(l, 0.8 + i * 0.35, 0.9);
       vtexto(ctx, x.k, 90, y, {px: 44, w: 700, a, maxW: W - 170, max: 1});
       vtexto(ctx, signo(x.bal), VW - 90, y, {px: 50, w: 700, fam: VF.h, color: x.bal < 0 ? VC.cri : x.bal > 0 ? VC.pos : VC.muted, a, align: "right"});
-      ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = "rgba(240,244,255,.08)"; vrr(ctx, 90, y + 32, half, 36, 10); ctx.fill(); vrr(ctx, cx + 8, y + 32, half, 36, 10); ctx.fill();
+      ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = VC.track; vrr(ctx, 90, y + 32, half, 36, 10); ctx.fill(); vrr(ctx, cx + 8, y + 32, half, 36, 10); ctx.fill();
       if (x.cri) { const w = Math.max(10, half * x.cri / max * g); ctx.fillStyle = VC.cri; vrr(ctx, cx - 8 - w, y + 32, w, 36, 10); ctx.fill(); }
       if (x.pos) { const w = Math.max(10, half * x.pos / max * g); ctx.fillStyle = VC.pos; vrr(ctx, cx + 8, y + 32, w, 36, 10); ctx.fill(); }
       ctx.restore();
@@ -220,13 +223,13 @@ const VESC = {
     const ca = vin(l, 1.2); let cx = 90, cy = y - 8; vfont(ctx, 600, 32, VF.b);
     const chips = medios.slice(0, 4).concat(medios.length > 4 ? [`+${medios.length - 4} más`] : []);
     ctx.save(); ctx.globalAlpha *= ca;
-    chips.forEach(c => { const w = ctx.measureText(c).width + 44; if (cx + w > VW - 90) { cx = 90; cy += 74; } ctx.fillStyle = "rgba(240,244,255,.08)"; vrr(ctx, cx, cy, w, 58, 29); ctx.fill(); ctx.strokeStyle = VC.line; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = VC.text; ctx.textAlign = "left"; ctx.fillText(c, cx + 22, cy + 40); cx += w + 14; });
+    chips.forEach(c => { const w = ctx.measureText(c).width + 44; if (cx + w > VW - 90) { cx = 90; cy += 74; } ctx.fillStyle = VC.track; vrr(ctx, cx, cy, w, 58, 29); ctx.fill(); ctx.strokeStyle = VC.line; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = VC.text; ctx.textAlign = "left"; ctx.fillText(c, cx + 22, cy + 40); cx += w + 14; });
     ctx.restore(); y = cy + 130;
     // hasta dónde llegó
     vkicker(ctx, "Hasta dónde llegó", y, VC.muted, vin(l, 1.6)); y += 30;
     e.r.forEach((x, i) => {
       const colW = W / 3, bx = 90 + i * colW, h = [44, 78, 112][i], on = i <= e.max, g = vin(l, 1.9 + i * 0.35, 0.5), base = y + 120;
-      ctx.save(); ctx.globalAlpha *= vin(l, 1.7); ctx.fillStyle = "rgba(240,244,255,.10)"; vrr(ctx, bx, base - h, 64, h, 10); ctx.fill();
+      ctx.save(); ctx.globalAlpha *= vin(l, 1.7); ctx.fillStyle = VC.track; vrr(ctx, bx, base - h, 64, h, 10); ctx.fill();
       if (on && g > 0) { ctx.fillStyle = color; vrr(ctx, bx, base - h * g, 64, h * g, 10); ctx.fill(); } ctx.restore();
       vtexto(ctx, x.l, bx + 84, base - 44, {px: 34, w: 700, a: vin(l, 1.8 + i * 0.35), color: on ? VC.text : VC.muted});
       vtexto(ctx, x.n ? plural(x.n, "nota", "notas") : "sin notas", bx + 84, base - 2, {px: 28, w: 400, color: VC.muted, a: vin(l, 1.8 + i * 0.35)});
@@ -234,12 +237,12 @@ const VESC = {
     y = vtexto(ctx, llego(e), 90, y + 200, {px: 44, w: 700, fam: VF.h, color, a: vin(l, 2.9)});
     // qué hacer
     const aa = vin(l, 3.3, 0.7); vfont(ctx, 500, 42, VF.b); const L = vlineas(ctx, ac.a, W - 80).slice(0, 4); vfont(ctx, 700, 34, VF.b); const Lr = vlineas(ctx, "Responsable: " + ac.r, W - 80).slice(0, 2), hCard = 124 + L.length * 54 + 24 + (Lr.length - 1) * 43 + 52, top = Math.min(y + 10, VH - 150 - hCard);
-    ctx.save(); ctx.globalAlpha *= aa; ctx.fillStyle = VC.card; vrr(ctx, 90, top, W, hCard, 26); ctx.fill(); ctx.strokeStyle = VC.line; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = color; vrr(ctx, 90, top, 10, hCard, 5); ctx.fill(); ctx.restore();
-    vtexto(ctx, "QUÉ HACER", 140, top + 66, {px: 30, w: 700, fam: VF.h, color: VC.blue, a: aa, ls: 5});
+    ctx.save(); ctx.globalAlpha *= aa; ctx.fillStyle = VC.card; vrr(ctx, 90, top, W, hCard, 26); ctx.fill(); ctx.strokeStyle = VC.line; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = color; vrr(ctx, 90, top, 10, hCard, 5); ctx.fill(); ctx.restore();
+    vtexto(ctx, "QUÉ HACER", 140, top + 66, {px: 30, w: 700, fam: VF.b, color: VC.blue, a: aa, ls: 5});
     const y2 = vtexto(ctx, L.join("\n"), 140, top + 124, {px: 42, w: 500, lh: 54, a: aa, maxW: W - 80});
     vtexto(ctx, "Responsable: " + ac.r, 140, y2 + 24, {px: 34, w: 700, color: VC.muted, a: vin(l, 3.8), maxW: W - 80, max: 2});
   },
-  asunto(ctx, s, l){ VESC.ficha(ctx, s, l, `Lo que se puede complicar · ${s.i + 1} de ${s.de}`, vtono(s.f.m.tono)); },
+  asunto(ctx, s, l){ VESC.ficha(ctx, s, l, `Lo que se puede complicar · ${s.i + 1} de ${s.de}`, s.f.m.grave ? VC.grave : vtono(s.f.m.tono)); },
   buena(ctx, s, l){ VESC.ficha(ctx, s, l, "Para aprovechar", VC.pos); },
   calma(ctx, s, l, plan){
     vkicker(ctx, "Lo que se puede complicar", 330, VC.pos, vin(l, 0));
@@ -332,6 +335,7 @@ async function videoGrabado(plan, onProg, signal){
 /* Ventana del video */
 let VID = null;
 function videoAbrir(){
+  vpaleta();
   const plan = videoPlan();
   const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "vidBack";
   ov.innerHTML = `<section class="vid rep" role="dialog" aria-modal="true" aria-labelledby="vidT">
@@ -357,8 +361,8 @@ function videoAbrir(){
   vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const b = $("#vozAdd"), st = $("#vozEstado");
     if (e === "ok") { b.disabled = false; st.textContent = "Sin voz · voz chilena con ElevenLabs"; }
     else st.textContent = e === "sin-clave" ? "Falta configurar la clave de ElevenLabs en Vercel" : "Disponible en pregonia.vercel.app"; });
-  const fuentes = ['400 40px Inter', '500 40px Inter', '600 40px Inter', '700 40px Inter', '600 60px Newsreader'];
-  Promise.all(fuentes.map(f => document.fonts.load(f).catch(() => {}))).then(() => { vgrid = null; });
+  const fuentes = ['400 40px Inter', '500 40px Inter', '600 40px Inter', '700 40px Inter', '500 60px "Source Serif 4"', '600 60px "Source Serif 4"', '700 60px "Source Serif 4"'];
+  Promise.all(fuentes.map(f => document.fonts.load(f).catch(() => {})));
   const loop = now => {
     if (!VID) return; const pl = VID.plan;
     if (VID.play) {
