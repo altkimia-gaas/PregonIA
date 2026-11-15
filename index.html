@@ -15,7 +15,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
 <style>
 /* Identidad ALTKimia (manual de marca v1.0): oscura y técnica. Fondos Abyss/Void/Night, azul eléctrico solo para acción y énfasis
    (no más del 20% de la pantalla, nunca azul sobre azul), Inter para la interfaz y DM Mono para etiquetas y datos.
@@ -49,6 +49,23 @@
   --cri:#B3261E; --cri-soft:#FBE6E3; --cri-ink:#9A1F17;
   --amb-n:#0D3C78; --amb-r:#1565C0; --amb-l:#90B4E0;
   --shadow:0 1px 2px rgba(17,24,39,.06),0 1px 3px rgba(17,24,39,.04); --dots:transparent;
+  color-scheme:light;
+}
+/* PRUEBA · Tema Edición: lenguaje del boletín semanal (papel blanco, filete negro, titulares serif en color, botones píldora).
+   Se elige con el botón de tema; en esta rama es el tema por defecto. */
+:root[data-theme="editorial"]{
+  --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#F5F5F2; --ink:#141414; --muted:#555555; --line:#DADADA; --track:#ECECE9;
+  --frame:#141414;
+  --top:#FFFFFF; --top-ink:#141414; --top-muted:#555555; --top-line:#DADADA; --top-accent:#2B4BE0; --live:#1E6B3F;
+  --accent:#2B4BE0; --accent-bg:#2B4BE0; --accent-bg-h:#1F3BC0; --accent-ink:#FFFFFF; --accent-soft:#EEF1FD;
+  --bell:#8F560C; --bell-soft:#FBEFD9;
+  --pos:#2A9466; --pos-soft:#E3F1E8; --pos-ink:#1E6B3F;
+  --neu:#CC9A10; --neu-soft:#FBF1D6; --neu-ink:#7A5A00;
+  --cri:#B3261E; --cri-soft:#F8E3E1; --cri-ink:#9A1F18;
+  --amb-n:#0D2A8C; --amb-r:#2B4BE0; --amb-l:#9DB0F0;
+  --shadow:none; --dots:transparent;
+  --f-news:"Source Serif 4","Newsreader",Georgia,"Times New Roman",serif;
+  --r:14px; --r-btn:999px;
   color-scheme:light;
 }
 *{box-sizing:border-box}
@@ -1344,6 +1361,50 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   .top-in{gap:8px 10px}
 }
 @media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto!important} .live .dot{animation:none} }
+/* PRUEBA · Tema Edición: componentes */
+:root[data-theme="editorial"] .topbar{border-bottom:1.5px solid var(--frame)}
+:root[data-theme="editorial"] .logo{font-family:var(--f-news);font-weight:700;letter-spacing:-.01em;font-size:23px}
+:root[data-theme="editorial"] .logo b{font-weight:700}
+:root[data-theme="editorial"] .org select{background:var(--surface);color:var(--ink);border:1.5px solid var(--frame)}
+:root[data-theme="editorial"] .themebtn,:root[data-theme="editorial"] .helpbtn{border:1.5px solid var(--frame)}
+:root[data-theme="editorial"] .navbar{background:#FFFFFF;border-bottom:1px solid var(--line)}
+:root[data-theme="editorial"] .card,:root[data-theme="editorial"] .item,:root[data-theme="editorial"] .ini-card,
+:root[data-theme="editorial"] .cal-c,:root[data-theme="editorial"] .cal-i,:root[data-theme="editorial"] .clip-i{border:1.5px solid var(--frame);border-radius:14px;box-shadow:none;background:var(--surface)}
+:root[data-theme="editorial"] .ini-card{padding:20px 20px 16px;gap:10px}
+:root[data-theme="editorial"] .ini-card.cri,:root[data-theme="editorial"] .ini-card.pos,:root[data-theme="editorial"] .ini-card.grave,
+:root[data-theme="editorial"] .cal-c{border-top-width:1.5px;border-top-color:var(--frame)}
+:root[data-theme="editorial"] .ini-kick:not(:has(svg))::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-right:7px;vertical-align:1px}
+:root[data-theme="editorial"] .item.cri,:root[data-theme="editorial"] .item.resp{border-left-width:1.5px}
+:root[data-theme="editorial"] .ini-kpis{border:1.5px solid var(--frame);background:var(--line);border-radius:14px}
+:root[data-theme="editorial"] .ini-kpi .v .mono,:root[data-theme="editorial"] .tile .big,:root[data-theme="editorial"] .kpi .v{font-family:var(--f-news);font-weight:700;letter-spacing:-.01em}
+:root[data-theme="editorial"] .ini-kpi[data-on]{background:var(--accent-soft);box-shadow:inset 0 -3px 0 var(--frame)}
+/* Titulares de prensa: serif en negrita y color de acento, como el boletín */
+:root[data-theme="editorial"] .ini-h,:root[data-theme="editorial"] .item h4,:root[data-theme="editorial"] .asuntos b.t,
+:root[data-theme="editorial"] .today li b,:root[data-theme="editorial"] .mini b{font-family:var(--f-news);font-weight:700;color:var(--accent);line-height:1.22}
+:root[data-theme="editorial"] .ini-h{font-size:22px}
+/* Titular de la edición con el filete vertical del boletín */
+:root[data-theme="editorial"] .ini-tit{font-weight:700;border-left:4px solid var(--frame);padding-left:16px;line-height:1.06}
+:root[data-theme="editorial"] .head h2{font-family:var(--f-news);font-weight:700;letter-spacing:-.01em;border-left:4px solid var(--frame);padding-left:14px}
+:root[data-theme="editorial"] .ini-ekick{color:var(--muted)}
+:root[data-theme="editorial"] .ini-sec h2,:root[data-theme="editorial"] .card > h3,:root[data-theme="editorial"] .sec{color:var(--ink)}
+/* Botones píldora con borde negro; el principal, relleno de acento */
+:root[data-theme="editorial"] .btn{border:1.5px solid var(--frame);border-radius:999px;background:var(--surface);color:var(--ink);min-height:44px;padding:8px 18px}
+:root[data-theme="editorial"] .btn:hover{background:var(--surface-2)}
+:root[data-theme="editorial"] .btn.primary{background:var(--accent-bg);border-color:var(--accent-bg);color:var(--accent-ink)}
+:root[data-theme="editorial"] .btn.primary:hover{background:var(--accent-bg-h);border-color:var(--accent-bg-h)}
+:root[data-theme="editorial"] .btn.ghost{border-color:transparent;background:transparent;color:var(--accent)}
+:root[data-theme="editorial"] .btn.sm{min-height:36px;padding:5px 14px}
+:root[data-theme="editorial"] .btn.pos-b{border-color:var(--pos-ink);color:var(--pos-ink)}
+/* Selectores de período: píldora; el elegido, en negro */
+:root[data-theme="editorial"] .perg,:root[data-theme="editorial"] .ini-per,:root[data-theme="editorial"] .seg{border:1.5px solid var(--frame);border-radius:999px;padding:3px;background:var(--surface)}
+:root[data-theme="editorial"] .perg button,:root[data-theme="editorial"] .ini-per button,:root[data-theme="editorial"] .seg button{border-radius:999px;border-right:0}
+:root[data-theme="editorial"] .perg button[aria-pressed="true"],:root[data-theme="editorial"] .ini-per button[aria-pressed="true"],:root[data-theme="editorial"] .seg button[aria-pressed="true"]{background:var(--frame);color:#FFFFFF}
+:root[data-theme="editorial"] .nav a[aria-current="page"]{color:var(--ink)}
+:root[data-theme="editorial"] .navbar .nav a[aria-current="page"]{border-bottom-color:var(--frame)}
+/* Barra inferior del celular */
+:root[data-theme="editorial"] .bnav{background:#FFFFFF;border-top:1.5px solid var(--frame)}
+:root[data-theme="editorial"] .bnav a[aria-current="page"]{color:var(--ink);background:transparent;box-shadow:inset 0 3px 0 var(--accent);border-radius:0}
+:root[data-theme="editorial"] .ini-lista{border:1.5px solid var(--frame)}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="pat-pos" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" style="fill:var(--pos)"/></pattern></defs></svg>
@@ -4214,7 +4275,7 @@ function renderHelp(){
   const [t, d] = ayudaVista();
   el.querySelector(".hp-body").innerHTML = `
     <section class="hp-here"><span class="kick">Estás en</span><h3>${esc(t)}</h3><p>${esc(d)}</p></section>
-    <section class="hp-apar"><h3 class="hp-h">Apariencia</h3><button class="btn sm" type="button" data-act="tema" id="temaAyuda">${temaActual() === "light" ? "Usar modo oscuro" : "Usar modo claro"}</button></section>
+    <section class="hp-apar"><h3 class="hp-h">Apariencia</h3><button class="btn sm" type="button" data-act="tema" id="temaAyuda">${"Usar " + TEMA_NOMBRE[temaSiguiente()]}</button></section>
     <section><h3 class="hp-h">Cómo se usa, en cinco pasos</h3><ol class="hp-guia">${GUIA.map(([a, b]) => `<li><b>${a}</b><span>${b}</span></li>`).join("")}</ol></section>
     <section><h3 class="hp-h">Preguntas frecuentes</h3><input id="helpQ" class="hp-q" type="search" placeholder="Busca, por ejemplo: tono, WhatsApp, límite" aria-label="Buscar en las preguntas frecuentes" value="${esc(helpQ)}"><div id="faqOut">${faqHtml()}</div></section>
     <section class="hp-teclado"><h3 class="hp-h">Atajos de teclado</h3><dl class="hp-atajos"><dt><span class="kbd">1</span> a <span class="kbd">5</span></dt><dd>Ir a Inicio, Menciones, Reportes, Comunicados o Ajustes</dd><dt><span class="kbd">/</span></dt><dd>Buscar en las menciones</dd><dt><span class="kbd">?</span></dt><dd>Abrir o cerrar esta ayuda</dd><dt><span class="kbd">Esc</span></dt><dd>Cerrar ventanas y menús</dd></dl></section>
@@ -4363,9 +4424,12 @@ $("#org").addEventListener("change", () => { if ($("#entBack")) return; pintarMo
 
 /* Tema: la marca es oscura; el modo claro es una opción que se recuerda en este navegador. */
 const TEMA_KEY = "pregonia-tema", ICO_TEMA = {sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>', luna: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'};
-function temaActual(){ return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"; }
-function pintarTema(){ const claro = temaActual() === "light", b = $("#temaBtn"), ba = $("#temaAyuda"); if (ba) ba.textContent = claro ? "Usar modo oscuro" : "Usar modo claro"; if (!b) return; $("#temaIco").innerHTML = claro ? ICO_TEMA.luna : ICO_TEMA.sol; b.setAttribute("aria-label", claro ? "Cambiar a modo oscuro" : "Cambiar a modo claro"); b.title = claro ? "Modo oscuro" : "Modo claro"; }
-try { const t = localStorage.getItem(TEMA_KEY); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch(e) {}
+/* PRUEBA: tres temas en ciclo (Edición, oscuro, claro); Edición es el de entrada en esta rama. */
+const TEMAS = ["editorial", "dark", "light"], TEMA_NOMBRE = {editorial: "modo edición", dark: "modo oscuro", light: "modo claro"};
+function temaActual(){ const t = document.documentElement.getAttribute("data-theme"); return TEMAS.includes(t) ? t : "dark"; }
+function temaSiguiente(){ return TEMAS[(TEMAS.indexOf(temaActual()) + 1) % TEMAS.length]; }
+function pintarTema(){ const sig = temaSiguiente(), b = $("#temaBtn"), ba = $("#temaAyuda"); if (ba) ba.textContent = "Usar " + TEMA_NOMBRE[sig]; if (!b) return; $("#temaIco").innerHTML = sig === "dark" ? ICO_TEMA.luna : ICO_TEMA.sol; b.setAttribute("aria-label", "Cambiar a " + TEMA_NOMBRE[sig]); b.title = "Cambiar a " + TEMA_NOMBRE[sig]; }
+try { const t = localStorage.getItem(TEMA_KEY); document.documentElement.setAttribute("data-theme", TEMAS.includes(t) ? t : "editorial"); } catch(e) { document.documentElement.setAttribute("data-theme", "editorial"); }
 pintarTema();
 new MutationObserver(pintarTema).observe(document.documentElement, {attributes: true, attributeFilter: ["data-theme"]});
 /* Volver arriba: aparece en páginas largas, por encima de la barra inferior en el celular. */
@@ -4373,7 +4437,7 @@ addEventListener("scroll", () => { const b = $("#arriba"); if (b) b.hidden = scr
 function irAlContenido(){ const h = $("#view h2") || $("#view"); h.setAttribute("tabindex", "-1"); h.focus({preventScroll: true}); }
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-act]"); if (!b) return; const a = b.dataset.act;
-  if (a === "tema") { const n = temaActual() === "light" ? "dark" : "light"; document.documentElement.setAttribute("data-theme", n); try { localStorage.setItem(TEMA_KEY, n); } catch(err) {} toast(n === "light" ? "Modo claro activado." : "Modo oscuro activado."); }
+  if (a === "tema") { const n = temaSiguiente(); document.documentElement.setAttribute("data-theme", n); try { localStorage.setItem(TEMA_KEY, n); } catch(err) {} toast(TEMA_NOMBRE[n][0].toUpperCase() + TEMA_NOMBRE[n].slice(1) + " activado."); }
   if (a === "skip") irAlContenido();
   if (a === "arriba") { scrollTo({top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); irAlContenido(); }
 });
