@@ -1,10 +1,19 @@
 
-/* Modo piloto (etapa 2): inicio de sesión con Supabase y datos compartidos por municipio.
+/* Modo piloto (etapa 2): inicio de sesión con Supabase y datos compartidos por institución cliente: un municipio o una autoridad
+   (diputado, senador, consejero regional, concejal, gobernador o delegado). En la base ambas son filas de la tabla municipios;
+   las de autoridad traen tipo (el cargo) y autoridad (zona, nombre y, si está, el id de la nómina).
    Las noticias vienen de la base (lectura programada cada 30 minutos); temas, marcas, respuestas aprobadas y publicaciones
    agregadas se guardan en la base y las ve todo el equipo. La base registra sola quién hizo qué (tabla actividad).
    Sin sesión, la aplicación sigue siendo la demostración de siempre. */
 PILOTO = {activo: false, disponible: false, sb: null, user: null, perfil: null, muni: null, editor: false, snap: null, timer: null, sinc: false, pendiente: false, estado: "", lectura: null};
-const ROLES = {admin: "Administración", comunicaciones: "Comunicaciones", alcalde: "Alcalde", directivo: "Equipo directivo", lector: "Solo lectura"};
+const ROLES = {admin: "Administración", comunicaciones: "Comunicaciones", alcalde: "Alcalde", autoridad: "Autoridad", directivo: "Equipo directivo", lector: "Solo lectura"};
+/* En una cuenta de autoridad, la persona titular se muestra con su cargo y el equipo directivo como su equipo. */
+const esPilotoAut = () => !!(PILOTO.muni && PILOTO.muni.tipo && PILOTO.muni.tipo !== "municipio");
+function rolNombre(rol){
+  if (!esPilotoAut()) return ROLES[rol] || rol;
+  const a = PILOTO.muni.autoridad || {};
+  return rol === "autoridad" || rol === "alcalde" ? cargoDe(PILOTO.muni.tipo, a.g) : rol === "directivo" ? "Equipo de la oficina" : ROLES[rol] || rol;
+}
 const cargarSupabase = () => cargarScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js", "supabase");
 const ICO_USR = '<circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-3.6 4.4-5.4 8-5.4s6.5 1.8 8 5.4"/>';
 
@@ -13,16 +22,17 @@ function pintarAcceso(){
   const tools = $(".tools"); if (!tools || !PILOTO.disponible) return;
   let b = $("#cuentaBtn");
   if (!b) { b = document.createElement("button"); b.id = "cuentaBtn"; b.type = "button"; b.className = "helpbtn"; tools.insertBefore(b, tools.firstChild); }
-  if (PILOTO.activo) { const n = PILOTO.perfil.nombre || PILOTO.user.email; b.dataset.act = "cuenta"; b.setAttribute("aria-haspopup", "menu"); b.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO_USR}</svg><span>${esc(n.split(" ")[0])}</span>`; b.title = `${n} · ${ROLES[PILOTO.perfil.rol] || PILOTO.perfil.rol}`; }
+  if (PILOTO.activo) { const n = PILOTO.perfil.nombre || PILOTO.user.email; b.dataset.act = "cuenta"; b.setAttribute("aria-haspopup", "menu"); b.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO_USR}</svg><span>${esc(n.split(" ")[0])}</span>`; b.title = `${n} · ${rolNombre(PILOTO.perfil.rol)}`; }
   else { b.dataset.act = "login"; b.removeAttribute("aria-haspopup"); b.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO_USR}</svg><span>Ingresar</span>`; b.title = "Ingresar al piloto"; }
+  if (typeof pintarAccesoPortada === "function") pintarAccesoPortada();
 }
 function pintarPiloto(){
   const el = $("#demo"), p = PILOTO, l = p.lectura, n = NOTAS.length;
   el.className = "demo real";
-  el.innerHTML = `<span class="demo-txt"><b>Piloto</b>${esc(p.muni.nombre)}<span class="demo-mas"> · ${plural(n, "nota", "notas")} en 30 días${l ? ` · última lectura de medios ${horaCorta(l.fin)} (${l.fuentes_ok} de ${l.fuentes_total} fuentes)` : " · aún sin lecturas de medios"}${p.estado ? " · " + p.estado : ""}</span></span>${p.editor ? "" : `<span class="solo-lect">Solo lectura</span>`}`;
+  el.innerHTML = `<span class="demo-txt"><b>Piloto</b>${esc(p.muni.nombre)}<span class="demo-mas"> · ${MODO.cargando ? "preparando tu edición…" : plural(n, "nota", "notas") + " en 30 días"}${MODO.cargando ? "" : l ? ` · última lectura de medios ${horaCorta(l.fin)} (${l.fuentes_ok} de ${l.fuentes_total} fuentes)` : " · aún sin lecturas de medios"}${p.estado ? " · " + p.estado : ""}</span></span>${p.editor ? "" : `<span class="solo-lect">Solo lectura</span>`}`;
 }
 
-/* Diálogos: ingreso, nueva contraseña y cuenta sin municipio */
+/* Diálogos: ingreso, nueva contraseña y cuenta sin institución */
 function dialogo(id, titulo, sub, cuerpo){
   cerrarDialogo();
   const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "dlgBack";
@@ -32,7 +42,7 @@ function dialogo(id, titulo, sub, cuerpo){
 }
 function cerrarDialogo(){ const o = $("#dlgBack"); if (!o) return; if (aceptacion.pend) { const r = aceptacion.pend; aceptacion.pend = null; r(false); } if (avisoLegal.pend) { const r = avisoLegal.pend; avisoLegal.pend = null; r(false); } o.remove(); document.body.classList.remove("vid-on"); if (dialogo.origen && dialogo.origen.isConnected) dialogo.origen.focus(); }
 function abrirLogin(){
-  dialogo("login", "Ingresar a PregonIA", "Para los equipos de las instituciones clientes. Si aún no tienes cuenta, pide una invitación a ALTKimia.", `
+  dialogo("login", "Ingresar a PregonIA", "Para los equipos de municipios y autoridades clientes. Si aún no tienes cuenta, pide una invitación a ALTKimia.", `
     <form class="cap-f" id="loginForm" novalidate>
       <label class="cap-l">Correo<input id="lgCorreo" type="email" autocomplete="username" inputmode="email" required></label>
       <label class="cap-l">Contraseña<input id="lgClave" type="password" autocomplete="current-password" required></label>
@@ -59,7 +69,7 @@ async function ingresar(e){
   ok.disabled = true; ok.textContent = "Ingresando…";
   const {data, error} = await PILOTO.sb.auth.signInWithPassword({email: correo, password: clave});
   if (error) { ok.disabled = false; ok.textContent = "Ingresar"; return errorEn("#lgErr", /invalid/i.test(error.message) ? "Correo o contraseña incorrectos." : "No se pudo ingresar: " + error.message, "#lgClave"); }
-  cerrarDialogo(); await entrarPiloto(data.user);
+  cerrarDialogo(); await entrarPiloto(data.user, true);
 }
 async function guardarClave(e){
   e.preventDefault();
@@ -80,7 +90,7 @@ async function olvide(){
 function menuCuenta(b){
   if ($("#shrPop")) { cerrarMenu(); return; }
   const p = PILOTO, m = document.createElement("div"); m.className = "shr-pop"; m.id = "shrPop"; m.setAttribute("role", "menu");
-  m.innerHTML = `<div class="cta-info"><b>${esc(p.perfil.nombre || p.user.email)}</b><span>${esc(p.user.email)}</span><span>${esc(ROLES[p.perfil.rol] || p.perfil.rol)} · ${esc(p.muni.nombre)}</span></div><button type="button" role="menuitem" data-act="recargar-piloto">Actualizar datos</button><button type="button" role="menuitem" data-act="salir">Salir</button>`;
+  m.innerHTML = `<div class="cta-info"><b>${esc(p.perfil.nombre || p.user.email)}</b><span>${esc(p.user.email)}</span><span>${esc(rolNombre(p.perfil.rol))} · ${esc(p.muni.nombre)}</span></div><button type="button" role="menuitem" data-act="recargar-piloto">Actualizar datos</button><button type="button" role="menuitem" data-act="salir">Salir</button>`;
   document.body.appendChild(m); m._origen = b; ubicarMenu(); m.querySelector("button").focus({preventScroll: true});
 }
 
@@ -141,21 +151,38 @@ async function registrarAceptacion(e){
 }
 
 /* Sesión */
-async function entrarPiloto(user){
-  const sb = PILOTO.sb;
-  const {data: perfil, error} = await sb.from("perfiles").select("nombre, rol, municipio_id, municipios(id, comuna, nombre, plan)").eq("id", user.id).maybeSingle();
-  if (error || !perfil || !perfil.municipios) {
-    dialogo("sinmuni", "Tu cuenta aún no tiene municipio", "Ingresaste bien, pero falta asignarte un municipio y un rol. Pídeselo a ALTKimia o al administrador del piloto.", `<div class="cap-f"><p class="hint" style="margin:0">${esc(user.email)}</p><div class="cap-acts"><button class="btn" type="button" data-act="salir">Salir</button></div></div>`);
-    return;
-  }
+/* Perfil con su institución. Si la base aún no tiene las columnas de autoridades (esquema sin actualizar), se lee como antes. */
+async function leerPerfil(user){
+  const q = cols => PILOTO.sb.from("perfiles").select(`nombre, rol, municipio_id, municipios(${cols})`).eq("id", user.id).maybeSingle();
+  const r = await q("id, comuna, nombre, plan, tipo, autoridad");
+  return r.error ? q("id, comuna, nombre, plan") : r;
+}
+/* Cuenta de la aplicación para la institución del piloto: el municipio de la comuna, o la autoridad (de la nómina si está, si no por nombre). */
+function cuentaPiloto(m){
+  if (!m.tipo || m.tipo === "municipio") return COMUNAS.includes(m.comuna) ? m.comuna : null;
+  const x = m.autoridad || {}, a = x.id ? AUTORIDADES.find(z => z.id === x.id && z.rol === m.tipo) : null;
+  return crearCuentaAutoridad({rol: m.tipo, zona: a ? a.zona : x.zona, a, nombre: String(x.nombre || "").trim(), g: x.g === "F" ? "F" : "M"});
+}
+function sinInstitucion(user, titulo, sub){
+  dialogo("sinmuni", titulo, sub, `<div class="cap-f"><p class="hint" style="margin:0">${esc(user.email)}</p><div class="cap-acts"><button class="btn" type="button" data-act="salir">Salir</button></div></div>`);
+}
+/* entrar: viene de «Ingresar»; si la portada está a la vista, se pasa directo a la edición mientras cargan los datos. */
+async function entrarPiloto(user, entrar){
+  const {data: perfil, error} = await leerPerfil(user);
+  if (error || !perfil || !perfil.municipios) return sinInstitucion(user, "Tu cuenta aún no tiene institución", "Ingresaste bien, pero falta asignarte un municipio o una autoridad, y un rol. Pídeselo a ALTKimia o al administrador del piloto.");
+  const key = cuentaPiloto(perfil.municipios);
+  if (!key) return sinInstitucion(user, "Falta completar tu institución", "La cuenta asignada no tiene comuna, cargo o zona válidos. Pídele a ALTKimia que revise su ficha en la base.");
   if (!(await aceptacion(user))) { salir(); return; }
   Object.assign(PILOTO, {activo: true, user, perfil, muni: perfil.municipios, editor: ["admin", "comunicaciones"].includes(perfil.rol)});
-  if (COMUNAS.includes(PILOTO.muni.comuna)) S.org = PILOTO.muni.comuna;
-  $("#org").disabled = true; $("#org").title = "En el piloto ves solo tu municipio";
+  S.org = key;
+  $("#org").disabled = true; $("#org").title = esPilotoAut() ? "En el piloto ves solo la cuenta de tu autoridad" : "En el piloto ves solo tu municipio";
+  MODO = {...MODO, cargando: true, inicio: Date.now()};  // pantalla de lectura, no la demostración, mientras llegan sus datos
   pintarAcceso();
+  if (entrar && !$("#portada").hidden) salirPortada();
+  render();
   if (typeof avisosAlEntrar === "function") await avisosAlEntrar();
   try { await cargarDatosPiloto(); toast(`Hola, ${(perfil.nombre || "").split(" ")[0] || "bienvenido"}. Estás en el piloto de ${PILOTO.muni.nombre}.`); if (typeof guiaIOSAuto === "function") guiaIOSAuto(); }
-  catch(e) { toast("No se pudieron cargar los datos del piloto: " + (e.message || e)); }
+  catch(e) { MODO.cargando = false; pintarModo(); render(); toast("No se pudieron cargar los datos del piloto: " + (e.message || e)); }
 }
 const capAFila = x => ({id: x.id, municipio_id: PILOTO.muni.id, medio_id: MED[x.m] && (x.m < FB_ID0 || x.m >= 10000) ? x.m : null, medio_nombre: MED[x.m] ? MED[x.m].n : "Página de Facebook", medio_ambito: MED[x.m] ? MED[x.m].a : "local",
   url: x.url || null, titulo: x.t, resumen: x.res, palabras: x.x, tono: x.tono, grupo: x.g, publicado: new Date(x.ts).toISOString(), indice: norm(x.t + " " + x.res + " " + x.x).slice(0, 1000)});
@@ -179,6 +206,8 @@ async function cargarDatosPiloto(){
     cargarRedesPiloto(sb).catch(() => null)  // cuentas de Facebook e Instagram: antes de las notas, que las necesitan como medio
   ]);
   const c = cuenta(), pend = PILOTO.editor ? leerPendiente() : null;
+  // Lo que la IA ya confirmó como propio se ancla a la cuenta: la comuna, o el nombre de la autoridad (su tema núcleo).
+  const ancla = esAut(c) ? " " + c.perfil.variantes[0] : " " + org + " comuna";
   if (pend) {  // temas cambiados en este equipo que no alcanzaron a llegar a la base: se suben y prevalecen
     const cfg = JSON.parse(pend.cfg);
     const d = await pide(sb.from("municipios").update({config: cfg, actualizado: new Date().toISOString()}).eq("id", mid).select("id"));
@@ -188,12 +217,12 @@ async function cargarDatosPiloto(){
   else if (mun.config && mun.config.temas) { Object.assign(c, mun.config); c.tv = mun.config.tv || 0; adaptarCuenta(c); }  // configuración guardada antes de los temas por territorio: se adapta al leerla
   else if (PILOTO.editor) await pide(sb.from("municipios").update({config: configDe(c)}).eq("id", mid).select("id"));  // primera vez: se sube la caracterización actual
   const notas = men.filter(r => MED[r.notas.medio_id]).map(r => { const n = r.notas, t = n.titulo, res = r.resumen || t, x = r.palabras || "";
-    return {id: n.id, m: n.medio_id, ts: Date.parse(n.publicado), t, b: "", x, tono: r.tono || "neu", res, g: String(r.grupo || n.id), url: n.url, hay: norm(t + " " + res + " " + x + " " + org + " comuna"), ht: norm(t), real: true}; });
+    return {id: n.id, m: n.medio_id, ts: Date.parse(n.publicado), t, b: "", x, tono: r.tono || "neu", res, g: String(r.grupo || n.id), url: n.url, hay: norm(t + " " + res + " " + x + ancla), ht: norm(t), real: true}; });
   Object.keys(S.fp).forEach(k => { if (k.startsWith(org + ":")) delete S.fp[k]; });
   Object.keys(S.resp).forEach(k => { if (k.startsWith(org + ":")) delete S.resp[k]; });
   mar.forEach(m => { (m.tipo === "respondida" ? S.resp : S.fp)[org + ":" + m.grupo] = true; });
   S.comunicados = S.comunicados.filter(x => x.org !== org).concat(com.map(x => ({org, ts: Date.parse(x.creado), pieza: x.pieza, origen: x.origen || "", texto: x.texto, g: x.grupo, dbid: x.id})));
-  S.capturas = S.capturas.filter(x => x.org !== org).concat(cap.map(x => ({id: x.id, org, m: x.medio_id && MED[x.medio_id] ? x.medio_id : paginaFB(x.medio_nombre, x.medio_ambito), via: "facebook", ts: Date.parse(x.publicado), t: x.titulo, res: x.resumen || x.titulo, x: x.palabras || "", tono: x.tono || "neu", g: x.grupo || x.id, url: x.url || "", hay: (x.indice || "") + " " + norm(org) + " comuna"})));
+  S.capturas = S.capturas.filter(x => x.org !== org).concat(cap.map(x => ({id: x.id, org, m: x.medio_id && MED[x.medio_id] ? x.medio_id : paginaFB(x.medio_nombre, x.medio_ambito), via: "facebook", ts: Date.parse(x.publicado), t: x.titulo, res: x.resumen || x.titulo, x: x.palabras || "", tono: x.tono || "neu", g: x.grupo || x.id, url: x.url || "", hay: (x.indice || "") + norm(ancla)})));
   PILOTO.lectura = lec[0] || null; PILOTO.estado = "";
   MODO = {...MODO, tipo: "piloto", info: null, cargando: false};
   guardarLocal(); refrescarNotas(notas); PILOTO.snap = serializar();

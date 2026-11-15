@@ -1,18 +1,21 @@
-// Lectura programada (etapa 2): cada 30 minutos lee los medios, guarda las notas nuevas de cada comuna cliente y las clasifica.
+// Lectura programada (etapa 2): cada 30 minutos lee los medios, guarda las notas nuevas de cada cuenta cliente y las clasifica.
+// Cuentas: municipios (lo que menciona la comuna) y autoridades (lo que nombra a la persona, juzgado respecto de ella; ver _sujetos.js).
 // Solo se clasifica lo nuevo (lo ya visto no se vuelve a pagar) y las notas nuevas se agrupan con los hechos de días anteriores,
 // para que el historial, las respuestas y las marcas queden en el mismo hecho aunque lleguen notas días después.
 // La llama un programador externo (GitHub Actions) con Authorization: Bearer CRON_SECRET.
 // Variables: SUPABASE_URL, SUPABASE_SECRET_KEY, CRON_SECRET, ANTHROPIC_API_KEY. Para avisos: ver api/_avisos.js.
 // Cuentas de Facebook e Instagram de medios: META_ACCESS_TOKEN, META_IG_USER_ID, META_FB_PPCA (ver api/_redes.js).
 // Después de guardar, revisa los hechos que recibieron notas nuevas y avisa lo urgente (notificación y correo).
-import { COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, candidatasDe } from "./_lectura.js";
+import { COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre } from "./_lectura.js";
+import { variantesNombre } from "./_autoridades.js";
+import { consulta, sujetoDeCuenta, fichaIA } from "./_sujetos.js";
 import { avisar } from "./_avisos.js";
 import { leerRedes, usuarioDe } from "./_redes.js";
 
 /* Cuentas de Facebook e Instagram de la base: las del catálogo fijo y las inscritas desde la aplicación. */
 const cuentaDe = r => ({id: r.id, nombre: r.nombre, ambito: r.ambito, comuna: r.comunas || "", red: r.metodo, usuario: r.usuario_red || usuarioDe(r.metodo, r.url_lectura)});
 
-const MAX_POR_COMUNA = 30;  // tope de notas nuevas que se clasifican por comuna en cada pasada; el resto entra en la siguiente
+const MAX_POR_COMUNA = 30;  // tope de notas nuevas que se clasifican por cuenta en cada pasada; el resto entra en la siguiente
 
 async function sb(ruta, {method = "GET", body, prefer} = {}){
   const url = process.env.SUPABASE_URL, clave = process.env.SUPABASE_SECRET_KEY;
@@ -23,16 +26,31 @@ async function sb(ruta, {method = "GET", body, prefer} = {}){
   return r.status === 204 || method === "DELETE" ? null : r.json().catch(() => null);
 }
 
-async function procesarComuna(muni, items, desde, ahora){
-  const {id: municipio_id, comuna} = muni;
-  const candidatas = candidatasDe(comuna, items, desde, ahora);
-  if (!candidatas.length) return {comuna, candidatas: 0, nuevas: 0, clasificadas: 0};
-  // Lo ya registrado para esta comuna en la ventana (incluye lo descartado por no ser de la comuna, para no volver a clasificarlo).
+/* Cuentas activas: municipios de las comunas conocidas y autoridades con ficha válida.
+   Cada una sabe qué buscar en Google News, cómo elegir sus candidatas y a quién le habla la IA. */
+async function cuentasActivas(){
+  // Si la base aún no tiene las columnas de autoridades (esquema sin actualizar), se sigue leyendo solo municipios.
+  const filas = await sb("municipios?activo=eq.true&select=id,comuna,nombre,tipo,autoridad").catch(() => sb("municipios?activo=eq.true&select=id,comuna,nombre"));
+  return filas.map(f => {
+    if ((f.tipo || "municipio") === "municipio") return COMUNAS[f.comuna] ? {...f, etiqueta: f.comuna, institucion: "Municipalidad de " + f.comuna, ia: f.comuna,
+      gn: () => leerGoogleNews(f.comuna), candidatas: (items, desde, ahora) => candidatasDe(f.comuna, items, desde, ahora)} : null;
+    const a = sujetoDeCuenta(f); if (!a) return null;
+    const ficha = fichaIA(a), nombre = f.nombre || `${ficha.cargo} ${a.n}`;
+    return {...f, etiqueta: nombre, institucion: nombre, ia: ficha, autoridad: true,
+      gn: () => leerGoogleNewsConsulta(consulta(a)), candidatas: (items, desde, ahora) => candidatasPorNombre(variantesNombre(a), items, desde, ahora)};
+  }).filter(Boolean);
+}
+
+async function procesarCuenta(cta, items, desde, ahora){
+  const {id: municipio_id} = cta, quien = cta.autoridad ? {autoridad: cta.etiqueta} : {comuna: cta.etiqueta};
+  const candidatas = cta.candidatas(items, desde, ahora);
+  if (!candidatas.length) return {...quien, candidatas: 0, nuevas: 0, clasificadas: 0};
+  // Lo ya registrado para esta cuenta en la ventana (incluye lo descartado por ajeno, para no volver a clasificarlo).
   const desdeIso = new Date(desde - 2 * 864e5).toISOString();
   const previas = await sb(`menciones?municipio_id=eq.${municipio_id}&clasificado=gte.${desdeIso}&select=nota_id,grupo,rel,notas(titulo,publicado)&limit=2000`);
   const vistas = new Set(previas.map(p => p.nota_id));
   const nuevas = candidatas.filter(c => !vistas.has(c.id)).slice(0, MAX_POR_COMUNA);
-  if (!nuevas.length) return {comuna, candidatas: candidatas.length, nuevas: 0, clasificadas: 0};
+  if (!nuevas.length) return {...quien, candidatas: candidatas.length, nuevas: 0, clasificadas: 0};
   // Hechos recientes (un titular por grupo) para que lo nuevo se sume al hecho que corresponde.
   const porGrupo = new Map();
   previas.filter(p => p.rel && p.grupo && p.notas).sort((a, b) => Date.parse(b.notas.publicado) - Date.parse(a.notas.publicado))
@@ -42,7 +60,7 @@ async function procesarComuna(muni, items, desde, ahora){
   await sb("notas?on_conflict=id", {method: "POST", prefer: "resolution=ignore-duplicates,return=minimal",
     body: nuevas.map(n => ({id: n.id, medio_id: n.m, url: n.url, titulo: n.titulo.slice(0, 400), publicado: new Date(n.ts).toISOString(), via: ["google_news", "instagram", "facebook"].includes(n.via) ? n.via : "lectura"}))});
 
-  const clas = await clasificar(comuna, nuevas, existentes);
+  const clas = await clasificar(cta.ia, nuevas, existentes);
   // Grupo estable: el de un hecho existente, o la nota más antigua de un hecho nuevo.
   const etiquetaDe = (n, c) => c && c.grupoExistente ? "e:" + c.grupoExistente : c && c.g ? "g:" + norm(c.g) : "n:" + n.id;
   const grupoPorEtiqueta = new Map();
@@ -56,7 +74,7 @@ async function procesarComuna(muni, items, desde, ahora){
   });
   // Lo que la IA no alcanzó a clasificar se guarda igual (neutro, con el titular) y queda marcado con ia = false para revisarlo.
   await sb("menciones?on_conflict=nota_id,municipio_id", {method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body: filas});
-  return {comuna, candidatas: candidatas.length, nuevas: nuevas.length, clasificadas: filas.filter(f => f.ia).length, descartadas: filas.filter(f => !f.rel).length, grupos: filas.filter(f => f.rel).map(f => f.grupo)};
+  return {...quien, candidatas: candidatas.length, nuevas: nuevas.length, clasificadas: filas.filter(f => f.ia).length, descartadas: filas.filter(f => !f.rel).length, grupos: filas.filter(f => f.rel).map(f => f.grupo)};
 }
 
 async function manejar(req){
@@ -69,10 +87,10 @@ async function manejar(req){
   const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
   const [lectura] = await sb("lecturas", {method: "POST", prefer: "return=representation", body: {inicio: new Date(ahora).toISOString()}});
   try {
-    const munis = (await sb("municipios?activo=eq.true&select=id,comuna")).filter(m => COMUNAS[m.comuna]);
+    const munis = await cuentasActivas();
     const [cat0, enBase, filasRedes, ...gns] = await Promise.all([leerCatalogo(), sb("medios?select=id"),
       sb("medios?metodo=in.(instagram,facebook)&estado=neq.retirado&select=id,nombre,ambito,comunas,metodo,url_lectura,usuario_red").catch(() => []),
-      ...munis.map(m => leerGoogleNews(m.comuna).catch(() => null))]);
+      ...munis.map(m => m.gn().catch(() => null))]);
     const rs = await leerRedes(filasRedes.map(cuentaDe));
     // Estado de cada cuenta para la vista Fuentes: cuándo se leyó y, si falló, por qué. Un error aquí no detiene la lectura.
     await Promise.all(rs.estado.filter(e => !e.pendiente).map(e => sb(`medios?id=eq.${e.id}`, {method: "PATCH", prefer: "return=minimal",
@@ -80,7 +98,7 @@ async function manejar(req){
     // Solo medios que ya existen en la base (clave foránea de notas): un medio nuevo del catálogo espera a que se cargue la semilla.
     const ids = new Set(enBase.map(x => x.id)), cat = {...cat0, items: cat0.items.filter(x => ids.has(x.m.id)).concat(rs.items), total: cat0.total + rs.total};
     const errores = cat.errores.concat(gns.some(g => !g) ? ["Google News"] : [], rs.errores);
-    const res = await Promise.all(munis.map((m, k) => procesarComuna(m, cat.items.concat((gns[k] || []).filter(x => ids.has(x.m.id))), desde, ahora).catch(e => ({comuna: m.comuna, error: String(e.message || e).slice(0, 200)}))));
+    const res = await Promise.all(munis.map((m, k) => procesarCuenta(m, cat.items.concat((gns[k] || []).filter(x => ids.has(x.m.id))), desde, ahora).catch(e => ({[m.autoridad ? "autoridad" : "comuna"]: m.etiqueta, error: String(e.message || e).slice(0, 200)}))));
     // Avisos: un error aquí no debe perder la lectura ya guardada.
     await Promise.all(res.map(async (r, k) => { const grupos = r.grupos || []; delete r.grupos; if (!grupos.length) return;
       try { r.avisos = await avisar(sb, munis[k], grupos, Date.now()); } catch(e) { r.avisos = {error: String(e.message || e).slice(0, 160)}; } }));

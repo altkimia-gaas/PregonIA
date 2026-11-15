@@ -1761,6 +1761,13 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
 .pd-go:hover{background:var(--accent-bg-h)}
 .pd-go:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .pd-go .ico{width:19px;height:19px;stroke-width:2.2}
+/* Dos puertas en la portada: la demostración (principal) e Ingresar para los equipos con cuenta. Con sesión queda una sola: su edición. */
+.pd-acts{margin-top:26px;display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+.pd-acts .pd-go{margin-top:0}
+.pd-go.pd-alt{background:transparent;color:var(--ink);border:1.5px solid var(--frame)}
+.pd-go.pd-alt:hover{background:var(--surface-2)}
+.pd-piloto{margin:14px 0 0;font-size:.9375rem;color:var(--muted)}
+.pd-piloto a{color:var(--accent);font-weight:600;text-underline-offset:3px}
 .pd-cols{margin-top:34px;width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--rule);text-align:left}
 .pd-cols section{padding:16px 22px 4px;border-left:1px solid var(--line)}
 .pd-cols section:first-child{border-left:0;padding-left:0}
@@ -1775,6 +1782,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   .pd-nombre{margin-top:16px}
   .pd-ante{margin-top:22px;letter-spacing:.08em}
   .pd-titulo{font-size:1.75rem}
+  .pd-acts{width:100%}
   .pd-go{width:100%}
   .pd-cols{grid-template-columns:minmax(0,1fr);margin-top:32px}
   .pd-cols section,.pd-cols section:first-child{border-left:0;padding:14px 0;border-top:1px solid var(--line)}
@@ -1840,7 +1848,11 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
       <p class="pd-ante">Municipios · Concejos · Consejos regionales · Parlamentarios</p>
       <h1 class="pd-titulo">Detecta lo que la prensa dice de tu gestión, mide hasta dónde llegó y responde antes de que el tema escale.</h1>
       <p class="pd-bajada">PregonIA lee cada día más de 100 medios nacionales, regionales y locales, y sus redes, y entrega a quien decide alertas, informes y respuestas redactadas con IA.</p>
-      <button class="pd-go" id="ptGo" type="button">Empezar <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      <div class="pd-acts">
+        <button class="pd-go" id="ptGo" type="button"><span id="ptGoTx">Ver demostración</span> <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <button class="pd-go pd-alt" id="ptIn" type="button" data-act="login" hidden>Ingresar</button>
+      </div>
+      <p class="pd-piloto" id="ptPiloto">¿Quieres PregonIA en tu institución? <a href="mailto:soporte@altkimia.cl?subject=Quiero%20un%20piloto%20de%20PregonIA">Solicita un piloto</a></p>
       <figure class="pd-foto"><div class="pd-mini" id="ptMini"></div><figcaption id="ptMiniPie"></figcaption></figure>
       <div class="pd-cols">
         <section><h2>Lee</h2><p>Más de 100 medios digitales y sus cuentas en redes, con el tono de cada nota.</p></section>
@@ -1848,7 +1860,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
         <section><h2>Responde</h2><p>Comunicados, aclaraciones y mensajes clave listos para revisar. Nada se publica sin aprobación.</p></section>
       </div>
     </div>
-    <footer class="pd-pie"><span>Un producto de <b><span>ALT</span>Kimia</b></span><span>Prototipo con noticias ficticias</span><a href="/legal.html#privacidad">Privacidad</a><a href="/legal.html#terminos">Términos</a></footer>
+    <footer class="pd-pie"><span>Un producto de <b><span>ALT</span>Kimia</b></span><span id="ptEstado">Demostración con noticias ficticias</span><a href="/legal.html#privacidad">Privacidad</a><a href="/legal.html#terminos">Términos</a></footer>
   </div>
 </section>
 <button class="skip" type="button" data-act="skip">Ir al contenido</button>

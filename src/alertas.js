@@ -7,13 +7,13 @@ S.avisos ||= {pref: null, porOrg: {}, push: null};
 Object.keys(S.avisos.porOrg).forEach(k => { if (!k.includes("|")) delete S.avisos.porOrg[k]; });  // formato anterior, sin modo
 const AV = {abierto: false, vuelta: null, cfg: null, destacar: null};
 const AV_ETQ = {urgente: "Urgente", importante: "Importante", info: "Buena noticia"};
-const AV_NIV = [["urgente", "Solo lo urgente", "Críticas que llegaron a prensa regional o nacional, o que crecen rápido. Pensado para el alcalde."],
+const AV_NIV = [["urgente", "Solo lo urgente", "Críticas que llegaron a prensa regional o nacional, o que crecen rápido. Pensado para el alcalde o la autoridad."],
   ["importante", "Lo crítico", "Además, toda noticia crítica nueva, aunque sea comunal. Pensado para comunicaciones."],
   ["todo", "Todo", "Además, las buenas noticias que llegan a prensa regional o nacional."],
   ["nada", "Nada", "Sin avisos; la campana sigue guardando la lista."]];
 fetch("/api/config").then(r => r.ok ? r.json() : {}).then(j => { AV.cfg = j.avisos || null; if (AV.abierto) avPintar(); }).catch(() => {});
 const avRol = () => typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo && PILOTO.perfil ? PILOTO.perfil.rol : "";
-function avPref(){ return S.avisos.pref || {nivel: ["alcalde", "directivo"].includes(avRol()) ? "urgente" : "importante", silencio: true, correo: true}; }
+function avPref(){ return S.avisos.pref || {nivel: ["alcalde", "autoridad", "directivo"].includes(avRol()) ? "urgente" : "importante", silencio: true, correo: true}; }
 /* Un estado por municipio y por modo: los avisos de la demostración no se mezclan con los de noticias reales ni con los del piloto,
    y la primera carga de cada modo solo arma la lista (no notifica lo que ya estaba). */
 const avModo = () => typeof MODO !== "undefined" && MODO && MODO.tipo ? MODO.tipo : "demo";
