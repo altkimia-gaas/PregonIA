@@ -521,6 +521,32 @@ button.ini-fila:hover{background:var(--surface-2)}
 .voc-spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:vocgira .8s linear infinite}
 @keyframes vocgira{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.voc-spin{animation:none}}
+/* Pantalla de lectura de medios */
+.pr{min-height:min(78vh,720px);display:grid;place-content:center;justify-items:center;text-align:center;gap:10px;padding:32px 18px}
+.pr-circ{position:relative;width:220px;height:220px;margin-bottom:6px}
+@media (min-width:900px){.pr-circ{transform:scale(1.15);margin:14px 0 18px}}
+.pr-anillo{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.pr-arco{animation:prArco 1.6s linear infinite;transform-origin:110px 110px}
+@keyframes prArco{to{transform:rotate(360deg)}}
+.pr-ventana{position:absolute;inset:14px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 40%,var(--surface-2),var(--surface));box-shadow:inset 0 0 0 1px var(--line)}
+.pr-mitad{position:absolute;top:0;bottom:0;overflow:hidden}.pr-der{left:50%;right:0}.pr-izq{left:0;right:50%}
+.pr-cinta{position:absolute;top:50%;display:flex;gap:16px;transform:translateY(-50%);animation:prCinta 11s linear infinite;will-change:transform}
+.pr-der .pr-cinta{left:-96px}.pr-izq .pr-cinta{left:0}
+/* Las dos copias recorren lo mismo; la derecha arranca desplazada media ventana para quedar alineada con la izquierda. */
+@keyframes prCinta{from{transform:translate(96px,-50%)}to{transform:translate(-478px,-50%)}}
+.pr-p{position:relative;flex:0 0 66px;height:82px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25))}
+.pr-diario{width:66px;height:82px;display:block}
+
+.pr-ok{position:absolute;right:-6px;top:-6px;width:22px;height:22px;border-radius:50%;background:#3CC08A;color:#fff;font:700 13px/22px system-ui,sans-serif;display:none;box-shadow:0 0 0 2px var(--surface)}
+.leidos .pr-ok{display:block}
+.pr-linea{position:absolute;top:10%;bottom:10%;left:calc(50% - 1px);width:2px;background:linear-gradient(transparent,#2196F3,transparent);box-shadow:0 0 12px 3px rgba(33,150,243,.55);animation:prLuz 1.4s ease-in-out infinite alternate}
+@keyframes prLuz{from{opacity:.55}to{opacity:1}}
+.pr-marca{margin:4px 0 0;font:700 15px var(--f-display,inherit);letter-spacing:.02em;color:var(--muted)}.pr-marca span{color:var(--accent)}
+.pr-t{margin:0;font-size:clamp(22px,4.4vw,30px);letter-spacing:-.01em}
+.pr-s{margin:0;max-width:540px;color:var(--muted);font-size:15px;line-height:1.5}
+.pr-paso{margin:8px 0 0;font-weight:600;color:var(--ink);min-height:1.4em}
+.pr-nota{margin:0;font-size:12.5px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.pr-cinta,.pr-arco,.pr-linea{animation:none}.pr-der .pr-cinta,.pr-izq .pr-cinta{transform:translate(-20px,-50%)}}
 .voc-f{display:grid;gap:8px;padding:12px 18px 16px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--surface)}
 .voc-f2{display:flex;gap:8px;flex-wrap:wrap}
 .voc-f .hint{margin:0}
