@@ -41,15 +41,16 @@
 /* PRUEBA · Tema Edición: lenguaje del boletín semanal (papel blanco, filete negro, titulares serif en color, botones píldora).
    Se elige con el botón de tema; en esta rama es el tema por defecto. */
 :root[data-theme="editorial"]{
-  --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#F5F5F2; --ink:#141414; --muted:#555555; --line:#DADADA; --track:#ECECE9;
+  --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#F5F5F2; --ink:#141414; --muted:#555555; --line:#DADADA; --track:#C9C9C4;
   --frame:#141414;
   --top:#FFFFFF; --top-ink:#141414; --top-muted:#555555; --top-line:#DADADA; --top-accent:#2B4BE0; --live:#1E6B3F;
   --accent:#2B4BE0; --accent-bg:#2B4BE0; --accent-bg-h:#1F3BC0; --accent-ink:#FFFFFF; --accent-soft:#EEF1FD;
   --bell:#8F560C; --bell-soft:#FBEFD9;
-  --pos:#2A9466; --pos-soft:#E3F1E8; --pos-ink:#1E6B3F;
-  --neu:#CC9A10; --neu-soft:#FBF1D6; --neu-ink:#7A5A00;
+  --pos:#1E6B3F; --pos-soft:#E3F1E8; --pos-ink:#1E6B3F;
+  --neu:#858A93; --neu-soft:#EEEFF1; --neu-ink:#4F545C;
   --cri:#B3261E; --cri-soft:#F8E3E1; --cri-ink:#9A1F18;
-  --amb-n:#0D2A8C; --amb-r:#2B4BE0; --amb-l:#9DB0F0;
+  --grave:#CC9A10; --grave-soft:#FBEFD9; --grave-ink:#9A5B00;
+  --amb-n:#14217A; --amb-r:#2B4BE0; --amb-l:#6F86E8;
   --shadow:none; --dots:transparent;
   --f-news:"Source Serif 4","Newsreader",Georgia,"Times New Roman",serif;
   --r:14px; --r-btn:999px;
@@ -1367,8 +1368,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
 :root[data-theme="editorial"] .ini-kpi[data-on]{background:var(--accent-soft);box-shadow:inset 0 -3px 0 var(--frame)}
 /* Titulares de prensa: serif en negrita y color de acento, como el boletín */
 :root[data-theme="editorial"] .ini-h,:root[data-theme="editorial"] .item h4,:root[data-theme="editorial"] .asuntos b.t,
-:root[data-theme="editorial"] .today li b,:root[data-theme="editorial"] .mini b{font-family:var(--f-news);font-weight:700;color:var(--accent);line-height:1.22}
-:root[data-theme="editorial"] .ini-h{font-size:22px}
+:root[data-theme="editorial"] .today li b,:root[data-theme="editorial"] .mini b{font-family:var(--f-news);font-weight:600;color:var(--ink);line-height:1.25}
 /* Titular de la edición con el filete vertical del boletín */
 :root[data-theme="editorial"] .ini-tit{font-weight:700;border-left:4px solid var(--frame);padding-left:16px;line-height:1.06}
 :root[data-theme="editorial"] .head h2{font-family:var(--f-news);font-weight:700;letter-spacing:-.01em;border-left:4px solid var(--frame);padding-left:14px}
@@ -1392,6 +1392,331 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
 :root[data-theme="editorial"] .bnav{background:#FFFFFF;border-top:1.5px solid var(--frame)}
 :root[data-theme="editorial"] .bnav a[aria-current="page"]{color:var(--ink);background:transparent;box-shadow:inset 0 3px 0 var(--accent);border-radius:0}
 :root[data-theme="editorial"] .ini-lista{border:1.5px solid var(--frame)}
+/* PRUEBA · Piso de lectura: generado desde las reglas de arriba (≤12px→13, 12,5–13,5→14, 14–15,5→16). Contadores y gráficos quedan fuera. */
+:root[data-theme="editorial"] body{font-size:1rem}
+:root[data-theme="editorial"] .demo{font-size:0.875rem}
+:root[data-theme="editorial"] .brand p{font-size:0.8125rem}
+:root[data-theme="editorial"] .org label{font-size:0.8125rem}
+:root[data-theme="editorial"] .plan{font-size:0.8125rem}
+:root[data-theme="editorial"] .nav .grp{font-size:0.8125rem}
+:root[data-theme="editorial"] .usage .row{font-size:0.8125rem}
+:root[data-theme="editorial"] .usage a{font-size:0.8125rem}
+:root[data-theme="editorial"] .side .foot{font-size:0.8125rem}
+:root[data-theme="editorial"] .back{font-size:0.875rem}
+:root[data-theme="editorial"] .card > h3,:root[data-theme="editorial"] .sec{font-size:0.8125rem}
+:root[data-theme="editorial"] .kpi .k{font-size:0.875rem}
+:root[data-theme="editorial"] .kpi .s{font-size:0.875rem}
+:root[data-theme="editorial"] .kpi .go{font-size:0.8125rem}
+:root[data-theme="editorial"] .pill{font-size:0.8125rem}
+:root[data-theme="editorial"] .tag{font-size:0.8125rem}
+:root[data-theme="editorial"] .btn{font-size:0.875rem}
+:root[data-theme="editorial"] .btn.sm{font-size:0.875rem}
+:root[data-theme="editorial"] .shr .lbl{font-size:0.8125rem}
+:root[data-theme="editorial"] .cap-l input[type=file]{font-size:0.875rem}
+:root[data-theme="editorial"] .cap-inst{font-size:0.875rem}
+:root[data-theme="editorial"] .gi-pasos li{font-size:1rem}
+:root[data-theme="editorial"] .ent-marca small{font-size:0.875rem}
+:root[data-theme="editorial"] .ent-pasoN{font-size:1rem}
+:root[data-theme="editorial"] .ent-rail p{font-size:0.875rem}
+:root[data-theme="editorial"] .ent-rn{font-size:0.875rem}
+:root[data-theme="editorial"] .ent-tx b{font-size:1rem}
+:root[data-theme="editorial"] .ent-tx small{font-size:0.875rem}
+:root[data-theme="editorial"] .ent-pasoT{font-size:0.875rem}
+:root[data-theme="editorial"] .ent-tit p{font-size:1rem}
+:root[data-theme="editorial"] .ent-campo{font-size:1rem}
+:root[data-theme="editorial"] .ent-o{font-size:0.875rem}
+:root[data-theme="editorial"] .ent-av{font-size:1rem}
+:root[data-theme="editorial"] .ent-hits .ent-av{font-size:0.875rem}
+:root[data-theme="editorial"] .ent-grupo h4{font-size:0.8125rem}
+:root[data-theme="editorial"] .ent-pil{font-size:1rem}
+:root[data-theme="editorial"] .ent-vacio{font-size:1rem}
+:root[data-theme="editorial"] .ent-banner{font-size:1rem}
+:root[data-theme="editorial"] .ent-nota{font-size:0.875rem}
+:root[data-theme="editorial"] .ent-gen{font-size:1rem}
+:root[data-theme="editorial"] .ent-chip{font-size:0.875rem}
+:root[data-theme="editorial"] .ent-quien small{font-size:1rem}
+:root[data-theme="editorial"] .ent-fila dt{font-size:0.875rem}
+:root[data-theme="editorial"] .ent-fila dd{font-size:1rem}
+:root[data-theme="editorial"] .ent-link{font-size:1rem}
+:root[data-theme="editorial"] .ent-cta{font-size:1rem}
+:root[data-theme="editorial"] .perg button{font-size:0.875rem}
+:root[data-theme="editorial"] .per-nota{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-ekick{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-per button{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-kpi .l{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-kpi .v small{font-size:1rem}
+:root[data-theme="editorial"] .ini-kpi .s{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-kpi::after{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-dv small{font-size:0.8125rem}
+:root[data-theme="editorial"] .cob-v{font-size:1rem}
+:root[data-theme="editorial"] .cob-s{font-size:0.875rem}
+:root[data-theme="editorial"] .item .clasif{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-lad-r{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-lad-r .mono{font-size:1rem}
+:root[data-theme="editorial"] .ini-lad-c{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-imp-ej{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-imp-n{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-imp-n small{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-imp-v{font-size:1rem}
+:root[data-theme="editorial"] .ini-para,:root[data-theme="editorial"] .ini-quien{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-explica{font-size:1rem}
+:root[data-theme="editorial"] .ini-det-g h4{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-dr{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-dn small{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-tbh{font-size:1rem}
+:root[data-theme="editorial"] .ini-tbh small{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-mas2{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-nota{font-size:0.875rem}
+@media (max-width:760px){
+  :root[data-theme="editorial"] .ini-kpi .l::after{font-size:1rem}
+}
+:root[data-theme="editorial"] .ini-d{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-pulso-h h3{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-valor{font-size:1rem}
+:root[data-theme="editorial"] .ini-sec h2{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-sub{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-colt{font-size:1rem}
+:root[data-theme="editorial"] details.nr{font-size:0.875rem}
+:root[data-theme="editorial"] details.nr summary::before{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-kick{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-meta{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-esc{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-dato{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-por{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-fn{font-size:1rem}
+:root[data-theme="editorial"] .ini-fv{font-size:1rem}
+:root[data-theme="editorial"] .ini-fv small{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-fs{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-ft{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-afina{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-sin{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-vh > span{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-vm{font-size:0.875rem}
+:root[data-theme="editorial"] .ini-an small{font-size:0.8125rem}
+:root[data-theme="editorial"] .ini-mas a{font-size:0.875rem}
+@media (max-width:600px){
+  :root[data-theme="editorial"] .ini-kpi .s{font-size:0.875rem}
+  :root[data-theme="editorial"] .ini-imp-n{font-size:0.875rem}
+  :root[data-theme="editorial"] .ini-lad-r{font-size:0.8125rem}
+  :root[data-theme="editorial"] .ini-kpi .l{font-size:0.8125rem}
+  :root[data-theme="editorial"] .ini-valor{font-size:0.875rem}
+}
+:root[data-theme="editorial"] .voc-sel select{font-size:1rem}
+:root[data-theme="editorial"] .voc-libre input{font-size:1rem}
+:root[data-theme="editorial"] .voc-s h3{font-size:0.8125rem}
+:root[data-theme="editorial"] .voc-hechos{font-size:0.875rem}
+:root[data-theme="editorial"] .voc-hechos li>b{font-size:1rem}
+:root[data-theme="editorial"] .voc-hechos li>span:not(.voc-k){font-size:0.875rem}
+:root[data-theme="editorial"] .voc-k{font-size:0.8125rem}
+:root[data-theme="editorial"] .voc-cita{font-size:0.875rem}
+:root[data-theme="editorial"] .voc-datos{font-size:0.875rem}
+:root[data-theme="editorial"] .voc-datos .pill{font-size:0.8125rem}
+:root[data-theme="editorial"] .voc-msj li{font-size:1rem}
+:root[data-theme="editorial"] .voc-dato{font-size:0.875rem}
+:root[data-theme="editorial"] .voc-dato span{font-size:0.8125rem}
+:root[data-theme="editorial"] .voc-ev{font-size:0.875rem}
+:root[data-theme="editorial"] .voc-pq li{font-size:0.875rem}
+:root[data-theme="editorial"] .voc-load{font-size:0.875rem}
+:root[data-theme="editorial"] .pr-s{font-size:1rem}
+:root[data-theme="editorial"] .pr-paso{font-size:1rem}
+:root[data-theme="editorial"] .pr-nota{font-size:0.875rem}
+:root[data-theme="editorial"] .cal-when{font-size:0.875rem}
+:root[data-theme="editorial"] .cal-when .pill{font-size:0.8125rem}
+:root[data-theme="editorial"] .cal-que{font-size:0.875rem}
+:root[data-theme="editorial"] .cal-meta{font-size:0.875rem}
+:root[data-theme="editorial"] .cal-g{font-size:0.8125rem}
+:root[data-theme="editorial"] .cal-n b{font-size:1rem}
+:root[data-theme="editorial"] .cal-n small{font-size:0.8125rem}
+:root[data-theme="editorial"] .cal-w{font-size:0.875rem}
+:root[data-theme="editorial"] .cal-b{font-size:0.875rem}
+:root[data-theme="editorial"] .cal-prep legend{font-size:0.8125rem}
+:root[data-theme="editorial"] .cap-l{font-size:0.875rem}
+:root[data-theme="editorial"] .cap-l input,:root[data-theme="editorial"] .cap-l select,:root[data-theme="editorial"] .cap-l textarea{font-size:1rem}
+:root[data-theme="editorial"] .cap-l small{font-size:0.8125rem}
+:root[data-theme="editorial"] .opc{font-size:0.8125rem}
+:root[data-theme="editorial"] .cap-err{font-size:0.875rem}
+@media (max-width:480px){
+  :root[data-theme="editorial"] .r4.dk .tile .sub{font-size:0.8125rem}
+  :root[data-theme="editorial"] .r4.dk .tile .lb{font-size:0.8125rem}
+}
+:root[data-theme="editorial"] .cri-n{font-size:0.8125rem}
+:root[data-theme="editorial"] .clip-h{font-size:0.875rem}
+:root[data-theme="editorial"] .clip-h .ref{font-size:0.8125rem}
+:root[data-theme="editorial"] .clip-t{font-size:1rem}
+:root[data-theme="editorial"] .clip-m{font-size:0.875rem}
+:root[data-theme="editorial"] .clip-p li{font-size:0.875rem}
+:root[data-theme="editorial"] .clip-p .hh{font-size:0.8125rem}
+:root[data-theme="editorial"] .clip-p .niv{font-size:0.8125rem}
+:root[data-theme="editorial"] .clip-p .tt{font-size:1rem}
+:root[data-theme="editorial"] .clip-p .nolink{font-size:0.8125rem}
+:root[data-theme="editorial"] .cta-info{font-size:0.875rem}
+:root[data-theme="editorial"] .cta-info b{font-size:0.875rem}
+:root[data-theme="editorial"] .solo-lect{font-size:0.8125rem}
+:root[data-theme="editorial"] .shr-pop button{font-size:0.875rem}
+:root[data-theme="editorial"] .steps .n{font-size:0.8125rem}
+:root[data-theme="editorial"] .day{font-size:0.8125rem}
+:root[data-theme="editorial"] .item h4{font-size:1rem}
+:root[data-theme="editorial"] .item .meta{font-size:0.875rem}
+:root[data-theme="editorial"] .item details{font-size:0.875rem}
+:root[data-theme="editorial"] .seg button{font-size:0.875rem}
+:root[data-theme="editorial"] .active{font-size:0.875rem}
+:root[data-theme="editorial"] table{font-size:0.875rem}
+:root[data-theme="editorial"] th{font-size:0.8125rem}
+:root[data-theme="editorial"] .field > label,:root[data-theme="editorial"] .field legend,:root[data-theme="editorial"] .lbl{font-size:0.875rem}
+:root[data-theme="editorial"] .field small,:root[data-theme="editorial"] .hint{font-size:0.8125rem}
+:root[data-theme="editorial"] .checks label{font-size:0.875rem}
+:root[data-theme="editorial"] .prow .num{font-size:0.8125rem}
+:root[data-theme="editorial"] .origin{font-size:0.8125rem}
+:root[data-theme="editorial"] .subtabs a,:root[data-theme="editorial"] .tabs button{font-size:0.875rem}
+:root[data-theme="editorial"] .tema .top h4{font-size:1rem}
+:root[data-theme="editorial"] .chip{font-size:0.875rem}
+:root[data-theme="editorial"] .chip button{font-size:1rem}
+:root[data-theme="editorial"] .opt b{font-size:0.875rem}
+:root[data-theme="editorial"] .opt span{font-size:0.8125rem}
+:root[data-theme="editorial"] .opt .rec{font-size:0.8125rem}
+:root[data-theme="editorial"] .stepper h3{font-size:1rem}
+:root[data-theme="editorial"] .stepper h3 .n{font-size:0.8125rem}
+:root[data-theme="editorial"] details.kb summary{font-size:0.875rem}
+:root[data-theme="editorial"] .note{font-size:0.875rem}
+:root[data-theme="editorial"] .legend{font-size:0.8125rem}
+:root[data-theme="editorial"] .repdesc{font-size:0.875rem}
+:root[data-theme="editorial"] .rhead .per{font-size:0.875rem}
+:root[data-theme="editorial"] .tile .lb{font-size:0.875rem}
+:root[data-theme="editorial"] .tile .big small{font-size:1rem}
+:root[data-theme="editorial"] .delta{font-size:0.875rem}
+:root[data-theme="editorial"] .sub{font-size:0.875rem}
+:root[data-theme="editorial"] .scale{font-size:0.8125rem}
+:root[data-theme="editorial"] .keys{font-size:0.875rem}
+:root[data-theme="editorial"] .tone3 .l{font-size:0.8125rem}
+:root[data-theme="editorial"] .div .hd{font-size:0.8125rem}
+:root[data-theme="editorial"] .div .nm{font-size:0.875rem}
+:root[data-theme="editorial"] .div .num{font-size:0.875rem}
+:root[data-theme="editorial"] .clima{font-size:0.875rem}
+:root[data-theme="editorial"] .hbars li{font-size:0.875rem}
+:root[data-theme="editorial"] .amb3 .l{font-size:0.8125rem}
+:root[data-theme="editorial"] .grp h4{font-size:1rem}
+:root[data-theme="editorial"] .grp h4 .c{font-size:0.8125rem}
+:root[data-theme="editorial"] .grp li b{font-size:0.875rem}
+:root[data-theme="editorial"] .grp li span{font-size:0.8125rem}
+:root[data-theme="editorial"] .grp .empty{font-size:0.875rem}
+:root[data-theme="editorial"] .cmp .hd{font-size:0.8125rem}
+:root[data-theme="editorial"] .share .v{font-size:0.875rem}
+@media (max-width:820px){
+  :root[data-theme="editorial"] .div .num::before{font-size:0.8125rem}
+  :root[data-theme="editorial"] .bnav a{font-size:0.8125rem}
+}
+:root[data-theme="editorial"] body{font-size:1rem}
+:root[data-theme="editorial"] .demo{font-size:0.8125rem}
+:root[data-theme="editorial"] .demo b{font-size:0.8125rem}
+:root[data-theme="editorial"] .slogan{font-size:1rem}
+:root[data-theme="editorial"] .org label{font-size:0.8125rem}
+:root[data-theme="editorial"] .org select{font-size:1rem}
+:root[data-theme="editorial"] .live{font-size:0.875rem}
+:root[data-theme="editorial"] .planbox summary{font-size:0.875rem}
+:root[data-theme="editorial"] .card > h3,:root[data-theme="editorial"] .sec{font-size:0.8125rem}
+:root[data-theme="editorial"] .tile .lb{font-size:0.875rem}
+:root[data-theme="editorial"] .tabs button{font-size:1rem}
+:root[data-theme="editorial"] .clima{font-size:0.875rem}
+@media (max-width:820px){
+  :root[data-theme="editorial"] .clima{font-size:0.8125rem}
+}
+:root[data-theme="editorial"] .esc{font-size:0.875rem}
+:root[data-theme="editorial"] .esc .cts{font-size:0.8125rem}
+:root[data-theme="editorial"] .para dt{font-size:0.8125rem}
+:root[data-theme="editorial"] .para dd{font-size:0.875rem}
+:root[data-theme="editorial"] .kick{font-size:0.8125rem}
+:root[data-theme="editorial"] .vtx{font-size:1rem}
+:root[data-theme="editorial"] .parte h4{font-size:0.8125rem}
+:root[data-theme="editorial"] .asuntos .n{font-size:0.875rem}
+:root[data-theme="editorial"] .asuntos .sub{font-size:0.875rem}
+:root[data-theme="editorial"] .acc{font-size:1rem}
+:root[data-theme="editorial"] .acc b,:root[data-theme="editorial"] .rsp b{font-size:0.8125rem}
+:root[data-theme="editorial"] .acc.sm{font-size:0.875rem}
+:root[data-theme="editorial"] .rsp{font-size:0.875rem}
+:root[data-theme="editorial"] .grp .cola .esc,:root[data-theme="editorial"] .grp .cola .esc span{font-size:0.875rem}
+:root[data-theme="editorial"] .grp .cola .acc b{font-size:0.8125rem}
+:root[data-theme="editorial"] .grp h4{font-size:0.8125rem}
+:root[data-theme="editorial"] .grp .empty{font-size:1rem}
+:root[data-theme="editorial"] details.resp summary{font-size:0.8125rem}
+@media (max-width:820px){
+  :root[data-theme="editorial"] .asuntos .n{font-size:0.8125rem}
+}
+:root[data-theme="editorial"] .dg-kick{font-size:0.8125rem}
+:root[data-theme="editorial"] .dg-ed-row{font-size:0.875rem}
+:root[data-theme="editorial"] .dg-ticker-l{font-size:0.8125rem}
+:root[data-theme="editorial"] .dg-ticker li{font-size:0.875rem}
+:root[data-theme="editorial"] .dg-ticker time{font-size:0.8125rem}
+:root[data-theme="editorial"] .dg-ticker em{font-size:0.8125rem}
+:root[data-theme="editorial"] .dg-ind .l{font-size:0.8125rem}
+:root[data-theme="editorial"] .dg-ind .s{font-size:0.875rem}
+:root[data-theme="editorial"] .dg-sec{font-size:0.8125rem}
+:root[data-theme="editorial"] .dg-meta{font-size:0.875rem}
+:root[data-theme="editorial"] .dg-ficha-l{font-size:0.875rem}
+:root[data-theme="editorial"] .dg-sec-s{font-size:0.8125rem}
+:root[data-theme="editorial"] .dg-tema-c small{font-size:0.8125rem}
+:root[data-theme="editorial"] .dg-rank-m small{font-size:0.8125rem}
+:root[data-theme="editorial"] .helpbtn{font-size:0.875rem}
+:root[data-theme="editorial"] .av-sec>p{font-size:1rem}
+:root[data-theme="editorial"] .av-opt b{font-size:1rem}
+:root[data-theme="editorial"] .av-opt small{font-size:0.875rem}
+:root[data-theme="editorial"] .av-chk{font-size:0.875rem}
+:root[data-theme="editorial"] .av-g{font-size:0.8125rem}
+:root[data-theme="editorial"] .av-k{font-size:0.875rem}
+:root[data-theme="editorial"] .av-k .pill{font-size:0.8125rem}
+:root[data-theme="editorial"] .av-t{font-size:1rem}
+:root[data-theme="editorial"] .av-m{font-size:0.875rem}
+@media (max-width:820px){
+  :root[data-theme="editorial"] .para dt,:root[data-theme="editorial"] .kick,:root[data-theme="editorial"] .dg-kick,:root[data-theme="editorial"] .dg-ind .l,:root[data-theme="editorial"] .dg-ticker-l,:root[data-theme="editorial"] .dg-sec,:root[data-theme="editorial"] .card > h3,:root[data-theme="editorial"] .sec,:root[data-theme="editorial"] .grp h4,:root[data-theme="editorial"] .tile .lb,:root[data-theme="editorial"] th,:root[data-theme="editorial"] .pill,:root[data-theme="editorial"] .opt .rec,:root[data-theme="editorial"] .acc b,:root[data-theme="editorial"] .rsp b,:root[data-theme="editorial"] .scale,:root[data-theme="editorial"] .esc .cts,:root[data-theme="editorial"] .origin,:root[data-theme="editorial"] .legend,:root[data-theme="editorial"] .demo,:root[data-theme="editorial"] .demo b,:root[data-theme="editorial"] details.resp summary,:root[data-theme="editorial"] .steps .n,:root[data-theme="editorial"] .dg-sec-s,:root[data-theme="editorial"] .tag{font-size:0.8125rem}
+  :root[data-theme="editorial"] .dg-ticker time{font-size:0.8125rem}
+  :root[data-theme="editorial"] .parte h4,:root[data-theme="editorial"] .clima,:root[data-theme="editorial"] .grp .cola .acc b,:root[data-theme="editorial"] .grp .acc b,:root[data-theme="editorial"] .cola .acc b{font-size:0.8125rem}
+  :root[data-theme="editorial"] .para dd{font-size:1rem}
+  :root[data-theme="editorial"] .ftab td{font-size:0.875rem}
+  :root[data-theme="editorial"] .ftab td[data-l]::before{font-size:0.8125rem}
+  :root[data-theme="editorial"] .steps li b{font-size:1rem}
+  :root[data-theme="editorial"] .btn.sm{font-size:0.875rem}
+}
+:root[data-theme="editorial"] .modo-sw button{font-size:0.8125rem}
+:root[data-theme="editorial"] .modo-link{font-size:0.8125rem}
+:root[data-theme="editorial"] .demo-btn{font-size:0.8125rem}
+:root[data-theme="editorial"] .card > h3,:root[data-theme="editorial"] .sec{font-size:0.8125rem}
+:root[data-theme="editorial"] .slogan{font-size:0.875rem}
+:root[data-theme="editorial"] .kbd{font-size:0.8125rem}
+/* PRUEBA · Ajustes UX: "grave" e "Informar" en ámbar propio (el amarillo ya no significa neutro) */
+:root[data-theme="editorial"] .pill.grave{background:var(--grave-soft);color:var(--grave-ink);border-color:var(--grave)}
+:root[data-theme="editorial"] .ini-colt.neu{color:var(--grave-ink)}
+:root[data-theme="editorial"] .dg-ficha{border-top-color:var(--grave)}
+/* PRUEBA · Escala tipográfica (celular primero; en rem para respetar el tamaño de letra del navegador) */
+:root[data-theme="editorial"] body{font-size:1rem;line-height:1.5}
+:root[data-theme="editorial"] .ini-tit{font-size:clamp(1.75rem,3.2vw,2.5rem);line-height:1.1}
+:root[data-theme="editorial"] .ini-h{font-size:1.1875rem}
+:root[data-theme="editorial"] .ini-card.pos .ini-h{font-size:1.1875rem}
+:root[data-theme="editorial"] .ini-card.chico .ini-h{font-size:1.0625rem}
+:root[data-theme="editorial"] .item h4{font-size:1.125rem}
+:root[data-theme="editorial"] .ini-lead{font-size:1.0625rem;opacity:1;color:#2A2A2A}
+:root[data-theme="editorial"] .bnav a{font-size:.75rem}
+:root[data-theme="editorial"] .bnav a[aria-current="page"]{font-weight:700}
+:root[data-theme="editorial"] .bnav .count,:root[data-theme="editorial"] .nav .count,:root[data-theme="editorial"] .av-btn .av-n{font-size:.6875rem}
+@media (min-width:760px){
+  :root[data-theme="editorial"] .ini-h{font-size:1.3125rem}
+  :root[data-theme="editorial"] .item h4{font-size:1.1875rem}
+  :root[data-theme="editorial"] .ini-lead{font-size:1.125rem}
+}
+/* PRUEBA · Ajustes de calce con la letra más grande */
+:root[data-theme="editorial"] .ini-imp-ej,:root[data-theme="editorial"] .ini-imp-r{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) 58px;gap:0 8px}
+@media (max-width:759px){
+  :root[data-theme="editorial"] .filters .seg{flex-wrap:nowrap;gap:0;background:var(--surface)}
+  :root[data-theme="editorial"] .filters .seg button{flex:1 1 auto;padding:0 6px;min-height:40px;background:transparent}
+  :root[data-theme="editorial"] .filters .seg button[aria-pressed="true"]{background:var(--frame);color:#FFFFFF}
+}
+@media (max-width:759px){
+  :root[data-theme="editorial"] .ini-imp-ej,:root[data-theme="editorial"] .ini-imp-r{grid-template-columns:minmax(0,1.6fr) minmax(0,.7fr) minmax(0,.7fr) 52px;gap:0 6px}
+  :root[data-theme="editorial"] .ini-imp-ej{font-size:.75rem}
+}
+/* La barra superior de escritorio conserva su tamaño para no partirse en dos líneas */
+@media (min-width:760px){
+  :root[data-theme="editorial"] .live,:root[data-theme="editorial"] .planbox summary,:root[data-theme="editorial"] .helpbtn{font-size:.8125rem}
+  :root[data-theme="editorial"] .org label{font-size:.75rem}
+}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="pat-pos" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" style="fill:var(--pos)"/></pattern></defs></svg>
