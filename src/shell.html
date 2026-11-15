@@ -1802,6 +1802,28 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   .pd-mini-c > div{padding:10px 8px 0}
   .pd-mini-c > div small.cnt{display:none}
 }
+/* PRUEBA · Pantalla de lectura en Edición: diarios en blanco y negro, sin brillos ni sombras; el que se lee, con anillo azul. */
+.dm-papel{fill:var(--surface);stroke:var(--card-line);stroke-width:1.5}
+.dm-cab{fill:var(--ink)}
+.dm-filete{fill:var(--ink);opacity:.6}
+.dm-foto{fill:var(--track)}
+.dm-l{fill:var(--muted);opacity:.55}
+:root[data-theme="editorial"] .pr-pista::after{display:none}
+:root[data-theme="editorial"] .pr-pista{border-color:var(--line)}
+:root[data-theme="editorial"] .pr-oi svg{filter:none}
+:root[data-theme="editorial"] .pr-o.leyendo .pr-oi svg{filter:none;transform:scale(1.25)}
+:root[data-theme="editorial"] .pr-o.leyendo .dm-papel{stroke:var(--accent);stroke-width:2.5}
+:root[data-theme="editorial"] .pr-ok{background:var(--pos);color:var(--bg);box-shadow:none}
+:root[data-theme="editorial"] .pr-libro{width:132px}
+:root[data-theme="editorial"] .pr-cab{height:18px;border-radius:4px 4px 0 0}
+:root[data-theme="editorial"] .pr-cab span{font-family:var(--f-news);font-weight:700;font-size:10px;letter-spacing:.08em;color:var(--bg)}
+:root[data-theme="editorial"] .pr-abierto{box-shadow:none;border-width:1.5px}
+:root[data-theme="editorial"] .pr-pag i{background:var(--muted);opacity:.5}
+:root[data-theme="editorial"] .pr-pag i:first-child{background:var(--ink);opacity:.85}
+:root[data-theme="editorial"] .pr-t{font-weight:700}
+:root[data-theme="editorial"] .pr-s{font-size:1rem;max-width:34rem}
+:root[data-theme="editorial"] .pr-paso{border:1px solid var(--line);background:var(--surface);font-size:.875rem}
+:root[data-theme="editorial"] .ico-per{--tinta:var(--ink);--papel:var(--surface)}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="pat-pos" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" style="fill:var(--pos)"/></pattern></defs></svg>

@@ -1711,13 +1711,14 @@ const DIARIOS = [
 ];
 const PR_ORB = 7, PR_MS = 2600;  // 3 páginas por diario
 function diarioMini(d, i){
-  const ln = (y, w) => `<rect x="5" y="${y}" width="${w}" height="2" rx="1" fill="#2B3445" opacity=".5"/>`;
-  return `<svg viewBox="0 0 40 50" aria-hidden="true"><rect x=".75" y=".75" width="38.5" height="48.5" rx="3" fill="${d.p}" stroke="${d.c}" stroke-width="1.5"/><rect x=".75" y=".75" width="38.5" height="10" rx="3" fill="${d.c}"/><rect x=".75" y="6" width="38.5" height="4.75" fill="${d.c}"/>
-    <rect x="5" y="15" width="${i % 2 ? 30 : 14}" height="${i % 2 ? 10 : 14}" rx="1.5" fill="${d.c}" opacity=".8"/>${i % 2 ? ln(29, 30) + ln(33, 26) : ln(16, 12) + ln(20, 12) + ln(24, 10)}${ln(37, 30)}${ln(41, 24)}</svg>`;
+  // PRUEBA · Edición: diarios en blanco y negro (papel, cabezal en tinta, foto gris); los colores salen del modo claro u oscuro.
+  const ln = (y, w) => `<rect class="dm-l" x="5" y="${y}" width="${w}" height="2" rx="1"/>`;
+  return `<svg viewBox="0 0 40 50" aria-hidden="true"><rect class="dm-papel" x=".75" y=".75" width="38.5" height="48.5" rx="3"/><rect class="dm-cab" x="5" y="4.5" width="30" height="3.5" rx="1"/><rect class="dm-filete" x="5" y="10" width="30" height="1"/>
+    <rect class="dm-foto" x="5" y="15" width="${i % 2 ? 30 : 14}" height="${i % 2 ? 10 : 14}" rx="1.5"/>${i % 2 ? ln(29, 30) + ln(33, 26) : ln(16, 12) + ln(20, 12) + ln(24, 10)}${ln(37, 30)}${ln(41, 24)}</svg>`;
 }
 const prPagina = lado => `<div class="pr-pag ${lado}">${[0, 1, 2, 3, 4, 5].map(k => `<i style="width:${[86, 70, 92, 64, 88, 74][(k + (lado === "der" ? 2 : 0)) % 6]}%"></i>`).join("")}</div>`;
 function prLibro(d){
-  return `<div class="pr-libro" style="--c:${d.c};--p:${d.p}"><div class="pr-cab"><span>${d.n}</span></div>
+  return `<div class="pr-libro" style="--c:var(--ink);--p:var(--surface)"><div class="pr-cab"><span>${d.n}</span></div>
     <div class="pr-abierto">${prPagina("izq")}${prPagina("der")}<div class="pr-hoja"><div class="pr-cara fr">${prPagina("der")}</div><div class="pr-cara re">${prPagina("izq")}</div></div></div></div>`;
 }
 const PR_PASOS = [[0, "Leyendo los medios nacionales, regionales y locales…"], [8, "Juntando la misma noticia publicada en varios medios…"], [18, "La IA está leyendo el tono y escribiendo resúmenes propios…"], [32, "Ordenando por alcance y preparando qué conviene hacer…"], [55, "Unos segundos más: hay muchas fuentes para revisar…"]];
