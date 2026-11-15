@@ -42,7 +42,7 @@
    Se elige con el botón de tema; en esta rama es el tema por defecto. */
 :root[data-theme="editorial"]{
   --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#F5F5F2; --ink:#141414; --muted:#555555; --line:#DADADA; --track:#C9C9C4;
-  --frame:#141414;
+  --frame:#141414; --card-line:#141414; --paper:#FFFFFF; --sel:#141414; --on-sel:#FFFFFF; --rule:#141414; --lead:#2A2A2A;
   --top:#FFFFFF; --top-ink:#141414; --top-muted:#555555; --top-line:#DADADA; --top-accent:#2B4BE0; --live:#1E6B3F;
   --accent:#2B4BE0; --accent-bg:#2B4BE0; --accent-bg-h:#1F3BC0; --accent-ink:#FFFFFF; --accent-soft:#EEF1FD;
   --bell:#8F560C; --bell-soft:#FBEFD9;
@@ -1349,29 +1349,43 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
   .top-in{gap:8px 10px}
 }
 @media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto!important} .live .dot{animation:none} }
+/* PRUEBA · Edición oscuro: el mismo lenguaje invertido. Sigue la configuración del teléfono; el botón de tema la fuerza. */
+:root[data-theme="editorial"][data-modo="oscuro"]{
+  --bg:#121212; --surface:#1A1A1A; --surface-2:#232323; --ink:#EDEDED; --muted:#A8A8A8; --line:#2E2E2E; --track:#3A3A3A;
+  --frame:#6B6B6B; --card-line:#3A3A3A; --paper:#121212; --sel:#EDEDED; --on-sel:#121212; --rule:#EDEDED; --lead:#D6D6D6;
+  --top:#121212; --top-ink:#EDEDED; --top-muted:#A8A8A8; --top-line:#2E2E2E; --top-accent:#8FA2FF; --live:#7DDBA8;
+  --accent:#8FA2FF; --accent-bg:#8FA2FF; --accent-bg-h:#A9B8FF; --accent-ink:#0B1240; --accent-soft:#1E2340;
+  --bell:#E9A44C; --bell-soft:#2A1F0E;
+  --pos:#4CC38A; --pos-soft:#14301F; --pos-ink:#7DDBA8;
+  --neu:#6E737B; --neu-soft:#2A2C30; --neu-ink:#C4C8CE;
+  --cri:#E5534B; --cri-soft:#3A1715; --cri-ink:#FF9A92;
+  --grave:#E0A93A; --grave-soft:#33260C; --grave-ink:#F0C46A;
+  --amb-n:#C7D0FF; --amb-r:#8FA2FF; --amb-l:#5A6FD6;
+  color-scheme:dark;
+}
 /* PRUEBA · Tema Edición: componentes */
 :root[data-theme="editorial"] .topbar{border-bottom:1.5px solid var(--frame)}
 :root[data-theme="editorial"] .logo{font-family:var(--f-news);font-weight:700;letter-spacing:-.01em;font-size:23px}
 :root[data-theme="editorial"] .logo b{font-weight:700}
 :root[data-theme="editorial"] .org select{background:var(--surface);color:var(--ink);border:1.5px solid var(--frame)}
 :root[data-theme="editorial"] .themebtn,:root[data-theme="editorial"] .helpbtn{border:1.5px solid var(--frame)}
-:root[data-theme="editorial"] .navbar{background:#FFFFFF;border-bottom:1px solid var(--line)}
+:root[data-theme="editorial"] .navbar{background:var(--paper);border-bottom:1px solid var(--line)}
 :root[data-theme="editorial"] .card,:root[data-theme="editorial"] .item,:root[data-theme="editorial"] .ini-card,
-:root[data-theme="editorial"] .cal-c,:root[data-theme="editorial"] .cal-i,:root[data-theme="editorial"] .clip-i{border:1.5px solid var(--frame);border-radius:14px;box-shadow:none;background:var(--surface)}
+:root[data-theme="editorial"] .cal-c,:root[data-theme="editorial"] .cal-i,:root[data-theme="editorial"] .clip-i{border:1.5px solid var(--card-line);border-radius:14px;box-shadow:none;background:var(--surface)}
 :root[data-theme="editorial"] .ini-card{padding:20px 20px 16px;gap:10px}
 :root[data-theme="editorial"] .ini-card.cri,:root[data-theme="editorial"] .ini-card.pos,:root[data-theme="editorial"] .ini-card.grave,
-:root[data-theme="editorial"] .cal-c{border-top-width:1.5px;border-top-color:var(--frame)}
+:root[data-theme="editorial"] .cal-c{border-top-width:1.5px;border-top-color:var(--card-line)}
 :root[data-theme="editorial"] .ini-kick:not(:has(svg))::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-right:7px;vertical-align:1px}
 :root[data-theme="editorial"] .item.cri,:root[data-theme="editorial"] .item.resp{border-left-width:1.5px}
-:root[data-theme="editorial"] .ini-kpis{border:1.5px solid var(--frame);background:var(--line);border-radius:14px}
+:root[data-theme="editorial"] .ini-kpis{border:1.5px solid var(--card-line);background:var(--line);border-radius:14px}
 :root[data-theme="editorial"] .ini-kpi .v .mono,:root[data-theme="editorial"] .tile .big,:root[data-theme="editorial"] .kpi .v{font-family:var(--f-news);font-weight:700;letter-spacing:-.01em}
 :root[data-theme="editorial"] .ini-kpi[data-on]{background:var(--accent-soft);box-shadow:inset 0 -3px 0 var(--frame)}
 /* Titulares de prensa: serif en negrita y color de acento, como el boletín */
 :root[data-theme="editorial"] .ini-h,:root[data-theme="editorial"] .item h4,:root[data-theme="editorial"] .asuntos b.t,
 :root[data-theme="editorial"] .today li b,:root[data-theme="editorial"] .mini b{font-family:var(--f-news);font-weight:600;color:var(--ink);line-height:1.25}
 /* Titular de la edición con el filete vertical del boletín */
-:root[data-theme="editorial"] .ini-tit{font-weight:700;border-left:4px solid var(--frame);padding-left:16px;line-height:1.06}
-:root[data-theme="editorial"] .head h2{font-family:var(--f-news);font-weight:700;letter-spacing:-.01em;border-left:4px solid var(--frame);padding-left:14px}
+:root[data-theme="editorial"] .ini-tit{font-weight:700;border-left:4px solid var(--rule);padding-left:16px;line-height:1.06}
+:root[data-theme="editorial"] .head h2{font-family:var(--f-news);font-weight:700;letter-spacing:-.01em;border-left:4px solid var(--rule);padding-left:14px}
 :root[data-theme="editorial"] .ini-ekick{color:var(--muted)}
 :root[data-theme="editorial"] .ini-sec h2,:root[data-theme="editorial"] .card > h3,:root[data-theme="editorial"] .sec{color:var(--ink)}
 /* Botones píldora con borde negro; el principal, relleno de acento */
@@ -1385,13 +1399,13 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
 /* Selectores de período: píldora; el elegido, en negro */
 :root[data-theme="editorial"] .perg,:root[data-theme="editorial"] .ini-per,:root[data-theme="editorial"] .seg{border:1.5px solid var(--frame);border-radius:999px;padding:3px;background:var(--surface)}
 :root[data-theme="editorial"] .perg button,:root[data-theme="editorial"] .ini-per button,:root[data-theme="editorial"] .seg button{border-radius:999px;border-right:0}
-:root[data-theme="editorial"] .perg button[aria-pressed="true"],:root[data-theme="editorial"] .ini-per button[aria-pressed="true"],:root[data-theme="editorial"] .seg button[aria-pressed="true"]{background:var(--frame);color:#FFFFFF}
+:root[data-theme="editorial"] .perg button[aria-pressed="true"],:root[data-theme="editorial"] .ini-per button[aria-pressed="true"],:root[data-theme="editorial"] .seg button[aria-pressed="true"]{background:var(--sel);color:var(--on-sel)}
 :root[data-theme="editorial"] .nav a[aria-current="page"]{color:var(--ink)}
 :root[data-theme="editorial"] .navbar .nav a[aria-current="page"]{border-bottom-color:var(--frame)}
 /* Barra inferior del celular */
-:root[data-theme="editorial"] .bnav{background:#FFFFFF;border-top:1.5px solid var(--frame)}
+:root[data-theme="editorial"] .bnav{background:var(--paper);border-top:1.5px solid var(--frame)}
 :root[data-theme="editorial"] .bnav a[aria-current="page"]{color:var(--ink);background:transparent;box-shadow:inset 0 3px 0 var(--accent);border-radius:0}
-:root[data-theme="editorial"] .ini-lista{border:1.5px solid var(--frame)}
+:root[data-theme="editorial"] .ini-lista{border:1.5px solid var(--card-line)}
 /* PRUEBA · Piso de lectura: generado desde las reglas de arriba (≤12px→13, 12,5–13,5→14, 14–15,5→16). Contadores y gráficos quedan fuera. */
 :root[data-theme="editorial"] body{font-size:1rem}
 :root[data-theme="editorial"] .demo{font-size:0.875rem}
@@ -1692,7 +1706,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
 :root[data-theme="editorial"] .ini-card.pos .ini-h{font-size:1.1875rem}
 :root[data-theme="editorial"] .ini-card.chico .ini-h{font-size:1.0625rem}
 :root[data-theme="editorial"] .item h4{font-size:1.125rem}
-:root[data-theme="editorial"] .ini-lead{font-size:1.0625rem;opacity:1;color:#2A2A2A}
+:root[data-theme="editorial"] .ini-lead{font-size:1.0625rem;opacity:1;color:var(--lead)}
 :root[data-theme="editorial"] .bnav a{font-size:.75rem}
 :root[data-theme="editorial"] .bnav a[aria-current="page"]{font-weight:700}
 :root[data-theme="editorial"] .bnav .count,:root[data-theme="editorial"] .nav .count,:root[data-theme="editorial"] .av-btn .av-n{font-size:.6875rem}
@@ -1706,7 +1720,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
 @media (max-width:759px){
   :root[data-theme="editorial"] .filters .seg{flex-wrap:nowrap;gap:0;background:var(--surface)}
   :root[data-theme="editorial"] .filters .seg button{flex:1 1 auto;padding:0 6px;min-height:40px;background:transparent}
-  :root[data-theme="editorial"] .filters .seg button[aria-pressed="true"]{background:var(--frame);color:#FFFFFF}
+  :root[data-theme="editorial"] .filters .seg button[aria-pressed="true"]{background:var(--sel);color:var(--on-sel)}
 }
 @media (max-width:759px){
   :root[data-theme="editorial"] .ini-imp-ej,:root[data-theme="editorial"] .ini-imp-r{grid-template-columns:minmax(0,1.6fr) minmax(0,.7fr) minmax(0,.7fr) 52px;gap:0 6px}
