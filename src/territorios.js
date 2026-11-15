@@ -278,7 +278,9 @@ const LENTE = {
       educacion: ["SLEP", "Mineduc", "universidad", "CAE", "FES"], transito: ["MOP", "concesión", "autopista", "EFE", "tren", "puerto", "conectividad"],
       aseo: ["medio ambiente", "contaminación", "evaluación ambiental", "relleno sanitario", "zona de sacrificio"], turismo: ["empleo", "inversión", "pymes", "agricultura", "minería"]}}
 };
-const lenteDe = rol => rol === "diputado" || rol === "senador" ? "nac" : rol === "core" ? "reg" : "local";
+const lenteDe = rol => rol === "diputado" || rol === "senador" ? "nac" : rol === "core" || rol === "gobernador" || rol === "delegado" ? "reg" : "local";
+// Gobernador y delegación regional: la misma lectura del territorio que la circunscripción senatorial (las 38 comunas).
+TERR_ZONA.REG = TERR_ZONA.C6;
 const unicos = a => { const v = new Set(); return a.filter(x => { const k = norm(x); if (!x || v.has(k)) return false; v.add(k); return true; }); };
 const lugaresDe = cs => unicos(cs.flatMap(c => (TERR[c] && TERR[c].l) || []));
 /* Contexto del tema de la comuna: palabras de gestión local más sus localidades; homónimos propios de cada comuna. */

@@ -4,7 +4,10 @@
    Nómina al inicio de cada período; verificar cambios posteriores (reemplazos, renuncias) antes de usarla con un cliente.
    Fuentes: diputados 2026-2030 (Mala Espina Check, 17 nov 2025, distritos 6 y 7); senadores 2026-2034 (Meganoticias y T13, 11 mar 2026);
    consejeros regionales 2025-2029 (Radio Universidad de Valparaíso, enero 2025); alcaldes 2024-2028 (resultados oficiales publicados por RedGol, oct 2024;
-   Nogales verificada con TuOpinas, oct 2026). De los alcaldes no se registra partido: la ficha muestra solo el cargo. */
+   Nogales verificada con TuOpinas, oct 2026); gobernador regional 2025-2029 (elección del 24 nov 2024, Ex-Ante); delegado presidencial regional
+   (Diario Oficial, decreto publicado el 24 jul 2026) y delegados provinciales (nómina del Gobierno, 13 mar 2026, 24horas y G5noticias).
+   De los alcaldes y delegados provinciales no se registra partido: la ficha muestra solo el cargo.
+   Los delegados son de exclusiva confianza del Presidente: revisar la nómina ante cualquier cambio de gabinete. */
 const NOMINA_CORTE = "11 de noviembre de 2026";
 const PROVINCIAS = {
   "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández"],
@@ -26,7 +29,9 @@ const CARGOS = {
   senador: {n: "Senador o senadora", f: "Senadora", m: "Senador", zona: "Circunscripción", organo: "Senado"},
   core: {n: "Consejero o consejera regional", f: "Consejera regional", m: "Consejero regional", zona: "Circunscripción provincial", organo: "Consejo Regional de Valparaíso"},
   alcalde: {n: "Alcalde o alcaldesa", f: "Alcaldesa", m: "Alcalde", zona: "Comuna", organo: "Municipalidad"},
-  concejal: {n: "Concejal o concejala", f: "Concejala", m: "Concejal", zona: "Comuna", organo: "Concejo Municipal"}
+  concejal: {n: "Concejal o concejala", f: "Concejala", m: "Concejal", zona: "Comuna", organo: "Concejo Municipal"},
+  gobernador: {n: "Gobernador o gobernadora regional", f: "Gobernadora regional", m: "Gobernador regional", zona: "Región", organo: "Gobierno Regional de Valparaíso"},
+  delegado: {n: "Delegado o delegada presidencial", f: "Delegada presidencial", m: "Delegado presidencial", zona: "Región o provincia", organo: "Delegación Presidencial"}
 };
 const ZONAS = {
   diputado: [{id: "D6", n: "Distrito 6", comunas: D6}, {id: "D7", n: "Distrito 7", comunas: D7}],
@@ -43,7 +48,13 @@ const ZONAS = {
     {id: "IP", n: "Isla de Pascua", comunas: PROVINCIAS["Isla de Pascua"]}
   ],
   concejal: COMUNAS_V.map(c => ({id: c, n: c, comunas: [c]})),
-  alcalde: COMUNAS_V.map(c => ({id: c, n: c, comunas: [c]}))
+  alcalde: COMUNAS_V.map(c => ({id: c, n: c, comunas: [c]})),
+  gobernador: [{id: "REG", n: "Región de Valparaíso", comunas: COMUNAS_V}],
+  // La delegación regional cubre la región y gobierna directamente la provincia de Valparaíso; las otras siete tienen delegación provincial.
+  // Los ids de provincia son los mismos de las circunscripciones del consejo regional, que coinciden con las provincias.
+  delegado: [{id: "REG", n: "Delegación regional · Región de Valparaíso", comunas: COMUNAS_V}].concat(
+    [["MM", "Marga Marga"], ["QUI", "Quillota"], ["SA", "San Antonio"], ["SF", "San Felipe de Aconcagua"], ["LA", "Los Andes"], ["PET", "Petorca"], ["IP", "Isla de Pascua"]]
+      .map(([id, pv]) => ({id, n: "Provincia de " + pv, comunas: PROVINCIAS[pv]})))
 };
 const provinciaDe = c => Object.keys(PROVINCIAS).find(k => PROVINCIAS[k].includes(c)) || "";
 /* n: nombre con que se le conoce; c: nombre completo; p: partido o pacto al momento de la elección; g: F o M. */
@@ -136,7 +147,16 @@ const AUTORIDADES = [
   nuevaAut("alcalde", "Valparaíso", "Camila Nieto", "Camila Nieto Hernández", "", "F"),
   nuevaAut("alcalde", "Villa Alemana", "Nelson Estay", "Nelson Estay", "", "M"),
   nuevaAut("alcalde", "Viña del Mar", "Macarena Ripamonti", "Macarena Ripamonti", "", "F"),
-  nuevaAut("alcalde", "Zapallar", "Gustavo Alessandri", "Gustavo Alessandri", "", "M")
+  nuevaAut("alcalde", "Zapallar", "Gustavo Alessandri", "Gustavo Alessandri", "", "M"),
+  nuevaAut("gobernador", "REG", "Rodrigo Mundaca", "Rodrigo Mundaca Cabrera", "Ind.-FA", "M"),
+  nuevaAut("delegado", "REG", "Manuel Millones", "Manuel Millones Chirino", "Ind.-Republicanos", "M"),
+  nuevaAut("delegado", "MM", "Gonzalo Azancot", "Gonzalo Azancot", "", "M"),
+  nuevaAut("delegado", "QUI", "Pilar Cuevas", "Pilar Cuevas", "", "F"),
+  nuevaAut("delegado", "SA", "Soledad Loyola", "Soledad Loyola", "", "F"),
+  nuevaAut("delegado", "SF", "Sebastián Caldera", "Sebastián Caldera", "", "M"),
+  nuevaAut("delegado", "LA", "Ricardo Figueroa", "Ricardo Figueroa", "", "M"),
+  nuevaAut("delegado", "PET", "Andrés Soza", "Andrés Soza", "", "M"),
+  nuevaAut("delegado", "IP", "Mai Teao", "Mai Teao", "", "M")
 ];
 const zonaDe = (rol, id) => (ZONAS[rol] || []).find(z => z.id === id) || null;
 const cargoDe = (rol, g) => CARGOS[rol] ? (g === "F" ? CARGOS[rol].f : CARGOS[rol].m) : "";
@@ -147,5 +167,8 @@ function variantesNombre(a){
   const out = new Set([sin(a.n), sin(a.c)]);
   out.add(cargo + " " + sin(ap));
   if (a.rol === "core") out.add("core " + sin(ap));
+  // La prensa abrevia: «gobernador Mundaca», «delegado Millones», «delegada presidencial provincial Loyola».
+  if (a.rol === "gobernador") out.add((a.g === "F" ? "gobernadora " : "gobernador ") + sin(ap));
+  if (a.rol === "delegado") { const d = a.g === "F" ? "delegada " : "delegado "; out.add(d + sin(ap)); if (a.zona !== "REG") out.add(d + "presidencial provincial " + sin(ap)); else out.add(d + "presidencial regional " + sin(ap)); }
   return [...out].filter(x => x.split(" ").length >= 2);
 }
