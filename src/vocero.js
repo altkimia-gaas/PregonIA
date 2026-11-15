@@ -96,7 +96,7 @@ function vocSaber(x){
 }
 function vocKitHtml(x){
   const k = VOC.kits[vocClave(x)];
-  if (VOC.cargando) return `<div class="voc-load" role="status"><span class="voc-spin" aria-hidden="true"></span>Preparando mensajes y preguntas… <button class="btn ghost sm" type="button" data-act="voc-stop">Detener</button></div>`;
+  if (VOC.cargando) return `<div class="voc-load" role="status">${icoPeriodico(22)}Preparando mensajes y preguntas… <button class="btn ghost sm" type="button" data-act="voc-stop">Detener</button></div>`;
   if (!k) return x.tipo === "libre" ? `<p class="hint" style="margin:0">Escribe el tema y presiona «Preparar».</p>` : "";
   return `${VOC.aviso ? `<p class="note" style="margin:0">${esc(VOC.aviso)}</p>` : ""}
     <section class="voc-s"><h3>Tres mensajes</h3><ol class="voc-msj">${k.mensajes.map(m => `<li><p>${esc(m.idea)}</p><p class="voc-dato"><span>Dato</span>${esc(m.dato)}</p></li>`).join("")}</ol></section>
