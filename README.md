@@ -62,6 +62,7 @@ Voz del video resumen (opcional; sin ella el video sale sin narración):
 
 - `ELEVENLABS_API_KEY`: clave de ElevenLabs con permiso de texto a voz.
 - `ELEVENLABS_VOICE_ID` (opcional): voz a usar. Por defecto, Felipe (español de Chile).
+- `ELEVENLABS_VOICE_FALLBACK` (opcional): voz estándar que se usa si el plan de ElevenLabs no permite la elegida (el plan gratuito no permite voces de la biblioteca por API, como Felipe). Por defecto, George (`JBFqnCBsd6RMkjVDRZzb`), que lee en español con el modelo multilingüe. El video avisa cuando se usó.
 - `ELEVENLABS_MODEL` (opcional): por defecto `eleven_multilingual_v2`.
 - `ELEVENLABS_SPEED` (opcional): velocidad de lectura, de 0,7 a 1,2 (por defecto 1,06).
 - `VOZ_LIMITE` (opcional): grabaciones por IP cada 10 minutos (por defecto 60). Un video usa de 6 a 8.
