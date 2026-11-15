@@ -1209,7 +1209,7 @@ body.hp-on{overflow:hidden}
 /* Portada de bienvenida · identidad ALTKimia (fondo #080B12, azul #2196F3, Inter, trama de puntos) */
 .portada{--alt-bg:#080B12;--alt-card:#111827;--alt-blue:#2196F3;--alt-blue-d:#1565C0;--alt-btn:#1976D2;--alt-text:#F0F4FF;--alt-muted:#8B9DC3;--alt-border:#1E2D4A;
   position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;overflow:hidden;background:var(--alt-bg);color:var(--alt-text);color-scheme:dark;font-family:var(--f-ui)}
-.portada::before{content:"";position:absolute;inset:0;background:var(--alt-bg) url("assets/portada.jpg") 62% 45% / cover no-repeat;transform:scale(1.04);animation:ptzoom 20s ease-out forwards;filter:saturate(.95) brightness(1.04)}
+.portada::before{content:"";position:absolute;inset:0;background:var(--alt-bg);transform:scale(1.04);animation:ptzoom 20s ease-out forwards;filter:saturate(.95) brightness(1.04)}
 .portada::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,11,18,.18) 0%,rgba(8,11,18,.05) 26%,rgba(8,11,18,.70) 58%,rgba(8,11,18,.95) 100%),linear-gradient(90deg,rgba(8,11,18,.65) 0%,rgba(8,11,18,0) 65%),linear-gradient(0deg,rgba(21,101,192,.18),rgba(21,101,192,0) 55%)}
 .pt-grid{position:absolute;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(33,150,243,.35) 1px,transparent 1px);background-size:40px 40px;opacity:.28;-webkit-mask-image:linear-gradient(0deg,#000 0%,#000 45%,transparent 75%);mask-image:linear-gradient(0deg,#000 0%,#000 45%,transparent 75%)}
 @keyframes ptzoom{to{transform:scale(1)}}
