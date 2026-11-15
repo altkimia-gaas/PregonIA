@@ -534,6 +534,45 @@ button.ini-fila:hover{background:var(--surface-2)}
 .voc-spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:vocgira .8s linear infinite}
 @keyframes vocgira{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.voc-spin{animation:none}}
+/* Pantalla de lectura de medios: mismo lenguaje de la portada (tarjeta, kicker azul, titular serif) */
+.pr{min-height:min(80vh,740px);display:grid;place-content:center;justify-items:center;text-align:center;gap:10px;padding:28px 18px}
+.pr-circ{position:relative;width:284px;height:284px;margin-bottom:6px}
+.pr-pista{position:absolute;inset:30px;border-radius:50%;border:1.5px dashed var(--line)}
+.pr-pista::after{content:"";position:absolute;inset:34px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 14%,transparent),transparent 70%)}
+/* La órbita gira y cada diario gira al revés para quedar derecho */
+.pr-orbita{position:absolute;inset:0;animation:prOrb 26s linear infinite}
+@keyframes prOrb{to{transform:rotate(360deg)}}
+.pr-o{position:absolute;left:50%;top:50%;width:40px;height:50px;margin:-25px 0 0 -20px;transform:rotate(var(--a)) translateY(-112px) rotate(calc(-1 * var(--a)))}
+.pr-oi{position:relative;display:block;width:40px;height:50px;animation:prOrb 26s linear infinite reverse;transition:opacity .4s}
+.pr-oi svg{width:40px;height:50px;display:block;filter:drop-shadow(0 3px 6px rgba(0,0,0,.25));transition:transform .4s}
+.pr-o.leyendo .pr-oi svg{transform:scale(1.25);filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent) 70%,transparent))}
+.pr-o:not(.leyendo):not(.leido) .pr-oi{opacity:.92}
+.pr-ok{position:absolute;right:-7px;top:-7px;width:18px;height:18px;border-radius:50%;background:var(--pos);color:#fff;font:700 11px/18px system-ui,sans-serif;text-align:center;opacity:0;transform:scale(.4);transition:opacity .3s,transform .3s;box-shadow:0 0 0 2px var(--bg,var(--surface))}
+.pr-o.leido .pr-ok{opacity:1;transform:none}
+/* Centro: el diario que se está leyendo, abierto, con las páginas dando vuelta */
+.pr-centro{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);perspective:600px}
+.pr-libro{width:124px;animation:prEntra .45s ease-out}
+@keyframes prEntra{from{opacity:0;transform:scale(.6) rotate(-8deg)}to{opacity:1;transform:none}}
+.pr-cab{height:16px;background:var(--c);border-radius:4px 4px 0 0;display:grid;place-items:center}
+.pr-cab span{font:700 9px Georgia,serif;letter-spacing:.06em;color:#fff}
+.pr-abierto{position:relative;display:flex;height:76px;background:var(--p);border:1.5px solid var(--c);border-top:0;border-radius:0 0 4px 4px;box-shadow:0 8px 18px rgba(0,0,0,.3);transform-style:preserve-3d}
+.pr-abierto::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:color-mix(in srgb,var(--c) 45%,transparent)}
+.pr-pag{flex:1;display:grid;align-content:start;gap:5px;padding:8px 7px}
+.pr-pag i{display:block;height:3px;border-radius:2px;background:#2B3445;opacity:.45}
+.pr-pag i:first-child{height:12px;background:var(--c);opacity:.8;width:100% !important}
+.pr-hoja{position:absolute;left:50%;top:0;width:50%;height:100%;transform-origin:left center;transform-style:preserve-3d;animation:prPagina .87s ease-in-out infinite}
+.pr-cara{position:absolute;inset:0;background:var(--p);backface-visibility:hidden;display:flex}
+.pr-cara.fr{border-left:1px solid color-mix(in srgb,var(--c) 30%,transparent)}
+.pr-cara.re{transform:rotateY(180deg)}
+.pr-cara .pr-pag{flex:1}
+@keyframes prPagina{0%{transform:rotateY(0)}70%,100%{transform:rotateY(-180deg)}}
+.pr-t{margin:2px 0 0;font-family:var(--f-news);font-weight:600;font-size:clamp(26px,3.4vw,38px);line-height:1.12;letter-spacing:-.01em}
+.pr-t:focus{outline:none}
+.pr-s{margin:0;max-width:560px;color:var(--muted);font-size:15px;line-height:1.5}.pr-s b{color:var(--ink)}
+.pr-paso{margin:10px 0 0;display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-weight:600;font-size:14px;color:var(--ink)}
+.pr-nota{margin:0;font-size:12.5px;color:var(--muted)}
+@media (max-width:420px){.pr-centro{transform:translate(-50%,-50%) scale(.8)}.pr-circ{width:256px;height:256px}.pr-pista{inset:28px}.pr-o{transform:rotate(var(--a)) translateY(-99px) rotate(calc(-1 * var(--a)))}}
+@media (prefers-reduced-motion:reduce){.pr-orbita,.pr-oi,.pr-hoja,.pr-libro{animation:none}}
 .voc-f{display:grid;gap:8px;padding:12px 18px 16px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--surface)}
 .voc-f2{display:flex;gap:8px;flex-wrap:wrap}
 .voc-f .hint{margin:0}
@@ -3896,6 +3935,8 @@ async function compartir(b){
 /* Render y navegación */
 const VIEWFN = {inicio:vInicio, menciones:vMenciones, reportes:vReportes, comunicados:vComunicados, temas:vTemas, asistente:vAsistente, fuentes:vFuentes};
 function render(focus){
+  // Mientras se leen los medios no se muestra una portada a medias: va la pantalla de lectura (Ajustes sigue disponible).
+  if (MODO.cargando && !isConfig(route())) { renderChrome(); $("#view").innerHTML = procesandoHtml(); cerrarMenu(); procesandoPaso(); return; }
   renderChrome(); $("#view").innerHTML = (perAplica() ? `<div class="perbar">${perCtl()}</div>` : "") + (VIEWFN[route()] || vInicio)();
   cerrarMenu(); if ($("#view .shr")) cargarJsPDF().catch(() => {});
   if (focus) { const h = $("#view h2"); if (h) h.focus({preventScroll:true}); }
@@ -4233,20 +4274,63 @@ function pintarModo(){
 }
 async function cargarReales(force, silencioso){
   if (PILOTO && PILOTO.activo) return;
-  if (MODO.cargando || (MODO.tipo === "real" && MODO.info && MODO.info.comuna === S.org && !force)) return; MODO.cargando = true; pintarModo();
+  if (MODO.cargando || (MODO.tipo === "real" && MODO.info && MODO.info.comuna === S.org && !force)) return; MODO.cargando = true; MODO.inicio = Date.now(); pintarModo(); render();
   const org = S.org;
   try {
     const pa = esAut() ? cuenta().perfil : null;
     const q = !pa ? "comuna=" + encodeURIComponent(org) : pa.autoridadId ? "autoridad=" + encodeURIComponent(pa.autoridadId) : "rol=" + encodeURIComponent(pa.rol) + "&zona=" + encodeURIComponent(pa.zona) + "&nombre=" + encodeURIComponent(pa.nombre) + "&g=" + pa.g;
     const r = await fetch("/api/noticias?" + q + redesParam()); if (!r.ok) throw new Error("HTTP " + r.status);
-    const j = await r.json(); if (PILOTO && PILOTO.activo) { MODO.cargando = false; return; } if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
+    const j = await r.json(); if (PILOTO && PILOTO.activo) { MODO.cargando = false; render(); return; } if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
     const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via ? {via: n.via} : {}), hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? pa.variantes[0] : org + " comuna")), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna
     actualizarEstadoRedes(j.redes);  // estado de cada cuenta de Facebook e Instagram para la vista Fuentes
     MODO = {...MODO, tipo: "real", info: {...j, comuna: org, notas: nuevas}, cargando: false}; refrescarNotas(nuevas);  // el modo primero: los avisos se guardan por modo
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
     pintarModo(); render();
     if (!silencioso) toast(nuevas.length ? `Listo: ${plural(nuevas.length, "nota real", "notas reales")} de ${org}. Ábrelas en Menciones.` : `Los medios leídos no publicaron sobre ${org} en los últimos ${j.ventana_dias} días.`);
-  } catch(e) { MODO.cargando = false; pintarModo(); if (!silencioso) toast("No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
+  } catch(e) { MODO.cargando = false; pintarModo(); render(); if (!silencioso) toast("No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
+}
+/* Pantalla de lectura: posiciona a PregonIA mientras el servidor lee los medios y la IA clasifica.
+   Siete diarios de colores giran en órbita; uno a la vez pasa al centro, se abre y se le dan vuelta las páginas;
+   al terminar queda con visto en la órbita y entra el siguiente. Sin movimiento si el sistema lo pide. */
+const DIARIOS = [
+  {n: "DIARIO", c: "#1976D2", p: "#E3F0FB"}, {n: "NOTICIAS", c: "#D9443C", p: "#FBE7E5"}, {n: "CRÓNICA", c: "#2E9E6B", p: "#E2F4EA"},
+  {n: "GACETA", c: "#C98A0B", p: "#FBF0D9"}, {n: "EL PREGÓN", c: "#7B4BC4", p: "#EFE7FA"}, {n: "SEMANARIO", c: "#0F8C99", p: "#DDF2F4"}, {n: "LA VOZ", c: "#E0598B", p: "#FBE5EE"}
+];
+const PR_ORB = 7, PR_MS = 2600;  // 3 páginas por diario
+function diarioMini(d, i){
+  const ln = (y, w) => `<rect x="5" y="${y}" width="${w}" height="2" rx="1" fill="#2B3445" opacity=".5"/>`;
+  return `<svg viewBox="0 0 40 50" aria-hidden="true"><rect x=".75" y=".75" width="38.5" height="48.5" rx="3" fill="${d.p}" stroke="${d.c}" stroke-width="1.5"/><rect x=".75" y=".75" width="38.5" height="10" rx="3" fill="${d.c}"/><rect x=".75" y="6" width="38.5" height="4.75" fill="${d.c}"/>
+    <rect x="5" y="15" width="${i % 2 ? 30 : 14}" height="${i % 2 ? 10 : 14}" rx="1.5" fill="${d.c}" opacity=".8"/>${i % 2 ? ln(29, 30) + ln(33, 26) : ln(16, 12) + ln(20, 12) + ln(24, 10)}${ln(37, 30)}${ln(41, 24)}</svg>`;
+}
+const prPagina = lado => `<div class="pr-pag ${lado}">${[0, 1, 2, 3, 4, 5].map(k => `<i style="width:${[86, 70, 92, 64, 88, 74][(k + (lado === "der" ? 2 : 0)) % 6]}%"></i>`).join("")}</div>`;
+function prLibro(d){
+  return `<div class="pr-libro" style="--c:${d.c};--p:${d.p}"><div class="pr-cab"><span>${d.n}</span></div>
+    <div class="pr-abierto">${prPagina("izq")}${prPagina("der")}<div class="pr-hoja"><div class="pr-cara fr">${prPagina("der")}</div><div class="pr-cara re">${prPagina("izq")}</div></div></div></div>`;
+}
+const PR_PASOS = [[0, "Leyendo los medios nacionales, regionales y locales…"], [8, "Juntando la misma noticia publicada en varios medios…"], [18, "La IA está leyendo el tono y escribiendo resúmenes propios…"], [32, "Ordenando por alcance y preparando qué conviene hacer…"], [55, "Unos segundos más: hay muchas fuentes para revisar…"]];
+function procesandoHtml(){
+  const quien = esAut() ? cuenta().perfil.nombre : S.org, hoy = new Date(NOW).toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long"});
+  const orbita = DIARIOS.map((d, i) => `<span class="pr-o${i ? "" : " leyendo"}" style="--a:${i * 360 / PR_ORB}deg"><span class="pr-oi">${diarioMini(d, i)}<span class="pr-ok">✓</span></span></span>`).join("");
+  return `<section class="pr" role="status" aria-live="polite" aria-labelledby="prT">
+    <div class="pr-circ" aria-hidden="true"><span class="pr-pista"></span><div class="pr-orbita">${orbita}</div><div class="pr-centro" id="prCentro">${prLibro(DIARIOS[0])}</div></div>
+    <span class="ini-ekick">Leyendo la prensa · ${esc(hoy)}</span>
+    <h2 id="prT" class="pr-t" tabindex="-1">Estamos leyendo la prensa por ti</h2>
+    <p class="pr-s">Más de 100 medios nacionales, regionales y locales en una sola lectura: qué se dice de <b>${esc(quien)}</b>, hasta dónde llegó y qué conviene hacer.</p>
+    <p class="pr-paso"><span class="voc-spin" aria-hidden="true"></span><span id="prPaso">${PR_PASOS[0][1]}</span></p>
+    <p class="pr-nota" id="prNota">Suele tardar menos de un minuto.</p>
+  </section>`;
+}
+function procesandoPaso(){
+  clearInterval(procesandoPaso.t); clearInterval(procesandoPaso.l);
+  const tick = () => { const el = $("#prPaso"); if (!el || !MODO.cargando) { clearInterval(procesandoPaso.t); return; }
+    const seg = Math.round((Date.now() - (MODO.inicio || Date.now())) / 1000), p = PR_PASOS.filter(x => seg >= x[0]).pop()[1];
+    if (el.textContent !== p) el.textContent = p; const n = $("#prNota"); if (n) n.textContent = seg < 5 ? "Suele tardar menos de un minuto." : `Llevamos ${seg} s · suele tardar menos de un minuto.`; };
+  // Un diario a la vez: el leído queda con visto en la órbita y el siguiente pasa al centro. Al completar la vuelta, empieza otra tanda.
+  let i = 0; const leer = () => { const c = $("#prCentro"); if (!c || !MODO.cargando) { clearInterval(procesandoPaso.l); return; }
+    const os = [...document.querySelectorAll(".pr-o")]; os[i].classList.remove("leyendo"); os[i].classList.add("leido");
+    i = (i + 1) % PR_ORB; if (!i) os.forEach(o => o.classList.remove("leido"));
+    os[i].classList.add("leyendo"); c.innerHTML = prLibro(DIARIOS[i]); };
+  tick(); procesandoPaso.t = setInterval(tick, 1000); procesandoPaso.l = setInterval(leer, PR_MS);
 }
 function usarDemo(){ if (MODO.tipo === "demo") return; MODO = {...MODO, tipo: "demo", info: null}; refrescarNotas(NOTAS_DEMO); try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
 document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; if (b.dataset.act === "modo-real") cargarReales(); if (b.dataset.act === "modo-demo") usarDemo(); });
