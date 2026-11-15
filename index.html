@@ -534,6 +534,19 @@ button.ini-fila:hover{background:var(--surface-2)}
 .voc-spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:vocgira .8s linear infinite}
 @keyframes vocgira{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.voc-spin{animation:none}}
+/* Ícono animado: periódico que da vuelta sus páginas */
+.ico-per{flex:none;--tinta:var(--accent);--papel:#FFFFFF;overflow:visible}
+.ico-per .ip-p{fill:var(--papel);stroke:var(--tinta);stroke-width:2.2;stroke-linejoin:round}
+.ico-per .ip-t{stroke:var(--tinta);stroke-width:3.4;stroke-linecap:round}
+.ico-per .ip-l{stroke:var(--tinta);stroke-width:1.9;stroke-linecap:round;opacity:.5}
+.ico-per .ip-f{fill:var(--tinta);opacity:.35}
+.ico-per .ip-lomo{stroke:var(--tinta);stroke-width:2.2;stroke-linecap:round}
+.ico-per .ip-izq{transform-box:view-box;transform-origin:32px 32px;transform:scaleX(-1)}
+.ico-per .ip-hoja{transform-box:view-box;transform-origin:32px 32px;animation:ipPasar 2.4s cubic-bezier(.45,.05,.35,1) infinite}
+.ico-per .ip-som{fill:var(--tinta);opacity:0;animation:ipSombra 2.4s cubic-bezier(.45,.05,.35,1) infinite}
+@keyframes ipPasar{0%{transform:scaleX(1) skewY(0)}22%{transform:scaleX(.1) skewY(-10deg)}45%,100%{transform:scaleX(-1) skewY(0)}}
+@keyframes ipSombra{0%,45%,100%{opacity:0}20%{opacity:.14}}
+@media (prefers-reduced-motion:reduce){.ico-per .ip-hoja,.ico-per .ip-som{animation:none}}
 /* Pantalla de lectura de medios: mismo lenguaje de la portada (tarjeta, kicker azul, titular serif) */
 .pr{min-height:min(80vh,740px);display:grid;place-content:center;justify-items:center;text-align:center;gap:10px;padding:28px 18px}
 .pr-circ{position:relative;width:284px;height:284px;margin-bottom:6px}
@@ -4289,6 +4302,10 @@ async function cargarReales(force, silencioso){
     if (!silencioso) toast(nuevas.length ? `Listo: ${plural(nuevas.length, "nota real", "notas reales")} de ${org}. Ábrelas en Menciones.` : `Los medios leídos no publicaron sobre ${org} en los últimos ${j.ventana_dias} días.`);
   } catch(e) { MODO.cargando = false; pintarModo(); render(); if (!silencioso) toast("No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
 }
+/* Ícono animado de carga: un periódico abierto que da vuelta sus páginas (el mismo de assets/periodico-animado.svg).
+   La página izquierda es el reflejo exacto de la derecha, así la hoja que pasa calza sin salto. */
+const IP_PAG = '<path class="ip-p" d="M32 14H54.5a1.5 1.5 0 0 1 1.5 1.5v33a1.5 1.5 0 0 1-1.5 1.5H32Z"/><line class="ip-t" x1="36" y1="19.5" x2="52" y2="19.5"/><line class="ip-l" x1="36" y1="26" x2="42.5" y2="26"/><line class="ip-l" x1="36" y1="30.5" x2="42.5" y2="30.5"/><line class="ip-l" x1="36" y1="35" x2="42.5" y2="35"/><line class="ip-l" x1="36" y1="39.5" x2="42.5" y2="39.5"/><line class="ip-l" x1="36" y1="44" x2="41" y2="44"/><line class="ip-l" x1="45.5" y1="26" x2="52" y2="26"/><line class="ip-l" x1="45.5" y1="30.5" x2="52" y2="30.5"/><rect class="ip-f" x="45.5" y="34" width="6.5" height="11" rx="1.2"/>';
+const icoPeriodico = (px = 20) => `<svg class="ico-per" viewBox="0 0 64 64" width="${px}" height="${px}" aria-hidden="true"><g class="ip-izq">${IP_PAG}</g><g>${IP_PAG}</g><path class="ip-som" d="M32 14H56V50H32Z"/><g class="ip-hoja">${IP_PAG}</g><line class="ip-lomo" x1="32" y1="14" x2="32" y2="50"/></svg>`;
 /* Pantalla de lectura: posiciona a PregonIA mientras el servidor lee los medios y la IA clasifica.
    Siete diarios de colores giran en órbita; uno a la vez pasa al centro, se abre y se le dan vuelta las páginas;
    al terminar queda con visto en la órbita y entra el siguiente. Sin movimiento si el sistema lo pide. */
@@ -4316,7 +4333,7 @@ function procesandoHtml(){
     <span class="ini-ekick">Leyendo la prensa · ${esc(hoy)}</span>
     <h2 id="prT" class="pr-t" tabindex="-1">Estamos leyendo la prensa por ti</h2>
     <p class="pr-s">Más de 100 medios nacionales, regionales y locales en una sola lectura: qué se dice de <b>${esc(quien)}</b>, hasta dónde llegó y qué conviene hacer.</p>
-    <p class="pr-paso"><span class="voc-spin" aria-hidden="true"></span><span id="prPaso">${PR_PASOS[0][1]}</span></p>
+    <p class="pr-paso">${icoPeriodico(24)}<span id="prPaso">${PR_PASOS[0][1]}</span></p>
     <p class="pr-nota" id="prNota">Suele tardar menos de un minuto.</p>
   </section>`;
 }
@@ -4822,7 +4839,7 @@ function vocSaber(x){
 }
 function vocKitHtml(x){
   const k = VOC.kits[vocClave(x)];
-  if (VOC.cargando) return `<div class="voc-load" role="status"><span class="voc-spin" aria-hidden="true"></span>Preparando mensajes y preguntas… <button class="btn ghost sm" type="button" data-act="voc-stop">Detener</button></div>`;
+  if (VOC.cargando) return `<div class="voc-load" role="status">${icoPeriodico(22)}Preparando mensajes y preguntas… <button class="btn ghost sm" type="button" data-act="voc-stop">Detener</button></div>`;
   if (!k) return x.tipo === "libre" ? `<p class="hint" style="margin:0">Escribe el tema y presiona «Preparar».</p>` : "";
   return `${VOC.aviso ? `<p class="note" style="margin:0">${esc(VOC.aviso)}</p>` : ""}
     <section class="voc-s"><h3>Tres mensajes</h3><ol class="voc-msj">${k.mensajes.map(m => `<li><p>${esc(m.idea)}</p><p class="voc-dato"><span>Dato</span>${esc(m.dato)}</p></li>`).join("")}</ol></section>

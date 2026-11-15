@@ -521,6 +521,19 @@ button.ini-fila:hover{background:var(--surface-2)}
 .voc-spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:vocgira .8s linear infinite}
 @keyframes vocgira{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.voc-spin{animation:none}}
+/* Ícono animado: periódico que da vuelta sus páginas */
+.ico-per{flex:none;--tinta:var(--accent);--papel:#FFFFFF;overflow:visible}
+.ico-per .ip-p{fill:var(--papel);stroke:var(--tinta);stroke-width:2.2;stroke-linejoin:round}
+.ico-per .ip-t{stroke:var(--tinta);stroke-width:3.4;stroke-linecap:round}
+.ico-per .ip-l{stroke:var(--tinta);stroke-width:1.9;stroke-linecap:round;opacity:.5}
+.ico-per .ip-f{fill:var(--tinta);opacity:.35}
+.ico-per .ip-lomo{stroke:var(--tinta);stroke-width:2.2;stroke-linecap:round}
+.ico-per .ip-izq{transform-box:view-box;transform-origin:32px 32px;transform:scaleX(-1)}
+.ico-per .ip-hoja{transform-box:view-box;transform-origin:32px 32px;animation:ipPasar 2.4s cubic-bezier(.45,.05,.35,1) infinite}
+.ico-per .ip-som{fill:var(--tinta);opacity:0;animation:ipSombra 2.4s cubic-bezier(.45,.05,.35,1) infinite}
+@keyframes ipPasar{0%{transform:scaleX(1) skewY(0)}22%{transform:scaleX(.1) skewY(-10deg)}45%,100%{transform:scaleX(-1) skewY(0)}}
+@keyframes ipSombra{0%,45%,100%{opacity:0}20%{opacity:.14}}
+@media (prefers-reduced-motion:reduce){.ico-per .ip-hoja,.ico-per .ip-som{animation:none}}
 /* Pantalla de lectura de medios: mismo lenguaje de la portada (tarjeta, kicker azul, titular serif) */
 .pr{min-height:min(80vh,740px);display:grid;place-content:center;justify-items:center;text-align:center;gap:10px;padding:28px 18px}
 .pr-circ{position:relative;width:284px;height:284px;margin-bottom:6px}

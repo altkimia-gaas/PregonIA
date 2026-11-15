@@ -1697,6 +1697,10 @@ async function cargarReales(force, silencioso){
     if (!silencioso) toast(nuevas.length ? `Listo: ${plural(nuevas.length, "nota real", "notas reales")} de ${org}. Ábrelas en Menciones.` : `Los medios leídos no publicaron sobre ${org} en los últimos ${j.ventana_dias} días.`);
   } catch(e) { MODO.cargando = false; pintarModo(); render(); if (!silencioso) toast("No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
 }
+/* Ícono animado de carga: un periódico abierto que da vuelta sus páginas (el mismo de assets/periodico-animado.svg).
+   La página izquierda es el reflejo exacto de la derecha, así la hoja que pasa calza sin salto. */
+const IP_PAG = '<path class="ip-p" d="M32 14H54.5a1.5 1.5 0 0 1 1.5 1.5v33a1.5 1.5 0 0 1-1.5 1.5H32Z"/><line class="ip-t" x1="36" y1="19.5" x2="52" y2="19.5"/><line class="ip-l" x1="36" y1="26" x2="42.5" y2="26"/><line class="ip-l" x1="36" y1="30.5" x2="42.5" y2="30.5"/><line class="ip-l" x1="36" y1="35" x2="42.5" y2="35"/><line class="ip-l" x1="36" y1="39.5" x2="42.5" y2="39.5"/><line class="ip-l" x1="36" y1="44" x2="41" y2="44"/><line class="ip-l" x1="45.5" y1="26" x2="52" y2="26"/><line class="ip-l" x1="45.5" y1="30.5" x2="52" y2="30.5"/><rect class="ip-f" x="45.5" y="34" width="6.5" height="11" rx="1.2"/>';
+const icoPeriodico = (px = 20) => `<svg class="ico-per" viewBox="0 0 64 64" width="${px}" height="${px}" aria-hidden="true"><g class="ip-izq">${IP_PAG}</g><g>${IP_PAG}</g><path class="ip-som" d="M32 14H56V50H32Z"/><g class="ip-hoja">${IP_PAG}</g><line class="ip-lomo" x1="32" y1="14" x2="32" y2="50"/></svg>`;
 /* Pantalla de lectura: posiciona a PregonIA mientras el servidor lee los medios y la IA clasifica.
    Siete diarios de colores giran en órbita; uno a la vez pasa al centro, se abre y se le dan vuelta las páginas;
    al terminar queda con visto en la órbita y entra el siguiente. Sin movimiento si el sistema lo pide. */
@@ -1724,7 +1728,7 @@ function procesandoHtml(){
     <span class="ini-ekick">Leyendo la prensa · ${esc(hoy)}</span>
     <h2 id="prT" class="pr-t" tabindex="-1">Estamos leyendo la prensa por ti</h2>
     <p class="pr-s">Más de 100 medios nacionales, regionales y locales en una sola lectura: qué se dice de <b>${esc(quien)}</b>, hasta dónde llegó y qué conviene hacer.</p>
-    <p class="pr-paso"><span class="voc-spin" aria-hidden="true"></span><span id="prPaso">${PR_PASOS[0][1]}</span></p>
+    <p class="pr-paso">${icoPeriodico(24)}<span id="prPaso">${PR_PASOS[0][1]}</span></p>
     <p class="pr-nota" id="prNota">Suele tardar menos de un minuto.</p>
   </section>`;
 }
