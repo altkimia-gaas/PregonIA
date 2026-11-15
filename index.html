@@ -5975,7 +5975,8 @@ setInterval(() => { if (PILOTO.activo && (document.visibilityState === "visible"
    Escenas dibujadas en canvas a partir de parteData(); se exporta a MP4 con WebCodecs + mp4-muxer
    (más rápido que tiempo real) y, si el navegador no lo permite, se graba con MediaRecorder. Todo en el navegador. */
 const VW = 1080, VH = 1920, VFPS = 30, VOUT = [720, 1280];
-/* PRUEBA · Paleta Edición: el video toma el modo (claro u oscuro) que tiene la app al abrirlo. */
+/* PRUEBA · Paleta Edición. El video sale siempre en claro: es una pieza para compartir y todos deben recibir la misma.
+   La paleta oscura queda definida por si más adelante se quiere ofrecer como opción. */
 const VPALETA = {
   claro: {bg:"#FFFFFF", card:"#FFFFFF", line:"#141414", text:"#141414", muted:"#555555", blue:"#2B4BE0", cri:"#B3261E", pos:"#1E6B3F", neu:"#6E737B", grave:"#9A5B00",
           track:"#ECECE9", soft:"#F5F5F2", progBg:"#D6D6D2", prog:"#141414", rule:"#141414", ambN:"#14217A", ambR:"#2B4BE0", ambL:"#6F86E8"},
@@ -5983,7 +5984,7 @@ const VPALETA = {
           track:"#2A2A2A", soft:"#232323", progBg:"#3A3A3A", prog:"#EDEDED", rule:"#EDEDED", ambN:"#C7D0FF", ambR:"#8FA2FF", ambL:"#5A6FD6"}
 };
 let VC = VPALETA.claro;
-function vpaleta(){ VC = VPALETA[typeof modoActual === "function" && modoActual() === "oscuro" ? "oscuro" : "claro"]; }
+function vpaleta(){ VC = VPALETA.claro; }
 const VF = {h:'"Source Serif 4", Newsreader, Georgia, serif', b:'Inter, system-ui, sans-serif', n:'"Source Serif 4", Newsreader, Georgia, serif'};
 const vtono = t => VC[t] || VC.neu;
 const vease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
