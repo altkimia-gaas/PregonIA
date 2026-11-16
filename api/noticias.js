@@ -2,7 +2,8 @@
 // y devuelve titular, enlace, medio, fecha y resumen propio. La respuesta queda 15 minutos en la caché de Vercel.
 // La lectura y la clasificación viven en _lectura.js, compartido con la lectura programada (/api/ingesta).
 import { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre, saludFuentes } from "./_lectura.js";
-import { AUTORIDADES, CARGOS, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
+import { AUTORIDADES, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
+import { limpio, consulta, sujeto, fichaIA } from "./_sujetos.js";
 import { CATALOGO } from "./_catalogo.js";
 import { leerRedes, usuarioDe, cuentasCatalogo } from "./_redes.js";
 
@@ -17,25 +18,10 @@ function redesDe(u){
   return fijas.concat(propias.filter(p => !fijas.some(f => f.red === p.red && f.usuario.toLowerCase() === p.usuario.toLowerCase())));
 }
 
-/* Autoridades: la consulta va por nombre y cargo, con palabras de contexto que descartan homónimos lejanos. */
-const CONTEXTO_ROL = {
-  diputado: '(diputado OR diputada OR Cámara OR Congreso OR Valparaíso OR Chile)',
-  senador: '(senador OR senadora OR Senado OR Congreso OR Valparaíso OR Chile)',
-  core: '(consejero OR consejera OR core OR "gobierno regional" OR Valparaíso)',
-  concejal: '(concejal OR concejala OR concejo OR municipalidad OR comuna)',
-  alcalde: '(alcalde OR alcaldesa OR municipalidad OR municipio OR comuna)',
-  gobernador: '(gobernador OR gobernadora OR "gobierno regional" OR Valparaíso)',
-  delegado: '(delegado OR delegada OR "delegación presidencial" OR Valparaíso OR provincia)'
-};
-const limpio = (s, n = 80) => String(s || "").replace(/[\u0000-\u001f"<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
-function sujetoDe(u){
-  const id = u.searchParams.get("autoridad");
-  if (id) { const a = AUTORIDADES.find(x => x.id === id); return a ? {...a, nomina: true} : null; }
-  const rol = u.searchParams.get("rol"), zona = u.searchParams.get("zona"), n = limpio(u.searchParams.get("nombre"));
-  if (!CARGOS[rol] || rol === "municipio" || !zonaDe(rol, zona) || n.split(" ").length < 2) return null;
-  return {id: null, rol, zona, n, c: n, p: "", g: u.searchParams.get("g") === "F" ? "F" : "M", nomina: false};
-}
-const consulta = a => { const z = zonaDe(a.rol, a.zona); return `(${variantesNombre(a).map(v => `"${v}"`).join(" OR ")}) ${a.rol === "concejal" || a.rol === "alcalde" ? `("${z.n}" OR ${CONTEXTO_ROL[a.rol]})` : CONTEXTO_ROL[a.rol]}`; };
+/* Autoridades: consulta y ficha de la persona en _sujetos.js (las comparte la lectura programada del piloto). */
+const sujetoDe = u => u.searchParams.get("autoridad")
+  ? sujeto({id: u.searchParams.get("autoridad")})
+  : sujeto({rol: u.searchParams.get("rol"), zona: u.searchParams.get("zona"), nombre: u.searchParams.get("nombre"), g: u.searchParams.get("g")});
 /* Presencia en prensa de los pares: cuántas notas los nombran en la ventana, en cualquier medio que indexe Google News.
    Pares de una autoridad: mismo cargo y zona en la nómina. Pares de un alcalde: los alcaldes de su provincia. */
 async function paresDe(a, desde){
@@ -57,7 +43,7 @@ async function deAutoridad(u){
   const [cat, gn, pares, rs] = await Promise.all([leerCatalogo(), leerGoogleNewsConsulta(consulta(a)).catch(() => null), a.nomina ? paresDe(a, desde).catch(() => []) : [], leerRedes(redesDe(u))]);
   const errores = cat.errores.concat(gn ? [] : ["Google News"], rs.errores);
   const candidatas = candidatasPorNombre(variantesNombre(a), cat.items.concat(gn || [], rs.items), desde, ahora), lote = candidatas.slice(0, MAX_IA);
-  let clas = {porI: new Map(), ok: false}; try { clas = await clasificar({nombre: a.n, cargo, zona: z.n}, lote); } catch(e) { console.error("clasificar", e); }
+  let clas = {porI: new Map(), ok: false}; try { clas = await clasificar(fichaIA(a), lote); } catch(e) { console.error("clasificar", e); }
   const notas = armar(lote, clas.porI);
   return json({
     autoridad: {id: a.id, nombre: a.n, cargo, zona: z.n}, generado: new Date(ahora).toISOString(), ventana_dias: VENTANA_DIAS, ia: clas.ok, ia_parcial: !clas.ok && clas.porI.size > 0,

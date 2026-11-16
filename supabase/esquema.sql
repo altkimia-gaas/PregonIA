@@ -45,6 +45,20 @@ create table if not exists municipios (
   creado  timestamptz not null default now(),
   actualizado timestamptz not null default now()
 );
+-- Autoridades como clientes del piloto (nov 2026). La tabla se sigue llamando municipios, pero también guarda cuentas de autoridad:
+-- diputado, senador, core, concejal, gobernador y delegado. En ellas la comuna queda vacía y "autoridad" describe a la persona:
+--   {"id": id de la nómina de PregonIA o null, "zona": distrito, circunscripción, comuna o provincia, "nombre": como la nombra la prensa,
+--    "g": "F" o "M", "partido": opcional}. La lectura programada busca sus menciones por nombre, y la IA juzga relevancia y tono respecto de la persona.
+alter table municipios add column if not exists tipo text not null default 'municipio';
+alter table municipios add column if not exists autoridad jsonb;
+alter table municipios alter column comuna drop not null;
+alter table municipios drop constraint if exists municipios_tipo_check;
+alter table municipios add constraint municipios_tipo_check check (tipo in ('municipio', 'diputado', 'senador', 'core', 'concejal', 'gobernador', 'delegado'));
+alter table municipios drop constraint if exists municipios_cuenta_check;
+alter table municipios add constraint municipios_cuenta_check check (
+  (tipo = 'municipio' and comuna is not null) or
+  (tipo <> 'municipio' and comuna is null and coalesce(autoridad ->> 'zona', '') <> '' and length(trim(coalesce(autoridad ->> 'nombre', ''))) >= 5));
+create unique index if not exists municipios_autoridad on municipios (tipo, (autoridad ->> 'zona'), lower(autoridad ->> 'nombre')) where tipo <> 'municipio';
 
 -- Usuarios: el registro en auth.users lo crea Supabase (invitación por correo); aquí se asigna municipio y rol.
 create table if not exists perfiles (
@@ -54,6 +68,9 @@ create table if not exists perfiles (
   rol          text not null default 'lector' check (rol in ('admin', 'comunicaciones', 'alcalde', 'directivo', 'lector')),
   creado       timestamptz not null default now()
 );
+-- Rol "autoridad" (nov 2026): la persona titular de una cuenta de autoridad. Como el alcalde, solo lee y recibe lo urgente.
+alter table perfiles drop constraint if exists perfiles_rol_check;
+alter table perfiles add constraint perfiles_rol_check check (rol in ('admin', 'comunicaciones', 'alcalde', 'autoridad', 'directivo', 'lector'));
 
 -- Una fila por publicación (enlace). Es compartida: la misma nota puede ser mención de varias comunas.
 -- No se guarda el texto del medio: solo titular, enlace, medio y fecha.
@@ -346,12 +363,12 @@ create policy avisos_propios on avisos for all to authenticated using (usuario =
 drop policy if exists suscripciones_propias on suscripciones;
 create policy suscripciones_propias on suscripciones for all to authenticated using (usuario = auth.uid()) with check (usuario = auth.uid() and municipio_id = mi_municipio());
 -- Destinatarios de un municipio con su correo y preferencias. Solo la usa el servidor (lectura programada).
--- Sin preferencia guardada: el alcalde y los directivos reciben solo lo urgente; el resto, lo crítico.
+-- Sin preferencia guardada: el alcalde, la autoridad y los directivos reciben solo lo urgente; el resto, lo crítico.
 create or replace function destinatarios_avisos(muni uuid)
 returns table (usuario uuid, correo text, nivel text, silencio boolean, por_correo boolean)
 language sql stable security definer set search_path = public, auth as $$
   select p.id, u.email::text,
-         coalesce(a.nivel, case when p.rol in ('alcalde', 'directivo') then 'urgente' else 'importante' end),
+         coalesce(a.nivel, case when p.rol in ('alcalde', 'autoridad', 'directivo') then 'urgente' else 'importante' end),
          coalesce(a.silencio, true), coalesce(a.correo, true)
   from perfiles p join auth.users u on u.id = p.id left join avisos a on a.usuario = p.id
   where p.municipio_id = muni

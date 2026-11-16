@@ -228,7 +228,9 @@ const sinTema = m => [...m.temas.values()].every(x => x.tema.origen === "Núcleo
 /* Lectura agregada (tono, impacto, partes): por categoría del cargo, para que cada noticia cuente una vez y nada quede «sin tema». */
 const temaLectura = m => categoriaDe(m).n;
 const catPorNombre = (n, c = cuenta()) => catsDe(c).find(x => x.n === n) || null;
-const temaCorto = m => { const t = [...m.temas.values()].map(x => x.tema).find(t => t.origen !== "Núcleo"); return (t ? t.nombre : temaDe(m)).split(":")[0]; };
+// En una autoridad todo la nombra a ella: si solo calza su tema núcleo, el asunto lo dice la categoría de la noticia, no su nombre.
+const temaCorto = m => { const t = [...m.temas.values()].map(x => x.tema).find(t => t.origen !== "Núcleo"), k = !t && esAut() ? categoriaDe(m) : null;
+  return (t ? t.nombre : k && k !== CAT_OTROS ? k.n : temaDe(m)).split(":")[0]; };
 /* Menciones del período anterior: las notas entre `dias` y 2×`dias` atrás, agrupadas igual que las actuales. */
 function mencionesPrevias(c, dias){
   return menciones(c, dias * 2).map(m => { const notas = m.notas.filter(n => NOW - n.ts >= dias * DAY); if (!notas.length) return null;
@@ -1792,7 +1794,9 @@ document.addEventListener("keydown", e => {
 });
 
 /* Portada de bienvenida: aparece cada vez que se abre o recarga la aplicación, y con #portada o el logo.
-   "Empezar" lleva a la sección de la dirección si había una (enlaces compartidos); si no, a Inicio. */
+   Sin sesión ofrece dos puertas: «Ver demostración» (aviso legal y elección de autoridad o municipio) e «Ingresar» (equipos con invitación).
+   Con sesión del piloto, una sola: «Entrar a mi edición», directo a su institución. Ambas llevan a la sección de la dirección
+   si había una (enlaces compartidos); si no, a Inicio. */
 
 /* Edición · Miniatura de la edición del día en la portada.
    Sin sesión del piloto: siempre "Comuna de Ejemplo" con datos de ejemplo (nunca un municipio real, ni el de la demo).
@@ -1818,15 +1822,25 @@ function pintarMini(){
     pie.textContent = "Así se ve la edición de cada día para un municipio. Comuna y cifras de ejemplo.";
   }
 }
+function pintarAccesoPortada(){
+  const go = $("#ptGo"); if (!go) return;
+  const pl = typeof PILOTO !== "undefined" && PILOTO, dentro = !!(pl && pl.activo);
+  $("#ptGoTx").textContent = dentro ? "Entrar a mi edición" : "Ver demostración";
+  $("#ptIn").hidden = dentro || !(pl && pl.disponible);  // sin Supabase configurado (por ejemplo, el archivo suelto) no hay a qué ingresar
+  $("#ptPiloto").hidden = dentro;
+  $("#ptEstado").textContent = dentro ? "Edición de " + pl.muni.nombre : "Demostración con noticias ficticias";
+}
+function salirPortada(){ mostrarPortada(false); if (!location.hash || location.hash === "#portada") location.hash = "inicio"; }
 function mostrarPortada(on){
   const p = $("#portada"); if (!p) return;
-  if (on) pintarMini();
+  if (on) { pintarMini(); pintarAccesoPortada(); }
   p.hidden = !on; document.body.classList.toggle("pt-on", on);
   if (on) { window.scrollTo(0, 0); setTimeout(() => $("#ptGo").focus({preventScroll:true}), 60); }
 }
 document.addEventListener("click", e => {
   if (!e.target.closest("#ptGo")) return;
-  // Antes de entrar se muestra el aviso legal (demostración); con sesión iniciada lo cubre el registro en la base.
+  if (typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo) return salirPortada();  // con sesión: directo a su institución
+  // Demostración: antes de entrar se muestra el aviso legal; con sesión iniciada lo cubre el registro en la base.
   avisoLegal().then(ok => { if (ok) entAbrir(true); });  // la entrada se elige por rol, zona y nombre
 });
 window.addEventListener("hashchange", () => { if (location.hash === "#portada") mostrarPortada(true); });

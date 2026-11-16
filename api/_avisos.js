@@ -24,12 +24,12 @@ function vistosDe(filas){
   return v;
 }
 
-async function enviarPush(sb, subs, alerta, comuna){
+async function enviarPush(sb, subs, alerta, cuenta){
   if (!pushListo() || !subs.length) return 0;
   const webpush = (await import("web-push")).default;
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || "mailto:avisos@pregonia.cl", process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
   const carga = JSON.stringify({titulo: `${ETIQUETA[alerta.nivel]} · ${alerta.titulo}`, cuerpo: `${alerta.titular}${alerta.medio ? " — " + alerta.medio : ""}`,
-    url: `/?sin-portada&alerta=${encodeURIComponent(alerta.grupo)}#inicio`, tag: alerta.clave, urgente: alerta.nivel === "urgente", comuna});
+    url: `/?sin-portada&alerta=${encodeURIComponent(alerta.grupo)}#inicio`, tag: alerta.clave, urgente: alerta.nivel === "urgente", cuenta});
   let ok = 0;
   await Promise.all(subs.map(async s => {
     try { await webpush.sendNotification({endpoint: s.endpoint, keys: {p256dh: s.p256dh, auth: s.auth}}, carga, {TTL: 6 * 3600, urgency: alerta.nivel === "urgente" ? "high" : "normal"}); ok++; }
@@ -38,15 +38,15 @@ async function enviarPush(sb, subs, alerta, comuna){
   return ok;
 }
 
-async function enviarCorreo(destino, alertas, comuna){
+async function enviarCorreo(destino, alertas, cuenta, institucion){
   if (!correoListo() || !alertas.length) return false;
-  const hay = alertas.some(a => a.nivel === "urgente"), asunto = `${hay ? "Urgente · " : ""}PregonIA ${comuna}: ${alertas.length === 1 ? alertas[0].titulo.toLowerCase() : alertas.length + " avisos de prensa"}`;
+  const hay = alertas.some(a => a.nivel === "urgente"), asunto = `${hay ? "Urgente · " : ""}PregonIA ${cuenta}: ${alertas.length === 1 ? alertas[0].titulo.toLowerCase() : alertas.length + " avisos de prensa"}`;
   const filas = alertas.map(a => `<tr><td style="padding:12px 0;border-bottom:1px solid #E5E7EB">
     <div style="font:600 11px/1.4 Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:${a.nivel === "urgente" ? "#B42318" : a.nivel === "info" ? "#00695E" : "#1565C0"}">${ETIQUETA[a.nivel]} · ${esc(a.titulo)}</div>
     <div style="font:600 16px/1.4 Arial,sans-serif;color:#111827;margin-top:4px">${a.url ? `<a href="${esc(a.url)}" style="color:#111827">${esc(a.titular)}</a>` : esc(a.titular)}</div>
     <div style="font:13px/1.4 Arial,sans-serif;color:#56627A;margin-top:2px">${esc(a.medio)}</div></td></tr>`).join("");
   const html = `<div style="max-width:560px;margin:0 auto;padding:20px;font-family:Arial,sans-serif">
-    <div style="font:700 13px Arial,sans-serif;color:#1565C0">PregonIA · Municipalidad de ${esc(comuna)}</div>
+    <div style="font:700 13px Arial,sans-serif;color:#1565C0">PregonIA · ${esc(institucion)}</div>
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:8px">${filas}</table>
     <p style="margin:18px 0 0"><a href="${SITIO()}/?sin-portada#inicio" style="display:inline-block;background:#1565C0;color:#fff;text-decoration:none;font:600 14px Arial,sans-serif;padding:10px 16px;border-radius:6px">Abrir PregonIA</a></p>
     <p style="font:12px/1.5 Arial,sans-serif;color:#8A94A6;margin-top:18px">Recibes este correo porque tienes activados los avisos por correo en PregonIA. Puedes cambiarlo en la campana de avisos.</p></div>`;
@@ -56,7 +56,7 @@ async function enviarCorreo(destino, alertas, comuna){
   return r.ok;
 }
 
-/* Revisa los hechos tocados en esta lectura para un municipio y avisa lo nuevo. */
+/* Revisa los hechos tocados en esta lectura para una cuenta (municipio o autoridad) y avisa lo nuevo. */
 export async function avisar(sb, muni, grupos, ahora = Date.now()){
   const gs = [...new Set(grupos)].filter(Boolean).slice(0, 80);
   if (!gs.length) return {alertas: 0, push: 0, correos: 0};
@@ -75,13 +75,15 @@ export async function avisar(sb, muni, grupos, ahora = Date.now()){
     body: nuevas.map(a => ({municipio_id: muni.id, clave: a.clave, grupo: a.g, tipo: a.tipo, nivel: a.nivel, titulo: a.titulo.slice(0, 160), titular: a.titular.slice(0, 300), medio: a.medio, url: a.url}))}) || [];
   if (!creadas.length || (!pushListo() && !correoListo())) return {alertas: creadas.length, push: 0, correos: 0};
   const [dest, subs] = await Promise.all([sb("rpc/destinatarios_avisos", {method: "POST", body: {muni: muni.id}}), pushListo() ? sb(`suscripciones?municipio_id=eq.${muni.id}&select=endpoint,p256dh,auth,usuario`) : []]);
+  // Nombre con que se presenta la cuenta: la comuna o la autoridad (la lectura programada los entrega; si no, la comuna).
+  const cuenta = muni.etiqueta || muni.comuna, institucion = muni.institucion || "Municipalidad de " + muni.comuna;
   let push = 0, correos = 0;
   for (const d of dest || []) {
     const pref = {nivel: d.nivel, silencio: d.silencio}, suyas = creadas.filter(a => pasaPreferencia(a, pref, ahora));
     if (!suyas.length) continue;
     const susSubs = (subs || []).filter(s => s.usuario === d.usuario);
-    for (const a of suyas) push += await enviarPush(sb, susSubs, a, muni.comuna);
-    if (d.por_correo && d.correo && await enviarCorreo(d.correo, suyas, muni.comuna).catch(() => false)) correos++;
+    for (const a of suyas) push += await enviarPush(sb, susSubs, a, cuenta);
+    if (d.por_correo && d.correo && await enviarCorreo(d.correo, suyas, cuenta, institucion).catch(() => false)) correos++;
   }
   return {alertas: creadas.length, push, correos};
 }

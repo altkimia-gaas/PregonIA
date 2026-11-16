@@ -8,7 +8,7 @@ Producto de ALTKimia. Piloto: Casablanca, Algarrobo, El Quisco, El Tabo, Cartage
 Versión de demostración: el catálogo de medios es real; las noticias, cifras y fechas son ficticias.
 
 ## Qué incluye el prototipo
-- **Portada:** como la de un diario: cabezal con la fecha, nombre y lema, doble filete, titular con la propuesta de valor, botón Empezar, la miniatura de la edición del día y tres columnas (Lee, Mide, Responde). Sin sesión la miniatura es siempre de "Comuna de Ejemplo", con datos de ejemplo; con sesión del piloto es la del municipio de esa persona, nunca la de otro. Aparece cada vez que se abre o recarga la aplicación, con `#portada` y al tocar el logo; "Empezar" lleva a la sección de la dirección o a Inicio. Para abrir sin portada: `?sin-portada`.
+- **Portada:** como la de un diario: cabezal con la fecha, nombre y lema, doble filete, titular con la propuesta de valor, botones «Ver demostración» e «Ingresar» (con sesión, «Entrar a mi edición»), la miniatura de la edición del día y tres columnas (Lee, Mide, Responde). Sin sesión la miniatura es siempre de "Comuna de Ejemplo", con datos de ejemplo; con sesión del piloto es la de la institución de esa persona, nunca la de otra. Aparece cada vez que se abre o recarga la aplicación, con `#portada` y al tocar el logo; la entrada lleva a la sección de la dirección o a Inicio. Para abrir sin portada: `?sin-portada`.
 - **Entrada (¿Para quién es PregonIA?):** en pasos: cargo, comuna, persona y revisión. Siempre se pide la comuna y de ella se deducen el distrito, la circunscripción o la circunscripción provincial del consejo regional. También se puede buscar directo por nombre en toda la nómina. En el teléfono es una decisión por pantalla, a pantalla completa; desde 760 px suma un riel con los pasos. La contraseña de la demo se pide en la revisión.
 - **Inicio:** portada que responde cuatro preguntas, con período a elegir (24 horas, Semana o 30 días) comparado con el período anterior: cómo estamos (veredicto en una frase y cuatro cifras: noticias, tono, hasta dónde llegó y el alcalde o el territorio en la prensa), qué hacer hoy (críticas por responder, con un «dato para la respuesta» cuando hay una nota positiva del mismo asunto, y notas positivas para aprovechar), qué está cambiando (temas con tendencia y asuntos sin tema que se pueden seguir con un toque), qué viene en el calendario y quién marca la agenda. Cada noticia aparece una sola vez; el gráfico por día está en Reportes.
 - **Menciones:** cada noticia una vez aunque la publiquen varios medios; filtros por tono, período, tema y palabra; "¿Por qué aparece?" y "No corresponde".
@@ -81,16 +81,21 @@ La función solo acepta pedidos desde el propio sitio, limita el largo del texto
 
 ## Piloto con base de datos (etapa 2)
 
-Con sesión iniciada, la aplicación trabaja con datos compartidos por municipio: noticias leídas cada 30 minutos, temas, marcas,
+Con sesión iniciada, la aplicación trabaja con datos compartidos por institución cliente, sea un municipio o una autoridad
+(diputado, senador, consejero regional, concejal, gobernador o delegado): noticias leídas cada 30 minutos, temas, marcas,
 respuestas aprobadas y publicaciones agregadas a mano. Sin sesión sigue siendo la demostración.
+
+La portada ofrece dos puertas: «Ver demostración» (aviso legal y elección de autoridad o municipio) e «Ingresar» (equipos con invitación),
+más el enlace «Solicita un piloto» a soporte@altkimia.cl. Con sesión iniciada queda una sola: «Entrar a mi edición», directo a su institución.
 
 Piezas:
 
 - `supabase/esquema.sql`: tablas, reglas por municipio y rol (Row Level Security) y registro automático de actividad.
 - `supabase/semilla.sql`: catálogo de medios (lo genera `scripts/build.py`).
-- `supabase/alta_usuario.sql`: plantilla para asignar municipio y rol a una persona invitada.
+- `supabase/alta_usuario.sql`: plantilla para crear la cuenta de una autoridad y asignar institución y rol a una persona invitada.
 - `api/ingesta.js`: lectura programada; guarda solo notas nuevas, clasifica solo lo nuevo y agrupa con hechos de días anteriores.
 - `api/_lectura.js`: lectura y clasificación compartidas con `api/noticias.js`.
+- `api/_sujetos.js`: consulta a Google News y ficha de una autoridad, compartidas por `api/noticias.js` y `api/ingesta.js`.
 - `api/config.js`: entrega al navegador la URL y la clave publicable de Supabase (públicas por diseño).
 - `src/piloto.js`: ingreso, carga desde la base y sincronización de cambios.
 - `.github/workflows/lectura.yml`: llama a `/api/ingesta` cada 30 minutos.
@@ -103,7 +108,20 @@ Puesta en marcha:
 4. En GitHub › Settings › Secrets and variables › Actions, el secreto `CRON_SECRET` con el mismo valor.
 5. Invitar a cada persona en Supabase › Authentication › Users y asignarle municipio y rol con `supabase/alta_usuario.sql`.
 
-Roles: `admin` y `comunicaciones` editan; `alcalde`, `directivo` y `lector` solo leen. Cada persona ve solo su municipio.
+Roles: `admin` y `comunicaciones` editan; `alcalde`, `autoridad`, `directivo` y `lector` solo leen. Cada persona ve solo su institución.
+
+### Autoridades en el piloto
+
+La tabla `municipios` guarda también cuentas de autoridad: `tipo` es el cargo y `autoridad` describe a la persona
+(`zona`, `nombre`, `g` y, si está en la nómina de `src/autoridades.js`, su `id`). La lectura programada busca lo que la nombra
+(Google News por nombre y cargo, más los medios del catálogo) y la IA juzga relevancia y tono respecto de la persona, igual que
+«Noticias reales» en la demostración. Los avisos llegan con el nombre de la autoridad.
+
+Para activarlo en una base existente:
+
+1. Correr de nuevo `supabase/esquema.sql` (agrega `tipo` y `autoridad` a `municipios`, deja la comuna opcional para autoridades y suma el rol `autoridad`).
+   Mientras no se corra, la aplicación y la lectura programada siguen funcionando solo con municipios.
+2. Crear la cuenta de la autoridad y asignar a su equipo con el bloque B de `supabase/alta_usuario.sql`.
 
 ## Avisos (alertas)
 
