@@ -319,4 +319,10 @@ setInterval(() => { if (PILOTO.activo && (document.visibilityState === "visible"
   const {data: {session}} = await PILOTO.sb.auth.getSession();
   if (/access_token=|type=/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search + "#inicio");
   if (session) { await entrarPiloto(session.user); if (tipoEnlace === "invite" || tipoEnlace === "recovery") pedirClave(tipoEnlace); }
+  // Enlace /?ingresar (desde la página del servicio): sin sesión abre el acceso de clientes; con sesión ya entró a su edición.
+  if (/[?&]ingresar\b/.test(location.search)) {
+    const resto = location.search.slice(1).split("&").filter(x => x && !/^ingresar(=|$)/.test(x)).join("&");
+    history.replaceState(null, "", location.pathname + (resto ? "?" + resto : "") + location.hash);
+    if (!session) abrirLogin();
+  }
 })();

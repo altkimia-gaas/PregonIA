@@ -1865,7 +1865,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
         <button class="pd-go" id="ptGo" type="button"><span id="ptGoTx">Ver demostración</span> <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
         <button class="pd-go pd-alt" id="ptIn" type="button" data-act="login" hidden>Ingresar</button>
       </div>
-      <p class="pd-piloto" id="ptPiloto">¿Quieres PregonIA en tu institución? <a href="mailto:soporte@altkimia.cl?subject=Quiero%20un%20piloto%20de%20PregonIA">Solicita un piloto</a></p>
+      <p class="pd-piloto" id="ptPiloto">¿Quieres PregonIA en tu institución? <a href="/servicio">Conoce el servicio y sus planes</a></p>
       <figure class="pd-foto"><div class="pd-mini" id="ptMini"></div><figcaption id="ptMiniPie"></figcaption></figure>
       <div class="pd-cols">
         <section><h2>Lee</h2><p>Más de 100 medios digitales y sus cuentas en redes, con el tono de cada nota.</p></section>
@@ -4969,7 +4969,7 @@ window.addEventListener("hashchange", () => { if (location.hash === "#portada") 
 (() => { const f = $("#ptFecha"); if (!f) return; const d = new Date().toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long", year: "numeric"}); f.textContent = d.charAt(0).toUpperCase() + d.slice(1); })();
 
 render();
-mostrarPortada(!/[?&]sin-portada\b/.test(location.search));
+mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingresar llega desde /servicio: va directo al acceso de clientes
 
 
 /* Captura asistida: publicaciones de Facebook (u otras redes) que el equipo agrega a mano.
@@ -6147,6 +6147,12 @@ setInterval(() => { if (PILOTO.activo && (document.visibilityState === "visible"
   const {data: {session}} = await PILOTO.sb.auth.getSession();
   if (/access_token=|type=/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search + "#inicio");
   if (session) { await entrarPiloto(session.user); if (tipoEnlace === "invite" || tipoEnlace === "recovery") pedirClave(tipoEnlace); }
+  // Enlace /?ingresar (desde la página del servicio): sin sesión abre el acceso de clientes; con sesión ya entró a su edición.
+  if (/[?&]ingresar\b/.test(location.search)) {
+    const resto = location.search.slice(1).split("&").filter(x => x && !/^ingresar(=|$)/.test(x)).join("&");
+    history.replaceState(null, "", location.pathname + (resto ? "?" + resto : "") + location.hash);
+    if (!session) abrirLogin();
+  }
 })();
 
 

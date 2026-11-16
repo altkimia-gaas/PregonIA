@@ -1848,4 +1848,4 @@ window.addEventListener("hashchange", () => { if (location.hash === "#portada") 
 (() => { const f = $("#ptFecha"); if (!f) return; const d = new Date().toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long", year: "numeric"}); f.textContent = d.charAt(0).toUpperCase() + d.slice(1); })();
 
 render();
-mostrarPortada(!/[?&]sin-portada\b/.test(location.search));
+mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingresar llega desde /servicio: va directo al acceso de clientes
