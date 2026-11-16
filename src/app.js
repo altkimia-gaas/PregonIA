@@ -341,11 +341,18 @@ function vInicio(){
       <span class="ini-fs">${segbar([{l: "Críticas", v: X.cri, c: "var(--cri)"}, {l: "Neutras", v: X.neu, c: "var(--neu)"}, {l: "Positivas", v: X.pos, c: "var(--pos)"}])}<span>${conteoCorto(X)}${ya ? ` · ${ya} ya en «Qué hacer hoy»` : ""}</span></span>
       <span class="ini-ft">${xs.filter(m => !usadas.has(m.g)).slice(0, 2).map(m => esc(m.lead.t)).join(" · ") || ""}</span>
       <span class="ini-fb"><button class="btn sm" data-act="ini-tema" data-a="${esc(a)}">Seguir como tema</button></span></div></li>`; };
-  // Qué viene
-  const hitos = hitosOrdenados(c).filter(x => x.o.curso || x.o.dias <= 45).slice(0, 3);
-  const vieneHtml = hitos.map(({h, o}) => { const n = hitoMenciones(h, ms30).length, hechas = prepHechas(h, o, c).length;
-    return `<li><span class="ini-vh"><b>${esc(h.nombre)}</b><span class="${h.tipo === "riesgo" && !o.curso && o.dias <= 21 ? "pronto" : ""}">${esc(cuandoHito(o).replace("En curso · quedan", "en curso ·"))}</span></span>
-      <span class="ini-vm">${h.tipo === "riesgo" ? "Riesgo" : "Oportunidad"} · ${n ? `<b>${plural(n, "nota", "notas")} del tema ya publicadas</b>` : "sin notas aún"}${h.prep.length ? ` · preparación ${hechas} de ${h.prep.length}` : ""} · <button class="ini-link" data-act="cal-ver" data-h="${esc(h.id)}">Preparar</button></span></li>`; }).join("");
+  // Qué viene: fechas del calendario con la lente del cargo, primero lo que más urge.
+  const vieneHtml = hitosUrgentes(c, ms30).map(({h, o, u}) => {
+    const segs = Array.from({length: u.total}, (_, i) => `<i class="${i < u.hechas ? "on" : ""}"></i>`).join("");
+    return `<li class="qv qv-${u.k}">
+      <p class="qv-top"><span class="qv-est">${u.t}</span><span class="qv-tipo">${h.tipo === "riesgo" ? "Puede traer críticas" : "Oportunidad"}</span></p>
+      <h3 class="qv-n">${esc(h.nombre)}</h3>
+      <p class="qv-cuando">${esc(cuandoLargo(o))}</p>
+      <p class="qv-porque">${esc(porqueHito(h, u))}</p>
+      ${u.total ? `<div class="qv-prep"><p class="qv-pl"><span>Preparación</span><b>${u.hechas} de ${u.total} ${u.hechas === 1 ? "lista" : "listas"}</b></p><span class="qv-bar" style="grid-template-columns:repeat(${u.total},minmax(0,1fr))" aria-hidden="true">${segs}</span></div>` : ""}
+      ${u.sig ? `<p class="qv-sig"><b>Lo siguiente:</b> ${esc(u.sig)}</p>` : ""}
+      <button class="btn ${u.k === "ya" ? "primary" : ""} qv-btn" data-act="cal-ver" data-h="${esc(h.id)}">${u.pend ? `${u.k === "ya" ? "Preparar ahora" : "Preparar"} · ${plural(u.pend, "tarea", "tareas")}` : "Ver preparación"}</button></li>`; }).join("");
+  const vieneQuien = aut ? `${cargoCuenta(c)} · ${c.perfil.zonaNombre}` : `Municipalidad de ${S.org}`;
   // Quién marca la agenda
   const med = {}; ms.forEach(m => m.notas.forEach(n => { const x = med[n.m] = med[n.m] || {id: n.m, tot: 0, pos: 0, neu: 0, cri: 0}; x.tot++; x[n.tono]++; }));
   const medTop = Object.values(med).sort((a, b) => b.tot - a.tot || b.cri - a.cri).slice(0, 4);
@@ -483,7 +490,7 @@ function vInicio(){
       ${filasT.length || asuntos.length ? `<ul class="ini-lista">${filasT.map(filaT).join("")}${asuntos.map(filaA).join("")}</ul>` : `<p class="muted">Sin notas de tus temas ${perTx}.</p>`}
     </section>
     <div class="ini-der">
-      ${vieneHtml ? `<section aria-labelledby="vieT">${sec("vieT", "Qué viene")}<ul class="ini-lista ini-viene">${vieneHtml}</ul></section>` : ""}
+      ${vieneHtml ? `<section aria-labelledby="vieT">${sec("vieT", "Qué viene")}<p class="qv-intro">Fechas en que estos temas suelen llegar a la prensa, con las tareas de <b>${esc(vieneQuien)}</b>. Primero, lo que más urge. <button class="ini-link" data-act="goto-cal">Ver el calendario completo</button></p><ul class="qv-l">${vieneHtml}</ul></section>` : ""}
       ${agendaHtml ? `<section aria-labelledby="ageT">${sec("ageT", "Quién marca la agenda", `<span class="ini-sub">${{1: "24 horas", 7: "7 días", 30: "30 días"}[per]}</span>`)}<ul class="ini-lista ini-agenda">${agendaHtml}<li class="ini-mas"><a href="#reportes">Todos los medios y noticias por día, en Reportes →</a></li></ul></section>` : ""}
     </div>
   </div>`;
@@ -1550,7 +1557,8 @@ const FAQ = [
   ["Vocería y calendario", [
     ["¿Qué es el kit de vocería?", "Una hoja para una entrevista en minutos: lo que pasó, hasta dónde llegó, qué hacer, tres mensajes con su dato de respaldo, frases a evitar y cinco preguntas probables con respuesta. Ábrelo con «Me llaman de la radio» en Inicio o con «Vocería» en cada noticia. Usa solo los datos del municipio y de la noticia; lo que falte queda marcado [completar]."],
     ["¿De dónde salen los datos del kit?", "De «Datos del municipio», en Comunicados. Mientras más cifras oficiales cargues ahí, con su fecha, mejores mensajes prepara. Los datos de ejemplo aparecen marcados como ficticios."],
-    ["¿Qué es el calendario de riesgos?", "Las fechas que se repiten cada año y en las que ciertos temas suelen llegar a la prensa: temporada estival, incendios, temporales, Fiestas Patrias, PADEM, presupuesto. Está en Reportes. Cada fecha trae qué suele pasar, una lista de preparación que puedes marcar y las noticias recientes del tema."],
+    ["¿Qué es el calendario de riesgos?", "Las fechas que se repiten cada año y en las que ciertos temas suelen llegar a la prensa: temporada estival, incendios, temporales, Fiestas Patrias, PADEM, presupuesto. Está en Reportes. Cada fecha trae qué suele pasar, una lista de preparación que puedes marcar y las noticias recientes del tema. Las fechas y las tareas dependen del cargo: un concejal ve qué fiscalizar y votar; un diputado, la Ley de Presupuestos y no el PADEM. En Inicio, «Qué viene» muestra primero lo que más urge."],
+    ["¿Puedo ocultar una fecha que no me aplica?", "Sí. En Reportes · Calendario de riesgos, abre la fecha y usa «No aplica aquí»; por ejemplo, el PADEM en una comuna cuya educación pública ya está a cargo de un SLEP. Puedes mostrarla de nuevo cuando quieras."],
     ["¿Puedo agregar fechas de mi comuna?", "Sí. En Reportes · Calendario de riesgos, «Agregar fecha propia»: aniversario, fiestas locales o sesiones clave del concejo, con sus palabras clave y lo que hay que preparar."]
   ]],
   ["Monitoreo", [

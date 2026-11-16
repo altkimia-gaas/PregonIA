@@ -491,6 +491,26 @@ button.ini-fila:hover{background:var(--surface-2)}
 .ini-viene li{padding:12px 16px;display:grid;gap:4px}
 .ini-vh{display:flex;justify-content:space-between;gap:10px}.ini-vh b{font-weight:600}.ini-vh > span{font-size:13px;color:var(--muted);white-space:nowrap}.ini-vh > span.pronto{color:var(--bell)}
 .ini-vm{font-size:13px;color:var(--muted)}.ini-vm b{color:var(--ink);font-weight:600}
+/* Qué viene: una tarjeta por fecha, con estado, plazo, por qué importa, preparación y la tarea siguiente. */
+.qv-intro{margin:-4px 0 12px;font-size:13.5px;line-height:1.5;color:var(--muted)}.qv-intro b{color:var(--ink);font-weight:600}
+.qv-l{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px}
+.qv{display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.qv-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:0}
+.qv-est{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:12.5px;font-weight:600;background:var(--accent-soft);color:var(--accent)}
+.qv-ya .qv-est{background:var(--cri-soft);color:var(--cri-ink)}
+.qv-semana .qv-est{background:var(--bell-soft);color:var(--bell)}
+.qv-listo .qv-est{background:var(--pos-soft);color:var(--pos-ink)}
+.qv-tipo{font-size:12px;color:var(--muted)}
+.qv-n{margin:0;font-size:17px;line-height:1.3;font-weight:600}
+.qv-cuando{margin:-6px 0 0;font-size:13.5px;color:var(--muted)}
+.qv-porque{margin:0;font-size:14.5px;line-height:1.45}
+.qv-prep{display:grid;gap:6px}
+.qv-pl{display:flex;justify-content:space-between;gap:8px;margin:0;font-size:12.5px;color:var(--muted)}.qv-pl b{color:var(--ink);font-weight:600}
+.qv-bar{display:grid;gap:4px}.qv-bar i{display:block;height:6px;border-radius:3px;background:var(--track)}.qv-bar i.on{background:var(--accent-bg)}
+.qv-listo .qv-bar i.on{background:var(--pos)}
+.qv-sig{margin:0;padding:10px 12px;border-radius:8px;background:var(--surface-2);font-size:13.5px;line-height:1.45}.qv-sig b{font-weight:600}
+.qv-btn{width:100%;min-height:44px;margin-top:auto;font-size:14px}
+.cal-ocu{margin:14px 0 0}
 .ini-link{border:0;background:transparent;padding:0;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;min-height:32px}
 .ini-agenda li{display:grid;grid-template-columns:minmax(0,1fr) 84px 28px;gap:12px;align-items:center;padding:11px 16px}
 .ini-an{display:flex;flex-direction:column;min-width:0}.ini-an b{font-weight:600}.ini-an small{font-size:12px;color:var(--muted)}.ini-an small.cri{color:var(--cri-ink)}.ini-an small.pos{color:var(--pos-ink)}
@@ -1970,66 +1990,153 @@ function mkNota(r, i){
 }
 const NOTAS = RAW.map(mkNota);
 /* Calendario de riesgos: fechas que se repiten cada año y en las que ciertos temas suelen estallar (o abrir una oportunidad).
-   Sirve para preparar datos, vocería y mensajes antes, no durante. Cada municipio puede sumar fechas propias.
-   Las fechas son ventanas aproximadas; cada municipio las ajusta a su realidad. */
+   Sirve para preparar datos, vocería y mensajes antes, no durante. Cada cuenta puede sumar fechas propias y ocultar las que no le aplican.
+   Las fechas son ventanas aproximadas; cada cuenta las ajusta a su realidad.
+   Cada fecha se lee con la lente del cargo (la misma de territorios.js, pero más fina):
+     local    municipio y alcalde: ejecutan y responden por la gestión.
+     concejal concejo municipal: fiscaliza y vota (presupuesto, PADEM); no ejecuta.
+     reg      gobernador y consejo regional: inversión regional.
+     delegado delegación presidencial: coordina al Estado en emergencias y seguridad.
+     nac      diputados y senadores: agenda legislativa y gestiones por el territorio.
+   cargos: grupos a los que aplica la fecha (sin el campo, a todos). por: nombre, «que» y «prep» propios de un grupo. */
 const COSTA = ["Casablanca","Algarrobo","El Quisco","El Tabo","Cartagena","San Antonio"];
+const GRUPO_ROL = {municipio: "local", alcalde: "local", concejal: "concejal", core: "reg", gobernador: "reg", delegado: "delegado", diputado: "nac", senador: "nac"};
+const grupoCuenta = (c = cuenta()) => GRUPO_ROL[esAut(c) ? c.perfil.rol : "municipio"] || "local";
 const HITOS = [
   {id:"estival", nombre:"Temporada estival", desde:[12,15], hasta:[3,1], tipo:"riesgo", comunas:COSTA,
     kw:["playa","turista","turismo","basura","residuos","agua","aljibe","transito","taco","estacionamiento","salvavidas","ahog","ruido","ocupacion"],
     que:"Reclamos por basura, agua y tránsito; accidentes en playas. La ocupación turística suele ser la noticia positiva.",
-    prep:["Cifras de refuerzo de aseo, salvavidas y fiscalización listas antes del inicio","Mensaje de bienvenida con servicios y teléfonos útiles para visitantes","Protocolo y vocero definidos ante un accidente en playa","Balance de la temporada preparado para la primera semana de marzo"]},
+    prep:["Cifras de refuerzo de aseo, salvavidas y fiscalización listas antes del inicio","Mensaje de bienvenida con servicios y teléfonos útiles para visitantes","Protocolo y vocero definidos ante un accidente en playa","Balance de la temporada preparado para la primera semana de marzo"],
+    por:{
+      concejal:{que:"Llegan reclamos de vecinos y turistas por basura, agua y tránsito; se pregunta qué fiscaliza el concejo.",
+        prep:["Pedir en sesión el plan de aseo, agua y tránsito de la temporada","Canal para recibir reclamos de vecinos y derivarlos al municipio","Balance propio de la temporada para marzo"]},
+      reg:{nombre:"Temporada estival en el litoral", que:"Agua, conectividad y seguridad en el litoral ponen a prueba la inversión regional.",
+        prep:["Datos de inversión regional en el litoral: agua, caminos y seguridad","Postura sobre los problemas que se repiten cada verano"]},
+      delegado:{nombre:"Temporada estival en el litoral", que:"Seguridad, tránsito y emergencias en playas; se pregunta por la coordinación del Estado.",
+        prep:["Plan de seguridad y control carretero coordinado con Carabineros","Vocería única ante emergencias en playas","Balance de seguridad de la temporada para marzo"]},
+      nac:{nombre:"Temporada estival en el litoral", que:"Agua, tránsito y seguridad en las comunas costeras; se pide postura a las autoridades del territorio.",
+        prep:["Datos de agua potable rural y conectividad vial del litoral","Postura sobre los problemas que se repiten cada verano"]}}},
   {id:"incendios", nombre:"Temporada de incendios forestales", desde:[12,1], hasta:[4,30], tipo:"riesgo", comunas:"*",
     kw:["incendio","forestal","conaf","senapred","bomberos","evacua","quema","humo","brigada"],
     que:"Un incendio cerca de zonas pobladas lleva la comuna a la prensa nacional en pocas horas.",
-    prep:["Datos de cortafuegos, brigadas y puntos de encuentro verificados","Canal único de información a vecinos acordado con Senapred y Conaf","Plantilla de declaración de emergencia y vocero designado","Lista de teléfonos de emergencia publicada en redes municipales"]},
-  {id:"anonuevo", nombre:"Año Nuevo en la costa", desde:[12,28], hasta:[1,2], tipo:"riesgo", comunas:COSTA,
+    prep:["Datos de cortafuegos, brigadas y puntos de encuentro verificados","Canal único de información a vecinos acordado con Senapred y Conaf","Plantilla de declaración de emergencia y vocero designado","Lista de teléfonos de emergencia publicada en redes municipales"],
+    por:{
+      concejal:{que:"Se preguntará si el plan comunal de emergencia está al día y si los vecinos lo conocen.",
+        prep:["Pedir en sesión el estado del plan de emergencia y de las brigadas","Difundir teléfonos de emergencia y puntos de encuentro en sus redes","Postura preparada por si un incendio afecta a la comuna"]},
+      reg:{que:"Un incendio grave abre la pregunta por la prevención y por los recursos regionales para la reconstrucción.",
+        prep:["Cifras de inversión regional en prevención y brigadas","Postura sobre recursos para emergencia y reconstrucción","Vocería coordinada con Senapred si hay emergencia"]},
+      delegado:{que:"La Delegación coordina la respuesta del Estado; cada incendio pone a prueba esa coordinación ante la prensa.",
+        prep:["Protocolo de vocería única con Senapred, Conaf y municipios","Plantilla de declaración de emergencia y de alerta","Cifras de brigadas, aeronaves y recursos disponibles","Lista de teléfonos de emergencia para difundir"]},
+      nac:{que:"Se pedirá postura sobre prevención y recursos para el territorio, sin competir con la autoridad a cargo de la emergencia.",
+        prep:["Postura breve sobre recursos de prevención para el territorio","Presencia y vocería coordinadas si hay emergencia, sin competir con la autoridad a cargo","Seguimiento de las leyes y recursos para incendios en el Congreso"]}}},
+  {id:"anonuevo", nombre:"Año Nuevo en la costa", desde:[12,28], hasta:[1,2], tipo:"riesgo", comunas:COSTA, cargos:["local","concejal","delegado"],
     kw:["ano nuevo","fuegos artificiales","pirotecnia","aglomeracion","carabineros","transito","fiesta"],
     que:"Aglomeraciones, tránsito colapsado y hechos de seguridad marcan el balance del 1 de enero.",
-    prep:["Plan de seguridad y tránsito comunicado con una semana de anticipación","Balance de la noche listo para la mañana del 1 de enero"]},
-  {id:"escolar", nombre:"Inicio del año escolar", desde:[2,20], hasta:[3,31], tipo:"riesgo", comunas:"*",
+    prep:["Plan de seguridad y tránsito comunicado con una semana de anticipación","Balance de la noche listo para la mañana del 1 de enero"],
+    por:{
+      concejal:{prep:["Pedir el plan de seguridad y tránsito antes de la fecha","Difundir el plan entre los vecinos"]},
+      delegado:{que:"Seguridad y tránsito marcan el balance; se pregunta por la coordinación con Carabineros.",
+        prep:["Plan de seguridad coordinado con Carabineros y municipios","Balance de seguridad listo para la mañana del 1 de enero"]}}},
+  {id:"escolar", nombre:"Inicio del año escolar", desde:[2,20], hasta:[3,31], tipo:"riesgo", comunas:"*", cargos:["local","concejal"],
     kw:["colegio","escuela","liceo","transporte escolar","matricula","daem","slep","profesor","infraestructura escolar"],
     que:"Reclamos por transporte escolar, falta de matrícula o colegios con obras pendientes.",
-    prep:["Estado de obras y mantención de establecimientos con fechas","Cifras de matrícula y transporte escolar disponibles"]},
-  {id:"vendimia", nombre:"Fiesta de la Vendimia", desde:[3,1], hasta:[4,15], tipo:"oportunidad", comunas:["Casablanca"],
+    prep:["Estado de obras y mantención de establecimientos con fechas","Cifras de matrícula y transporte escolar disponibles"],
+    por:{concejal:{que:"Los reclamos por transporte escolar, matrícula u obras pendientes llegan al concejo.",
+      prep:["Pedir el estado de obras y de transporte escolar antes del inicio","Canal para recibir reclamos de apoderados"]}}},
+  {id:"vendimia", nombre:"Fiesta de la Vendimia", desde:[3,1], hasta:[4,15], tipo:"oportunidad", comunas:["Casablanca"], cargos:["local","concejal","reg","nac"],
     kw:["vendimia","vino","vina","enoturismo","cosecha","turismo"],
     que:"Vitrina regional para el turismo y el comercio local del valle.",
-    prep:["Invitación a medios regionales con dos semanas de anticipación","Cifras de visitantes y ventas del comercio local para el balance"]},
-  {id:"cuenta", nombre:"Cuenta pública del alcalde", desde:[4,1], hasta:[4,30], tipo:"oportunidad", comunas:"*",
+    prep:["Invitación a medios regionales con dos semanas de anticipación","Cifras de visitantes y ventas del comercio local para el balance"],
+    por:{
+      concejal:{prep:["Difundir el programa en sus redes","Sumarse a la actividad con el comercio local"]},
+      reg:{que:"Vitrina para el turismo y la economía del valle; espacio para mostrar el apoyo regional al sector.",
+        prep:["Cifras de apoyo regional al turismo y al vino del valle","Confirmar presencia y mensaje con los productores"]},
+      nac:{que:"Vitrina para el turismo y la economía del valle; espacio para mostrar gestiones por el sector.",
+        prep:["Iniciativas de apoyo al turismo y al sector vitivinícola, con su estado","Confirmar presencia y mensaje con los productores"]}}},
+  {id:"cuenta", nombre:"Cuenta pública del alcalde", desde:[4,1], hasta:[4,30], tipo:"oportunidad", comunas:"*", cargos:["local","concejal"],
     kw:["cuenta publica","balance","gestion"],
     que:"La prensa contrasta lo anunciado con los reclamos del año.",
-    prep:["Informe anual de cobertura por tema (Reportes · Informe de gestión)","Tres logros con cifra y un desafío reconocido","Respuestas preparadas para los dos temas más críticos del año"]},
-  {id:"invierno", nombre:"Campaña de invierno en salud", desde:[4,15], hasta:[8,31], tipo:"riesgo", comunas:"*",
+    prep:["Informe anual de cobertura por tema (Reportes · Informe de gestión)","Tres logros con cifra y un desafío reconocido","Respuestas preparadas para los dos temas más críticos del año"],
+    por:{concejal:{que:"El alcalde rinde cuentas ante el concejo; la prensa busca la mirada de los concejales.",
+      prep:["Contraste entre lo anunciado y lo pendiente, con datos","Postura sobre los dos temas más críticos del año"]}}},
+  {id:"invierno", nombre:"Campaña de invierno en salud", desde:[4,15], hasta:[8,31], tipo:"riesgo", comunas:"*", cargos:["local","concejal","reg","nac"],
     kw:["cesfam","salud","urgencia","sapu","sar","vacuna","influenza","virus","consultorio","espera"],
     que:"Esperas en urgencias y falta de horas en los Cesfam son el reclamo más repetido.",
-    prep:["Horarios de urgencia y vacunación publicados y actualizados","Datos de atenciones y refuerzos para responder reclamos por esperas"]},
+    prep:["Horarios de urgencia y vacunación publicados y actualizados","Datos de atenciones y refuerzos para responder reclamos por esperas"],
+    por:{
+      concejal:{que:"Las esperas en Cesfam y urgencias son el reclamo más repetido; se pregunta qué fiscaliza el concejo.",
+        prep:["Pedir en sesión el plan de invierno de la salud municipal","Canal para derivar reclamos de vecinos por esperas"]},
+      reg:{que:"Camas, urgencias y listas de espera de la red asistencial de la región.",
+        prep:["Datos de inversión regional en salud: hospitales, Cesfam y equipamiento","Postura sobre la presión en urgencias de la región"]},
+      nac:{que:"Listas de espera y urgencias saturadas en la red del territorio; se pide postura y gestiones.",
+        prep:["Datos de la red de salud del territorio: hospitales y listas de espera","Gestiones ante el Minsal o el Servicio de Salud, con fecha y resultado"]}}},
   {id:"frontales", nombre:"Lluvias, temporales y marejadas", desde:[5,1], hasta:[8,31], tipo:"riesgo", comunas:"*",
     kw:["lluvia","temporal","anega","inunda","corte de luz","sin luz","arbol caido","marejada","borde costero","viento"],
     que:"Calles anegadas, cortes de luz y marejadas en el borde costero; se pregunta por la respuesta municipal.",
-    prep:["Puntos críticos de anegamiento y cuadrillas disponibles","Coordinación con la empresa eléctrica y Senapred para avisos","Albergues y ayuda disponible con dirección y teléfono"]},
-  {id:"patrimonio", nombre:"Día del Patrimonio", desde:[5,20], hasta:[5,31], tipo:"oportunidad", comunas:"*",
+    prep:["Puntos críticos de anegamiento y cuadrillas disponibles","Coordinación con la empresa eléctrica y Senapred para avisos","Albergues y ayuda disponible con dirección y teléfono"],
+    por:{
+      concejal:{que:"Calles anegadas y cortes de luz; se pregunta por la respuesta municipal y por lo que fiscaliza el concejo.",
+        prep:["Pedir el catastro de puntos críticos y cuadrillas","Difundir avisos y teléfonos útiles en sus redes"]},
+      reg:{que:"Temporales y marejadas ponen a prueba la inversión regional en aguas lluvia y borde costero.",
+        prep:["Datos de inversión regional en aguas lluvia y borde costero","Postura sobre recursos para emergencias y reconstrucción"]},
+      delegado:{que:"La Delegación coordina alertas y la respuesta del Estado ante temporales y marejadas.",
+        prep:["Protocolo de alertas y vocería única con Senapred","Coordinación con la empresa eléctrica para informar cortes","Albergues y ayuda disponible por comuna"]},
+      nac:{que:"Calles anegadas, cortes de luz y marejadas en el territorio; se pide postura sobre obras y recursos.",
+        prep:["Postura sobre obras de aguas lluvia y borde costero en el territorio","Presencia y vocería coordinadas si hay emergencia"]}}},
+  {id:"cuentapres", nombre:"Cuenta Pública presidencial", desde:[5,20], hasta:[6,5], tipo:"oportunidad", comunas:"*", cargos:["reg","delegado","nac"],
+    kw:["cuenta publica","presidente","presidenta","anuncio"],
+    que:"Los anuncios se leen en clave regional: qué llega al territorio y qué quedó fuera.",
+    prep:["Lectura de los anuncios con impacto en el territorio, el mismo día","Postura sobre lo que falta para el territorio"],
+    por:{delegado:{prep:["Bajada regional de los anuncios con cifras y plazos","Vocería coordinada con las seremías"]}}},
+  {id:"patrimonio", nombre:"Día del Patrimonio", desde:[5,20], hasta:[5,31], tipo:"oportunidad", comunas:"*", cargos:["local","concejal"],
     kw:["patrimonio","historia","museo","recorrido"],
     que:"Espacio para mostrar la identidad de la comuna con cobertura positiva.",
-    prep:["Programa de recorridos y espacios abiertos difundido dos semanas antes"]},
-  {id:"sanpedro", nombre:"Fiesta de San Pedro", desde:[6,25], hasta:[6,30], tipo:"oportunidad", comunas:COSTA,
+    prep:["Programa de recorridos y espacios abiertos difundido dos semanas antes"],
+    por:{concejal:{prep:["Difundir el programa en sus redes y sumarse a un recorrido"]}}},
+  {id:"sanpedro", nombre:"Fiesta de San Pedro", desde:[6,25], hasta:[6,30], tipo:"oportunidad", comunas:COSTA, cargos:["local","concejal"],
     kw:["san pedro","pescador","caleta","procesion"],
     que:"Celebraciones en caletas con cobertura regional; buena vitrina para la pesca artesanal.",
-    prep:["Programa e invitación a medios con los pescadores de la caleta"]},
-  {id:"patrias", nombre:"Fiestas Patrias", desde:[9,10], hasta:[9,21], tipo:"riesgo", comunas:"*",
+    prep:["Programa e invitación a medios con los pescadores de la caleta"],
+    por:{concejal:{prep:["Acompañar la celebración con los pescadores y difundirla"]}}},
+  {id:"patrias", nombre:"Fiestas Patrias", desde:[9,10], hasta:[9,21], tipo:"riesgo", comunas:"*", cargos:["local","concejal","delegado"],
     kw:["fonda","ramada","fiestas patrias","dieciocho","alcohol","accidente","transito","seguridad"],
     que:"Fiscalización de fondas, accidentes de tránsito y seguridad marcan el balance.",
-    prep:["Permisos y fiscalización de fondas informados con anticipación","Balance de seguridad y tránsito listo el 20 de septiembre"]},
-  {id:"padem", nombre:"PADEM y cierre de cursos", desde:[9,1], hasta:[11,30], tipo:"riesgo", comunas:"*",
+    prep:["Permisos y fiscalización de fondas informados con anticipación","Balance de seguridad y tránsito listo el 20 de septiembre"],
+    por:{
+      concejal:{prep:["Pedir el plan de fiscalización de fondas y tránsito","Difundir medidas de seguridad entre los vecinos"]},
+      delegado:{que:"Accidentes de tránsito y seguridad marcan el balance; la Delegación coordina los controles.",
+        prep:["Plan de controles carreteros coordinado con Carabineros","Balance de seguridad y tránsito listo el 20 de septiembre"]}}},
+  {id:"padem", nombre:"PADEM y cierre de cursos", desde:[9,1], hasta:[11,30], tipo:"riesgo", comunas:"*", cargos:["local","concejal"],
     kw:["padem","cierre","fusion","curso","escuela","profesores","apoderados"],
     que:"El cierre o fusión de cursos moviliza a apoderados y profesores.",
-    prep:["Explicación simple de los cambios del PADEM con cifras","Reunión con apoderados antes de que la noticia salga en medios"]},
-  {id:"presupuesto", nombre:"Presupuesto municipal en el concejo", desde:[10,1], hasta:[12,15], tipo:"riesgo", comunas:"*",
+    prep:["Explicación simple de los cambios del PADEM con cifras","Reunión con apoderados antes de que la noticia salga en medios"],
+    por:{concejal:{que:"El concejo vota el PADEM; los apoderados buscan a los concejales antes de la votación.",
+      prep:["Reunirse con los centros de padres de los cursos afectados","Pedir las cifras de matrícula y costos que justifican los cambios","Postura pública antes de la votación"]}}},
+  {id:"presupuesto", nombre:"Presupuesto municipal en el concejo", desde:[10,1], hasta:[12,15], tipo:"riesgo", comunas:"*", cargos:["local","concejal"],
     kw:["presupuesto","recorte","deficit","deuda municipal"],
     que:"Críticas de concejales por recortes o prioridades del presupuesto.",
-    prep:["Explicación de las prioridades del presupuesto en una página","Respuesta preparada para críticas por recortes"]}
+    prep:["Explicación de las prioridades del presupuesto en una página","Respuesta preparada para críticas por recortes"],
+    por:{concejal:{nombre:"Votación del presupuesto municipal", que:"El concejo vota el presupuesto; su postura sobre recortes y prioridades será noticia.",
+      prep:["Revisar las partidas de las comisiones que integra","Postura pública antes de la votación","Respuesta preparada si vota en contra o pide cambios"]}}},
+  {id:"leypresupuestos", nombre:"Ley de Presupuestos en el Congreso", desde:[10,1], hasta:[11,30], tipo:"oportunidad", comunas:"*", cargos:["reg","nac"],
+    kw:["ley de presupuestos","presupuesto de la nacion","presupuesto fiscal","partida presupuestaria","glosa"],
+    que:"La discusión de partidas define qué recursos llegan al territorio; lo aprobado y lo recortado es noticia regional.",
+    prep:["Lista de recursos para el territorio que defendió en la discusión, con montos","Mensaje para medios regionales el día del despacho","Respuesta preparada si una partida del territorio sufre recortes"],
+    por:{reg:{nombre:"Ley de Presupuestos y recursos para la región", que:"Del presupuesto nacional depende el marco de inversión regional del año siguiente.",
+      prep:["Cifras del marco de inversión regional comparadas con el año anterior","Postura sobre lo que la región pidió y no obtuvo"]}}}
 ];
 const MES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const fechaHito = ([m, d]) => d + " " + MES[m - 1];
-function hitosDe(c = cuenta()){ return HITOS.filter(h => h.comunas === "*" || territorio(c).some(x => h.comunas.includes(x))).concat((c.hitos || []).map(h => ({...h, propio: true}))); }
+const fechaDe = t => { const d = new Date(t); return d.getDate() + " " + MES[d.getMonth()]; };
+/* La fecha con el nombre, el texto y la preparación del cargo de la cuenta. */
+function hitoPara(h, g){ const v = (h.por || {})[g]; return v ? {...h, ...v} : h; }
+function hitosDe(c = cuenta()){
+  const g = grupoCuenta(c), oc = new Set(c.ocultos || []);
+  return HITOS.filter(h => (h.comunas === "*" || territorio(c).some(x => h.comunas.includes(x))) && (!h.cargos || h.cargos.includes(g)) && !oc.has(h.id))
+    .map(h => hitoPara(h, g)).concat((c.hitos || []).map(h => ({...h, propio: true})));
+}
+/* Fechas del cargo que la cuenta ocultó porque no le aplican (por ejemplo, PADEM en una comuna cuya educación ya está en un SLEP). */
+function hitosOcultos(c = cuenta()){ const oc = new Set(c.ocultos || []), g = grupoCuenta(c); return HITOS.filter(h => oc.has(h.id)).map(h => hitoPara(h, g)); }
 /* La próxima vez que ocurre (o la actual, si está en curso). */
 function ocurrencia(h, ahora = NOW){
   const vuelta = h.hasta[0] < h.desde[0] || (h.hasta[0] === h.desde[0] && h.hasta[1] < h.desde[1]), y = new Date(ahora).getFullYear();
@@ -2045,7 +2152,35 @@ const hitoMenciones = (h, ms) => ms.filter(m => m.notas.some(n => h.kw.some(k =>
 const prepClave = (h, o) => h.id + ":" + o.anio;
 function prepHechas(h, o, c = cuenta()){ return ((c.prep || {})[prepClave(h, o)] || []).filter(i => i < h.prep.length); }
 function cuandoHito(o){ return o.curso ? (o.quedan <= 1 ? "Termina hoy" : `En curso · quedan ${o.quedan} días`) : o.dias === 1 ? "Mañana" : `En ${o.dias} días`; }
+/* Cuándo, con fecha: «Empieza el 1 dic (en 15 días)», «Ya empezó · termina el 30 nov (quedan 15 días)». */
+function cuandoLargo(o){
+  if (o.curso) return o.quedan <= 1 ? "Ya empezó · termina hoy" : `Ya empezó · termina el ${fechaDe(o.fin)} (quedan ${o.quedan} días)`;
+  return o.dias <= 1 ? `Empieza mañana, ${fechaDe(o.ini)}` : `Empieza el ${fechaDe(o.ini)} (en ${o.dias} días)`;
+}
+/* Urgencia de una fecha: cruza el plazo, lo que ya publicó la prensa (y si hay críticas) y lo que falta preparar.
+   ya: la fecha está cerca (21 días) y ya hay críticas o varias notas, o quedan días contados. semana: la fecha está cerca o ya hay notas.
+   tiempo: hay margen. listo: la preparación está completa. */
+const URG = {ya: [0, "Actuar ya"], semana: [1, "Esta semana"], tiempo: [2, "A tiempo"], listo: [3, "Preparación lista"]};
+function urgenciaHito(h, o, ms, c = cuenta()){
+  const rel = hitoMenciones(h, ms), n = rel.length, nCri = rel.filter(m => m.tono === "cri").length, hechas = prepHechas(h, o, c).length, total = h.prep.length, pend = total - hechas;
+  const cerca = o.curso ? o.quedan <= 21 : o.dias <= 21, encima = o.curso ? o.quedan <= 7 : o.dias <= 7;
+  const k = total && !pend ? "listo" : encima || (cerca && (nCri || n >= 3)) ? "ya" : n || cerca ? "semana" : "tiempo";
+  return {k, orden: URG[k][0], t: URG[k][1], n, nCri, hechas, total, pend, sig: h.prep.find((_, i) => !prepHechas(h, o, c).includes(i)) || ""};
+}
+/* Por qué importa, en una frase. */
+function porqueHito(h, u){
+  const notas = u.n ? `${plural(u.n, "nota", "notas")} este mes${u.nCri ? `, ${plural(u.nCri, "crítica", "críticas")}` : ""}` : "";
+  if (u.k === "listo") return u.n ? `Preparación completa. ${notas.charAt(0).toUpperCase() + notas.slice(1)}.` : "Preparación completa. Aún no hay notas del tema.";
+  if (u.n && !u.hechas) return `La prensa ya habla del tema: ${notas}, y la preparación aún no parte.`;
+  if (u.n) return notas.charAt(0).toUpperCase() + notas.slice(1) + ".";
+  return h.tipo === "oportunidad" ? "Aún no hay notas. Buen momento para proponer la noticia a los medios." : "Aún no hay notas. Es el momento de preparar la versión propia antes de que llegue a la prensa.";
+}
 function hitosOrdenados(c = cuenta()){ return hitosDe(c).map(h => ({h, o: ocurrencia(h)})).filter(x => x.o).sort((a, b) => (b.o.curso - a.o.curso) || a.o.ini - b.o.ini); }
+/* Para la portada: lo que está en curso o empieza en los próximos 45 días, primero lo que más urge. */
+function hitosUrgentes(c = cuenta(), ms = menciones(c, 30), max = 3){
+  return hitosOrdenados(c).filter(x => x.o.curso || x.o.dias <= 45).map(x => ({...x, u: urgenciaHito(x.h, x.o, ms, c)}))
+    .sort((a, b) => a.u.orden - b.u.orden || (a.o.curso ? a.o.quedan : a.o.dias) - (b.o.curso ? b.o.quedan : b.o.dias) || b.u.nCri - a.u.nCri || b.u.n - a.u.n).slice(0, max);
+}
 
 /* Portada: lo que está en curso y lo que viene en los próximos 45 días. */
 function calendarioInicio(){
@@ -2076,11 +2211,13 @@ function repCalendario(){
         ${h.que ? `<p>${esc(h.que)}</p>` : ""}
         ${h.prep.length ? `<fieldset class="cal-prep"><legend>Preparación ${o.anio === new Date(o.ini).getFullYear() ? o.anio : ""} · ${hechas.length} de ${h.prep.length}</legend>${h.prep.map((p, i) => `<label><input type="checkbox" data-act="cal-prep" data-h="${esc(h.id)}" data-i="${i}" ${hechas.includes(i) ? "checked" : ""}> ${esc(p)}</label>`).join("")}</fieldset>` : ""}
         ${rel.length ? `<div class="cal-rel"><p class="hint" style="margin:0 0 6px">${plural(rel.length, "noticia de los últimos 30 días toca", "noticias de los últimos 30 días tocan")} el tema:</p><ul>${rel.slice(0, 3).map(m => `<li>${pillTono(m.tono)} ${esc(m.lead.t)} <span class="muted">· ${esc(MED[m.lead.m].n)}</span></li>`).join("")}</ul></div>` : ""}
-        <div class="cal-acts"><button class="btn sm" data-act="vocero" data-h="${esc(h.id)}">${ri("mic")} Kit de vocería</button><button class="btn ghost sm" data-act="cal-com" data-h="${esc(h.id)}">Preparar comunicado</button>${h.propio ? `<button class="btn ghost sm" data-act="cal-del" data-h="${esc(h.id)}">Quitar fecha</button>` : ""}</div>
+        <div class="cal-acts"><button class="btn sm" data-act="vocero" data-h="${esc(h.id)}">${ri("mic")} Kit de vocería</button><button class="btn ghost sm" data-act="cal-com" data-h="${esc(h.id)}">Preparar comunicado</button>${h.propio ? `<button class="btn ghost sm" data-act="cal-del" data-h="${esc(h.id)}">Quitar fecha</button>` : `<button class="btn ghost sm" data-act="cal-ocultar" data-h="${esc(h.id)}">No aplica aquí</button>`}</div>
       </div></details>`; };
+  const ocultos = hitosOcultos(c);
   return `<div class="rhead"><h3>${esc(S.org)} · calendario de riesgos</h3><span class="per">${ri("cal")} Próximos 12 meses</span></div>
-  <p class="note" style="margin:0 0 14px">Fechas que se repiten cada año y en las que ciertos temas suelen llegar a la prensa. Prepara los datos y la vocería antes; marca lo que ya está listo.</p>
+  <p class="note" style="margin:0 0 14px">Fechas que se repiten cada año y en las que ciertos temas suelen llegar a la prensa, con las tareas que corresponden a ${esAut(c) ? "este cargo" : "un municipio"}. Prepara los datos y la vocería antes; marca lo que ya está listo. Si una fecha no aplica aquí, ocúltala.</p>
   ${grupos.filter(([, l]) => l.length).map(([t, l]) => `<h4 class="cal-g">${t}</h4><div class="cal-l">${l.map(item).join("")}</div>`).join("")}
+  ${ocultos.length ? `<p class="hint cal-ocu">${plural(ocultos.length, "fecha oculta porque no aplica", "fechas ocultas porque no aplican")}: ${ocultos.map(h => esc(h.nombre)).join(", ")}. <button class="ini-link" data-act="cal-restaurar">Mostrarlas de nuevo</button></p>` : ""}
   <div class="card cal-nueva" style="margin-top:16px">${calForm ? `<form id="calForm" class="cal-f" novalidate>
       <h3 style="margin:0">Agregar una fecha propia</h3>
       <label class="cap-l">Nombre<input id="calN" required maxlength="60" placeholder="Por ejemplo: Aniversario de la comuna"></label>
@@ -2114,6 +2251,9 @@ document.addEventListener("click", e => {
   if (a === "cal-ver") { e.preventDefault(); tState.rep = "calendario"; tState.calOpen = b.dataset.h; if (route() === "reportes") render(true); else location.hash = "reportes"; setTimeout(() => document.getElementById("hito-" + b.dataset.h)?.scrollIntoView({block: "start", behavior: "smooth"}), 60); }
   if (a === "cal-form") { calForm = !calForm; render(); if (calForm) setTimeout(() => $("#calN")?.focus(), 0); }
   if (a === "cal-del") { const c = cuenta(), h = (c.hitos || []).find(x => x.id === b.dataset.h); if (!h) return; c.hitos = c.hitos.filter(x => x !== h); save(); render(); toast(`Quitaste «${h.nombre}».`, () => { c.hitos.push(h); save(); render(); }); }
+  if (a === "goto-cal") { e.preventDefault(); tState.rep = "calendario"; tState.calOpen = null; if (route() === "reportes") render(true); else location.hash = "reportes"; }
+  if (a === "cal-ocultar") { const c = cuenta(), h = hitosDe(c).find(x => x.id === b.dataset.h); if (!h || h.propio) return; (c.ocultos ||= []).push(h.id); save(); render(); toast(`Ocultaste «${h.nombre}».`, () => { c.ocultos = c.ocultos.filter(x => x !== h.id); save(); render(); }); }
+  if (a === "cal-restaurar") { const c = cuenta(), antes = (c.ocultos || []).slice(); c.ocultos = []; save(); render(); toast("Las fechas ocultas volvieron al calendario.", () => { c.ocultos = antes; save(); render(); }); }
   if (a === "cal-com") { const h = hitosDe().find(x => x.id === b.dataset.h); tState.draft = null; tState.from = "reportes"; tState.pieza = "comunicado"; tState.enf = h && h.tipo === "oportunidad" ? "anunciar" : "contextualizar"; location.hash = "comunicados"; }
 });
 
@@ -3450,11 +3590,18 @@ function vInicio(){
       <span class="ini-fs">${segbar([{l: "Críticas", v: X.cri, c: "var(--cri)"}, {l: "Neutras", v: X.neu, c: "var(--neu)"}, {l: "Positivas", v: X.pos, c: "var(--pos)"}])}<span>${conteoCorto(X)}${ya ? ` · ${ya} ya en «Qué hacer hoy»` : ""}</span></span>
       <span class="ini-ft">${xs.filter(m => !usadas.has(m.g)).slice(0, 2).map(m => esc(m.lead.t)).join(" · ") || ""}</span>
       <span class="ini-fb"><button class="btn sm" data-act="ini-tema" data-a="${esc(a)}">Seguir como tema</button></span></div></li>`; };
-  // Qué viene
-  const hitos = hitosOrdenados(c).filter(x => x.o.curso || x.o.dias <= 45).slice(0, 3);
-  const vieneHtml = hitos.map(({h, o}) => { const n = hitoMenciones(h, ms30).length, hechas = prepHechas(h, o, c).length;
-    return `<li><span class="ini-vh"><b>${esc(h.nombre)}</b><span class="${h.tipo === "riesgo" && !o.curso && o.dias <= 21 ? "pronto" : ""}">${esc(cuandoHito(o).replace("En curso · quedan", "en curso ·"))}</span></span>
-      <span class="ini-vm">${h.tipo === "riesgo" ? "Riesgo" : "Oportunidad"} · ${n ? `<b>${plural(n, "nota", "notas")} del tema ya publicadas</b>` : "sin notas aún"}${h.prep.length ? ` · preparación ${hechas} de ${h.prep.length}` : ""} · <button class="ini-link" data-act="cal-ver" data-h="${esc(h.id)}">Preparar</button></span></li>`; }).join("");
+  // Qué viene: fechas del calendario con la lente del cargo, primero lo que más urge.
+  const vieneHtml = hitosUrgentes(c, ms30).map(({h, o, u}) => {
+    const segs = Array.from({length: u.total}, (_, i) => `<i class="${i < u.hechas ? "on" : ""}"></i>`).join("");
+    return `<li class="qv qv-${u.k}">
+      <p class="qv-top"><span class="qv-est">${u.t}</span><span class="qv-tipo">${h.tipo === "riesgo" ? "Puede traer críticas" : "Oportunidad"}</span></p>
+      <h3 class="qv-n">${esc(h.nombre)}</h3>
+      <p class="qv-cuando">${esc(cuandoLargo(o))}</p>
+      <p class="qv-porque">${esc(porqueHito(h, u))}</p>
+      ${u.total ? `<div class="qv-prep"><p class="qv-pl"><span>Preparación</span><b>${u.hechas} de ${u.total} ${u.hechas === 1 ? "lista" : "listas"}</b></p><span class="qv-bar" style="grid-template-columns:repeat(${u.total},minmax(0,1fr))" aria-hidden="true">${segs}</span></div>` : ""}
+      ${u.sig ? `<p class="qv-sig"><b>Lo siguiente:</b> ${esc(u.sig)}</p>` : ""}
+      <button class="btn ${u.k === "ya" ? "primary" : ""} qv-btn" data-act="cal-ver" data-h="${esc(h.id)}">${u.pend ? `${u.k === "ya" ? "Preparar ahora" : "Preparar"} · ${plural(u.pend, "tarea", "tareas")}` : "Ver preparación"}</button></li>`; }).join("");
+  const vieneQuien = aut ? `${cargoCuenta(c)} · ${c.perfil.zonaNombre}` : `Municipalidad de ${S.org}`;
   // Quién marca la agenda
   const med = {}; ms.forEach(m => m.notas.forEach(n => { const x = med[n.m] = med[n.m] || {id: n.m, tot: 0, pos: 0, neu: 0, cri: 0}; x.tot++; x[n.tono]++; }));
   const medTop = Object.values(med).sort((a, b) => b.tot - a.tot || b.cri - a.cri).slice(0, 4);
@@ -3592,7 +3739,7 @@ function vInicio(){
       ${filasT.length || asuntos.length ? `<ul class="ini-lista">${filasT.map(filaT).join("")}${asuntos.map(filaA).join("")}</ul>` : `<p class="muted">Sin notas de tus temas ${perTx}.</p>`}
     </section>
     <div class="ini-der">
-      ${vieneHtml ? `<section aria-labelledby="vieT">${sec("vieT", "Qué viene")}<ul class="ini-lista ini-viene">${vieneHtml}</ul></section>` : ""}
+      ${vieneHtml ? `<section aria-labelledby="vieT">${sec("vieT", "Qué viene")}<p class="qv-intro">Fechas en que estos temas suelen llegar a la prensa, con las tareas de <b>${esc(vieneQuien)}</b>. Primero, lo que más urge. <button class="ini-link" data-act="goto-cal">Ver el calendario completo</button></p><ul class="qv-l">${vieneHtml}</ul></section>` : ""}
       ${agendaHtml ? `<section aria-labelledby="ageT">${sec("ageT", "Quién marca la agenda", `<span class="ini-sub">${{1: "24 horas", 7: "7 días", 30: "30 días"}[per]}</span>`)}<ul class="ini-lista ini-agenda">${agendaHtml}<li class="ini-mas"><a href="#reportes">Todos los medios y noticias por día, en Reportes →</a></li></ul></section>` : ""}
     </div>
   </div>`;
@@ -4659,7 +4806,8 @@ const FAQ = [
   ["Vocería y calendario", [
     ["¿Qué es el kit de vocería?", "Una hoja para una entrevista en minutos: lo que pasó, hasta dónde llegó, qué hacer, tres mensajes con su dato de respaldo, frases a evitar y cinco preguntas probables con respuesta. Ábrelo con «Me llaman de la radio» en Inicio o con «Vocería» en cada noticia. Usa solo los datos del municipio y de la noticia; lo que falte queda marcado [completar]."],
     ["¿De dónde salen los datos del kit?", "De «Datos del municipio», en Comunicados. Mientras más cifras oficiales cargues ahí, con su fecha, mejores mensajes prepara. Los datos de ejemplo aparecen marcados como ficticios."],
-    ["¿Qué es el calendario de riesgos?", "Las fechas que se repiten cada año y en las que ciertos temas suelen llegar a la prensa: temporada estival, incendios, temporales, Fiestas Patrias, PADEM, presupuesto. Está en Reportes. Cada fecha trae qué suele pasar, una lista de preparación que puedes marcar y las noticias recientes del tema."],
+    ["¿Qué es el calendario de riesgos?", "Las fechas que se repiten cada año y en las que ciertos temas suelen llegar a la prensa: temporada estival, incendios, temporales, Fiestas Patrias, PADEM, presupuesto. Está en Reportes. Cada fecha trae qué suele pasar, una lista de preparación que puedes marcar y las noticias recientes del tema. Las fechas y las tareas dependen del cargo: un concejal ve qué fiscalizar y votar; un diputado, la Ley de Presupuestos y no el PADEM. En Inicio, «Qué viene» muestra primero lo que más urge."],
+    ["¿Puedo ocultar una fecha que no me aplica?", "Sí. En Reportes · Calendario de riesgos, abre la fecha y usa «No aplica aquí»; por ejemplo, el PADEM en una comuna cuya educación pública ya está a cargo de un SLEP. Puedes mostrarla de nuevo cuando quieras."],
     ["¿Puedo agregar fechas de mi comuna?", "Sí. En Reportes · Calendario de riesgos, «Agregar fecha propia»: aniversario, fiestas locales o sesiones clave del concejo, con sus palabras clave y lo que hay que preparar."]
   ]],
   ["Monitoreo", [
@@ -5966,7 +6114,7 @@ function paginaFB(nombre, ambito){
   if (!p) { p = {id: FB_ID0 + S.fbPaginas.length + 1, n: nombre, a: ambito || "local", c: ambito === "local" ? S.org : ""}; S.fbPaginas.push(p); registrarPagina(p); }
   return p.id;
 }
-const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null, hitos: c.hitos || [], prep: c.prep || {}, tv: c.tv || 0});
+const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null, hitos: c.hitos || [], ocultos: c.ocultos || [], prep: c.prep || {}, tv: c.tv || 0});
 async function cargarDatosPiloto(){
   if (PILOTO.timer) await sincronizarYa();  // un cambio a medio guardar se envía antes de releer la base
   const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 32 * DAY).toISOString();
