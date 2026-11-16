@@ -17,6 +17,10 @@
     {
       "source": "/compartir",
       "destination": "/api/compartir"
+    },
+    {
+      "source": "/servicio",
+      "destination": "/servicio.html"
     }
   ],
   "headers": [
