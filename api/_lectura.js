@@ -161,7 +161,35 @@ async function llamar1(prompt, maxTok){
   } catch(e) { console.error("Anthropic", e && e.name, String(e).slice(0, 200)); DIAG.push((e && e.name || "error") + ": " + String(e && e.message || e).slice(0, 80) + (txt ? " | salida: " + txt.slice(0, 80) + " … " + txt.slice(-60) : "")); return null; }
 }
 const linea = (n, i) => `${i}. [${n.medio} · ${n.ambito}] ${n.titulo}${n.desc ? " — " + n.desc.slice(0, 240) : ""}`;
-function promptLote(comuna, notas, base){
+/* Ficha editorial (ver claude/clasificacion-editorial-pregonia.md): la IA clasifica lo interpretativo; competencia, prioridad,
+   acción y plazo los calcula la aplicación con reglas a partir de esto. Va en la misma llamada: solo suma unas palabras por nota. */
+const AREAS_IA = ["agua", "seguridad", "salud", "educacion", "vivienda", "obras", "ambiente", "emergencias", "fomento", "social", "territorio", "probidad", "politica", "local"];
+const ENCUADRES_IA = ["logro", "servicio", "reclamo", "conflicto", "emergencia", "probidad", "judicial", "politico", "opinion", "humano"];
+const IMPULSORES_IA = ["propia", "autoridad", "vecinos", "gremio", "fiscalizador", "medio"];
+const PAPELES_IA = ["prot", "fuente", "menc", "alud", "no"];
+const fichaInstr = (sujeto, otro) => `- "a": área de gestión: agua (agua y saneamiento), seguridad, salud, educacion, vivienda (vivienda y barrios), obras (obras, vialidad y transporte), ambiente (residuos y medio ambiente), emergencias, fomento (fomento productivo, empleo y turismo), social (desarrollo social), territorio (planificación y ordenamiento territorial), probidad (presupuesto, contratos y probidad de la institución), politica (relación política, elecciones, partidos), local (vida local: fiestas, deporte, cultura, hechos del barrio).
+- "e": encuadre del medio: logro (logro o gestión), servicio (información útil para la gente), reclamo (reclamo ciudadano), conflicto (conflicto entre actores), emergencia, probidad (irregularidad o denuncia), judicial (tribunales o policial), politico (político-electoral), opinion (columna o carta), humano (historia humana).
+- "im": quién puso el tema en la prensa: propia (${sujeto} o su equipo), autoridad (otra autoridad o un partido), vecinos (vecinos u organizaciones), gremio (gremio o empresa), fiscalizador (Contraloría, fiscalía, tribunales o policías), medio (investigación o iniciativa del medio).
+- "p": papel de ${sujeto} en la nota: prot (protagonista), fuente (citada con declaraciones), menc (mencionada), alud (aludida sin nombre, por ejemplo «las autoridades no responden»), no (no aparece).
+- "t2": la postura de la nota hacia ${otro}: cri, neu o pos.
+- "gr": gravedad del hecho, de 0 a 3: 0 sin daño; 1 molestia o reclamo acotado; 2 afecta un servicio o a muchas personas; 3 riesgo para la vida, daño mayor o irregularidad grave.
+- "cf": tu confianza en esta clasificación: a (alta), m (media) o b (baja).`;
+/* Correcciones del equipo de la cuenta (aprendizaje): ejemplos de cómo quiere que se clasifique. */
+const ejemplosInstr = ej => ej && ej.length ? `\nCriterios del equipo de esta cuenta, tomados de sus correcciones; aplícalos a notas parecidas:\n${ej.slice(0, 12).map(x => `- «${String(x.t).slice(0, 140)}»: ${[x.a && "área " + x.a, x.e && "encuadre " + x.e, x.p && "papel " + x.p, x.im && "impulsor " + x.im].filter(Boolean).join(", ")}`).join("\n")}\n` : "";
+/* Ficha válida a partir de lo que devolvió la IA (descarta valores fuera de las listas). */
+export function fichaNota(c){
+  if (!c) return null;
+  const f = {};
+  if (AREAS_IA.includes(c.a)) f.a = c.a;
+  if (ENCUADRES_IA.includes(c.e)) f.e = c.e;
+  if (IMPULSORES_IA.includes(c.im)) f.im = c.im;
+  if (PAPELES_IA.includes(c.p)) f.p = c.p;
+  if (["cri", "neu", "pos"].includes(c.t2)) f.t2 = c.t2;
+  if (c.gr !== undefined && [0, 1, 2, 3].includes(Number(c.gr))) f.g = Number(c.gr);  // «gr» en la IA: «g» es la etiqueta del hecho en el agrupador
+  if (["a", "m", "b"].includes(c.cf)) f.cf = c.cf;
+  return Object.keys(f).length ? f : null;
+}
+function promptLote(comuna, notas, base, ejemplos = []){
   return `Eres analista de prensa de PregonIA para la Municipalidad de ${comuna}, Región de Valparaíso, Chile. Revisa estas notas de prensa:
 
 ${notas.map((n, k) => linea(n, base + k) + (n.sobre === "pc" ? " (hallada por la comuna)" : "")).join("\n")}
@@ -174,7 +202,8 @@ Para cada nota devuelve un objeto con:
 - "tono": la postura de la nota hacia el municipio y su gestión. "cri" si lo critica, lo cuestiona o recoge reclamos contra él (servicios que fallan, demoras, denuncias, conflictos con vecinos); "pos" si lo favorece (logros, inversiones, eventos exitosos); "neu" si es informativa. Una emergencia o un accidente que solo se informa, sin reclamos ni cuestionamientos al municipio, es "neu".
 - "res": un resumen propio de una frase, de máximo 20 palabras, en español de Chile, sin copiar frases del medio.
 - "x": entre 3 y 6 palabras clave en minúsculas separadas por espacios (temas, lugares, instituciones).
-
+${fichaInstr("la Municipalidad de " + comuna, "el alcalde o la alcaldesa de " + comuna)}
+${ejemplosInstr(ejemplos)}
 Responde solo con un arreglo JSON compacto, en una sola línea, sin bloque de código ni texto adicional.`;
 }
 /* Autoridades: las mismas reglas que una comuna. Una comuna lee lo que trata de ella, de su municipio o de sus autoridades;
@@ -182,7 +211,7 @@ Responde solo con un arreglo JSON compacto, en una sola línea, sin bloque de c�
 const esSujeto = x => x && typeof x === "object";
 const MARCA = {pc: " (hallada por su nombre)", i: " (sobre su institución)"};
 const lineaAut = (n, i) => linea(n, i) + (MARCA[n.sobre] || "");
-function promptLoteAut(a, notas, base){
+function promptLoteAut(a, notas, base, ejemplos = []){
   const inst = a.institucion || a.zona;
   return `Eres analista de prensa de PregonIA para el equipo de ${a.cargo} ${a.nombre} (${a.zona}, Región de Valparaíso, Chile). Revisa estas notas de prensa:
 
@@ -194,7 +223,8 @@ Para cada nota devuelve un objeto con:
 - "tono": la postura de la nota hacia ${a.nombre} o, si la nota trata de su institución, hacia la gestión de ${inst}; no lo grave del hecho. "cri" si la critica, la cuestiona o la vincula a una polémica o denuncia; "pos" si la favorece (iniciativas, logros, reconocimientos); "neu" si es informativa, solo la cita o informa un hecho grave sin cuestionarla.
 - "res": un resumen propio de una frase, de máximo 20 palabras, en español de Chile, sin copiar frases del medio.
 - "x": entre 3 y 6 palabras clave en minúsculas separadas por espacios (temas, lugares, instituciones).
-
+${fichaInstr(a.nombre, inst)}
+${ejemplosInstr(ejemplos)}
 Responde solo con un arreglo JSON compacto, en una sola línea, sin bloque de código ni texto adicional.`;
 }
 function promptGrupos(comuna, notas, existentes = []){
@@ -208,11 +238,11 @@ ${existentes.map((e, k) => `E${k}: ${e.titulo}`).join("\n")}
 ` : ""}
 Agrupa las notas que cuentan el mismo hecho, aunque sean de medios distintos. Si una nota cuenta un hecho ya registrado, usa su código (por ejemplo "E3") como etiqueta; si no, inventa una etiqueta corta del hecho. Responde solo con un arreglo JSON de objetos {"i": número, "g": "etiqueta"}, uno por nota; las notas del mismo hecho llevan la misma etiqueta. JSON compacto en una sola línea, sin bloque de código.`;
 }
-async function clasificar(comuna, notas, existentes = []){
+async function clasificar(comuna, notas, existentes = [], ejemplos = []){
   if (!process.env.ANTHROPIC_API_KEY || !notas.length) return {porI: new Map(), ok: false};
   const lotes = []; for (let k = 0; k < notas.length; k += LOTE) lotes.push(k);
   const pl = esSujeto(comuna) ? promptLoteAut : promptLote;
-  const lote = async k => (await llamar(pl(comuna, notas.slice(k, k + LOTE), k), 4000)) || (await llamar(pl(comuna, notas.slice(k, k + LOTE), k), 4000)); // un reintento
+  const lote = async k => (await llamar(pl(comuna, notas.slice(k, k + LOTE), k, ejemplos), 4000)) || (await llamar(pl(comuna, notas.slice(k, k + LOTE), k, ejemplos), 4000)); // un reintento
   const [grupos, ...partes] = await Promise.all([llamar(promptGrupos(comuna, notas, existentes), 4000), ...lotes.map(lote)]);
   const porI = new Map();
   partes.forEach(p => (p || []).forEach(c => { if (Number.isInteger(Number(c.i))) porI.set(Number(c.i), {...c}); }));

@@ -191,14 +191,15 @@ function paginaFB(nombre, ambito){
   if (!p) { p = {id: FB_ID0 + S.fbPaginas.length + 1, n: nombre, a: ambito || "local", c: ambito === "local" ? S.org : ""}; S.fbPaginas.push(p); registrarPagina(p); }
   return p.id;
 }
-const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null, hitos: c.hitos || [], prep: c.prep || {}, tv: c.tv || 0});
+const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null, hitos: c.hitos || [], prep: c.prep || {}, tv: c.tv || 0,
+  correcciones: c.correcciones || {}, compArea: c.compArea || {}, plazos: c.plazos || {}, fv: c.fv || 0});  // ficha editorial: correcciones, competencias y plazos de la cuenta
 async function cargarDatosPiloto(){
   if (PILOTO.timer) await sincronizarYa();  // un cambio a medio guardar se envía antes de releer la base
   const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 32 * DAY).toISOString();
   const pide = q => q.then(r => { if (r.error) throw new Error(r.error.message); return r.data; });
   const menQ = cols => sb.from("menciones").select(cols + ", notas!inner(id, medio_id, url, titulo, publicado)").eq("municipio_id", mid).eq("rel", true).gte("notas.publicado", desde).limit(5000);
   const [men, mar, com, cap, lec, mun] = await Promise.all([
-    pide(menQ("tono, resumen, palabras, grupo, sobre")).catch(() => pide(menQ("tono, resumen, palabras, grupo"))),  // sin la columna sobre (esquema anterior), se lee sin ella
+    pide(menQ("tono, resumen, palabras, grupo, sobre, ficha")).catch(() => pide(menQ("tono, resumen, palabras, grupo, sobre"))).catch(() => pide(menQ("tono, resumen, palabras, grupo"))),  // sin la columna sobre (esquema anterior), se lee sin ella
     pide(sb.from("marcas").select("grupo, tipo").eq("municipio_id", mid)),
     pide(sb.from("comunicados").select("id, grupo, pieza, origen, texto, creado").eq("municipio_id", mid).order("creado", {ascending: false}).limit(300)),
     pide(sb.from("capturas").select("*").eq("municipio_id", mid).gte("publicado", desde)),
@@ -219,7 +220,7 @@ async function cargarDatosPiloto(){
   else if (mun.config && mun.config.temas) { Object.assign(c, mun.config); c.tv = mun.config.tv || 0; adaptarCuenta(c); }  // configuración guardada antes de los temas por territorio: se adapta al leerla
   else if (PILOTO.editor) await pide(sb.from("municipios").update({config: configDe(c)}).eq("id", mid).select("id"));  // primera vez: se sube la caracterización actual
   const notas = men.filter(r => MED[r.notas.medio_id]).map(r => { const n = r.notas, t = n.titulo, res = r.resumen || t, x = r.palabras || "";
-    return {id: n.id, m: n.medio_id, ts: Date.parse(n.publicado), t, b: "", x, tono: r.tono || "neu", res, g: String(r.grupo || n.id), url: n.url, hay: norm(t + " " + res + " " + x + anclaDe(r)), ht: norm(t), real: true}; });
+    return {id: n.id, m: n.medio_id, ts: Date.parse(n.publicado), t, b: "", x, tono: r.tono || "neu", res, g: String(r.grupo || n.id), url: n.url, ...(r.ficha ? {f: r.ficha} : {}), hay: norm(t + " " + res + " " + x + anclaDe(r)), ht: norm(t), real: true}; });
   Object.keys(S.fp).forEach(k => { if (k.startsWith(org + ":")) delete S.fp[k]; });
   Object.keys(S.resp).forEach(k => { if (k.startsWith(org + ":")) delete S.resp[k]; });
   mar.forEach(m => { (m.tipo === "respondida" ? S.resp : S.fp)[org + ":" + m.grupo] = true; });
