@@ -127,7 +127,22 @@ async function leerFuente(url, m){
    En paralelo, una llamada corta solo con los titulares agrupa las notas que cuentan el mismo hecho. */
 const LOTE = 10;
 const DIAG = [];
+const dormir = ms => new Promise(ok => setTimeout(ok, ms));
+/* Cola de la IA: la API limita las solicitudes simultáneas de la organización (la lectura programada lanzaba unas 30 a la vez y
+   recibía 429). Como máximo IA_PARALELO a la vez; ante 429 o 529 (sobrecarga) se espera y se reintenta, respetando retry-after. */
+const IA = {activas: 0, cola: []}, IA_PARALELO = 8;
+async function turnoIA(){ if (IA.activas >= IA_PARALELO) await new Promise(ok => IA.cola.push(ok)); IA.activas++; }
+function soltarIA(){ IA.activas--; const sig = IA.cola.shift(); if (sig) sig(); }
 async function llamar(prompt, maxTok){
+  for (let k = 0; k < 3; k++) {
+    await turnoIA(); let r;
+    try { r = await llamar1(prompt, maxTok); } finally { soltarIA(); }
+    if (!r || !r.limite) return r;
+    await dormir(Math.min(8000, r.espera || 2000 * 2 ** k));
+  }
+  return null;
+}
+async function llamar1(prompt, maxTok){
   const clave = process.env.ANTHROPIC_API_KEY; if (!clave) return null; let txt = "";
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -135,6 +150,7 @@ async function llamar(prompt, maxTok){
       headers: { "x-api-key": clave, "anthropic-version": "2023-06-01", "content-type": "application/json" },
       body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL_RAPIDO || "claude-haiku-5-5", max_tokens: maxTok, messages: [{ role: "user", content: prompt }] })
     });
+    if (r.status === 429 || r.status === 529) { DIAG.push("IA limitada (" + r.status + "), reintento"); return {limite: true, espera: Number(r.headers.get("retry-after")) * 1000 || 0}; }
     if (!r.ok) { const e = (await r.text()).slice(0, 200); console.error("Anthropic", r.status, e); DIAG.push("HTTP " + r.status + " " + e.replace(/\s+/g, " ").slice(0, 120)); return null; }
     const d = await r.json(); txt = (d.content || []).map(c => c.text || "").join("");
     try { const a = JSON.parse(txt.slice(txt.indexOf("["), txt.lastIndexOf("]") + 1)); if (Array.isArray(a)) return a; } catch {}
@@ -257,7 +273,6 @@ const GN = {activas: 0, cola: [], proximo: 0, limite: 0, stats: null, ahorro: fa
 const GN_CACHE_MS = 15 * 60000, GN_CACHE_MAX = 400;  // la misma consulta en 15 minutos (pares de una provincia, cuentas que comparten territorio) no se repite
 const nuevasStats = () => ({consultas: 0, cache: 0, notas: 0, vacias: 0, reintentos: 0, r429: 0, fallidas: 0, tramos: 0, ahorro: false});
 const GN_PARALELO = 2, GN_PAUSA = 450, GN_TOPE = 100;
-const dormir = ms => new Promise(ok => setTimeout(ok, ms));
 /* Plazo para las consultas a Google News de esta invocación (los reintentos y tramos no lo pasan). */
 export const plazoGoogleNews = ms => { GN.limite = Date.now() + ms; GN.stats = nuevasStats(); GN.ahorro = false; };
 /* Tras un 429, Google está limitando: lo prescindible (pares, tramos) se deja para que las consultas principales alcancen a leerse. */

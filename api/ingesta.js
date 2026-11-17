@@ -50,8 +50,9 @@ async function procesarCuenta(cta, items, desde, ahora){
   if (!candidatas.length) return {...quien, candidatas: 0, nuevas: 0, clasificadas: 0};
   // Lo ya registrado para esta cuenta en la ventana (incluye lo descartado por ajeno, para no volver a clasificarlo).
   const desdeIso = new Date(desde - 2 * 864e5).toISOString();
-  const previas = await sb(`menciones?municipio_id=eq.${municipio_id}&clasificado=gte.${desdeIso}&select=nota_id,grupo,rel,notas(titulo,publicado)&limit=2000`);
-  const vistas = new Set(previas.map(p => p.nota_id));
+  const previas = await sb(`menciones?municipio_id=eq.${municipio_id}&clasificado=gte.${desdeIso}&select=nota_id,grupo,rel,ia,notas(titulo,publicado)&limit=2000`);
+  // Lo que la IA no alcanzó a clasificar (ia = false) vuelve a la cola en esta pasada; lo demás no se vuelve a pagar.
+  const vistas = new Set(previas.filter(p => p.ia !== false).map(p => p.nota_id));
   const nuevas = candidatas.filter(c => !vistas.has(c.id)).slice(0, MAX_POR_COMUNA);
   if (!nuevas.length) return {...quien, candidatas: candidatas.length, nuevas: 0, clasificadas: 0};
   // Hechos recientes (un titular por grupo) para que lo nuevo se sume al hecho que corresponde.
