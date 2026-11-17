@@ -3416,6 +3416,12 @@ function entEntrar(e){
   if (!pruebaOk()) { const portada = ENT.enPortada; entCerrar(); return insAbrir(portada); }
   const a = entPersona(), libre = entLibre();
   if (!a && !entLibreOk()) return entIr(3);
+  const pv = pruebaVigente();
+  if (pv && pv.ilimitada) {  // demostración comercial: deja registro del ingreso (fecha, cargo, territorio y autoridad)
+    const r = ENT_ROLES.find(x => x.k === ENT.rol);
+    fetch("/api/contacto?prueba", {method: "POST", keepalive: true, headers: {"content-type": "application/json"}, body: JSON.stringify({accion: "ingreso",
+      correo: pv.correo, rol: ENT.rol, territorio: [(entZona() || {}).n, ENT.comuna !== (entZona() || {}).n ? ENT.comuna : ""].filter(Boolean).join(" · "), autoridad: a ? a.c : libre, cuenta: r ? r.n : ""})}).catch(() => {});
+  }
   const key = ENT.rol === "municipio" ? crearCuentaMunicipio(ENT.zona, a, libre, ENT.g) : crearCuentaAutoridad({rol: ENT.rol, zona: ENT.zona, a, nombre: libre, g: ENT.g});
   const portada = ENT.enPortada; entCerrar();
   if (portada) { mostrarPortada(false); if (!location.hash || location.hash === "#portada") location.hash = "inicio"; }

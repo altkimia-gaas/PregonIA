@@ -93,6 +93,17 @@ async function solicitar(d){
   return json({ok: true, id: fila.id, minutos: VIGENCIA_MIN});
 }
 
+/* Registro de ingresos de los correos de demostración: fecha, cargo, territorio y autoridad elegida en la entrada. */
+async function ingreso(d){
+  const correo = corto(d.correo, 160).toLowerCase();
+  if (!sinLimite(correo)) return json({ok: true});  // solo se registran los correos de demostración comercial
+  const rol = Object.keys(ROLES).includes(d.rol) ? d.rol : (d.rol === "alcalde" ? "municipio" : "");
+  if (!rol) return json({error: "Cargo inválido"}, 400);
+  await sb("pruebas_ingresos", {method: "POST", prefer: "return=minimal", body: {correo, rol,
+    territorio: corto(d.territorio, 160) || null, autoridad: corto(d.autoridad, 160) || null, cuenta: corto(d.cuenta, 200) || null}});
+  return json({ok: true});
+}
+
 async function verificar(d){
   const id = parseInt(d.id, 10), codigo = String(d.codigo ?? "").replace(/\D/g, "");
   if (!id || codigo.length !== 6) return json({error: "Escribe los 6 dígitos del código."}, 400);
@@ -130,6 +141,7 @@ export async function pruebaPOST(req){
   try {
     if (d?.accion === "solicitar") return await solicitar(d);
     if (d?.accion === "verificar") return await verificar(d);
+    if (d?.accion === "ingreso") return await ingreso(d);
     return json({error: "Acción desconocida"}, 400);
   } catch (e) {
     console.error("prueba", e.message);
