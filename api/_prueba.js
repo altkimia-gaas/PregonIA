@@ -18,6 +18,11 @@ const visitas = new Map(); // freno simple por IP e instancia
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 const corto = (v, n) => String(v ?? "").trim().replace(/\s+/g, " ").slice(0, n);
 const resumen = (correo, codigo, sal) => createHash("sha256").update(`${sal}:${correo}:${codigo}`).digest("hex");
+// Correos de demostración comercial (PRUEBA_SIN_LIMITE, separados por coma): sin vencimiento, sin tope de envíos por correo,
+// sin aviso interno al validar y fuera de la limpieza automática. Siguen validando el correo con código.
+const SIN_LIMITE = (process.env.PRUEBA_SIN_LIMITE || "avillalobos@altkimia.com").split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
+const sinLimite = correo => SIN_LIMITE.includes(String(correo || "").toLowerCase());
+const fueraLimpieza = SIN_LIMITE.length ? `&correo=not.in.(${SIN_LIMITE.map(c => encodeURIComponent(`"${c}"`)).join(",")})` : "";
 const horas = () => Math.max(1, Math.min(24 * 30, parseInt(process.env.PRUEBA_HORAS, 10) || 48));
 
 function excedido(ip){
@@ -58,13 +63,14 @@ async function solicitar(d){
   if (d.consentimiento !== true) return json({error: "Necesitamos tu autorización para usar estos datos."}, 400);
   // Plazos de conservación publicados en /legal.html: sin validar, 30 días; validadas, 12 meses.
   const atras = d => new Date(Date.now() - d * 864e5).toISOString();
-  sb(`pruebas?verificado_en=is.null&creado_en=lt.${atras(30)}`, {method: "DELETE"}).catch(() => {});
-  sb(`pruebas?creado_en=lt.${atras(365)}`, {method: "DELETE"}).catch(() => {});
-  const inicio = await primeraVerificacion(p.correo);
+  sb(`pruebas?verificado_en=is.null&creado_en=lt.${atras(30)}${fueraLimpieza}`, {method: "DELETE"}).catch(() => {});
+  sb(`pruebas?creado_en=lt.${atras(365)}${fueraLimpieza}`, {method: "DELETE"}).catch(() => {});
+  const demo = sinLimite(p.correo);
+  const inicio = demo ? 0 : await primeraVerificacion(p.correo);
   if (inicio && inicio + horas() * 36e5 < Date.now()) return json({error: "La prueba gratis de este correo ya terminó. Agenda una demostración en pregonia.vercel.app/servicio y te mostramos los planes."}, 403);
   const desde = new Date(Date.now() - VENTANA_MS).toISOString();
   const recientes = await sb(`pruebas?correo=eq.${encodeURIComponent(p.correo)}&creado_en=gte.${desde}&select=id`);
-  if ((recientes || []).length >= POR_CORREO) return json({error: "Ya enviamos varios códigos a ese correo. Revisa tu bandeja (y la de spam) o intenta en 10 minutos."}, 429);
+  if (!demo && (recientes || []).length >= POR_CORREO) return json({error: "Ya enviamos varios códigos a ese correo. Revisa tu bandeja (y la de spam) o intenta en 10 minutos."}, 429);
   const codigo = String(randomInt(0, 1000000)).padStart(6, "0"), sal = randomBytes(8).toString("hex");
   const [fila] = await sb("pruebas?select=id", {method: "POST", prefer: "return=representation", body: {...p,
     codigo_hash: sal + ":" + resumen(p.correo, codigo, sal), expira: new Date(Date.now() + VIGENCIA_MIN * 60000).toISOString(),
@@ -82,9 +88,10 @@ async function verificar(d){
   if (!id || codigo.length !== 6) return json({error: "Escribe los 6 dígitos del código."}, 400);
   const [f] = await sb(`pruebas?id=eq.${id}&select=id,nombre,correo,rol,territorio,codigo_hash,expira,intentos,verificado_en,acepta_contacto`) || [];
   if (!f) return json({error: "No encontramos esa inscripción. Pide un código nuevo."}, 404);
-  let inicio = await primeraVerificacion(f.correo);
-  const hasta = () => new Date((inicio || Date.now()) + horas() * 36e5).toISOString();
-  const prueba = () => ({nombre: f.nombre, correo: f.correo, rol: f.rol, territorio: f.territorio, hasta: hasta()});
+  const demo = sinLimite(f.correo);
+  let inicio = demo ? 0 : await primeraVerificacion(f.correo);
+  const hasta = () => demo ? "2099-12-31T23:59:59.000Z" : new Date((inicio || Date.now()) + horas() * 36e5).toISOString();
+  const prueba = () => ({nombre: f.nombre, correo: f.correo, rol: f.rol, territorio: f.territorio, hasta: hasta(), ...(demo ? {ilimitada: true} : {})});
   if (f.verificado_en) return json({ok: true, prueba: prueba()});
   if (f.intentos >= MAX_INTENTOS) return json({error: "Superaste los intentos. Pide un código nuevo."}, 429);
   if (new Date(f.expira).getTime() < Date.now()) return json({error: "El código venció. Pide uno nuevo."}, 410);
@@ -98,7 +105,7 @@ async function verificar(d){
   if (!inicio) inicio = Date.parse(f.verificado_en);
   await sb(`pruebas?id=eq.${id}`, {method: "PATCH", body: {verificado_en: f.verificado_en, codigo_hash: null, intentos: f.intentos + 1}, prefer: "return=minimal"});
   const destino = process.env.CONTACTO_DESTINO || "soporte@altkimia.cl";
-  await correo(destino, `Prueba gratis activada · ${f.nombre}`, `<div style="font:14px/1.5 Arial,sans-serif;color:#141414"><p style="font-weight:700;margin:0 0 10px">Nueva prueba gratis con correo verificado</p>
+  if (!demo) await correo(destino, `Prueba gratis activada · ${f.nombre}`, `<div style="font:14px/1.5 Arial,sans-serif;color:#141414"><p style="font-weight:700;margin:0 0 10px">Nueva prueba gratis con correo verificado</p>
     <p style="margin:0">${esc(f.nombre)} · ${esc(f.correo)}<br>${esc(ROLES[f.rol] || f.rol)} · ${esc(f.territorio)}<br>Vigente hasta ${new Date(hasta()).toLocaleString("es-CL", {timeZone: "America/Santiago", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"})}<br>${f.acepta_contacto ? "Acepta recibir información comercial." : "<b>No aceptó información comercial</b>: contáctalo solo por la prueba."}</p></div>`, {reply_to: f.correo}).catch(() => {});
   return json({ok: true, prueba: prueba()});
 }
