@@ -165,7 +165,7 @@ function pintarTabs(){
 function render(foco){
   cancelAnimationFrame(RD.anim);
   pintarTabs(); const r = ruta(), m = $("#rdMain");
-  if (r.v === "post") { const p = RD.posts.find(x => x.id === r.id); if (!p) { location.hash = "publicaciones"; return; } RD.post = p; m.innerHTML = vistaEditor(p); montarEditor(); }
+  if (r.v === "post") { const p = RD.posts.find(x => x.id === r.id); if (!p) { location.hash = "publicaciones"; return; } if (RD.post !== p) { const f = (p.contenido || {}).formato; RD.fmt = f && (p.formatos || []).includes(fmtVista(f.principal)) ? fmtVista(f.principal) : "feed"; } RD.post = p; m.innerHTML = vistaEditor(p); montarEditor(); }
   else { RD.post = null; m.innerHTML = {propuestas: vistaPropuestas, publicaciones: vistaPublicaciones, calendario: vistaCalendario, ajustes: vistaAjustes}[r.v](); if (r.v === "publicaciones") miniaturas(); }
   if (foco) { const h = m.querySelector("h2"); if (h) { h.setAttribute("tabindex", "-1"); h.focus({preventScroll: true}); } }
   if (RD.resaltar) { const el = document.getElementById("p-" + RD.resaltar); if (el) { el.scrollIntoView({block: "center"}); el.focus({preventScroll: true}); } RD.resaltar = null; }
@@ -254,8 +254,13 @@ REGLAS OBLIGATORIAS
 8. "historia": {"t": titular corto para la historia (máximo 10 palabras), "x": una frase con el hecho principal}.
 9. "slides": 3 o 4 láminas para un carrusel que cuenten la noticia en orden, cada una {"t": subtítulo de máximo 7 palabras, "x": máximo 40 palabras}: qué pasó, detalles y cifras, qué dijeron, qué viene (solo si la nota lo dice).
 10. "guion": guion para un reel narrado de 25 a 40 segundos: {"intro": máximo 22 palabras, "datos": una frase de máximo 20 palabras por cada dato clave, "cierre": máximo 14 palabras que nombre la fuente}. Frases cortas y fáciles de decir en voz alta; cifras con números.
+11. "formato": actúa como especialista en Facebook e Instagram para medios locales. Compara la nota original con tu versión y elige el formato que mejor transmite ESTA información a vecinos que la verán en el celular: {"principal": "imagen" | "carrusel" | "reel", "historia": true o false, "razon": máximo 30 palabras, concreta, sobre esta noticia}. Criterios:
+   - "imagen": un hecho único y claro que se entiende con titular y uno o dos datos; última hora o aviso breve, donde importa la rapidez.
+   - "carrusel": tres o más datos, cifras, pasos, plazos, lugares o requisitos; balances, cronologías, «qué se sabe» o información de servicio (cortes, desvíos, horarios, trámites) que la gente guarda o comparte.
+   - "reel": hechos de interés comunitario que se entienden mejor narrados y en secuencia, o que necesitan contexto breve; nunca para tragedias con víctimas ni para hechos en desarrollo que pueden cambiar en minutos.
+   - "historia": true cuando la información tiene vigencia corta o pide una acción (alertas, cortes, desvíos, plazos que vencen, eventos del día).
 
-Escribe en español de Chile. Responde SOLO con un objeto JSON con las claves kicker, titular, bajada, datos, nota, ig, hashtags, alt, historia, slides, guion. Sin bloque de código ni texto adicional.`;
+Escribe en español de Chile. Responde SOLO con un objeto JSON con las claves kicker, titular, bajada, datos, nota, ig, hashtags, alt, historia, slides, guion, formato. Sin bloque de código ni texto adicional.`;
 }
 /* Lee en el servidor el texto completo de las notas de la propuesta (solo las direcciones guardadas en ella). */
 async function leerNotas(p){
@@ -308,7 +313,25 @@ function plantilla(p){
   return {kicker: [lugar.split(",")[0], temaPrincipal(p)].filter(Boolean).join(" · "), titular: p.titulo, bajada: res, datos: [`Lugar: ${lugar}`, `Informan: ${fs.slice(0, 2).map(f => f.medio).join(" y ")}`],
     fb: res, ig: res,
     hashtags: ["#" + lugar.split(",")[0].replace(/\s+/g, ""), "#RegiónDeValparaíso"], alt: `Pieza informativa de El Pregonero con el titular: ${p.titulo}`,
-    historia: {t: p.titulo, x: res}, slides: [{t: "Qué pasó", x: res}], guion: {intro: p.titulo, datos: [], cierre: `Fuente: ${medios}. Esto fue El Pregonero.`}};
+    historia: {t: p.titulo, x: res}, slides: [{t: "Qué pasó", x: res}], guion: {intro: p.titulo, datos: [], cierre: `Fuente: ${medios}. Esto fue El Pregonero.`},
+    formato: {principal: "imagen", historia: true, facebook: "feed", razon: "Borrador sin IA: se propone la imagen del feed. Cambia el formato si la noticia trae varios datos."}};
+}
+/* Formato recomendado por la IA (como especialista en redes), validado: si falta algo, se deduce del contenido. */
+function formatoIA(f, j){
+  f = f && typeof f === "object" ? f : {};
+  const nSlides = (Array.isArray(j.slides) ? j.slides : []).filter(x => x && (x.t || x.x)).length, nDatos = (Array.isArray(j.datos) ? j.datos : []).filter(Boolean).length;
+  let principal = ["imagen", "carrusel", "reel"].includes(f.principal) ? f.principal : (nSlides >= 3 || nDatos >= 3 ? "carrusel" : "imagen");
+  if (principal === "carrusel" && nSlides < 2) principal = "imagen";
+  const facebook = principal === "carrusel" || (principal === "reel" && nSlides >= 2) ? "carrusel" : "feed";
+  return {principal, historia: f.historia !== false, facebook, razon: String(f.razon || "").replace(/\s+/g, " ").trim().slice(0, 240)};
+}
+const FMT_NOMBRE = {imagen: "Imagen única", carrusel: "Carrusel", reel: "Reel con voz"};
+const fmtVista = f => f === "imagen" ? "feed" : f;
+/* Aplica la recomendación: deja generados los formatos recomendados (sin quitar los que el editor ya agregó) y abre la vista en el principal. */
+function aplicarFormato(post){
+  const f = post.contenido && post.contenido.formato; if (!f) return;
+  const set = new Set(post.formatos && post.formatos.length ? post.formatos : ["feed"]); set.add("feed"); if (f.historia) set.add("historia"); if (f.principal !== "imagen") set.add(f.principal);
+  post.formatos = FORMATOS.map(([k]) => k).filter(k => set.has(k)); RD.fmt = fmtVista(f.principal);
 }
 function limpiarIA(j, p){
   const s = (x, n = 2000) => String(x ?? "").replace(/[*#_]{2,}/g, "").trim().slice(0, n);
@@ -317,7 +340,8 @@ function limpiarIA(j, p){
     hashtags: (Array.isArray(j.hashtags) ? j.hashtags : String(j.hashtags || "").split(/\s+/)).map(h => s(h, 40).replace(/^#?/, "#")).filter(h => h.length > 1).slice(0, 8),
     alt: s(j.alt, 260), historia: {t: s(j.historia && j.historia.t, 120), x: s(j.historia && j.historia.x, 220)},
     slides: (Array.isArray(j.slides) ? j.slides : []).map(x => ({t: s(x && x.t, 80), x: s(x && x.x, 320)})).filter(x => x.t || x.x).slice(0, 4),
-    guion: {intro: s(j.guion && j.guion.intro, 220), datos: ((j.guion && j.guion.datos) || []).map(x => s(x, 200)).slice(0, 3), cierre: s(j.guion && j.guion.cierre, 160)}};
+    guion: {intro: s(j.guion && j.guion.intro, 220), datos: ((j.guion && j.guion.datos) || []).map(x => s(x, 200)).slice(0, 3), cierre: s(j.guion && j.guion.cierre, 160)},
+    formato: formatoIA(j.formato, j)};
 }
 async function redactar(id, btn){
   const p = RD.props.find(x => x.id === id); if (!p) return;
@@ -332,6 +356,7 @@ async function redactar(id, btn){
   Object.assign(c, {fuente: fs[0] || null, fuentes: fs, etiquetaIA: RD_ETIQUETA_IA.replace(/\.$/, ""), ia, version: 1, fechaPieza: Date.now(), original: leido, notaCompleta: leido.length > 0});
   componerAmbos(c);
   const post = {id: uid(), propuesta_id: p.id, estado: "borrador", titulo: c.titular || p.titulo, contenido: c, formatos: ["feed", "historia"], comunas: p.comunas, sensible: !!p.sensible, programado: null, publicado: null, creado: new Date().toISOString()};
+  aplicarFormato(post);
   try { await store.guardarPost(post); if (p.estado === "nueva") { await store.marcarPropuesta(p.id, "tomada"); p.estado = "tomada"; } }
   catch(e) { if (btn) { btn.disabled = false; btn.innerHTML = `${ico("ia")}Redactar publicación`; } return toast("No se pudo guardar el borrador: " + (e.message || e)); }
   RD.posts.unshift(post); toast(ia ? "Borrador listo. Revísalo antes de aprobar." : "Borrador con plantilla (sin IA). Complétalo antes de aprobar."); location.hash = "post/" + post.id;
@@ -341,7 +366,7 @@ async function rehacer(btn){
   if (!(await RD.ia)) return toast("La IA no está disponible aquí.");
   btn.disabled = true; btn.innerHTML = `${ico("ia")}Leyendo la nota original…`;
   const textos = await leerNotas(p), leido = textoLeido(textos); btn.innerHTML = `${ico("ia")}Redactando la nueva versión…`;
-  try { const c = limpiarIA(await pedirIA(promptRedaccion(p, textos)), p); Object.assign(post.contenido, c, {ia: true, version: (post.contenido.version || 1) + 1, original: leido.length ? leido : (post.contenido.original || []), notaCompleta: leido.length > 0 || Boolean(post.contenido.notaCompleta)}); componerAmbos(post.contenido); post.titulo = c.titular; await guardarAhora(true); render(); toast("Nueva versión redactada. Revísala."); }
+  try { const c = limpiarIA(await pedirIA(promptRedaccion(p, textos)), p); Object.assign(post.contenido, c, {ia: true, version: (post.contenido.version || 1) + 1, original: leido.length ? leido : (post.contenido.original || []), notaCompleta: leido.length > 0 || Boolean(post.contenido.notaCompleta)}); componerAmbos(post.contenido); aplicarFormato(post); post.titulo = c.titular; await guardarAhora(true); render(); toast("Nueva versión redactada. Revísala."); }
   catch(e) { btn.disabled = false; btn.innerHTML = `${ico("ia")}Redactar de nuevo con IA`; toast(String(e.message || e)); }
 }
 
@@ -445,6 +470,7 @@ function vistaEditor(p){
       </div>
       <div class="ed-col"><div class="vista">
         <section class="panel" aria-labelledby="hVista"><h3 id="hVista">Vista previa</h3>
+          ${c.formato ? `<div class="recomienda"><strong>Formato recomendado: ${esc(FMT_NOMBRE[c.formato.principal] || "Imagen única")}${c.formato.principal === "carrusel" ? ` de ${pzLaminas(c).length} láminas` : ""}${c.formato.historia ? " + historia" : ""}</strong>${c.formato.razon ? `<span>${esc(c.formato.razon)}</span>` : ""}<span class="info">En Facebook se publica ${c.formato.facebook === "carrusel" ? "como carrusel de imágenes" : "con la imagen del feed"}${c.formato.principal === "reel" ? "; el reel se sube a mano desde Meta" : ""}. Puedes cambiarlo abajo.</span></div>` : ""}
           <div class="fmt" role="group" aria-label="Formato">${FORMATOS.map(([k, n]) => (p.formatos || []).includes(k) ? `<button type="button" data-act="fmt" data-f="${k}" aria-pressed="${RD.fmt === k}">${n}</button>` : bloqueado ? "" : `<button type="button" data-act="generar" data-f="${k}" title="Se genera solo para esta noticia"><span class="mas">+</span> ${n}</button>`).join("")}</div>
           <div class="lienzo"><canvas id="rdCanvas" role="img" aria-label="Vista previa de la pieza"></canvas></div>
           <div class="lam" id="rdLam"></div>
@@ -709,7 +735,8 @@ async function jpegsFacebook(c, cual){
 }
 function fbSelector(p, id){
   if (!(p.formatos || []).includes("carrusel")) return "";
-  return `<label class="campo" for="${id}">Imagen para Facebook<select class="sel" id="${id}"><option value="feed">Pieza del feed (1 imagen)</option><option value="carrusel">Carrusel (${pzLaminas(p.contenido || {}).length} imágenes)</option></select></label>`;
+  const rec = ((p.contenido || {}).formato || {}).facebook === "carrusel";
+  return `<label class="campo" for="${id}">Imagen para Facebook<select class="sel" id="${id}"><option value="feed"${rec ? "" : " selected"}>Pieza del feed (1 imagen)</option><option value="carrusel"${rec ? " selected" : ""}>Carrusel (${pzLaminas(p.contenido || {}).length} imágenes)${rec ? " · recomendado" : ""}</option></select></label>`;
 }
 async function enviarFacebook(accion, cual, cuando){
   const p = RD.post;
@@ -739,7 +766,7 @@ async function pintarFacebook(){
 async function publicarAhoraFacebook(){
   const fb = await RD.fb;
   if (!fb || !fb.facebook) return toast(fb && fb.prueba ? "En el modo de prueba no se publica en Facebook." : "Facebook no está conectado: descarga la pieza, copia el texto y usa «Marcar como publicada».");
-  const p = RD.post, cual = $("#fbImg") ? $("#fbImg").value : "feed";
+  const p = RD.post, rec = ((p.contenido || {}).formato || {}).facebook === "carrusel" && (p.formatos || []).includes("carrusel") ? "carrusel" : "feed", cual = $("#fbImg") ? $("#fbImg").value : rec;
   dialogo(`<form><h2 id="dlgT">Publicar ahora en Facebook</h2><p class="lead" style="margin:0 0 10px">Sale de inmediato en la página de El Pregonero, con el texto de Facebook aprobado y ${cual === "carrusel" ? "las láminas del carrusel" : "la pieza del feed"}.</p>
     <p class="info" style="margin:0">Una vez publicada, cualquier corrección se hace en Facebook y se indica en la publicación, como dice la línea editorial.</p>
     <div class="acciones"><button class="btn" type="button" data-dlg="cerrar">Cancelar</button><button class="btn pri" type="submit">Publicar</button></div></form>`, async ov => {
