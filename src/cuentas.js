@@ -264,7 +264,8 @@ function insCuerpo(){
       <div class="ent-bloque"><label class="ent-campo" for="insRol">Tipo de autoridad</label><select id="insRol" class="ent-in"><option value="">Elige una opción</option>${ENT_ROLES.map(r => `<option value="${r.k}" ${INS.rol === r.k ? "selected" : ""}>${esc(r.n)}</option>`).join("")}</select></div>
       <div class="ent-bloque"><label class="ent-campo" for="insTer">${t.lbl}</label><select id="insTer" class="ent-in" ${INS.rol && !t.fijo ? "" : "disabled"}>${INS.rol ? (t.fijo ? "" : `<option value="">Elige una opción</option>`) : `<option value="">Elige primero el tipo de autoridad</option>`}${t.ops.map(o => `<option value="${esc(o.v)}" ${INS.terr === o.v ? "selected" : ""}>${esc(o.n)}</option>`).join("")}</select>${t.nota ? `<p class="ent-nota">${t.nota}</p>` : ""}</div>
       <input id="insSitio" name="sitio" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-      <label class="ins-ok"><input id="insOk" type="checkbox"><span>Autorizo a ALTKIMIA a usar estos datos para validar mi correo, activar la prueba y contactarme sobre el servicio, según la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a>.</span></label>`;
+      <label class="ins-ok"><input id="insOk" type="checkbox"><span>Soy mayor de 18 años y acepto los <a href="/legal.html#terminos" target="_blank" rel="noopener">Términos</a> y que ALTKIMIA use estos datos para validar mi correo y activar la prueba, según la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a>.</span></label>
+      <label class="ins-ok"><input id="insCom" type="checkbox"><span>Quiero recibir información comercial de PregonIA (opcional).</span></label>`;
     pie = "Enviar código";
   }
   return `${cab}<div class="ent-cuerpo"><div class="ent-main"><div class="ent-scroll">${cuerpo}<p class="cap-err" id="insErr" role="alert" hidden></p></div>
@@ -318,10 +319,10 @@ async function insEnviar(e){
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(INS.correo)) return insError("Revisa el correo.", $("#insCor"));
   if (!INS.rol) return insError("Elige el tipo de autoridad.", $("#insRol"));
   if (!INS.terr) return insError("Elige el territorio.", $("#insTer"));
-  if (!$("#insOk").checked) return insError("Necesitamos tu autorización para usar estos datos.", $("#insOk"));
+  if (!$("#insOk").checked) return insError("Para activar la prueba debes aceptar los Términos y el uso de tus datos.", $("#insOk"));
   INS.ocupado = true; b.disabled = true; b.textContent = "Enviando…";
   try {
-    const j = await insLlamar({accion: "solicitar", nombre: INS.nombre, correo: INS.correo, rol: INS.rol, territorio: insTerrN(), consentimiento: true,
+    const j = await insLlamar({accion: "solicitar", nombre: INS.nombre, correo: INS.correo, rol: INS.rol, territorio: insTerrN(), consentimiento: true, contacto: $("#insCom").checked,
       sitio: $("#insSitio").value, version: typeof LEGAL_VERSION !== "undefined" ? LEGAL_VERSION : ""});
     fin(); Object.assign(INS, {etapa: "codigo", id: j.id, minutos: j.minutos || 15}); insPintar();
   } catch (err) { fin(); insError(err.message); }
@@ -340,7 +341,14 @@ document.addEventListener("click", e => {
   if (b.dataset.act === "ins-cerrar") return insCerrar();
   if (b.dataset.act === "ins-otro") { INS.etapa = "datos"; insPintar(); }
 });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#insBack")) { e.preventDefault(); insCerrar(); } });
+document.addEventListener("keydown", e => {
+  if (!$("#insBack")) return;
+  if (e.key === "Escape") { e.preventDefault(); insCerrar(); return; }
+  if (e.key !== "Tab") return;  // el foco queda dentro del diálogo
+  const f = [...document.querySelectorAll("#insBack button:not([disabled]), #insBack input:not([tabindex='-1']), #insBack select:not([disabled]), #insBack a[href]")].filter(x => x.offsetParent);
+  if (!f.length) return; const i = f.indexOf(document.activeElement);
+  if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && (i === f.length - 1 || i < 0)) { e.preventDefault(); f[0].focus(); }
+});
 function entAbrir(enPortada, pre){
   if (!pruebaOk()) return insAbrir(enPortada);
   Object.assign(ENT, {paso: 1, rol: "", zona: "", comuna: "", sel: "", libre: "", qn: "", qc: "", enPortada: !!enPortada}, pre || {});

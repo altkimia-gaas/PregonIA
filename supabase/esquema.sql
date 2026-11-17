@@ -603,6 +603,7 @@ create table if not exists public.pruebas (
   expira timestamptz not null,
   intentos int not null default 0,
   verificado_en timestamptz,
+  acepta_contacto boolean not null default false,
   version_privacidad text
 );
 create index if not exists pruebas_correo_creado on public.pruebas (correo, creado_en desc);

@@ -66,7 +66,7 @@ async function solicitar(d){
   const codigo = String(randomInt(0, 1000000)).padStart(6, "0"), sal = randomBytes(8).toString("hex");
   const [fila] = await sb("pruebas?select=id", {method: "POST", prefer: "return=representation", body: {...p,
     codigo_hash: sal + ":" + resumen(p.correo, codigo, sal), expira: new Date(Date.now() + VIGENCIA_MIN * 60000).toISOString(),
-    version_privacidad: corto(d.version, 20) || null}});
+    acepta_contacto: d.contacto === true, version_privacidad: corto(d.version, 20) || null}});
   const ok = await correo(p.correo, `${codigo} es tu código de PregonIA`, cuerpoCodigo(p.nombre, codigo)).catch(e => (console.error("prueba correo", e.message), false));
   if (!ok) {
     await sb(`pruebas?id=eq.${fila.id}`, {method: "DELETE"}).catch(() => {});
@@ -78,7 +78,7 @@ async function solicitar(d){
 async function verificar(d){
   const id = parseInt(d.id, 10), codigo = String(d.codigo ?? "").replace(/\D/g, "");
   if (!id || codigo.length !== 6) return json({error: "Escribe los 6 dígitos del código."}, 400);
-  const [f] = await sb(`pruebas?id=eq.${id}&select=id,nombre,correo,rol,territorio,codigo_hash,expira,intentos,verificado_en`) || [];
+  const [f] = await sb(`pruebas?id=eq.${id}&select=id,nombre,correo,rol,territorio,codigo_hash,expira,intentos,verificado_en,acepta_contacto`) || [];
   if (!f) return json({error: "No encontramos esa inscripción. Pide un código nuevo."}, 404);
   let inicio = await primeraVerificacion(f.correo);
   const hasta = () => new Date((inicio || Date.now()) + dias() * 864e5).toISOString();
@@ -97,7 +97,7 @@ async function verificar(d){
   await sb(`pruebas?id=eq.${id}`, {method: "PATCH", body: {verificado_en: f.verificado_en, codigo_hash: null, intentos: f.intentos + 1}, prefer: "return=minimal"});
   const destino = process.env.CONTACTO_DESTINO || "soporte@altkimia.cl";
   await correo(destino, `Prueba gratis activada · ${f.nombre}`, `<div style="font:14px/1.5 Arial,sans-serif;color:#141414"><p style="font-weight:700;margin:0 0 10px">Nueva prueba gratis con correo verificado</p>
-    <p style="margin:0">${esc(f.nombre)} · ${esc(f.correo)}<br>${esc(ROLES[f.rol] || f.rol)} · ${esc(f.territorio)}<br>Vigente hasta ${hasta().slice(0, 10)}</p></div>`, {reply_to: f.correo}).catch(() => {});
+    <p style="margin:0">${esc(f.nombre)} · ${esc(f.correo)}<br>${esc(ROLES[f.rol] || f.rol)} · ${esc(f.territorio)}<br>Vigente hasta ${hasta().slice(0, 10)}<br>${f.acepta_contacto ? "Acepta recibir información comercial." : "<b>No aceptó información comercial</b>: contáctalo solo por la prueba."}</p></div>`, {reply_to: f.correo}).catch(() => {});
   return json({ok: true, prueba: prueba()});
 }
 
