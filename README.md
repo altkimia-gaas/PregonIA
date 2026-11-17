@@ -139,7 +139,7 @@ Medido el 17 de noviembre de 2026 con consultas reales a Google News. Estas eran
 | El nombre de la comuna o de la autoridad se exigía en el titular, pero Google News no entrega la bajada: en Viña del Mar se perdía el 30% | Lo que Google News encontró buscando la comuna o la persona entra aunque el titular no la nombre; la IA lo sabe y decide por el tema |
 | Variantes de nombre incompletas | Se suma primer nombre y primer apellido («Juan Ibacache») y, en consejeros, «consejero Urrutia» |
 | Un medio lento en una pasada se perdía | Un reintento con más plazo |
-| Topes de clasificación | 120 notas por consulta al vuelo y 50 nuevas por cuenta en cada pasada programada (el resto entra en la siguiente); lo que nombra a la comuna o a la persona va primero |
+| Topes de clasificación | Al vuelo, hasta 200 notas por consulta si la lectura terminó en menos de 30 s (si no, 120); 50 nuevas por cuenta en cada pasada programada (el resto entra en la siguiente); lo que nombra a la comuna o a la persona va primero |
 
 ## Avisos (alertas)
 
