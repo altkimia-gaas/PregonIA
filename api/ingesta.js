@@ -3,7 +3,7 @@
 // en su territorio, juzgado respecto de ella; ver _sujetos.js).
 // Solo se clasifica lo nuevo (lo ya visto no se vuelve a pagar) y las notas nuevas se agrupan con los hechos de días anteriores,
 // para que el historial, las respuestas y las marcas queden en el mismo hecho aunque lleguen notas días después.
-// La llama un programador externo (GitHub Actions) con Authorization: Bearer CRON_SECRET.
+// La llama el programador de Supabase (pg_cron, cada 30 min) con un pase de un solo uso; a mano o desde GitHub Actions, con Authorization: Bearer CRON_SECRET.
 // Variables: SUPABASE_URL, SUPABASE_SECRET_KEY, CRON_SECRET, ANTHROPIC_API_KEY. Para avisos: ver api/_avisos.js.
 // Cuentas de Facebook e Instagram de medios: META_ACCESS_TOKEN, META_IG_USER_ID, META_FB_PPCA (ver api/_redes.js).
 // Después de guardar, revisa los hechos que recibieron notas nuevas y avisa lo urgente (notificación y correo).
@@ -26,7 +26,7 @@ async function sb(ruta, {method = "GET", body, prefer} = {}){
   if (!String(clave).startsWith("sb_")) headers.authorization = "Bearer " + clave; // claves antiguas (JWT de service_role)
   const r = await fetch(`${url}/rest/v1/${ruta}`, {method, headers, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(15000)});
   if (!r.ok) throw new Error(`Supabase ${method} ${ruta.split("?")[0]}: ${r.status} ${(await r.text()).slice(0, 200)}`);
-  return r.status === 204 || method === "DELETE" ? null : r.json().catch(() => null);
+  return r.status === 204 ? null : r.json().catch(() => null);
 }
 
 /* Cuentas activas: municipios de las comunas conocidas y autoridades con ficha válida.
@@ -82,12 +82,21 @@ async function procesarCuenta(cta, items, desde, ahora){
   return {...quien, candidatas: candidatas.length, nuevas: nuevas.length, clasificadas: filas.filter(f => f.ia).length, descartadas: filas.filter(f => !f.rel).length, grupos: filas.filter(f => f.rel).map(f => f.grupo)};
 }
 
+/* Pase del programador de Supabase: válido si existe, tiene menos de 2 minutos y no se usó (se borra al usarlo). */
+async function usarPase(pase){
+  const desde = new Date(Date.now() - 120000).toISOString();
+  const r = await sb(`disparos_lectura?token=eq.${pase}&creado=gte.${desde}`, {method: "DELETE", prefer: "return=representation"});
+  return Array.isArray(r) && r.length === 1;
+}
 async function manejar(req){
   // Sin espacios ni saltos de línea en los extremos: pegar en el campo de Vercel suele agregar uno al final.
-  const secreto = (process.env.CRON_SECRET || "").trim();
-  if (!secreto) return json({error: "Falta configurar CRON_SECRET en el servidor"}, 503);
-  if ((req.headers.get("authorization") || "").trim() !== "Bearer " + secreto) return json({error: "No autorizado"}, 401);
+  // Dos formas de autorizar: la clave CRON_SECRET (lectura manual o GitHub Actions) o un pase de un solo uso que genera
+  // el programador de Supabase (pg_cron, cada 30 min) en la tabla disparos_lectura y que vence a los 2 minutos.
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SECRET_KEY) return json({error: "Falta configurar Supabase en el servidor"}, 503);
+  const secreto = (process.env.CRON_SECRET || "").trim(), pase = (req.headers.get("x-disparo") || "").trim();
+  const porClave = secreto && (req.headers.get("authorization") || "").trim() === "Bearer " + secreto;
+  const porPase = !porClave && /^[a-f0-9]{48}$/.test(pase) && await usarPase(pase).catch(() => false);
+  if (!porClave && !porPase) return json({error: "No autorizado"}, 401);
   DIAG.length = 0; plazoGoogleNews(30000);  // Google News va en cola (responde 429 si se le pide mucho a la vez); el resto del minuto es para clasificar
   const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
   const [lectura] = await sb("lecturas", {method: "POST", prefer: "return=representation", body: {inicio: new Date(ahora).toISOString()}});

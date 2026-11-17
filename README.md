@@ -154,6 +154,10 @@ Medido el 17 de noviembre de 2026 con consultas reales a Google News. Estas eran
 | Un medio lento en una pasada se perdía | Un reintento con más plazo |
 | Topes de clasificación | 120 notas por consulta al vuelo y 50 nuevas por cuenta en cada pasada programada (el resto entra en la siguiente); lo que nombra a la comuna o a la persona va primero |
 
+### Lectura cada 30 minutos
+
+La dispara el programador de Supabase (`supabase/programador.sql`: pg_cron a los minutos 7 y 37), con un pase de un solo uso que `/api/ingesta` valida y borra; no requiere copiar secretos. GitHub Actions (`lectura.yml`) quedó solo para lecturas a mano con `CRON_SECRET`, porque GitHub postergaba horas su tarea programada. Ver las últimas lecturas: tabla `lecturas`.
+
 ## Avisos (alertas)
 
 PregonIA avisa de noticias críticas nuevas, de las que escalan a prensa regional o nacional y de los temas que crecen rápido (3 medios en 6 horas). Las reglas están en `src/reglas.js`; `scripts/build.py` las copia a `api/_reglas.js` para que la aplicación y el servidor avisen exactamente lo mismo.
