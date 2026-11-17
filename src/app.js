@@ -1794,7 +1794,7 @@ document.addEventListener("keydown", e => {
 });
 
 /* Portada de bienvenida: aparece cada vez que se abre o recarga la aplicación, y con #portada o el logo.
-   Sin sesión ofrece dos puertas: «Ver demostración» (aviso legal y elección de autoridad o municipio) e «Ingresar» (equipos con invitación).
+   Sin sesión ofrece dos puertas: «Prueba gratis» (aviso legal, inscripción con correo validado y elección de autoridad) e «Ingresar» (equipos con invitación).
    Con sesión del piloto, una sola: «Entrar a mi edición», directo a su institución. Ambas llevan a la sección de la dirección
    si había una (enlaces compartidos); si no, a Inicio. */
 
@@ -1825,7 +1825,7 @@ function pintarMini(){
 function pintarAccesoPortada(){
   const go = $("#ptGo"); if (!go) return;
   const pl = typeof PILOTO !== "undefined" && PILOTO, dentro = !!(pl && pl.activo);
-  $("#ptGoTx").textContent = dentro ? "Entrar a mi edición" : "Ver demostración";
+  $("#ptGoTx").textContent = dentro ? "Entrar a mi edición" : pruebaVigente() ? "Continuar mi prueba" : "Prueba gratis";
   $("#ptIn").hidden = dentro || !(pl && pl.disponible);  // sin Supabase configurado (por ejemplo, el archivo suelto) no hay a qué ingresar
   $("#ptPiloto").hidden = dentro;
   $("#ptEstado").textContent = dentro ? "Edición de " + pl.muni.nombre : "Demostración con noticias ficticias";
@@ -1841,7 +1841,7 @@ document.addEventListener("click", e => {
   if (!e.target.closest("#ptGo")) return;
   if (typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo) return salirPortada();  // con sesión: directo a su institución
   // Demostración: antes de entrar se muestra el aviso legal; con sesión iniciada lo cubre el registro en la base.
-  avisoLegal().then(ok => { if (ok) entAbrir(true); });  // la entrada se elige por rol, zona y nombre
+  avisoLegal().then(ok => { if (ok) entAbrir(true); });  // sin prueba vigente pide la inscripción; luego rol, zona y nombre
 });
 window.addEventListener("hashchange", () => { if (location.hash === "#portada") mostrarPortada(true); });
 /* Edición · Fecha del cabezal de la portada, como la de un diario. */

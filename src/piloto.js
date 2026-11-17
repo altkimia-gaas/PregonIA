@@ -123,8 +123,8 @@ function avisoLegal(){
     dialogo("aviso", "Antes de empezar", "PregonIA es un servicio de ALTKIMIA Consultoría y Tecnología SpA para instituciones y autoridades públicas.", `
       <form class="cap-f" id="avisoForm" novalidate>
         <ul class="hint" style="margin:0;padding-left:18px;display:grid;gap:4px">
-          <li>Estás entrando a una <b>demostración</b>: las noticias, cifras y fechas son ficticias; el catálogo de medios es real.</li>
-          <li>Lo que configures queda solo en este navegador.</li>
+          <li>Estás entrando a la <b>prueba gratis</b>: las noticias, cifras y fechas son ficticias; el catálogo de medios es real.</li>
+          <li>Para la prueba gratis te pediremos nombre, correo, tipo de autoridad y territorio, y validaremos tu correo con un código. Lo demás que configures queda solo en este navegador.</li>
           <li>Los textos generados con inteligencia artificial pueden contener errores: revísalos antes de usarlos.</li>
         </ul>
         <p class="hint" style="margin:0">Lee los <a href="/legal.html#terminos" target="_blank" rel="noopener">Términos de uso</a> y la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a> (versión ${LEGAL_VERSION}). Se abren en una pestaña nueva.</p>
@@ -327,4 +327,11 @@ setInterval(() => { if (PILOTO.activo && (document.visibilityState === "visible"
     history.replaceState(null, "", location.pathname + (resto ? "?" + resto : "") + location.hash);
     if (!session) abrirLogin();
   }
-})();
+})().catch(() => {}).finally(() => {
+  // Enlace /?prueba (botón «Prueba gratis» de la página del servicio): sin sesión, aviso legal e inscripción sobre la portada.
+  // Corre también si la sesión de clientes no está disponible (sin configuración o sin red hacia Supabase).
+  if (!/[?&]prueba\b/.test(location.search)) return;
+  const resto = location.search.slice(1).split("&").filter(x => x && !/^prueba(=|$)/.test(x)).join("&");
+  history.replaceState(null, "", location.pathname + (resto ? "?" + resto : "") + location.hash);
+  if (!PILOTO.activo) avisoLegal().then(ok => { if (ok) entAbrir(true); });
+});

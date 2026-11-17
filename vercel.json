@@ -26,6 +26,9 @@
     },
     "api/contacto.js": {
       "maxDuration": 20
+    },
+    "api/prueba.js": {
+      "maxDuration": 20
     }
   },
   "rewrites": [
