@@ -610,3 +610,16 @@ create table if not exists public.pruebas (
 );
 create index if not exists pruebas_correo_creado on public.pruebas (correo, creado_en desc);
 alter table public.pruebas enable row level security;
+
+-- Ingresos a la demostración de los correos sin límite (PRUEBA_SIN_LIMITE): fecha, cargo, territorio y autoridad elegida.
+create table if not exists public.pruebas_ingresos (
+  id bigint generated always as identity primary key,
+  creado_en timestamptz not null default now(),
+  correo text not null,
+  rol text not null,
+  territorio text,
+  autoridad text,
+  cuenta text
+);
+create index if not exists pruebas_ingresos_correo_creado on public.pruebas_ingresos (correo, creado_en desc);
+alter table public.pruebas_ingresos enable row level security;
