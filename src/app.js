@@ -1828,6 +1828,7 @@ function pintarAccesoPortada(){
   $("#ptGoTx").textContent = dentro ? "Entrar a mi edición" : pruebaVigente() ? "Continuar mi prueba" : "Prueba gratis";
   $("#ptIn").hidden = dentro || !(pl && pl.disponible);  // sin Supabase configurado (por ejemplo, el archivo suelto) no hay a qué ingresar
   $("#ptPiloto").hidden = dentro;
+  $("#ptDemo").hidden = dentro;
   $("#ptEstado").textContent = dentro ? "Edición de " + pl.muni.nombre : "Demostración con noticias ficticias";
 }
 function salirPortada(){ mostrarPortada(false); if (!location.hash || location.hash === "#portada") location.hash = "inicio"; }
@@ -1847,5 +1848,17 @@ window.addEventListener("hashchange", () => { if (location.hash === "#portada") 
 /* Edición · Fecha del cabezal de la portada, como la de un diario. */
 (() => { const f = $("#ptFecha"); if (!f) return; const d = new Date().toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long", year: "numeric"}); f.textContent = d.charAt(0).toUpperCase() + d.slice(1); })();
 
+/* Video explicativo de la portada: pega el enlace (YouTube, Vimeo o .mp4) en data-video de #ptVideo; se carga solo al tocarlo. */
+(() => {
+  const f = document.getElementById("ptVideo"); if (!f) return;
+  const src = (f.dataset.video || "").trim(), b = f.querySelector("button");
+  if (!src) { b.disabled = true; return; }
+  document.getElementById("ptVideoS").textContent = "Video explicativo";
+  b.addEventListener("click", () => {
+    const yt = src.match(/(?:youtu\.be\/|[?&]v=|embed\/|shorts\/)([\w-]{11})/), vm = src.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    f.innerHTML = /\.(mp4|webm)(\?|$)/i.test(src) ? `<video src="${src}" controls autoplay playsinline></video>`
+      : `<iframe src="${yt ? "https://www.youtube-nocookie.com/embed/" + yt[1] + "?autoplay=1&rel=0" : vm ? "https://player.vimeo.com/video/" + vm[1] + "?autoplay=1" : src}" title="Video explicativo de PregonIA" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+  });
+})();
 render();
 mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingresar llega desde /servicio: va directo al acceso de clientes

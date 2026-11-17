@@ -1771,7 +1771,28 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
 .pd-go:hover{background:var(--accent-bg-h)}
 .pd-go:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .pd-go .ico{width:19px;height:19px;stroke-width:2.2}
-/* Dos puertas en la portada: la prueba gratis (principal) e Ingresar para los equipos con cuenta. Con sesión queda una sola: su edición. */
+/* Portada: acceso de clientes arriba, video explicativo y dos llamados (prueba gratis y demostración) */
+.pd-fecha{align-items:center}
+.pd-der{display:flex;align-items:center;gap:14px}
+.pd-acceso{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 14px;border:1.5px solid var(--frame);border-radius:999px;background:transparent;color:var(--ink);font:inherit;font-size:.8125rem;font-weight:600;text-decoration:none;cursor:pointer;white-space:nowrap}
+.pd-acceso:hover{background:var(--surface-2);color:var(--ink)}
+.pd-acceso:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.pd-acceso svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pd-acceso[hidden],.pd-go[hidden]{display:none}
+a.pd-go{text-decoration:none}
+.pd-video{margin:28px 0 0;width:100%;max-width:560px;aspect-ratio:16/9;border:1.5px solid var(--frame);border-radius:14px;overflow:hidden;background:var(--surface-2);display:grid}
+.pd-video iframe,.pd-video video{width:100%;height:100%;border:0;display:block;background:#000}
+.pd-video-b{display:grid;place-content:center;justify-items:center;gap:12px;width:100%;height:100%;border:0;background:transparent;color:var(--ink);font:inherit;cursor:pointer}
+.pd-video-b:disabled{cursor:default}
+.pd-video-b:focus-visible{outline:2px solid var(--accent);outline-offset:-4px}
+.pd-video-i{width:68px;height:68px;border-radius:50%;background:var(--accent-bg);color:var(--accent-ink);display:grid;place-items:center;transition:transform .15s ease}
+.pd-video-b:not(:disabled):hover .pd-video-i{transform:scale(1.06)}
+.pd-video-i svg{width:26px;height:26px;margin-left:4px;fill:currentColor}
+.pd-video-t{font-family:var(--f-news);font-weight:700;font-size:1.125rem}
+.pd-video-s{font-size:.8125rem;color:var(--muted);margin-top:-6px}
+@media (max-width:700px){.pd-desc{display:none}.pd-fecha{flex-wrap:nowrap}.pd-video{margin-top:22px;border-radius:12px}.pd-video-i{width:56px;height:56px}}
+@media (prefers-reduced-motion:reduce){.pd-video-i{transition:none}}
+/* Portada: «Acceso clientes» arriba; abajo la prueba gratis (principal) y agendar demostración. Con sesión queda una sola: su edición. */
 .pd-acts{margin-top:26px;display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .pd-acts .pd-go{margin-top:0}
 .pd-go.pd-alt{background:transparent;color:var(--ink);border:1.5px solid var(--frame)}
@@ -1850,7 +1871,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
 <section class="portada" id="portada" aria-labelledby="ptT" hidden>
   <div class="pd">
     <header class="pd-cab">
-      <p class="pd-fecha"><span id="ptFecha">Edición digital</span><span>Monitoreo de prensa para instituciones públicas</span></p>
+      <div class="pd-fecha"><span id="ptFecha">Edición digital</span><nav class="pd-der" aria-label="Acceso"><span class="pd-desc">Monitoreo de prensa para instituciones públicas</span><button class="pd-acceso" id="ptIn" type="button" data-act="login" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>Acceso clientes</button></nav></div>
       <p class="pd-nombre" id="ptT">Pregon<b>IA</b></p>
       <p class="pd-lema">La prensa no espera. Tú tampoco.</p>
     </header>
@@ -1858,9 +1879,12 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
       <p class="pd-ante">Municipios · Concejos · Consejos regionales · Parlamentarios</p>
       <h1 class="pd-titulo">Detecta lo que la prensa dice de tu gestión, mide hasta dónde llegó y responde antes de que el tema escale.</h1>
       <p class="pd-bajada">PregonIA lee cada día más de 100 medios nacionales, regionales y locales, y sus redes, y entrega a quien decide alertas, informes y respuestas redactadas con IA.</p>
+      <figure class="pd-video" id="ptVideo" data-video="">
+        <button class="pd-video-b" type="button" aria-label="Ver el video explicativo de PregonIA"><span class="pd-video-i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></span><span class="pd-video-t">Así funciona PregonIA</span><span class="pd-video-s" id="ptVideoS">Video explicativo · muy pronto</span></button>
+      </figure>
       <div class="pd-acts">
         <button class="pd-go" id="ptGo" type="button"><span id="ptGoTx">Prueba gratis</span> <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-        <button class="pd-go pd-alt" id="ptIn" type="button" data-act="login" hidden>Ingresar</button>
+        <a class="pd-go pd-alt" id="ptDemo" href="/servicio#contacto">Agendar demostración</a>
       </div>
       <p class="pd-piloto" id="ptPiloto">¿Quieres PregonIA en tu institución? <a href="/servicio">Conoce el servicio y sus planes</a></p>
       <div class="pd-cols">
