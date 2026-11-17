@@ -1,7 +1,7 @@
 // Noticias reales para PregonIA (etapa 1, sin base de datos): lee los medios al vuelo para una comuna, clasifica con Claude Haiku
 // y devuelve titular, enlace, medio, fecha y resumen propio. La respuesta queda 15 minutos en la caché de Vercel.
 // La lectura y la clasificación viven en _lectura.js, compartido con la lectura programada (/api/ingesta).
-import { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre, saludFuentes, plazoGoogleNews, statsGoogleNews } from "./_lectura.js";
+import { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre, saludFuentes, plazoGoogleNews, statsGoogleNews, ahorroGoogleNews } from "./_lectura.js";
 import { AUTORIDADES, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
 import { limpio, consulta, sujeto, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
 import { CATALOGO } from "./_catalogo.js";
@@ -30,9 +30,10 @@ async function paresDe(a, desde){
   const lista = AUTORIDADES.filter(x => mismo(x) && x.id !== a.id).concat([a]);
   if (lista.length < 2) return [];
   return Promise.all(lista.map(async x => {
+    if (ahorroGoogleNews()) return {n_: x.n, n: null};  // Google está limitando: los pares no le quitan turno a las notas
     let n = 0; try {
       // La consulta exige el nombre, así que todo lo que devuelve la nombra (en el cuerpo, si no en el titular): se cuenta igual para todos los cargos.
-      n = (await leerGoogleNewsConsulta(consulta(x), VENTANA_DIAS, false)).filter(i => Number.isFinite(i.fecha) && i.fecha >= desde).length;
+      n = (await leerGoogleNewsConsulta(consulta(x), VENTANA_DIAS, false, false, true)).filter(i => Number.isFinite(i.fecha) && i.fecha >= desde).length;
     } catch(e) { n = null; }
     return {n_: x.n, p: x.p || (a.rol === "alcalde" ? x.zona : ""), n, yo: x === a};
   })).then(r => r.filter(x => x.n !== null));

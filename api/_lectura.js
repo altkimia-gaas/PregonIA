@@ -181,12 +181,15 @@ CATALOGO.forEach(m => { const d = dominio(m.url); if (d) porDominio.set(d, m); p
    además entrega como máximo 100 notas por consulta (Valparaíso en 14 días tiene más de 250).
    Por eso: cola con pocas consultas a la vez y una pausa entre ellas, reintentos con espera creciente ante 429 o errores del servidor,
    y si una consulta llega al tope, se vuelve a pedir por tramos de fechas hasta bajar del tope. Todo dentro del plazo de la función. */
-const GN = {activas: 0, cola: [], proximo: 0, limite: 0, stats: null};
-const nuevasStats = () => ({consultas: 0, notas: 0, vacias: 0, reintentos: 0, r429: 0, fallidas: 0, tramos: 0});
+const GN = {activas: 0, cola: [], proximo: 0, limite: 0, stats: null, ahorro: false, cache: new Map()};
+const GN_CACHE_MS = 15 * 60000, GN_CACHE_MAX = 400;  // la misma consulta en 15 minutos (pares de una provincia, cuentas que comparten territorio) no se repite
+const nuevasStats = () => ({consultas: 0, cache: 0, notas: 0, vacias: 0, reintentos: 0, r429: 0, fallidas: 0, tramos: 0, ahorro: false});
 const GN_PARALELO = 2, GN_PAUSA = 450, GN_TOPE = 100;
 const dormir = ms => new Promise(ok => setTimeout(ok, ms));
 /* Plazo para las consultas a Google News de esta invocación (los reintentos y tramos no lo pasan). */
-export const plazoGoogleNews = ms => { GN.limite = Date.now() + ms; GN.stats = nuevasStats(); };
+export const plazoGoogleNews = ms => { GN.limite = Date.now() + ms; GN.stats = nuevasStats(); GN.ahorro = false; };
+/* Tras un 429, Google está limitando: lo prescindible (pares, tramos) se deja para que las consultas principales alcancen a leerse. */
+export const ahorroGoogleNews = () => GN.ahorro;
 /* Cifras de Google News de esta invocación, para ver en la respuesta si algo se perdió (429, respuestas vacías, tramos). */
 export const statsGoogleNews = () => ({...(GN.stats || nuevasStats())});
 const limite = () => GN.limite > Date.now() ? GN.limite : Date.now() + 40000;
@@ -198,20 +201,24 @@ async function turno(){
 }
 function soltar(){ GN.activas--; const sig = GN.cola.shift(); if (sig) sig(); }
 /* Google también limita respondiendo 200 sin notas: una respuesta vacía se reintenta una vez, tras una espera, antes de darla por buena. */
-async function leerGN(url){
-  const st0 = GN.stats || (GN.stats = nuevasStats()); st0.consultas++;
+async function leerGN(url, prescindible = false){
+  const st0 = GN.stats || (GN.stats = nuevasStats());
+  const c = GN.cache.get(url); if (c && Date.now() - c.t < GN_CACHE_MS) { st0.cache++; return c.xml; }
+  st0.consultas++;
+  const guardar = xml => { if (GN.cache.size >= GN_CACHE_MAX) GN.cache.delete(GN.cache.keys().next().value); GN.cache.set(url, {t: Date.now(), xml}); return xml; };
   let vacia = false;
   for (let k = 0; ; k++) {
     await turno(); let err, xml;
+    if (prescindible && GN.ahorro) { soltar(); throw new Error("ahorro"); }  // lo prescindible cede su turno cuando Google limita
     try { xml = await leer(url, 10000); } catch(e) { err = e; } finally { soltar(); }
     if (!err) {
       const n = (xml.match(/<item[\s>]/g) || []).length;
-      if (n || vacia || Date.now() + 5000 > limite()) { st0.notas += n; if (!n) st0.vacias++; return xml; }
+      if (n || vacia || Date.now() + 5000 > limite()) { st0.notas += n; if (!n) st0.vacias++; return n ? guardar(xml) : xml; }
       vacia = true; st0.reintentos++; GN.proximo = Math.max(GN.proximo, Date.now() + 2500); await dormir(2500); continue;
     }
     const st = Number((/HTTP (\d+)/.exec(err && err.message) || [])[1]) || 0, reintentable = !st || st === 429 || st >= 500;
     const espera = 1500 * 2 ** k;
-    if (st === 429) { st0.r429++; GN.proximo = Math.max(GN.proximo, Date.now() + espera); }  // todas las consultas esperan, no solo esta
+    if (st === 429) { st0.r429++; GN.ahorro = st0.ahorro = true; GN.proximo = Math.max(GN.proximo, Date.now() + espera); }  // todas las consultas esperan, no solo esta
     if (!reintentable || k >= 3 || Date.now() + espera + 3000 > limite()) { st0.fallidas++; throw err; }
     st0.reintentos++; await dormir(espera);
   }
@@ -222,8 +229,9 @@ const diaISO = t => new Date(t).toISOString().slice(0, 10);
 async function porTramos(q, desde, hasta, prof, vistos, out){
   const medio = Math.floor((desde + hasta) / 2);
   for (const [a, b] of [[desde, medio], [medio, hasta]]) {
+    if (GN.ahorro) return;
     if (GN.stats) GN.stats.tramos++;
-    let its; try { its = parsear(await leerGN(urlGN(`${q} after:${diaISO(a - 864e5)} before:${diaISO(b + 864e5)}`))); } catch(e) { continue; }
+    let its; try { its = parsear(await leerGN(urlGN(`${q} after:${diaISO(a - 864e5)} before:${diaISO(b + 864e5)}`), true)); } catch(e) { continue; }
     its.forEach(x => { const k = x.url || x.titulo; if (!vistos.has(k)) { vistos.add(k); out.push(x); } });
     if (its.length >= GN_TOPE - 2 && prof > 1 && b - a > 1.5 * 864e5 && Date.now() + 8000 < limite()) await porTramos(q, a, b, prof - 1, vistos, out);
   }
@@ -231,8 +239,8 @@ async function porTramos(q, desde, hasta, prof, vistos, out){
 export async function leerGoogleNews(comuna, dias = VENTANA_DIAS){ return (await leerGoogleNewsConsulta(`"${comuna}" ${CONTEXTO}`, dias)).map(x => ({...x, q: "comuna"})); }
 /* Google News con una consulta cualquiera. Con catalogo = true quedan los medios del catálogo y los demás medios chilenos con ficha común;
    con false, todo lo que encuentre (para contar). Con tramos = true, una consulta que llega al tope se completa por tramos de fechas. */
-export async function leerGoogleNewsConsulta(q, dias = VENTANA_DIAS, catalogo = true, tramos = catalogo){
-  let items = parsear(await leerGN(urlGN(`${q} when:${dias}d`)));
+export async function leerGoogleNewsConsulta(q, dias = VENTANA_DIAS, catalogo = true, tramos = catalogo, prescindible = false){
+  let items = parsear(await leerGN(urlGN(`${q} when:${dias}d`), prescindible));
   if (tramos && items.length >= GN_TOPE - 2) {
     const vistos = new Set(items.map(x => x.url || x.titulo)), mas = [];
     await porTramos(q, Date.now() - dias * 864e5, Date.now(), 3, vistos, mas);
