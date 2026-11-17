@@ -521,115 +521,140 @@ function pzLogo(ctx, x, y, alto, {a = 1, ondas = 1, align = "left", color = PZC.
   pzEsp(ctx, -px * 0.02); pzFuente(ctx, 400, px, PZF.h); ctx.fillText("el ", x0 + wSim + gap, base); pzFuente(ctx, 700, px, PZF.h); ctx.fillText("pregonero", x0 + wSim + gap + wEl, base); pzEsp(ctx, 0);
   ctx.restore(); return total;
 }
-/* Fondo cobalto con los anillos de la portada (ondas que se expanden). fase: desplazamiento para animarlos en el reel. */
-function pzFondo(ctx, H, {fase = 0, lado = "der"} = {}){
-  ctx.fillStyle = PZC.bg; ctx.fillRect(0, 0, PZ.W, H);
-  const cx = lado === "der" ? PZ.W + 120 : -120, cy = H * 0.5;
-  ctx.save(); ctx.strokeStyle = PZC.anillo; ctx.lineWidth = 34;
-  for (let k = 0; k < 4; k++) { const r = 260 + k * 150 + (fase % 1) * 150; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); }
+/* Identidad «El bando» (17 de noviembre de 2026): las piezas se leen como un boletín impreso y no como publicidad.
+   Papel blanco como base, mancheta cobalto arriba con trama de imprenta, filetes de periódico en azul noche,
+   antetítulo con cuadrado coral, datos numerados 01·02·03 y pie en azul noche con la fuente.
+   Mismos colores de la marca; cambian las proporciones (dominan el papel y la tinta) y desaparecen los anillos. */
+const PZ_LINEA = "rgba(14,26,58,.14)";
+/* Trama de imprenta: puntos que crecen hacia un lado. dir 1: crecen hacia la derecha; -1: hacia la izquierda. */
+function pzTrama(ctx, x, y, w, h, {color = "rgba(255,255,255,.16)", paso = 24, dir = 1, fase = 0} = {}){
+  ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); ctx.fillStyle = color;
+  const off = (fase % 1) * paso;
+  for (let px = x - paso + off; px < x + w + paso; px += paso) {
+    const t = Math.min(1, Math.max(0, (px - x) / w)), r = (dir > 0 ? t : 1 - t) * paso * 0.42;
+    if (r < 0.6) continue;
+    for (let py = y + paso / 2, fila = 0; py < y + h + paso; py += paso, fila++) { ctx.beginPath(); ctx.arc(px + (fila % 2) * paso / 2, py, r, 0, Math.PI * 2); ctx.fill(); }
+  }
   ctx.restore();
 }
+/* Fondo: papel blanco (o azul noche para cierres). */
+function pzFondo(ctx, H, {tono = "papel"} = {}){ ctx.fillStyle = tono === "noche" ? PZC.noche : PZC.papel; ctx.fillRect(0, 0, PZ.W, H); }
 const pzFecha = ts => new Date(ts || Date.now()).toLocaleDateString("es-CL", {day: "numeric", month: "long", year: "numeric"});
-/* Cabezal: logo y fecha, con un filete fino. */
-function pzCabezal(ctx, c, y){
-  pzLogo(ctx, PZ_MARGEN, y, 58);
-  pzTexto(ctx, pzFecha(c.fechaPieza), PZ.W - PZ_MARGEN, y + 42, {px: 26, w: 500, color: PZC.muted, align: "right"});
-  ctx.fillStyle = PZC.track; ctx.fillRect(PZ_MARGEN, y + 92, PZ.W - 2 * PZ_MARGEN, 2);
-  return y + 92;
+/* Mancheta: banda cobalto con trama, logo blanco, región y fecha; debajo, doble filete de periódico. Devuelve la y bajo los filetes. */
+function pzMancheta(ctx, c, {alto = 210, yLogo = 76, logo = 58, fase = 0, a = 1, derecha = true} = {}){
+  ctx.save(); ctx.globalAlpha *= a;
+  ctx.fillStyle = PZC.bg; ctx.fillRect(0, 0, PZ.W, alto);
+  pzTrama(ctx, PZ.W * 0.5, 0, PZ.W * 0.5, alto, {fase});
+  ctx.restore();
+  pzLogo(ctx, PZ_MARGEN, yLogo, logo, {a});
+  if (derecha) {
+    pzTexto(ctx, "REGIÓN DE VALPARAÍSO", PZ.W - PZ_MARGEN, yLogo + logo * 0.42, {px: 22, w: 700, fam: PZF.h, ls: 3, align: "right", a});
+    pzTexto(ctx, pzFecha(c.fechaPieza), PZ.W - PZ_MARGEN, yLogo + logo * 0.42 + 36, {px: 24, w: 500, color: PZC.soft, align: "right", a});
+  }
+  ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = PZC.noche; ctx.fillRect(PZ_MARGEN, alto + 24, PZ.W - 2 * PZ_MARGEN, 6); ctx.fillRect(PZ_MARGEN, alto + 36, PZ.W - 2 * PZ_MARGEN, 2); ctx.restore();
+  return alto + 38;
 }
-/* Antetítulo en píldora coral con texto azul noche (contraste alto). */
-function pzKicker(ctx, txt, y, a = 1){
+function pzCabezal(ctx, c, y){ return pzMancheta(ctx, c); }
+/* Antetítulo: cuadrado coral y texto azul noche en versalitas espaciadas (como la data de un despacho). */
+function pzKicker(ctx, txt, y, a = 1, {color = PZC.noche} = {}){
   const t = String(txt || "").toUpperCase(); if (!t) return y;
-  pzFuente(ctx, 700, 26, PZF.h); pzEsp(ctx, 3); const w = Math.min(PZ.W - 2 * PZ_MARGEN, ctx.measureText(t).width + 44); pzEsp(ctx, 0);
-  ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = PZC.coral; pzRR(ctx, PZ_MARGEN, y - 38, w, 54, 27); ctx.fill(); ctx.restore();
-  pzTexto(ctx, t, PZ_MARGEN + 22, y - 2, {px: 26, w: 700, fam: PZF.h, color: PZC.noche, ls: 3, a, max: 1, maxW: w - 30});
-  return y + 30;
+  ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = PZC.coral; ctx.fillRect(PZ_MARGEN, y - 22, 22, 22); ctx.restore();
+  pzTexto(ctx, t, PZ_MARGEN + 40, y, {px: 26, w: 700, fam: PZF.h, color, ls: 4, a, max: 1, maxW: PZ.W - 2 * PZ_MARGEN - 40});
+  return y + 22;
 }
-/* Pie: fuente y mención de IA. */
-function pzPie(ctx, c, H, a = 1){
-  const y = H - 140; ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = PZC.track; ctx.fillRect(PZ_MARGEN, y, PZ.W - 2 * PZ_MARGEN, 2); ctx.restore();
-  pzTexto(ctx, pzFuenteLinea(c), PZ_MARGEN, y + 52, {px: 28, w: 600, a, max: 1});
-  pzTexto(ctx, c.etiquetaIA || "Resumen elaborado con apoyo de IA y revisado por el equipo de " + PZ_MARCA, PZ_MARGEN, y + 94, {px: 23, w: 400, color: PZC.muted, a, max: 1});
+/* Pie: banda azul noche con la fuente y la mención de IA. */
+function pzPie(ctx, c, H, a = 1, alto = 150){
+  ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = PZC.noche; ctx.fillRect(0, H - alto, PZ.W, alto); ctx.fillStyle = PZC.coral; ctx.fillRect(PZ_MARGEN, H - alto, 96, 6); ctx.restore();
+  pzTexto(ctx, pzFuenteLinea(c), PZ_MARGEN, H - alto + 66, {px: 28, w: 600, a, max: 1});
+  pzTexto(ctx, c.etiquetaIA || "Resumen elaborado con apoyo de IA y revisado por el equipo de " + PZ_MARCA, PZ_MARGEN, H - alto + 106, {px: 22, w: 400, color: PZC.muted, a, max: 1});
 }
 const pzDominio = u => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch(e) { return ""; } };
 /* Línea de fuente de la pieza: con un solo medio agrega su dominio, para que se sepa dónde está la nota original. */
 const pzFuenteLinea = c => { const fs = (c.fuentes && c.fuentes.length ? c.fuentes : [c.fuente || {}]).filter(f => f && f.medio), d = fs.length === 1 ? pzDominio(fs[0].url) : ""; return "Fuente: " + pzFuentes(c) + (d && rdSinTildes(d) !== rdSinTildes(fs[0].medio) ? " · " + d : ""); };
-const rdSinTildes = t => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "");
+const rdSinTildes = t => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, "");
 const pzFuentes = c => { const ms = [...new Set((c.fuentes && c.fuentes.length ? c.fuentes : [c.fuente || {}]).map(f => f.medio).filter(Boolean))]; return ms.length ? (ms.length > 2 ? ms.slice(0, 2).join(", ") + " y otros" : ms.join(" y ")) : "[completar fuente]"; };
+/* Datos numerados 01, 02, 03 con filetes finos entre ellos. */
 function pzDatos(ctx, datos, y, o = {}){
-  const {px = 34, gap = 22, a = 1, max = 3, color = PZC.ink} = o;
-  (datos || []).filter(Boolean).slice(0, max).forEach(d => {
-    ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = PZC.coral; ctx.beginPath(); ctx.arc(PZ_MARGEN + 8, y - px * 0.36, 8, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-    y = pzTexto(ctx, d, PZ_MARGEN + 36, y, {px, w: 500, a, color, maxW: PZ.W - 2 * PZ_MARGEN - 36, max: 3}) + gap;
+  const {px = 31, gap = 20, a = 1, max = 3, color = PZC.tinta} = o, L = (datos || []).filter(Boolean).slice(0, max);
+  L.forEach((d, i) => {
+    ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = PZ_LINEA; ctx.fillRect(PZ_MARGEN, y - px - 14, PZ.W - 2 * PZ_MARGEN, 2); ctx.restore();
+    pzTexto(ctx, String(i + 1).padStart(2, "0"), PZ_MARGEN, y + 4, {px: px + 6, w: 700, fam: PZF.h, color: PZC.bg, a});
+    y = pzTexto(ctx, d, PZ_MARGEN + 74, y, {px, w: 500, a, color, maxW: PZ.W - 2 * PZ_MARGEN - 74, max: 3, lh: px * 1.3}) + gap + 14;
   });
   return y;
 }
-
+function pzTitular(ctx, t, y, {max = 78, min = 52, lineas = 5, color = PZC.tinta, a = 1} = {}){
+  const px = pzAjustar(ctx, t, {max, min, maxLineas: lineas});
+  y = pzTexto(ctx, t || "[titular]", PZ_MARGEN, y + px * 0.82, {px, w: 700, fam: PZF.h, color, lh: px * 1.06, ls: -px * 0.025, max: lineas, a});
+  ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = PZC.coral; ctx.fillRect(PZ_MARGEN, y - px * 0.06 + 10, 96, 8); ctx.restore();
+  return y + 24;
+}
 /* Feed 4:5 */
 function pzFeed(ctx, c){
   const H = PZ.FEED; pzFondo(ctx, H);
-  let y = pzCabezal(ctx, c, 84) + 100;
-  y = pzKicker(ctx, c.kicker, y) + 24;
-  const px = pzAjustar(ctx, c.titular, {max: 84, min: 54, maxLineas: 5});
-  y = pzTexto(ctx, c.titular || "[titular]", PZ_MARGEN, y + px * 0.6, {px, w: 700, fam: PZF.h, lh: px * 1.08, ls: -px * 0.02, max: 5}) + 14;
-  if (c.bajada) y = pzTexto(ctx, c.bajada, PZ_MARGEN, y + 22, {px: 34, w: 400, color: PZC.soft, max: 4, lh: 46}) + 26;
-  const restante = H - 180 - y, datos = (c.datos || []).filter(Boolean);
-  if (datos.length && restante > 160) pzDatos(ctx, datos, y + 34, {px: 31, max: restante > 330 ? 3 : 2, gap: 16});
+  let y = pzMancheta(ctx, c) + 74;
+  y = pzKicker(ctx, c.kicker, y) + 14;
+  y = pzTitular(ctx, c.titular, y);
+  if (c.bajada) y = pzTexto(ctx, c.bajada, PZ_MARGEN, y + 40, {px: 32, w: 400, color: PZC.gris, max: 4, lh: 44}) + 10;
+  // Entran tantos datos como quepan completos sobre el pie (se mide antes de dibujar).
+  const datos = (c.datos || []).filter(Boolean), tope = H - 150 - 30, alto = d => { pzFuente(ctx, 500, 31, PZF.b); return Math.min(3, pzLineas(ctx, d, PZ.W - 2 * PZ_MARGEN - 74).length) * 31 * 1.3 + 34; };
+  let caben = 0, yy = y + 62; for (const d of datos.slice(0, 3)) { if (yy + alto(d) - 31 > tope) break; yy += alto(d); caben++; }
+  if (caben) pzDatos(ctx, datos, y + 62, {max: caben});
   pzPie(ctx, c, H);
 }
 /* Historia 9:16: el contenido evita los 250 px de arriba y los 300 de abajo, donde Instagram pone su interfaz. */
 function pzHistoria(ctx, c){
   const H = PZ.HIST; pzFondo(ctx, H);
-  let y = pzCabezal(ctx, c, 280) + 130;
-  y = pzKicker(ctx, c.kicker, y) + 30;
-  const t = (c.historia && c.historia.t) || c.titular, px = pzAjustar(ctx, t, {max: 96, min: 60, maxLineas: 6});
-  y = pzTexto(ctx, t || "[titular]", PZ_MARGEN, y + px * 0.6, {px, w: 700, fam: PZF.h, lh: px * 1.08, ls: -px * 0.02, max: 6}) + 30;
+  let y = pzMancheta(ctx, c, {alto: 420, yLogo: 290, logo: 64}) + 100;
+  y = pzKicker(ctx, c.kicker, y) + 16;
+  const t = (c.historia && c.historia.t) || c.titular;
+  y = pzTitular(ctx, t, y, {max: 96, min: 60, lineas: 6});
   const x = (c.historia && c.historia.x) || c.bajada;
-  if (x) y = pzTexto(ctx, x, PZ_MARGEN, y + 20, {px: 40, w: 400, color: PZC.soft, max: 5, lh: 54}) + 30;
-  // Llamado a ver el detalle en el feed: píldora blanca con texto cobalto.
-  const ty = Math.min(Math.max(y + 60, 1240), 1440); pzFuente(ctx, 700, 34, PZF.h); const lbl = "El detalle, en nuestra publicación", w = ctx.measureText(lbl).width + 80;
-  ctx.fillStyle = PZC.papel; pzRR(ctx, PZ_MARGEN, ty, w, 84, 42); ctx.fill(); pzTexto(ctx, lbl, PZ_MARGEN + 40, ty + 54, {px: 34, w: 700, fam: PZF.h, color: PZC.bg});
-  ctx.fillStyle = PZC.track; ctx.fillRect(PZ_MARGEN, 1540, PZ.W - 2 * PZ_MARGEN, 2);
-  pzTexto(ctx, pzFuenteLinea(c), PZ_MARGEN, 1590, {px: 28, w: 600, max: 1});
-  pzTexto(ctx, c.etiquetaIA || "Resumen elaborado con apoyo de IA y revisado por el equipo de " + PZ_MARCA, PZ_MARGEN, 1630, {px: 23, w: 400, color: PZC.muted, max: 2});
+  if (x) y = pzTexto(ctx, x, PZ_MARGEN, y + 46, {px: 40, w: 400, color: PZC.gris, max: 5, lh: 54}) + 20;
+  // Llamado a ver el detalle en el feed: rótulo azul noche, de esquinas rectas.
+  const ty = Math.min(Math.max(y + 50, 1180), 1380); pzFuente(ctx, 700, 32, PZF.h); const lbl = "El detalle, en nuestra publicación  →", w = ctx.measureText(lbl).width + 72;
+  ctx.fillStyle = PZC.noche; pzRR(ctx, PZ_MARGEN, ty, w, 84, 6); ctx.fill(); pzTexto(ctx, lbl, PZ_MARGEN + 36, ty + 54, {px: 32, w: 700, fam: PZF.h});
+  pzPie(ctx, c, H, 1, 420);
 }
-/* Carrusel: portada y cierre en cobalto; las láminas del medio en papel blanco, para dar ritmo y leer mejor el texto largo. */
+/* Carrusel: portada como la del feed, láminas de lectura en papel y cierre en azul noche con las fuentes. */
 function pzLaminas(c){ return [{k: "portada"}, ...((c.slides || []).filter(s => s && (s.t || s.x)).slice(0, 4).map(s => ({k: "punto", ...s}))), {k: "cierre"}]; }
-function pzPuntos(ctx, n, i, H, claro){ for (let k = 0; k < n; k++) { ctx.fillStyle = k === i ? (claro ? PZC.bg : PZC.ink) : (claro ? "#D6DCEB" : PZC.track); pzRR(ctx, PZ.W - PZ_MARGEN - (n - k) * 30 + 12, H - 76, 18, 18, 9); ctx.fill(); } }
+function pzPuntos(ctx, n, i, y, claro){ for (let k = 0; k < n; k++) { ctx.fillStyle = k === i ? (claro ? PZC.bg : PZC.ink) : (claro ? "#D6DCEB" : PZC.track); ctx.fillRect(PZ.W - PZ_MARGEN - (n - k) * 30 + 12, y, 18, 18); } }
 function pzLamina(ctx, c, i){
   const H = PZ.FEED, L = pzLaminas(c), s = L[i] || L[0], n = L.length;
   if (s.k === "punto") {
-    ctx.fillStyle = PZC.papel; ctx.fillRect(0, 0, PZ.W, H);
-    ctx.fillStyle = PZC.bg; ctx.fillRect(0, 0, PZ.W, 18);
-    pzSimbolo(ctx, PZ_MARGEN, 84, 58, {color: PZC.bg});
-    pzTexto(ctx, `${i} / ${n - 2}`, PZ.W - PZ_MARGEN, 128, {px: 30, w: 700, fam: PZF.h, color: PZC.bg, align: "right"});
-    const px = pzAjustar(ctx, s.t || "", {max: 76, min: 50, maxLineas: 3});
-    ctx.fillStyle = PZC.coral; ctx.fillRect(PZ_MARGEN, 300, 120, 10);
-    let y = pzTexto(ctx, s.t || "", PZ_MARGEN, 360 + px * 0.6, {px, w: 700, fam: PZF.h, color: PZC.tinta, lh: px * 1.08, ls: -px * 0.02, max: 3}) + 20;
-    pzTexto(ctx, s.x || "", PZ_MARGEN, y + 30, {px: 38, w: 400, color: PZC.gris, lh: 54, max: 9});
-    pzPuntos(ctx, n, i, H, true); return;
+    pzFondo(ctx, H);
+    ctx.fillStyle = PZC.bg; ctx.fillRect(0, 0, PZ.W, 150); pzTrama(ctx, PZ.W * 0.55, 0, PZ.W * 0.45, 150);
+    pzLogo(ctx, PZ_MARGEN, 48, 52);
+    ctx.fillStyle = PZC.noche; ctx.fillRect(PZ_MARGEN, 174, PZ.W - 2 * PZ_MARGEN, 6); ctx.fillRect(PZ_MARGEN, 186, PZ.W - 2 * PZ_MARGEN, 2);
+    pzTexto(ctx, String(i).padStart(2, "0"), PZ_MARGEN, 400, {px: 180, w: 700, fam: PZF.h, color: PZC.bg, ls: -6});
+    pzTexto(ctx, `de ${String(n - 2).padStart(2, "0")}`, PZ_MARGEN + 236, 400, {px: 34, w: 500, fam: PZF.h, color: PZC.gris});
+    const y = pzTitular(ctx, s.t || "", 450, {max: 72, min: 48, lineas: 3});
+    pzTexto(ctx, s.x || "", PZ_MARGEN, y + 50, {px: 36, w: 400, color: PZC.gris, lh: 52, max: 9});
+    ctx.fillStyle = PZ_LINEA; ctx.fillRect(PZ_MARGEN, H - 110, PZ.W - 2 * PZ_MARGEN, 2);
+    pzTexto(ctx, PZ_MARCA, PZ_MARGEN, H - 58, {px: 24, w: 700, fam: PZF.h, color: PZC.noche});
+    pzPuntos(ctx, n, i, H - 76, true); return;
   }
-  pzFondo(ctx, H, {lado: s.k === "cierre" ? "izq" : "der"});
-  let y = pzCabezal(ctx, c, 84) + 100;
   if (s.k === "portada") {
-    y = pzKicker(ctx, c.kicker, y) + 24;
-    const px = pzAjustar(ctx, c.titular, {max: 92, min: 58, maxLineas: 6});
-    y = pzTexto(ctx, c.titular || "[titular]", PZ_MARGEN, y + px * 0.6, {px, w: 700, fam: PZF.h, lh: px * 1.08, ls: -px * 0.02, max: 6});
-    if (c.bajada) pzTexto(ctx, c.bajada, PZ_MARGEN, y + 50, {px: 34, w: 400, color: PZC.soft, max: 3, lh: 46});
-    pzTexto(ctx, "Desliza  →", PZ_MARGEN, H - 60, {px: 30, w: 700, fam: PZF.h});
-  } else {
-    pzTexto(ctx, "FUENTES", PZ_MARGEN, y, {px: 26, w: 700, fam: PZF.h, ls: 4, color: PZC.muted}); y += 30;
-    const fs = (c.fuentes && c.fuentes.length ? c.fuentes : [c.fuente || {}]).filter(f => f.medio).slice(0, 5);
-    fs.forEach(f => { y = pzTexto(ctx, f.medio, PZ_MARGEN, y + 24, {px: 40, w: 700, fam: PZF.h, max: 1}); const sub = [pzDominio(f.url), f.fecha ? pzFecha(f.fecha) : ""].filter(Boolean).join(" · "); if (sub) y = pzTexto(ctx, sub, PZ_MARGEN, y + 2, {px: 26, w: 400, color: PZC.muted, max: 1}); y += 8; });
-    if (!fs.length) y = pzTexto(ctx, "[completar fuente]", PZ_MARGEN, y + 24, {px: 40, w: 700, fam: PZF.h});
-    y = Math.max(y + 70, 860);
-    pzLogo(ctx, PZ_MARGEN, y - 60, 72);
-    pzTexto(ctx, "Noticias de la Región de Valparaíso, comuna por comuna. Hechos con fuente, sin opinión.", PZ_MARGEN, y + 70, {px: 30, w: 400, color: PZC.soft, max: 3});
-    pzTexto(ctx, c.etiquetaIA || "Resumen elaborado con apoyo de IA y revisado por el equipo de " + PZ_MARCA, PZ_MARGEN, H - 120, {px: 24, w: 400, color: PZC.muted, max: 2, maxW: PZ.W - 2 * PZ_MARGEN - 200});
+    pzFondo(ctx, H);
+    let y = pzMancheta(ctx, c) + 74;
+    y = pzKicker(ctx, c.kicker, y) + 14;
+    y = pzTitular(ctx, c.titular, y, {max: 92, min: 58, lineas: 6});
+    if (c.bajada) pzTexto(ctx, c.bajada, PZ_MARGEN, y + 40, {px: 32, w: 400, color: PZC.gris, max: 3, lh: 44});
+    ctx.fillStyle = PZC.noche; ctx.fillRect(0, H - 130, PZ.W, 130); ctx.fillStyle = PZC.coral; ctx.fillRect(PZ_MARGEN, H - 130, 96, 6);
+    pzTexto(ctx, "Desliza  →", PZ_MARGEN, H - 52, {px: 30, w: 700, fam: PZF.h});
+    pzPuntos(ctx, n, i, H - 76, false); return;
   }
-  pzPuntos(ctx, n, i, H, false);
+  pzFondo(ctx, H, {tono: "noche"}); pzTrama(ctx, PZ.W * 0.5, 0, PZ.W * 0.5, 240, {color: "rgba(31,79,216,.6)"});
+  pzLogo(ctx, PZ_MARGEN, 96, 58);
+  let y = 300;
+  pzTexto(ctx, "FUENTES", PZ_MARGEN, y, {px: 26, w: 700, fam: PZF.h, ls: 4, color: PZC.muted}); y += 30;
+  const fs = (c.fuentes && c.fuentes.length ? c.fuentes : [c.fuente || {}]).filter(f => f.medio).slice(0, 5);
+  fs.forEach(f => { ctx.fillStyle = PZC.coral; ctx.fillRect(PZ_MARGEN, y + 12, 22, 22); y = pzTexto(ctx, f.medio, PZ_MARGEN + 40, y + 34, {px: 40, w: 700, fam: PZF.h, max: 1}); const sub = [pzDominio(f.url), f.fecha ? pzFecha(f.fecha) : ""].filter(Boolean).join(" · "); if (sub) y = pzTexto(ctx, sub, PZ_MARGEN + 40, y + 2, {px: 26, w: 400, color: PZC.muted, max: 1}); y += 14; });
+  if (!fs.length) y = pzTexto(ctx, "[completar fuente]", PZ_MARGEN, y + 24, {px: 40, w: 700, fam: PZF.h});
+  pzTexto(ctx, "Noticias de la Región de Valparaíso, comuna por comuna. Hechos con fuente, sin opinión.", PZ_MARGEN, Math.max(y + 80, 820), {px: 30, w: 400, color: PZC.soft, max: 3});
+  pzTexto(ctx, c.etiquetaIA || "Resumen elaborado con apoyo de IA y revisado por el equipo de " + PZ_MARCA, PZ_MARGEN, H - 110, {px: 24, w: 400, color: PZC.muted, max: 2, maxW: PZ.W - 2 * PZ_MARGEN - 200});
+  pzPuntos(ctx, n, i, H - 76, false);
 }
-
 /* Reel 9:16: escenas (portada, un dato por escena, cierre) sincronizadas con la voz de cada escena. */
 const PZ_VOZ_INI = 0.35, PZ_VOZ_COLA = 0.7;
 function pzEscenas(c){
@@ -645,31 +670,39 @@ const pzIn = (l, t0, d = 0.6) => pzEase((l - t0) / d);
 function pzReelCuadro(ctx, plan, t){
   const c = plan.c, H = PZ.HIST, k = ctx.canvas.width / PZ.W; ctx.setTransform(k, 0, 0, k, 0, 0); ctx.globalAlpha = 1;
   const s = plan.escenas.find(x => t < x.t0 + x.dur) || plan.escenas[plan.escenas.length - 1], l = Math.min(t - s.t0, s.dur);
-  pzFondo(ctx, H, {fase: t / 4, lado: s.k === "cierre" ? "izq" : "der"});
+  const cierre = s.k === "cierre";
+  pzFondo(ctx, H, {tono: cierre ? "noche" : "papel"});
+  if (!cierre) { ctx.fillStyle = PZC.bg; ctx.fillRect(0, 0, PZ.W, s.k === "intro" ? 460 : 340); pzTrama(ctx, PZ.W * 0.45, 0, PZ.W * 0.55, s.k === "intro" ? 460 : 340, {fase: t / 3}); }
+  else pzTrama(ctx, PZ.W * 0.45, 0, PZ.W * 0.55, 420, {color: "rgba(31,79,216,.6)", fase: t / 3});
   // Progreso arriba, como en las historias.
   const n = plan.escenas.length, gap = 10, w = (PZ.W - 2 * 60 - gap * (n - 1)) / n;
-  plan.escenas.forEach((x, i) => { const p = Math.min(1, Math.max(0, (t - x.t0) / x.dur)); ctx.fillStyle = PZC.track; pzRR(ctx, 60 + i * (w + gap), 60, w, 8, 4); ctx.fill(); if (p > 0) { ctx.fillStyle = PZC.ink; pzRR(ctx, 60 + i * (w + gap), 60, Math.max(8, w * p), 8, 4); ctx.fill(); } });
-  ctx.save(); ctx.globalAlpha = Math.min(1, (s.dur - l) / 0.35 + (s.k === "cierre" ? 1 : 0));
+  plan.escenas.forEach((x, i) => { const p = Math.min(1, Math.max(0, (t - x.t0) / x.dur)); ctx.fillStyle = PZC.track; ctx.fillRect(60 + i * (w + gap), 60, w, 8); if (p > 0) { ctx.fillStyle = PZC.ink; ctx.fillRect(60 + i * (w + gap), 60, Math.max(8, w * p), 8); } });
+  ctx.save(); ctx.globalAlpha = Math.min(1, (s.dur - l) / 0.35 + (cierre ? 1 : 0));
+  const filetes = (y, a) => { ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = PZC.noche; ctx.fillRect(PZ_MARGEN, y, (PZ.W - 2 * PZ_MARGEN) * a, 6); ctx.fillRect(PZ_MARGEN, y + 12, (PZ.W - 2 * PZ_MARGEN) * a, 2); ctx.restore(); };
   if (s.k === "intro") {
-    pzLogo(ctx, PZ.W / 2, 420, 96, {a: pzIn(l, 0), ondas: pzIn(l, 0.1, 1), align: "center"});
-    pzKicker(ctx, c.kicker, 740, pzIn(l, 0.4));
-    const px = pzAjustar(ctx, c.titular, {max: 100, min: 64, maxLineas: 6});
-    const y = pzTexto(ctx, c.titular, PZ_MARGEN, 820 + px * 0.6, {px, w: 700, fam: PZF.h, lh: px * 1.08, ls: -px * 0.02, a: pzIn(l, 0.65, 0.8), max: 6});
-    if (c.bajada) pzTexto(ctx, c.bajada, PZ_MARGEN, y + 50, {px: 40, w: 400, color: PZC.soft, lh: 54, a: pzIn(l, 1.4), max: 4});
+    pzLogo(ctx, PZ_MARGEN, 290, 72, {a: pzIn(l, 0), ondas: pzIn(l, 0.1, 1)});
+    filetes(484, pzIn(l, 0.2, 0.8));
+    pzKicker(ctx, c.kicker, 640, pzIn(l, 0.4));
+    const y = pzTitular(ctx, c.titular, 680, {max: 100, min: 64, lineas: 6, a: pzIn(l, 0.65, 0.8)});
+    if (c.bajada) pzTexto(ctx, c.bajada, PZ_MARGEN, y + 50, {px: 40, w: 400, color: PZC.gris, lh: 54, a: pzIn(l, 1.4), max: 4});
   } else if (s.k === "dato") {
-    pzLogo(ctx, PZ_MARGEN, 150, 54, {ondas: 0.5 + 0.5 * Math.abs(Math.sin(t * 2))});
-    pzKicker(ctx, c.kicker, 580, pzIn(l, 0));
-    pzTexto(ctx, `${s.i + 1} de ${s.de}`, PZ_MARGEN, 690, {px: 34, w: 700, fam: PZF.h, color: PZC.muted, a: pzIn(l, 0.15)});
-    ctx.save(); ctx.globalAlpha *= pzIn(l, 0.2); ctx.fillStyle = PZC.coral; ctx.fillRect(PZ_MARGEN, 750, 180 * pzIn(l, 0.2, 0.8), 12); ctx.restore();
-    const px = pzAjustar(ctx, s.d, {max: 84, min: 54, maxLineas: 7});
-    pzTexto(ctx, s.d, PZ_MARGEN, 860 + px * 0.6, {px, w: 700, fam: PZF.h, lh: px * 1.1, ls: -px * 0.015, a: pzIn(l, 0.35, 0.8), max: 7});
+    pzLogo(ctx, PZ_MARGEN, 200, 56, {ondas: 0.5 + 0.5 * Math.abs(Math.sin(t * 2))});
+    filetes(364, 1);
+    pzKicker(ctx, c.kicker, 520, pzIn(l, 0));
+    pzTexto(ctx, String(s.i + 1).padStart(2, "0"), PZ_MARGEN, 800, {px: 260, w: 700, fam: PZF.h, color: PZC.bg, ls: -8, a: pzIn(l, 0.1)});
+    pzTexto(ctx, `de ${String(s.de).padStart(2, "0")}`, PZ_MARGEN + 350, 800, {px: 40, w: 500, fam: PZF.h, color: PZC.gris, a: pzIn(l, 0.2)});
+    ctx.save(); ctx.globalAlpha *= pzIn(l, 0.2); ctx.fillStyle = PZC.coral; ctx.fillRect(PZ_MARGEN, 860, 160 * pzIn(l, 0.2, 0.8), 12); ctx.restore();
+    const px = pzAjustar(ctx, s.d, {max: 80, min: 52, maxLineas: 7});
+    pzTexto(ctx, s.d, PZ_MARGEN, 960 + px * 0.6, {px, w: 700, fam: PZF.h, color: PZC.tinta, lh: px * 1.1, ls: -px * 0.015, a: pzIn(l, 0.35, 0.8), max: 7});
   } else {
     pzTexto(ctx, "FUENTE", PZ_MARGEN, 560, {px: 30, w: 700, fam: PZF.h, ls: 4, color: PZC.muted, a: pzIn(l, 0)});
-    let y = pzTexto(ctx, pzFuentes(c), PZ_MARGEN, 660, {px: 70, w: 700, fam: PZF.h, lh: 80, a: pzIn(l, 0.2), max: 3});
-    if (c.fuente && c.fuente.fecha) pzTexto(ctx, pzFecha(c.fuente.fecha), PZ_MARGEN, y + 10, {px: 36, w: 500, color: PZC.muted, a: pzIn(l, 0.4)});
-    pzLogo(ctx, PZ.W / 2, 1120, 120, {a: pzIn(l, 0.8), ondas: pzIn(l, 0.9, 1.2), align: "center"});
-    pzTexto(ctx, "Noticias de la Región de Valparaíso, comuna por comuna", PZ.W / 2, 1360, {px: 34, w: 400, fam: PZF.h, color: PZC.soft, a: pzIn(l, 1.1), align: "center", maxW: PZ.W - 160, max: 2});
-    pzTexto(ctx, "Guion con apoyo de IA, revisado por el equipo · Voz sintética", PZ.W / 2, 1520, {px: 28, w: 500, color: PZC.muted, a: pzIn(l, 1.3), align: "center", maxW: PZ.W - 160, max: 2});
+    ctx.save(); ctx.globalAlpha *= pzIn(l, 0.1); ctx.fillStyle = PZC.coral; ctx.fillRect(PZ_MARGEN, 600, 96, 8); ctx.restore();
+    let y = pzTexto(ctx, pzFuentes(c), PZ_MARGEN, 700, {px: 70, w: 700, fam: PZF.h, lh: 80, a: pzIn(l, 0.2), max: 3});
+    const f0 = (c.fuentes && c.fuentes[0]) || c.fuente || {}, sub = [c.fuentes && c.fuentes.length > 1 ? "" : pzDominio(f0.url), f0.fecha ? pzFecha(f0.fecha) : ""].filter(Boolean).join(" · ");
+    if (sub) pzTexto(ctx, sub, PZ_MARGEN, y + 10, {px: 36, w: 500, color: PZC.muted, a: pzIn(l, 0.4)});
+    pzLogo(ctx, PZ.W / 2, 1060, 110, {a: pzIn(l, 0.8), ondas: pzIn(l, 0.9, 1.2), align: "center"});
+    pzTexto(ctx, "Noticias de la Región de Valparaíso, comuna por comuna", PZ.W / 2, 1290, {px: 34, w: 400, fam: PZF.h, color: PZC.soft, a: pzIn(l, 1.1), align: "center", maxW: PZ.W - 160, max: 2});
+    pzTexto(ctx, "Guion con apoyo de IA, revisado por el equipo · Voz sintética", PZ.W / 2, 1460, {px: 28, w: 500, color: PZC.muted, a: pzIn(l, 1.3), align: "center", maxW: PZ.W - 160, max: 2});
   }
   ctx.restore();
 }
