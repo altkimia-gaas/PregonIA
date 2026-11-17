@@ -223,7 +223,7 @@ function entPintar(foco){
 }
 function entIr(n){ ENT.paso = Math.max(1, Math.min(4, n)); if (ENT.paso <= 2) ENT.qc = ""; entPintar("titulo"); $("#entForm .ent-scroll")?.scrollTo(0, 0); }
 /* Prueba gratis · inscripción antes de elegir la autoridad: nombre, correo, tipo de autoridad y territorio. Al correo llega un
-   código de 6 dígitos generado al azar en el servidor (/api/prueba); al validarlo se abre la prueba en este navegador hasta la
+   código de 6 dígitos generado al azar en el servidor (/api/contacto?prueba); al validarlo se abre la prueba en este navegador hasta la
    fecha que devuelve el servidor y la entrada parte con el cargo y el territorio ya elegidos. Con sesión de cliente no se pide. */
 const PRUEBA_KEY = "pregonia-prueba";
 const pruebaGuardada = () => { try { return JSON.parse(localStorage.getItem(PRUEBA_KEY) || "null"); } catch(e) { return null; } };
@@ -283,7 +283,7 @@ function insAbrir(enPortada){
 function insCerrar(){ $("#insBack")?.remove(); if (!$("#entBack")) document.body.classList.remove("vid-on"); const o = insAbrir.vuelta; if (o && o.isConnected && !INS.enPortada) o.focus(); }
 function insError(msg, foco){ const e = $("#insErr"); if (!e) return; e.textContent = msg; e.hidden = false; if (foco) foco.focus(); }
 async function insLlamar(datos){
-  const r = await fetch("/api/prueba", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(datos)});
+  const r = await fetch("/api/contacto?prueba", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(datos)});
   const j = await r.json().catch(() => ({}));
   if (!r.ok || !j.ok) throw new Error(j.error || "No pudimos completar la inscripción. Intenta de nuevo.");
   return j;

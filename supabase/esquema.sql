@@ -590,7 +590,7 @@ create table if not exists contactos (
 );
 alter table contactos enable row level security;
 
--- Prueba gratis (/api/prueba): inscripción con verificación del correo por código de 6 dígitos.
+-- Prueba gratis (/api/contacto?prueba): inscripción con verificación del correo por código de 6 dígitos.
 -- Guarda solo el resumen con sal del código (se borra al verificar). Sin políticas: solo la clave secreta del servidor accede.
 create table if not exists public.pruebas (
   id bigint generated always as identity primary key,

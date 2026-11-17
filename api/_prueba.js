@@ -1,4 +1,5 @@
-// Prueba gratis: inscripción con verificación del correo.
+// Prueba gratis: inscripción con verificación del correo. Se atiende en /api/contacto?prueba (el plan de Vercel admite
+// 12 funciones; las dos son formularios de potenciales clientes y comparten la función).
 // POST {accion: "solicitar", nombre, correo, rol, territorio, consentimiento} guarda la inscripción en Supabase (tabla pruebas)
 // y envía al correo un código de 6 dígitos generado al azar (crypto.randomInt), válido 15 minutos. En la base solo queda
 // el resumen del código (SHA-256 con sal), nunca el código.
@@ -101,7 +102,7 @@ async function verificar(d){
   return json({ok: true, prueba: prueba()});
 }
 
-export async function POST(req){
+export async function pruebaPOST(req){
   const propio = new URL(req.url).origin, origen = req.headers.get("origin");
   if (origen && origen !== propio) return json({error: "Origen no permitido"}, 403);
   const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "anonimo";
@@ -117,4 +118,3 @@ export async function POST(req){
     return json({error: "No pudimos completar la inscripción. Intenta de nuevo o escríbenos a soporte@altkimia.cl."}, 500);
   }
 }
-export const GET = () => json({ok: true});
