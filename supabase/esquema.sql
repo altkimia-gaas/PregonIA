@@ -180,6 +180,18 @@ create or replace function mi_rol() returns text language sql stable security de
 $$ select rol from perfiles where id = auth.uid() $$;
 create or replace function puedo_editar() returns boolean language sql stable security definer set search_path = public as
 $$ select coalesce((select rol in ('admin', 'comunicaciones') from perfiles where id = auth.uid()), false) $$;
+-- Ayudantes solo para sesiones iniciadas (las reglas los usan); sin acceso anónimo por la API.
+revoke execute on function mi_municipio() from public;
+revoke execute on function mi_rol() from public;
+revoke execute on function puedo_editar() from public;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then
+    execute 'revoke execute on function mi_municipio() from anon'; execute 'revoke execute on function mi_rol() from anon'; execute 'revoke execute on function puedo_editar() from anon';
+  end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then
+    execute 'grant execute on function mi_municipio() to authenticated'; execute 'grant execute on function mi_rol() to authenticated'; execute 'grant execute on function puedo_editar() to authenticated';
+  end if;
+end $$;
 
 -- Row Level Security
 alter table medios      enable row level security;
@@ -316,6 +328,12 @@ drop trigger if exists act_capturas on capturas;
 create trigger act_capturas after insert or delete on capturas for each row execute function registrar_actividad();
 drop trigger if exists act_config on municipios;
 create trigger act_config after update of config on municipios for each row when (old.config is distinct from new.config) execute function registrar_actividad();
+-- La función del registro solo la usan los disparadores: nadie la llama por la API.
+revoke execute on function registrar_actividad() from public;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then execute 'revoke execute on function registrar_actividad() from anon'; end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then execute 'revoke execute on function registrar_actividad() from authenticated'; end if;
+end $$;
 
 -- Avisos (alertas): lo que la lectura programada detectó, las preferencias de cada persona y sus celulares suscritos.
 -- Una fila por aviso emitido; la clave (hecho + regla + nivel) evita avisar dos veces lo mismo.
