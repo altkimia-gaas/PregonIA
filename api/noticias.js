@@ -74,7 +74,9 @@ export async function GET(req){
   if (u.searchParams.has("ping")) return json({ ok: true, ia: Boolean(process.env.ANTHROPIC_API_KEY) }, 200, { "cache-control": "no-store" });
   if (u.searchParams.has("salud")) {  // diagnóstico de fuentes: por provincia, más la región
     const qs = ["Valparaíso", "San Antonio", "Quillota", "San Felipe", "Los Andes", "La Ligua", "Quilpué", "Casablanca", "Isla de Pascua"].map(c => `"${c}" ${'(Valparaíso OR comuna OR municipalidad OR alcalde OR Chile OR "litoral central")'}`).concat(['"Región de Valparaíso"']);
-    return json(await saludFuentes(qs), 200, { "cache-control": "public, max-age=0, s-maxage=1800" });
+    // ?salud=1&ids=5,6,23 revisa solo esos medios y no consulta Google News (para verificar un ajuste sin gastar su cuota).
+    const ids = (u.searchParams.get("ids") || "").split(",").map(Number).filter(Boolean);
+    return json(await saludFuentes(ids.length ? [] : qs, ids.length ? new Set(ids) : null), 200, { "cache-control": "public, max-age=0, s-maxage=" + (ids.length ? 60 : 1800) });
   }
   if (u.searchParams.has("autoridad") || u.searchParams.has("rol")) return deAutoridad(u);
   const comuna = u.searchParams.get("comuna") || "Casablanca";

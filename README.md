@@ -126,6 +126,19 @@ Para activarlo en una base existente:
    Mientras no se corra, la aplicación y la lectura programada siguen funcionando solo con municipios.
 2. Crear la cuenta de la autoridad y asignar a su equipo con el bloque B de `supabase/alta_usuario.sql`.
 
+### Métodos de lectura de medios
+
+| Método | Para qué medio | Cómo |
+|---|---|---|
+| `rss`, `sitemap_noticias` | Los que publican feed o mapa de noticias | Titular, fecha y bajada del feed |
+| `sitemap`, `sitemap_mensual` | Mapas del sitio corrientes (Duna, UCV Radio, Radio Quintay) o índices de mapas mensuales comprimidos (24 Horas) | Dirección y fecha de modificación; titular del mapa o, si no trae, desde la dirección. Un índice se resuelve a sus dos hijos más recientes; los .gz se descomprimen; los mapas enormes ordenados del más nuevo se leen solo hasta 1,5 MB |
+| `portada` | Sin feed ni mapa con fechas (T13, SoyChile y sus ediciones, Radio U. de Chile, Radio Agricultura, El Observador, El Martutino, Quilpué Online) | Enlaces a notas de la portada o sección; fecha desde la dirección o, si no la trae, la de la primera lectura |
+| `*_filtrado` | Ediciones dentro del feed de otro medio (BioBío Región de Valparaíso, 24 Horas Valparaíso, Meganoticias Región de Valparaíso) | Se lee la fuente del medio padre una vez y la edición se queda con lo que calza con su filtro |
+| `google_news` | Bloquean la lectura o no tienen formato legible (El Mercurio, La Tercera, LUN, Publimetro…) | Solo vía Google News |
+
+Siempre se respeta robots.txt: si cierra el feed o los mapas, se usa una ruta permitida (portada o sección) o queda solo vía Google News.
+Verificar medios sin gastar la cuota de Google News: `/api/noticias?salud=1&ids=5,6,23`.
+
 ### Búsqueda: cómo se asegura encontrar todas las noticias
 
 Medido el 17 de noviembre de 2026 con consultas reales a Google News. Estas eran las pérdidas, y esto es lo que hace hoy la lectura:

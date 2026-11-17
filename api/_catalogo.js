@@ -43,7 +43,7 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "portada",
 "url": "https://www.t13.cl/",
-"estado": "requiere_ajuste"
+"estado": "listo"
 },
 {
 "id": 6,
@@ -52,7 +52,7 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_mensual",
 "url": "https://www.24horas.cl/24horas/site/sitemap_pags.xml",
-"estado": "requiere_ajuste"
+"estado": "listo"
 },
 {
 "id": 7,
@@ -142,7 +142,7 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "portada",
 "url": "https://www.radioagricultura.cl/noticias/",
-"estado": "requiere_ajuste"
+"estado": "listo"
 },
 {
 "id": 17,
@@ -151,7 +151,7 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap",
 "url": "https://duna.cl/sitemaps/articles.xml",
-"estado": "requiere_ajuste"
+"estado": "listo"
 },
 {
 "id": 18,
@@ -160,7 +160,7 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "portada",
 "url": "https://radio.uchile.cl/",
-"estado": "requiere_ajuste"
+"estado": "listo"
 },
 {
 "id": 19,
@@ -194,9 +194,9 @@ export const CATALOGO = [
 "nombre": "Las Últimas Noticias",
 "ambito": "nacional",
 "comuna": "",
-"metodo": "portada",
-"url": "https://www.lun.com/Pages/LUNHomepage.aspx",
-"estado": "requiere_ajuste"
+"metodo": "google_news",
+"url": "https://www.lun.com/",
+"estado": "listo"
 },
 {
 "id": 23,
@@ -205,7 +205,7 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "portada",
 "url": "https://www.soychile.cl/",
-"estado": "requiere_ajuste"
+"estado": "listo"
 },
 {
 "id": 24,
@@ -493,7 +493,7 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "portada",
 "url": "https://www.soychile.cl/valparaiso/",
-"estado": "requiere_ajuste"
+"estado": "listo"
 },
 {
 "id": 56,
@@ -511,16 +511,16 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_filtrado",
 "url": "https://www.meganoticias.cl/sitemaps/sitemap-news.xml",
-"estado": "requiere_ajuste"
+"estado": "listo"
 },
 {
 "id": 58,
 "nombre": "24 Horas, Valparaíso",
 "ambito": "regional",
 "comuna": "",
-"metodo": "portada",
-"url": "https://www.24horas.cl/regiones/zona-centro/valparaiso",
-"estado": "requiere_ajuste"
+"metodo": "sitemap_filtrado",
+"url": "https://www.24horas.cl/24horas/site/sitemap_pags.xml",
+"estado": "listo"
 },
 {
 "id": 59,
@@ -554,9 +554,9 @@ export const CATALOGO = [
 "nombre": "UCV Radio",
 "ambito": "regional",
 "comuna": "",
-"metodo": "portada",
-"url": "https://www.ucvradio.cl/",
-"estado": "requiere_ajuste"
+"metodo": "sitemap",
+"url": "https://ucvradio.cl/news-sitemap1.xml",
+"estado": "listo"
 },
 {
 "id": 63,
@@ -601,7 +601,7 @@ export const CATALOGO = [
 "comuna": "Casablanca",
 "metodo": "sitemap",
 "url": "https://www.radioquintay.cl/sitemap.xml",
-"estado": "requiere_ajuste"
+"estado": "listo"
 },
 {
 "id": 68,
@@ -646,7 +646,7 @@ export const CATALOGO = [
 "comuna": "Valparaíso;Viña del Mar",
 "metodo": "portada",
 "url": "https://www.elmartutino.cl/",
-"estado": "requiere_ajuste"
+"estado": "listo"
 },
 {
 "id": 73,
@@ -680,9 +680,9 @@ export const CATALOGO = [
 "nombre": "Quilpué Online",
 "ambito": "local",
 "comuna": "Quilpué",
-"metodo": "sitemap",
-"url": "https://www.quilpueonline.cl/sitemap_index.xml",
-"estado": "requiere_ajuste"
+"metodo": "portada",
+"url": "https://www.quilpueonline.cl/",
+"estado": "listo"
 },
 {
 "id": 77,
@@ -716,9 +716,9 @@ export const CATALOGO = [
 "nombre": "El Observador",
 "ambito": "local",
 "comuna": "Quillota",
-"metodo": "sitemap",
-"url": "https://www.observador.cl/sitemap.xml",
-"estado": "requiere_ajuste"
+"metodo": "portada",
+"url": "https://www.observador.cl/",
+"estado": "listo"
 },
 {
 "id": 81,
@@ -788,9 +788,9 @@ export const CATALOGO = [
 "nombre": "Santo News",
 "ambito": "local",
 "comuna": "Santo Domingo",
-"metodo": "portada",
-"url": "https://santonews.cl/",
-"estado": "requiere_ajuste"
+"metodo": "rss",
+"url": "https://santonews.cl/?feed=rss2",
+"estado": "listo"
 },
 {
 "id": 89,
@@ -896,9 +896,9 @@ export const CATALOGO = [
 "nombre": "Andes Online",
 "ambito": "local",
 "comuna": "Los Andes",
-"metodo": "portada",
+"metodo": "google_news",
 "url": "http://www.losandesonline.cl/",
-"estado": "requiere_ajuste"
+"estado": "listo"
 },
 {
 "id": 101,
@@ -1132,6 +1132,24 @@ export const CATALOGO = [
 "comuna": "Isla de Pascua",
 "metodo": "google_news",
 "url": "https://www.rapanui.net/",
+"estado": "listo"
+},
+{
+"id": 210,
+"nombre": "SoySanAntonio",
+"ambito": "local",
+"comuna": "San Antonio;Cartagena;El Quisco;Algarrobo;Santo Domingo;El Tabo",
+"metodo": "portada",
+"url": "https://www.soychile.cl/san-antonio/",
+"estado": "listo"
+},
+{
+"id": 211,
+"nombre": "SoyQuillota",
+"ambito": "local",
+"comuna": "Quillota;La Calera;La Cruz;Hijuelas;Nogales",
+"metodo": "portada",
+"url": "https://www.soychile.cl/quillota/",
 "estado": "listo"
 },
 {
