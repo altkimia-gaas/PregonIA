@@ -8,7 +8,7 @@
 // Cuentas de Facebook e Instagram de medios: META_ACCESS_TOKEN, META_IG_USER_ID, META_FB_PPCA (ver api/_redes.js).
 // Después de guardar, revisa los hechos que recibieron notas nuevas y avisa lo urgente (notificación y correo).
 // Además, propone a los editores de PregonIA las noticias de alto impacto de sus territorios (api/_redaccion.js).
-import { COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, candidatasDe, candidatasPorNombre, plazoGoogleNews } from "./_lectura.js";
+import { COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, candidatasDe, candidatasPorNombre, plazoGoogleNews, statsGoogleNews } from "./_lectura.js";
 import { variantesNombre } from "./_autoridades.js";
 import { sujetoDeCuenta, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
 import { avisar } from "./_avisos.js";
@@ -114,7 +114,7 @@ async function manejar(req){
       try { r.avisos = await avisar(sb, munis[k], grupos, Date.now()); } catch(e) { r.avisos = {error: String(e.message || e).slice(0, 160)}; } }));
     const suma = k => res.reduce((s, r) => s + (r[k] || 0), 0);
     const resumen = {fin: new Date().toISOString(), fuentes_ok: cat.total + 1 - errores.length, fuentes_total: cat.total + 1, errores: errores.slice(0, 60),
-      candidatas: suma("candidatas"), nuevas: suma("nuevas"), clasificadas: suma("clasificadas"), detalle: {comunas: res, ia: DIAG.slice(0, 8), redaccion}};
+      candidatas: suma("candidatas"), nuevas: suma("nuevas"), clasificadas: suma("clasificadas"), detalle: {comunas: res, ia: DIAG.slice(0, 8), google_news: statsGoogleNews(), redaccion}};
     await sb(`lecturas?id=eq.${lectura.id}`, {method: "PATCH", body: resumen, prefer: "return=minimal"});
     return json({ok: true, lectura: lectura.id, ...resumen}, 200, {"cache-control": "no-store"});
   } catch(e) {

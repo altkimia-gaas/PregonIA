@@ -1,7 +1,7 @@
 // Noticias reales para PregonIA (etapa 1, sin base de datos): lee los medios al vuelo para una comuna, clasifica con Claude Haiku
 // y devuelve titular, enlace, medio, fecha y resumen propio. La respuesta queda 15 minutos en la caché de Vercel.
 // La lectura y la clasificación viven en _lectura.js, compartido con la lectura programada (/api/ingesta).
-import { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre, saludFuentes, plazoGoogleNews } from "./_lectura.js";
+import { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre, saludFuentes, plazoGoogleNews, statsGoogleNews } from "./_lectura.js";
 import { AUTORIDADES, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
 import { limpio, consulta, sujeto, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
 import { CATALOGO } from "./_catalogo.js";
@@ -50,7 +50,7 @@ async function deAutoridad(u){
   return json({
     autoridad: {id: a.id, nombre: a.n, cargo, zona: z.n}, generado: new Date(ahora).toISOString(), ventana_dias: VENTANA_DIAS, ia: clas.ok, ia_parcial: !clas.ok && clas.porI.size > 0,
     fuentes: { leidas: cat.total + 1 + rs.total - errores.length, total: cat.total + 1 + rs.total, con_error: errores.slice(0, 40) }, redes: rs.estado,
-    candidatas: candidatas.length, pares, ...(DIAG.length ? {ia_diagnostico: DIAG.slice(0, 6)} : {}), notas
+    candidatas: candidatas.length, google_news: statsGoogleNews(), pares, ...(DIAG.length ? {ia_diagnostico: DIAG.slice(0, 6)} : {}), notas
   }, 200, { "cache-control": clas.ok ? "public, max-age=0, s-maxage=900, stale-while-revalidate=3600" : "public, max-age=0, s-maxage=60" });
 }
 /* Notas clasificadas: descarta lo que la IA marcó como ajeno y agrupa por hecho. */
@@ -69,7 +69,7 @@ function armar(lote, porI, deAutoridad = false){
 }
 
 export async function GET(req){
-  const u = new URL(req.url); DIAG.length = 0; plazoGoogleNews(38000);  // deja tiempo a la clasificación dentro de los 60 s de la función
+  const u = new URL(req.url); DIAG.length = 0; plazoGoogleNews(32000);  // deja tiempo a la clasificación dentro de los 60 s de la función
   if (u.searchParams.has("ping")) return json({ ok: true, ia: Boolean(process.env.ANTHROPIC_API_KEY) }, 200, { "cache-control": "no-store" });
   if (u.searchParams.has("salud")) {  // diagnóstico de fuentes: por provincia, más la región
     const qs = ["Valparaíso", "San Antonio", "Quillota", "San Felipe", "Los Andes", "La Ligua", "Quilpué", "Casablanca", "Isla de Pascua"].map(c => `"${c}" ${'(Valparaíso OR comuna OR municipalidad OR alcalde OR Chile OR "litoral central")'}`).concat(['"Región de Valparaíso"']);
@@ -91,6 +91,6 @@ export async function GET(req){
   return json({
     comuna, generado: new Date(ahora).toISOString(), ventana_dias: VENTANA_DIAS, ia: clas.ok, ia_parcial: !clas.ok && clas.porI.size > 0,
     fuentes: { leidas: cat.total + 1 + rs.total - errores.length, total: cat.total + 1 + rs.total, con_error: errores.slice(0, 40) }, redes: rs.estado,
-    candidatas: candidatas.length, alcalde: alcalde ? {nombre: alcalde.n, cargo: cargoDe("alcalde", alcalde.g)} : null, pares, ...(DIAG.length ? {ia_diagnostico: DIAG.slice(0, 6)} : {}), notas
+    candidatas: candidatas.length, google_news: statsGoogleNews(), alcalde: alcalde ? {nombre: alcalde.n, cargo: cargoDe("alcalde", alcalde.g)} : null, pares, ...(DIAG.length ? {ia_diagnostico: DIAG.slice(0, 6)} : {}), notas
   }, 200, { "cache-control": clas.ok ? "public, max-age=0, s-maxage=900, stale-while-revalidate=3600" : "public, max-age=0, s-maxage=60" });
 }
