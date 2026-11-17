@@ -45,7 +45,7 @@ async function deAutoridad(u){
   const [cat, gn, rs] = await Promise.all([leerCatalogo(), leerSujeto(a).catch(() => null), leerRedes(redesDe(u))]);
   const paresP = a.nomina ? paresDe(a, desde).catch(() => []) : Promise.resolve([]);
   const errores = cat.errores.concat(gn ? [] : ["Google News"], rs.errores);
-  const candidatas = candidatasPorNombre(variantesNombre(a), cat.items.concat(gn || [], rs.items), desde, ahora, institucion(a)), lote = candidatas.slice(0, topeIA());
+  const candidatas = candidatasPorNombre(variantesNombre(a), cat.items.concat(gn || [], rs.items), desde, ahora, institucion(a)), lote = candidatas.slice(0, MAX_IA);
   let clas = {porI: new Map(), ok: false}; try { clas = await clasificar(fichaIA(a), lote); } catch(e) { console.error("clasificar", e); }
   const notas = armar(lote, clas.porI, true), pares = await paresP;
   return json({
@@ -69,11 +69,7 @@ function armar(lote, porI, deAutoridad = false){
   return notas;
 }
 
-/* Tope de notas que pasan por la IA: 200 si la lectura terminó con holgura, el normal (120) si ya consumió más de 30 s de los 60 de la función. */
-let INICIO = 0;
-const topeIA = () => Date.now() - INICIO < 30000 ? 200 : MAX_IA;
 export async function GET(req){
-  INICIO = Date.now();
   const u = new URL(req.url); DIAG.length = 0; plazoGoogleNews(32000);  // deja tiempo a la clasificación dentro de los 60 s de la función
   if (u.searchParams.has("ping")) return json({ ok: true, ia: Boolean(process.env.ANTHROPIC_API_KEY) }, 200, { "cache-control": "no-store" });
   if (u.searchParams.has("salud")) {  // diagnóstico de fuentes: por provincia, más la región
@@ -88,7 +84,7 @@ export async function GET(req){
   const [cat, gn, rs] = await Promise.all([leerCatalogo(), leerGoogleNews(comuna).catch(() => null), leerRedes(redesDe(u))]);
   const paresP = alcalde ? paresDe(alcalde, desde).catch(() => []) : Promise.resolve([]);
   const errores = cat.errores.concat(gn ? [] : ["Google News"], rs.errores);
-  const candidatas = candidatasDe(comuna, cat.items.concat(gn || [], rs.items), desde, ahora), lote = candidatas.slice(0, topeIA());
+  const candidatas = candidatasDe(comuna, cat.items.concat(gn || [], rs.items), desde, ahora), lote = candidatas.slice(0, MAX_IA);
 
   let clas = {porI: new Map(), ok: false}; try { clas = await clasificar(comuna, lote); } catch(e) { console.error("clasificar", e); }
   const notas = armar(lote, clas.porI), pares = await paresP;
