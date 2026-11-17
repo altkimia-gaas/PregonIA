@@ -77,7 +77,7 @@ Rama `redaccion-fase-1`. Filtro de los 35 controles solo para lo nuevo: PregonIA
 | 1, 35 | Privacidad y proveedores | Condicional | Sin datos personales nuevos de usuarios (solo el editor). Las noticias nombran a autoridades públicas en su cargo. En la fase 2, sumar Meta como destino de publicación en `legal.html#proveedores` |
 | 4 | Minimización | Aplica | De cada nota se guarda titular, enlace, medio, fecha e interacción pública; no el texto del medio |
 | 6 | Registro de aceptación | Aplica (registro editorial) | Cada cambio de estado de una publicación queda en `actividad` (trigger `registrar_redaccion`) y la aprobación guarda quién, cuándo, qué advertencias había y qué confirmó (`aprobado`, `aprobado_por`, `revision`) |
-| 13 | Términos | Aplica | Borrador de línea editorial en `legal.html#editorial` (neutralidad, fuentes, IA, conflictos de interés, correcciones). Pendiente: editor responsable y su declaración de relaciones; revisión de abogado |
+| 13 | Términos | Aplica | Borrador de línea editorial de El Pregonero en `el-pregonero.html` (/el-pregonero): propiedad, neutralidad, fuentes, IA, conflictos de interés, correcciones y datos personales; `legal.html#editorial` remite a ella. Pendiente: editor responsable y su declaración de relaciones; revisión de abogado |
 | 20 | Sin patrones engañosos | Aplica | Revisión automática bloquea o advierte: palabras valorativas, exclamaciones, mayúsculas sostenidas |
 | 22 | Sin promesas no demostrables | Aplica | Advertencia de cifras que no están en las fuentes; el prompt prohíbe agregar datos |
 | 25 | Logos de terceros | Aplica | Las piezas nombran a los medios como fuente; nunca usan sus logos ni fotos |
