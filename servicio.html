@@ -81,6 +81,10 @@
 .pd-video-b:not(:disabled):hover .pd-video-i{transform:scale(1.06)}
 .pd-video-i svg{width:26px;height:26px;margin-left:4px;fill:currentColor}
 .pd-video-t{font-family:var(--f-news);font-weight:700;font-size:1.125rem}
+.pd-video-b.con-poster{position:relative;background:#111 center/cover no-repeat}
+.pd-video-b.con-poster::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(0,0,0,.35))}
+.pd-video-b.con-poster .pd-video-i{position:relative;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.pd-video-d{position:absolute;right:12px;bottom:12px;padding:3px 9px;border-radius:999px;background:rgba(20,20,20,.78);color:#fff;font-family:"DM Mono",ui-monospace,monospace;font-size:.75rem}
 .pd-video-s{font-size:.8125rem;color:var(--muted);margin-top:-6px}
 @media (max-width:700px){.pd-desc{display:none}.pd-fecha{flex-wrap:nowrap}.pd-video{margin-top:22px;border-radius:12px}.pd-video-i{width:56px;height:56px}}
 @media (prefers-reduced-motion:reduce){.pd-video-i{transition:none}}
@@ -112,8 +116,8 @@
       <p class="pd-ante">Municipios · Concejos · Consejos regionales · Parlamentarios</p>
       <h1 class="pd-titulo">Detecta lo que la prensa dice de tu gestión, mide hasta dónde llegó y responde antes de que el tema escale.</h1>
       <p class="pd-bajada">PregonIA lee cada día más de 100 medios nacionales, regionales y locales, y sus redes, y entrega a quien decide alertas, informes y respuestas redactadas con IA.</p>
-      <figure class="pd-video" id="ptVideo" data-video="">
-        <button class="pd-video-b" type="button" aria-label="Ver el video explicativo de PregonIA"><span class="pd-video-i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></span><span class="pd-video-t">Así funciona PregonIA</span><span class="pd-video-s" id="ptVideoS">Video explicativo · muy pronto</span></button>
+      <figure class="pd-video" id="ptVideo" data-video="/media/pregonia-explicativo.mp4" data-poster="/media/pregonia-explicativo.jpg">
+        <button class="pd-video-b con-poster" type="button" style="background-image:url(/media/pregonia-explicativo.jpg)" aria-label="Ver el video explicativo de PregonIA, 1 minuto"><span class="pd-video-i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></span><span class="pd-video-d">1:08</span></button>
       </figure>
       <div class="pd-acts">
         <a class="pd-go" href="/?prueba">Prueba gratis <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
@@ -425,10 +429,10 @@ details.q p{margin:0 2px 18px;color:#333}
   const f = document.getElementById("ptVideo"); if (!f) return;
   const src = (f.dataset.video || "").trim(), b = f.querySelector("button");
   if (!src) { b.disabled = true; return; }
-  document.getElementById("ptVideoS").textContent = "Video explicativo";
+  const sub = document.getElementById("ptVideoS"); if (sub) sub.textContent = "Video explicativo";
   b.addEventListener("click", () => {
     const yt = src.match(/(?:youtu\.be\/|[?&]v=|embed\/|shorts\/)([\w-]{11})/), vm = src.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-    f.innerHTML = /\.(mp4|webm)(\?|$)/i.test(src) ? `<video src="${src}" controls autoplay playsinline></video>`
+    f.innerHTML = /\.(mp4|webm)(\?|$)/i.test(src) ? `<video src="${src}" controls autoplay playsinline preload="auto"${f.dataset.poster ? ` poster="${f.dataset.poster}"` : ""}></video>`
       : `<iframe src="${yt ? "https://www.youtube-nocookie.com/embed/" + yt[1] + "?autoplay=1&rel=0" : vm ? "https://player.vimeo.com/video/" + vm[1] + "?autoplay=1" : src}" title="Video explicativo de PregonIA" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
   });
 })();
