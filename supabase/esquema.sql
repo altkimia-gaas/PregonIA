@@ -417,3 +417,125 @@ do $$ begin
   if exists (select 1 from pg_roles where rolname = 'anon') then execute 'revoke execute on function aceptar_documentos(text, text) from anon'; end if;
   if exists (select 1 from pg_roles where rolname = 'authenticated') then execute 'grant execute on function aceptar_documentos(text, text) to authenticated'; end if;
 end $$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Redacción (nov 2026): las cuentas propias de PregonIA en Facebook e Instagram, como medio informativo.
+-- Solo para editores de PregonIA (tabla editores), separado de los municipios y autoridades clientes:
+-- un editor no ve datos de clientes y un cliente no ve nada de esto.
+-- La lectura programada propone noticias de alto impacto de los territorios elegidos (api/_redaccion.js);
+-- el editor las redacta con IA, las revisa, las aprueba y las programa en /redaccion. Nada se publica sin aprobación.
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists editores (
+  usuario uuid primary key references auth.users (id) on delete cascade,
+  nombre  text,
+  creado  timestamptz not null default now()
+);
+create or replace function es_editor() returns boolean language sql stable security definer set search_path = public as
+$$ select exists (select 1 from editores where usuario = auth.uid()) $$;
+
+-- Territorios y preferencias de cada editor. cercanos: términos que activan la revisión reforzada (conflicto de interés).
+create table if not exists redaccion_config (
+  usuario         uuid primary key default auth.uid() references auth.users (id) on delete cascade,
+  comunas         text[] not null default '{}',
+  nacional        boolean not null default true,
+  umbral          int not null default 80 check (umbral between 30 and 100),
+  silencio        boolean not null default true,
+  resumen_hora    int not null default 8 check (resumen_hora between 5 and 11),
+  resumen_enviado date,
+  cercanos        text[] not null default '{}',
+  pesos           jsonb,
+  meta_diaria     int not null default 4 check (meta_diaria between 1 and 10),
+  actualizado     timestamptz not null default now()
+);
+
+-- Hechos propuestos: notas agrupadas, puntaje y por qué. Solo titular, enlace, medio y fecha de cada nota (no su texto).
+create table if not exists redaccion_propuestas (
+  id          text primary key,
+  titulo      text not null,
+  resumen     text,
+  comunas     text[] not null default '{}',
+  alcance     text check (alcance in ('comunal', 'regional', 'nacional')),
+  puntaje     int not null default 0,
+  senales     jsonb,
+  detalle     jsonb,
+  notas       jsonb not null default '[]',
+  sensible    boolean not null default false,
+  cercanos    text[],
+  estado      text not null default 'nueva' check (estado in ('nueva', 'tomada', 'descartada')),
+  motivo      text,
+  ia          boolean not null default false,
+  avisado     boolean not null default false,
+  detectado   timestamptz not null default now(),
+  ultima      timestamptz,
+  actualizado timestamptz not null default now()
+);
+create index if not exists redaccion_prop_act on redaccion_propuestas (actualizado desc);
+create index if not exists redaccion_prop_puntaje on redaccion_propuestas (estado, puntaje desc);
+
+-- Publicaciones: textos para Facebook e Instagram, datos de las piezas (feed, historia, carrusel, reel), estado y agenda.
+-- Las imágenes y videos se generan en el navegador a partir de estos datos; en la fase 2 se guardarán para publicarlos por Meta.
+create table if not exists redaccion_posts (
+  id           uuid primary key default gen_random_uuid(),
+  propuesta_id text references redaccion_propuestas (id) on delete set null,
+  estado       text not null default 'borrador' check (estado in ('borrador', 'aprobado', 'programado', 'publicado', 'descartado')),
+  titulo       text,
+  contenido    jsonb not null default '{}',
+  formatos     text[] not null default '{feed,historia}',
+  comunas      text[] not null default '{}',
+  sensible     boolean not null default false,
+  programado   timestamptz,
+  recordado    boolean not null default false,
+  publicado    timestamptz,
+  enlaces      jsonb,
+  aprobado     timestamptz,
+  aprobado_por uuid references auth.users (id) on delete set null,
+  revision     jsonb,
+  autor        uuid references auth.users (id) on delete set null default auth.uid(),
+  creado       timestamptz not null default now(),
+  actualizado  timestamptz not null default now()
+);
+create index if not exists redaccion_posts_estado on redaccion_posts (estado, programado);
+
+-- Celulares y computadores del editor suscritos a los avisos de Redacción (Web Push).
+create table if not exists redaccion_suscripciones (
+  endpoint    text primary key,
+  usuario     uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  p256dh      text not null,
+  auth        text not null,
+  dispositivo text,
+  creada      timestamptz not null default now()
+);
+
+alter table editores                enable row level security;
+alter table redaccion_config        enable row level security;
+alter table redaccion_propuestas    enable row level security;
+alter table redaccion_posts         enable row level security;
+alter table redaccion_suscripciones enable row level security;
+drop policy if exists editores_leer on editores;
+create policy editores_leer on editores for select to authenticated using (usuario = auth.uid());
+drop policy if exists redaccion_config_propia on redaccion_config;
+create policy redaccion_config_propia on redaccion_config for all to authenticated using (usuario = auth.uid() and es_editor()) with check (usuario = auth.uid() and es_editor());
+drop policy if exists redaccion_prop_editor on redaccion_propuestas;
+create policy redaccion_prop_editor on redaccion_propuestas for all to authenticated using (es_editor()) with check (es_editor());
+drop policy if exists redaccion_posts_editor on redaccion_posts;
+create policy redaccion_posts_editor on redaccion_posts for all to authenticated using (es_editor()) with check (es_editor());
+drop policy if exists redaccion_subs_propias on redaccion_suscripciones;
+create policy redaccion_subs_propias on redaccion_suscripciones for all to authenticated using (usuario = auth.uid() and es_editor()) with check (usuario = auth.uid() and es_editor());
+
+-- Registro editorial (control 6 del checklist): quién creó, aprobó, programó, publicó o descartó cada publicación, y cuándo.
+-- Queda en la tabla actividad sin municipio. Lo escribe la base, no la aplicación.
+create or replace function registrar_redaccion() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' or new.estado is distinct from old.estado then
+    insert into actividad (municipio_id, usuario, accion, detalle)
+    values (null, auth.uid(), 'redaccion.' || case when tg_op = 'INSERT' then 'crear' else new.estado end,
+            jsonb_build_object('post', new.id, 'propuesta', new.propuesta_id, 'titulo', left(coalesce(new.titulo, ''), 160), 'programado', new.programado, 'sensible', new.sensible));
+  end if;
+  return new;
+end $$;
+drop trigger if exists act_redaccion on redaccion_posts;
+create trigger act_redaccion after insert or update of estado on redaccion_posts for each row execute function registrar_redaccion();
+drop policy if exists actividad_editor on actividad;
+create policy actividad_editor on actividad for select to authenticated using (municipio_id is null and accion like 'redaccion.%' and es_editor());
+-- Para habilitar a un editor (una vez, en SQL Editor, con el correo de su cuenta de Supabase):
+--   insert into editores (usuario, nombre) select id, 'Nombre' from auth.users where email = 'correo@dominio.cl' on conflict do nothing;

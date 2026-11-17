@@ -67,3 +67,30 @@ Si se agregan pagos en línea, analítica, píxeles o correos comerciales, se ac
 
 1. Supabase › SQL Editor: correr `supabase/esquema.sql` completo (agrega `aceptaciones` y `aceptar_documentos`). Sin esto, el ingreso funciona igual y la consola avisa que falta la tabla.
 2. Al cambiar los documentos, subir `LEGAL_VERSION` en `src/piloto.js` para que todos acepten la nueva versión.
+
+## Módulo Redacción (cuentas propias de PregonIA en Facebook e Instagram) · 16-nov-2026
+
+Rama `redaccion-fase-1`. Filtro de los 35 controles solo para lo nuevo: PregonIA publica a nombre de un medio, reutiliza información de noticias de terceros, genera texto, piezas y voz con IA y, en la fase 2, publicará por la API de Meta. El módulo es de uso exclusivo del editor (tabla `editores`); no trata datos de clientes.
+
+| N° | Control | Aplica | Cómo queda en el módulo |
+|---|---|---|---|
+| 1, 35 | Privacidad y proveedores | Condicional | Sin datos personales nuevos de usuarios (solo el editor). Las noticias nombran a autoridades públicas en su cargo. En la fase 2, sumar Meta como destino de publicación en `legal.html#proveedores` |
+| 4 | Minimización | Aplica | De cada nota se guarda titular, enlace, medio, fecha e interacción pública; no el texto del medio |
+| 6 | Registro de aceptación | Aplica (registro editorial) | Cada cambio de estado de una publicación queda en `actividad` (trigger `registrar_redaccion`) y la aprobación guarda quién, cuándo, qué advertencias había y qué confirmó (`aprobado`, `aprobado_por`, `revision`) |
+| 13 | Términos | Aplica | Borrador de línea editorial en `legal.html#editorial` (neutralidad, fuentes, IA, conflictos de interés, correcciones). Pendiente: editor responsable y su declaración de relaciones; revisión de abogado |
+| 20 | Sin patrones engañosos | Aplica | Revisión automática bloquea o advierte: palabras valorativas, exclamaciones, mayúsculas sostenidas |
+| 22 | Sin promesas no demostrables | Aplica | Advertencia de cifras que no están en las fuentes; el prompt prohíbe agregar datos |
+| 25 | Logos de terceros | Aplica | Las piezas nombran a los medios como fuente; nunca usan sus logos ni fotos |
+| 26–28 | Accesibilidad | Aplica | Panel con contraste AA, foco visible, teclado y diálogos con Escape; cada publicación lleva texto alternativo para Instagram |
+| 29 | Licencias | Aplica | Fuentes Inter y Source Serif 4 (OFL). Música compuesta por el propio navegador (sin pistas de terceros). **Voz ElevenLabs: el uso comercial en redes exige un plan pagado (el gratuito pide atribución y no permite uso comercial)** |
+| 31 | Derechos de autor | Aplica | Resúmenes propios; la revisión detecta frases de 8 palabras copiadas de los medios; sin fotos de los medios; canal de reclamos ya existe (`legal.html#medios`) |
+| 32 | Etiquetar IA | Aplica | Mención de IA en cada texto y pieza; el reel dice «voz sintética». En la fase 2, activar la etiqueta «Información de IA» de Meta al publicar reels con voz sintética |
+| 34 | Acuerdos con proveedores | Aplica | Sin proveedores nuevos en la fase 1 (Anthropic, ElevenLabs, Supabase, Vercel). Fase 2: términos de la plataforma de Meta para publicar |
+| 2, 3, 5, 7–12, 14–19, 21, 23, 24, 30, 33 | Resto | No aplica | Sin registro de terceros, cobros, cookies, correos comerciales, reseñas, certificaciones ni SDK nuevos en el navegador |
+
+Hallazgos del módulo:
+
+1. **Credibilidad y conflicto de interés.** El editor declaró relación con la Municipalidad de Casablanca. Mitigación en el producto: revisión reforzada configurable (términos en Ajustes) con confirmación adicional al aprobar. Mitigación de fondo: transparentar en la biografía de las cuentas quién opera PregonIA y su editor responsable.
+2. **Ley 19.733 (prensa).** Si PregonIA se presenta como medio, revisar con abogado si le aplican las obligaciones de un medio de comunicación social (director responsable, derecho de aclaración y rectificación). El borrador editorial ya ofrece un canal de correcciones.
+3. **Períodos electorales (Ley 18.700).** La línea neutral no es propaganda, pero en campaña conviene revisar con abogado el tratamiento de candidaturas y la publicidad pagada en redes.
+4. **Datos sensibles.** El prompt evita mencionar partidos salvo que sean el centro del hecho, y la revisión lo advierte.

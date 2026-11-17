@@ -11,6 +11,9 @@
     },
     "api/voz.js": {
       "maxDuration": 60
+    },
+    "api/redaccion.js": {
+      "maxDuration": 60
     }
   },
   "rewrites": [
@@ -21,6 +24,10 @@
     {
       "source": "/servicio",
       "destination": "/servicio.html"
+    },
+    {
+      "source": "/redaccion",
+      "destination": "/redaccion.html"
     }
   ],
   "headers": [
@@ -43,6 +50,24 @@
         {
           "key": "content-type",
           "value": "application/manifest+json"
+        }
+      ]
+    },
+    {
+      "source": "/manifest-redaccion.json",
+      "headers": [
+        {
+          "key": "content-type",
+          "value": "application/manifest+json"
+        }
+      ]
+    },
+    {
+      "source": "/redaccion(.html)?",
+      "headers": [
+        {
+          "key": "x-robots-tag",
+          "value": "noindex, nofollow"
         }
       ]
     }

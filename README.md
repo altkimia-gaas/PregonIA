@@ -189,3 +189,26 @@ Conectar Meta (una vez, en la cuenta de ALTKimia):
 Mientras quien generó el token tenga un rol en la app, no hace falta pasar por la revisión de Meta para Instagram. Si el token vence, Fuentes muestra «No se pudo leer» con el motivo.
 
 En la base del piloto: volver a ejecutar `supabase/esquema.sql` (agrega las columnas de cuentas de redes, las funciones `inscribir_red` y `retirar_red` y el origen `instagram`/`facebook` de las notas) y luego `supabase/semilla.sql`.
+
+## Redacción: cuentas propias de PregonIA en Facebook e Instagram
+
+Espacio privado del editor, en `https://pregonia.vercel.app/redaccion` (no aparece en la aplicación de los clientes ni en buscadores).
+
+- **Propuestas:** la lectura programada (cada 30 minutos) junta las noticias de las últimas 48 horas de las comunas elegidas en Ajustes, más las regionales y nacionales que afectan a la región, las agrupa por hecho y les da un **puntaje de impacto** de 0 a 100: repercusión en medios (35), interacción en redes de las cuentas de medios (20), autoridades de la nómina (15), temas críticos y gravedad (20) y recencia (10). Es por palabras y conteos (`src/impacto.js`, el mismo en el servidor como `api/_impacto.js`). Claude Haiku escribe un titular y un resumen neutrales solo para lo que llega a 30 puntos (máximo 12 hechos por pasada).
+- **Redacción:** desde una propuesta, Claude Sonnet redacta con reglas de neutralidad estricta los textos de Facebook (con enlace) e Instagram (sin enlaces, con hashtags), la pieza gráfica, la historia, el carrusel y el guion del reel. Sin IA disponible, deja una plantilla.
+- **Revisión automática:** fuente citada en ambos textos, palabras valorativas, exclamaciones, partidos, cifras que no están en las fuentes, frases copiadas de los medios, mención de IA y texto alternativo. Lo marcado en rojo impide aprobar.
+- **Piezas:** feed 4:5 e historia 9:16 siempre; carrusel y reel a pedido (`src/piezas.js`). Todo en el navegador, con la identidad Edición, sin fotos de medios ni imágenes generadas. El reel lleva voz sintética por escena (`/api/voz`, ElevenLabs) y música compuesta por el navegador; se exporta a MP4.
+- **Aprobación y agenda:** siempre manual, con confirmación de verificación y neutralidad (más una de revisión reforzada si la noticia toca términos declarados en Ajustes). Si se edita algo aprobado, vuelve a borrador. Calendario de 7 días con horarios sugeridos según la meta diaria.
+- **Avisos al celular:** push cuando una propuesta supera el umbral (silencio de 23:00 a 7:00 salvo 90+), resumen de la mañana y aviso a la hora de publicar lo programado.
+- **Fase 1:** se publica a mano (descargar o compartir la pieza y copiar el texto) y se marca como publicada con sus enlaces. **Fase 2:** publicación automática por la API de Meta.
+
+Puesta en marcha:
+
+1. Supabase › SQL Editor: correr `supabase/esquema.sql` completo (agrega `editores`, `redaccion_*`, reglas y el registro editorial).
+2. Habilitar al editor con el bloque C de `supabase/alta_usuario.sql` (su usuario debe existir en Authentication › Users).
+3. Publicar en Vercel. Las variables ya existentes bastan (`ANTHROPIC_API_KEY`, `ELEVENLABS_API_KEY`, `VAPID_*`, Supabase).
+4. Entrar a `/redaccion`, elegir territorios en Ajustes y activar los avisos en el celular (en iPhone, instalarla antes en la pantalla de inicio).
+
+Prueba local sin base de datos: `python3 scripts/build.py && python3 -m http.server 8000` y abrir `http://localhost:8000/redaccion.html`: entra en **modo prueba** con noticias, medios y personas ficticias guardadas en el navegador.
+
+Costo variable estimado (validar con los precios vigentes): la detección agrega una llamada corta a Haiku por pasada solo cuando hay hechos nuevos sobre 30 puntos; cada redacción es una llamada a Sonnet; la voz solo se graba en los reels que se piden (ElevenLabs cobra por caracteres; para uso comercial en redes se necesita un plan pagado). El render de imágenes y videos es en el navegador, sin costo de servidor.
