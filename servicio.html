@@ -64,6 +64,26 @@
 .pd-pie{margin-top:36px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;justify-content:center;gap:4px 14px;font-size:.8125rem;color:var(--muted)}
 .pd-pie b{color:var(--ink)}.pd-pie b span{color:var(--accent)}
 .pd-pie a{color:inherit;text-underline-offset:2px}
+/* Portada: acceso de clientes arriba, video explicativo y dos llamados (prueba gratis y demostración) */
+.pd-fecha{align-items:center}
+.pd-der{display:flex;align-items:center;gap:14px}
+.pd-acceso{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 14px;border:1.5px solid var(--frame);border-radius:999px;background:transparent;color:var(--ink);font:inherit;font-size:.8125rem;font-weight:600;text-decoration:none;cursor:pointer;white-space:nowrap}
+.pd-acceso:hover{background:var(--surface-2);color:var(--ink)}
+.pd-acceso:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.pd-acceso svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pd-acceso[hidden]{display:none}
+.pd-video{margin:28px 0 0;width:100%;max-width:560px;aspect-ratio:16/9;border:1.5px solid var(--frame);border-radius:14px;overflow:hidden;background:var(--surface-2);display:grid}
+.pd-video iframe,.pd-video video{width:100%;height:100%;border:0;display:block;background:#000}
+.pd-video-b{display:grid;place-content:center;justify-items:center;gap:12px;width:100%;height:100%;border:0;background:transparent;color:var(--ink);font:inherit;cursor:pointer}
+.pd-video-b:disabled{cursor:default}
+.pd-video-b:focus-visible{outline:2px solid var(--accent);outline-offset:-4px}
+.pd-video-i{width:68px;height:68px;border-radius:50%;background:var(--accent-bg);color:var(--accent-ink);display:grid;place-items:center;transition:transform .15s ease}
+.pd-video-b:not(:disabled):hover .pd-video-i{transform:scale(1.06)}
+.pd-video-i svg{width:26px;height:26px;margin-left:4px;fill:currentColor}
+.pd-video-t{font-family:var(--f-news);font-weight:700;font-size:1.125rem}
+.pd-video-s{font-size:.8125rem;color:var(--muted);margin-top:-6px}
+@media (max-width:700px){.pd-desc{display:none}.pd-fecha{flex-wrap:nowrap}.pd-video{margin-top:22px;border-radius:12px}.pd-video-i{width:56px;height:56px}}
+@media (prefers-reduced-motion:reduce){.pd-video-i{transition:none}}
 @media (max-width:700px){
   .pd-fecha span + span{display:none}
   .pd-nombre{margin-top:16px}
@@ -84,7 +104,7 @@
 <section class="portada-l" id="portada" aria-labelledby="ptT">
   <div class="pd">
     <header class="pd-cab">
-      <p class="pd-fecha"><span id="ptFecha">Edición digital</span><span>Monitoreo de prensa para instituciones públicas</span></p>
+      <div class="pd-fecha"><span id="ptFecha">Edición digital</span><nav class="pd-der" aria-label="Acceso"><span class="pd-desc">Monitoreo de prensa para instituciones públicas</span><a class="pd-acceso" href="/?ingresar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>Acceso clientes</a></nav></div>
       <p class="pd-nombre" id="ptT">Pregon<b>IA</b></p>
       <p class="pd-lema">La prensa no espera. Tú tampoco.</p>
     </header>
@@ -92,9 +112,12 @@
       <p class="pd-ante">Municipios · Concejos · Consejos regionales · Parlamentarios</p>
       <h1 class="pd-titulo">Detecta lo que la prensa dice de tu gestión, mide hasta dónde llegó y responde antes de que el tema escale.</h1>
       <p class="pd-bajada">PregonIA lee cada día más de 100 medios nacionales, regionales y locales, y sus redes, y entrega a quien decide alertas, informes y respuestas redactadas con IA.</p>
+      <figure class="pd-video" id="ptVideo" data-video="">
+        <button class="pd-video-b" type="button" aria-label="Ver el video explicativo de PregonIA"><span class="pd-video-i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></span><span class="pd-video-t">Así funciona PregonIA</span><span class="pd-video-s" id="ptVideoS">Video explicativo · muy pronto</span></button>
+      </figure>
       <div class="pd-acts">
         <a class="pd-go" href="/?prueba">Prueba gratis <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-        <a class="pd-go pd-alt" href="/?ingresar">Ingresar</a>
+        <a class="pd-go pd-alt" href="#contacto">Agendar demostración</a>
       </div>
       <p class="pd-piloto">¿Quieres PregonIA en tu institución? <a href="#para-quien">Conoce el servicio y sus planes</a></p>
       <div class="pd-cols">
@@ -396,6 +419,18 @@ details.q p{margin:0 2px 18px;color:#333}
   $("#chForm").addEventListener("submit", e => { e.preventDefault(); preguntar(txt.value); });
   txt.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); preguntar(txt.value); } });
   lista.addEventListener("click", e => { const b = e.target.closest(".ch-sug button"); if (b) preguntar(b.textContent); });
+})();
+/* Video explicativo de la portada: pega el enlace (YouTube, Vimeo o .mp4) en data-video de #ptVideo; se carga solo al tocarlo. */
+(() => {
+  const f = document.getElementById("ptVideo"); if (!f) return;
+  const src = (f.dataset.video || "").trim(), b = f.querySelector("button");
+  if (!src) { b.disabled = true; return; }
+  document.getElementById("ptVideoS").textContent = "Video explicativo";
+  b.addEventListener("click", () => {
+    const yt = src.match(/(?:youtu\.be\/|[?&]v=|embed\/|shorts\/)([\w-]{11})/), vm = src.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    f.innerHTML = /\.(mp4|webm)(\?|$)/i.test(src) ? `<video src="${src}" controls autoplay playsinline></video>`
+      : `<iframe src="${yt ? "https://www.youtube-nocookie.com/embed/" + yt[1] + "?autoplay=1&rel=0" : vm ? "https://player.vimeo.com/video/" + vm[1] + "?autoplay=1" : src}" title="Video explicativo de PregonIA" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+  });
 })();
 </script>
 </body>
