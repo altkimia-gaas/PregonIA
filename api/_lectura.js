@@ -125,7 +125,7 @@ async function leerFuente(url, m){
 
 /* Clasificación con Claude Haiku, en lotes paralelos para responder rápido: relevancia, tono, resumen propio y palabras clave.
    En paralelo, una llamada corta solo con los titulares agrupa las notas que cuentan el mismo hecho. */
-const LOTE = 10;
+const LOTE = 8;  // con la ficha editorial la respuesta por nota es más larga: lotes más chicos para que nada quede cortado
 const DIAG = [];
 const dormir = ms => new Promise(ok => setTimeout(ok, ms));
 /* Cola de la IA: la API limita las solicitudes simultáneas de la organización (la lectura programada lanzaba unas 30 a la vez y
@@ -242,8 +242,9 @@ async function clasificar(comuna, notas, existentes = [], ejemplos = []){
   if (!process.env.ANTHROPIC_API_KEY || !notas.length) return {porI: new Map(), ok: false};
   const lotes = []; for (let k = 0; k < notas.length; k += LOTE) lotes.push(k);
   const pl = esSujeto(comuna) ? promptLoteAut : promptLote;
-  const lote = async k => (await llamar(pl(comuna, notas.slice(k, k + LOTE), k, ejemplos), 4000)) || (await llamar(pl(comuna, notas.slice(k, k + LOTE), k, ejemplos), 4000)); // un reintento
-  const [grupos, ...partes] = await Promise.all([llamar(promptGrupos(comuna, notas, existentes), 4000), ...lotes.map(lote)]);
+  // 8000 tokens: el modelo puede razonar antes de responder y ese razonamiento descuenta del límite; con 4000 se cortaban lotes.
+  const lote = async k => (await llamar(pl(comuna, notas.slice(k, k + LOTE), k, ejemplos), 8000)) || (await llamar(pl(comuna, notas.slice(k, k + LOTE), k, ejemplos), 8000)); // un reintento
+  const [grupos, ...partes] = await Promise.all([llamar(promptGrupos(comuna, notas, existentes), 8000), ...lotes.map(lote)]);
   const porI = new Map();
   partes.forEach(p => (p || []).forEach(c => { if (Number.isInteger(Number(c.i))) porI.set(Number(c.i), {...c}); }));
   (grupos || []).forEach(c => {

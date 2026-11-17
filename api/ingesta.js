@@ -100,7 +100,7 @@ async function manejar(req){
   const porClave = secreto && (req.headers.get("authorization") || "").trim() === "Bearer " + secreto;
   const porPase = !porClave && /^[a-f0-9]{48}$/.test(pase) && await usarPase(pase).catch(() => false);
   if (!porClave && !porPase) return json({error: "No autorizado"}, 401);
-  DIAG.length = 0; plazoGoogleNews(30000);  // Google News va en cola (responde 429 si se le pide mucho a la vez); el resto del minuto es para clasificar
+  DIAG.length = 0; plazoGoogleNews(45000);  // Google News va en cola (responde 429 si se le pide mucho a la vez); el resto de los 300 s es para clasificar
   const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
   const [lectura] = await sb("lecturas", {method: "POST", prefer: "return=representation", body: {inicio: new Date(ahora).toISOString()}});
   try {
