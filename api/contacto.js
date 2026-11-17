@@ -4,6 +4,7 @@
 // CONTACTO_DESTINO (por defecto soporte@altkimia.cl). Si no se logra ni guardar ni avisar, responde error
 // para que la página ofrezca escribir directo al correo.
 import { sb, json } from "./_servidor.js";
+import { pruebaPOST } from "./_prueba.js";
 
 const VENTANA_MS = 10 * 60 * 1000, LIMITE = 5;
 const visitas = new Map(); // freno simple por IP e instancia
@@ -31,6 +32,7 @@ async function avisarCorreo(c){
 }
 
 export async function POST(req){
+  if (new URL(req.url).searchParams.has("prueba")) return pruebaPOST(req);  // inscripción de la prueba gratis
   const propio = new URL(req.url).origin, origen = req.headers.get("origin");
   if (origen && origen !== propio) return json({error: "Origen no permitido"}, 403);
   const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "anonimo";
