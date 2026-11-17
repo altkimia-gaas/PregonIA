@@ -513,6 +513,8 @@ create table if not exists redaccion_posts (
   actualizado  timestamptz not null default now()
 );
 create index if not exists redaccion_posts_estado on redaccion_posts (estado, programado);
+-- Publicación por la API de Meta (fase 2): id de la publicación en Facebook, si quedó programada en Meta o ya salió, y cuándo.
+alter table redaccion_posts add column if not exists meta jsonb;
 
 -- Celulares y computadores del editor suscritos a los avisos de Redacción (Web Push).
 create table if not exists redaccion_suscripciones (

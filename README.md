@@ -212,3 +212,12 @@ Puesta en marcha:
 Prueba local sin base de datos: `python3 scripts/build.py && python3 -m http.server 8000` y abrir `http://localhost:8000/redaccion.html`: entra en **modo prueba** con noticias, medios y personas ficticias guardadas en el navegador.
 
 Costo variable estimado (validar con los precios vigentes): la detección agrega una llamada corta a Haiku por pasada solo cuando hay hechos nuevos sobre 30 puntos; cada redacción es una llamada a Sonnet; la voz solo se graba en los reels que se piden (ElevenLabs cobra por caracteres; para uso comercial en redes se necesita un plan pagado). El render de imágenes y videos es en el navegador, sin costo de servidor.
+
+### Publicación en Facebook (fase 2, desde el 17-nov-2026)
+
+Con la página conectada, una publicación **aprobada** se puede publicar de inmediato o programar en Facebook desde Redacción, con la pieza del feed o el carrusel como imágenes. Meta publica sola a la hora programada; al abrir Redacción se confirma qué salió y se marca como publicada. Instagram, historias y reels siguen a mano.
+
+Variables en Vercel (Production) y luego Redeploy:
+- `META_PAGE_ID`: id de la página de Facebook de El Pregonero.
+- `META_PAGE_TOKEN`: token de un usuario del sistema del portafolio de ALTKIMIA (o de la página) con `pages_show_list`, `pages_read_engagement` y `pages_manage_posts`. Con el del usuario del sistema, el servidor obtiene el de la página.
+- `META_GRAPH_VERSION` (opcional): por defecto `v25.0`.

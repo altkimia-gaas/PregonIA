@@ -3,27 +3,10 @@
 // (no las cuentas de redes: esas las lee la lectura programada cada 30 minutos, para no pagar dos veces a Apify).
 // Variables: SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY, ANTHROPIC_API_KEY; avisos: VAPID_*.
 import { leerCatalogo, json } from "./_lectura.js";
+import { sb, editor } from "./_servidor.js";
 import { detectarRedaccion } from "./_redaccion.js";
 
 let ultima = 0; // freno simple por instancia: una búsqueda cada 2 minutos
-
-async function sb(ruta, {method = "GET", body, prefer} = {}){
-  const url = process.env.SUPABASE_URL, clave = process.env.SUPABASE_SECRET_KEY;
-  const headers = {apikey: clave, "content-type": "application/json", ...(prefer ? {prefer} : {})};
-  if (!String(clave).startsWith("sb_")) headers.authorization = "Bearer " + clave;
-  const r = await fetch(`${url}/rest/v1/${ruta}`, {method, headers, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(15000)});
-  if (!r.ok) throw new Error(`Supabase ${method} ${ruta.split("?")[0]}: ${r.status} ${(await r.text()).slice(0, 200)}`);
-  return r.status === 204 || method === "DELETE" ? null : r.json().catch(() => null);
-}
-
-/* Quién llama: valida el token de la sesión con Supabase y que esté en la tabla editores. */
-async function editor(req){
-  const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim(); if (!token) return null;
-  const r = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {headers: {apikey: process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_SECRET_KEY, authorization: "Bearer " + token}, signal: AbortSignal.timeout(8000)});
-  if (!r.ok) return null; const u = await r.json().catch(() => null); if (!u || !u.id) return null;
-  const e = await sb(`editores?usuario=eq.${u.id}&select=usuario`).catch(() => []);
-  return e && e.length ? u : null;
-}
 
 async function manejar(req){
   const listo = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SECRET_KEY);
