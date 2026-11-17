@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>PregonIA · Servicio de monitoreo de prensa para instituciones y autoridades públicas</title>
-<meta name="description" content="PregonIA vigila más de 100 medios nacionales, regionales y comunales, te avisa a tiempo, te dice qué hacer y te deja la respuesta lista. Para municipios, concejos, consejos regionales y parlamentarios.">
+<title>PregonIA · Monitoreo de prensa para instituciones y autoridades públicas</title>
+<meta name="description" content="PregonIA lee más de 100 medios nacionales, regionales y comunales, te avisa a tiempo, te dice qué hacer y te deja la respuesta lista. Para municipios, parlamentarios y autoridades.">
 <meta property="og:title" content="PregonIA · La prensa no espera. Tú tampoco.">
 <meta property="og:description" content="Detecta lo que la prensa dice de tu gestión, mide hasta dónde llegó y responde antes de que el tema escale.">
 <meta property="og:type" content="website">
@@ -13,117 +13,8 @@
 <link rel="apple-touch-icon" href="/icono-180.png">
 <link rel="canonical" href="https://pregonia.vercel.app/servicio">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Inter:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,500;6..72,600&amp;family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&amp;display=swap">
-<style>
-.ifw{display:contents}[hidden]{display:none!important}html{scroll-behavior:smooth}@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-body{margin:0;background:#FFFFFF}
-a{color:#2B4BE0}a:hover{color:#1F3BC0}
-.pg{--paper:#FFFFFF;--soft:#F5F5F2;--ink:#141414;--muted:#555555;--line:#DADADA;--frame:#141414;--acc:#2B4BE0;--acch:#1F3BC0;--accs:#EEF1FD;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
-.pg *{box-sizing:border-box}
-.dots{background:var(--paper)}
-.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
-.sec{padding:96px 0;border-top:1.5px solid var(--frame)}
-.light{background:var(--soft);color:var(--ink)}
-.light .mut{color:var(--muted)}
-.light .kick{color:var(--acc)}
-.kick{font-family:"DM Mono",ui-monospace,monospace;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin:0 0 14px}
-.kick::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-right:8px;vertical-align:1px}
-.h1{font-family:"Source Serif 4",Newsreader,Georgia,serif;font-weight:700;font-size:clamp(38px,5vw,62px);line-height:1.04;letter-spacing:-.015em;margin:0;border-left:5px solid var(--frame);padding-left:20px}
-.h2{font-family:"Source Serif 4",Newsreader,Georgia,serif;font-weight:700;font-size:clamp(30px,3.5vw,44px);line-height:1.08;letter-spacing:-.01em;margin:0;border-left:4px solid var(--frame);padding-left:16px;text-wrap:balance}
-.h3{font-family:"Source Serif 4",Newsreader,Georgia,serif;font-weight:700;font-size:22px;line-height:1.2;margin:0}
-.lead{font-size:clamp(17px,1.5vw,20px);line-height:1.55;color:var(--muted);margin:0}
-.mut{color:var(--muted)}
-.mono{font-family:"DM Mono",ui-monospace,monospace}
-.news{font-family:"Source Serif 4",Newsreader,Georgia,serif}
-.blu{color:var(--acc)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 24px;border-radius:999px;font-family:Inter,sans-serif;font-weight:600;font-size:15.5px;text-decoration:none;border:1.5px solid var(--frame);background:var(--paper);color:var(--ink);cursor:pointer;line-height:1.2}
-.btn:hover{background:var(--soft);color:var(--ink)}
-.btn.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
-.btn.pri:hover{background:var(--acch);border-color:var(--acch);color:#fff}
-.btn.sec2{background:var(--paper);color:var(--ink);border-color:var(--frame)}
-.btn.sec2:hover{background:var(--soft);color:var(--ink)}
-.btn.sm{min-height:36px;padding:0 16px;font-size:13.5px}
-.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.ic.s{width:16px;height:16px}
-.ic.l{width:26px;height:26px}
-.card{background:var(--paper);border:1.5px solid var(--frame);border-radius:14px}
-.chip{display:inline-flex;align-items:center;gap:6px;font-family:"DM Mono",monospace;font-size:12px;letter-spacing:.04em;padding:4px 10px;border-radius:999px;white-space:nowrap}
-.chip.cri{background:#F8E3E1;color:#9A1F18}
-.chip.pos{background:#E3F1E8;color:#1E6B3F}
-.chip.neu{background:#EEEFF1;color:#4F545C}
-.chip.warn{background:#FBEFD9;color:#9A5B00}
-.chip.info{background:var(--accs);color:var(--acch)}
-.live{width:8px;height:8px;border-radius:50%;background:#1E6B3F;box-shadow:0 0 0 4px rgba(30,107,63,.15);flex:none}
-.nav a{color:var(--muted);text-decoration:none;font-size:14.5px;font-weight:500}
-.nav a:hover{color:var(--ink)}
-.seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border-radius:999px;background:var(--paper);border:1.5px solid var(--frame)}
-.sb{min-height:42px;padding:0 18px;border-radius:999px;border:0;background:transparent;color:var(--ink);font:600 14.5px Inter,sans-serif;cursor:pointer}
-.sb:hover{background:var(--soft)}
-.sb.on,.sb.on:hover{background:var(--frame);color:#fff}
-.tab{min-height:44px;padding:0 18px;border-radius:999px;border:1.5px solid var(--frame);background:var(--paper);color:var(--ink);font:600 14px Inter,sans-serif;cursor:pointer}
-.tab:hover{background:var(--soft)}
-.tab.on,.tab.on:hover{background:var(--frame);color:#fff}
-.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
-.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
-.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
-.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:center}
-.tour{display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,1.25fr);gap:40px;align-items:center}
-.reach{display:inline-flex;align-items:flex-end;gap:3px;height:16px}
-.reach i{display:block;width:5px;border-radius:1.5px;background:#C9C9C4}
-.reach i.f{background:var(--acc)}
-.price{font-family:"Source Serif 4",Georgia,serif;font-weight:700;font-size:44px;letter-spacing:-.01em;line-height:1}
-.feat{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:15px}
-.feat li{display:flex;gap:10px;align-items:flex-start}
-.feat .ic{margin-top:3px;color:var(--acc)}
-.plan.hl{border:2.5px solid var(--acc);box-shadow:inset 0 -4px 0 var(--acc)}
-.pcard{display:flex;flex-direction:column;padding:28px;border-radius:14px;background:var(--paper);border:1.5px solid var(--frame);color:var(--ink);text-decoration:none;cursor:pointer;transition:background .15s ease,box-shadow .15s ease}
-.pcard:hover{background:var(--soft);color:var(--ink)}
-.pcard:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
-.pcard.on{background:var(--accs);box-shadow:inset 0 -4px 0 var(--frame)}
-.pico{width:52px;height:52px;border-radius:999px;background:var(--accs);color:var(--acc);display:inline-flex;align-items:center;justify-content:center;border:1.5px solid var(--frame)}
-.pfeat{list-style:none;margin:0 0 26px;padding:0;display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.4}
-.pfeat li{display:flex;gap:10px;align-items:flex-start}
-.pfeat .ic{color:#1E6B3F;margin-top:2px}
-.pfoot{margin-top:auto;padding-top:18px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;font-size:13.5px;color:var(--muted);border-top:1px solid var(--line)}
-.pgo{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:14.5px;color:var(--acc)}
-.prob{display:flex;gap:18px;align-items:flex-start;padding:24px 0;border-top:1px solid var(--line)}
-.prob .n{font-family:"DM Mono",monospace;font-size:13px;color:#fff;background:#B3261E;border-radius:999px;min-width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center}
-.sol{padding:30px;border-radius:14px;background:var(--paper);border:1.5px solid var(--frame)}
-.sol .k{width:48px;height:48px;border-radius:999px;background:var(--accs);color:var(--acc);display:inline-flex;align-items:center;justify-content:center;border:1.5px solid var(--frame)}
-.cov-h{display:flex;align-items:center;gap:14px;padding:16px 20px;border-radius:14px;background:var(--frame);color:#fff;min-height:84px}
-.cov-h b{font:700 22px "Source Serif 4",Georgia,serif}
-.cov-sub{color:#C9C9C4;font-size:14px}
-.cov{padding:15px 18px;border-radius:14px;background:var(--paper);border:1.5px solid var(--frame);font-size:14.5px;line-height:1.5}
-.cov b{display:inline-block;margin-bottom:2px;font-family:"Source Serif 4",Georgia,serif;font-size:16px}
-.gn{color:#9A5B00}
-.fb{color:var(--acch)}
-details.q{border-bottom:1.5px solid var(--frame)}
-details.q summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:20px 4px;font:700 18px "Source Serif 4",Georgia,serif;color:var(--ink)}
-details.q summary::-webkit-details-marker{display:none}
-details.q summary:hover{color:var(--acc)}
-details.q[open] summary .pl{transform:rotate(45deg)}
-details.q .ans{padding:0 4px 22px;color:#333;font-size:16px;max-width:820px}
-details.q .ans p{margin:0}
-.pl{transition:transform .2s ease;color:var(--acc)}
-.fld{display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:600;color:var(--ink)}
-.fld input,.fld select{min-height:48px;border-radius:10px;border:1.5px solid var(--frame);background:var(--paper);color:var(--ink);font:400 16px Inter,sans-serif;padding:0 14px}
-.fld input:focus,.fld select:focus,.btn:focus-visible,.sb:focus-visible,.tab:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-input[type=range]{width:100%;accent-color:#2B4BE0;min-height:32px}
-.bar{height:10px;border-radius:3px}
-.win{border-radius:14px;overflow:hidden;border:1.5px solid var(--frame);background:var(--paper);box-shadow:8px 8px 0 var(--frame)}
-.phone{width:300px;border-radius:34px;padding:10px;background:#141414;border:1.5px solid #141414;box-shadow:8px 8px 0 #2B4BE0}
-.scr{border-radius:26px;background:#FFFFFF;overflow:hidden}
-.navl{display:flex;gap:28px;align-items:center}
-.mockwrap{position:relative;padding-bottom:40px}
-.phone-abs{position:absolute;right:-12px;bottom:-24px;width:240px}
-.mock-more{font-size:12px;color:#555555;padding:4px 2px 64px;max-width:52%}
-.faqg{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr);gap:56px;align-items:start}
-.tourcard{margin-top:18px;padding:40px}
-@media (max-width:1060px){.hero,.tour{grid-template-columns:minmax(0,1fr)}.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.navl{display:none}}
-@media (max-width:820px){.g3,.g2,.faqg{grid-template-columns:minmax(0,1fr)}.faqg{gap:28px}.tourcard{padding:22px}.mockwrap{padding-bottom:0}.phone-abs{position:static;width:min(280px,100%);margin:20px auto 0}.mock-more{padding-bottom:4px;max-width:none}.sec{padding:68px 0}.phone-abs{position:static}.hide-m{display:none!important}}
-@media (max-width:560px){.g4{grid-template-columns:minmax(0,1fr)}.wrap{padding:0 18px}.price{font-size:36px}.h1{padding-left:14px}}
-@media (prefers-reduced-motion:reduce){.pl,.pcard{transition:none}}
-</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
+<style>body{margin:0;background:#fff}html{scroll-behavior:smooth}[hidden]{display:none!important}.trampa{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}</style>
 </head>
 <body>
 <style>
@@ -205,7 +96,7 @@ input[type=range]{width:100%;accent-color:#2B4BE0;min-height:32px}
         <a class="pd-go" href="/?sin-portada#inicio">Ver demostración <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
         <a class="pd-go pd-alt" href="/?ingresar">Ingresar</a>
       </div>
-      <p class="pd-piloto">¿Quieres PregonIA en tu institución? <a href="#perfil">Conoce el servicio y sus planes</a></p>
+      <p class="pd-piloto">¿Quieres PregonIA en tu institución? <a href="#para-quien">Conoce el servicio y sus planes</a></p>
       <figure class="pd-foto">
         <div class="pd-mini">
           <p class="pd-mini-k"><span>Edición Comuna de Ejemplo · hoy</span><span class="pd-sello">Datos de ejemplo</span></p>
@@ -224,606 +115,299 @@ input[type=range]{width:100%;accent-color:#2B4BE0;min-height:32px}
         <section><h2>Responde</h2><p>Comunicados, aclaraciones y mensajes clave listos para revisar. Nada se publica sin aprobación.</p></section>
       </div>
     </div>
-    <footer class="pd-pie"><span>Un producto de <b><span>ALT</span>Kimia</b></span><a href="/legal.html#privacidad">Privacidad</a><a href="/legal.html#terminos">Términos</a></footer>
   </div>
 </section>
+<style>
+.sv{--ink:#141414;--muted:#555555;--line:#DADADA;--frame:#141414;--soft:#F5F5F2;--acc:#2B4BE0;--acch:#1F3BC0;--accs:#EEF1FD;--serif:"Source Serif 4","Newsreader",Georgia,serif;color:var(--ink);background:#fff;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.sv *{box-sizing:border-box}
+.sv a{color:var(--acc)}
+.w{max-width:1100px;margin:0 auto;padding:0 24px}
+.sec{padding:72px 0;border-top:1.5px solid var(--frame)}
+.sec.soft{background:var(--soft)}
+.k{font-family:"DM Mono",ui-monospace,monospace;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin:0 0 12px}
+.t{font-family:var(--serif);font-weight:700;font-size:clamp(28px,3.4vw,40px);line-height:1.1;letter-spacing:-.01em;margin:0;border-left:4px solid var(--frame);padding-left:16px;text-wrap:balance}
+.mut{color:var(--muted)}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.c{background:#fff;border:1.5px solid var(--frame);border-radius:14px;padding:24px}
+.c h3{font-family:var(--serif);font-weight:700;font-size:21px;line-height:1.2;margin:0 0 8px}
+.c p{margin:0}
+.ls{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px;font-size:15px}
+.ls li{display:flex;gap:9px}
+.ls li::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-top:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 22px;border-radius:999px;border:1.5px solid var(--frame);background:#fff;color:var(--ink);font:600 15px Inter,sans-serif;text-decoration:none;cursor:pointer}
+.sv a.btn{color:var(--ink)}
+.btn:hover{background:var(--soft)}
+.btn.p,.sv a.btn.p{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.p:hover{background:var(--acch);border-color:var(--acch)}
+.btn.s{min-height:38px;padding:0 16px;font-size:14px}
+.btn:focus-visible,.sv a:focus-visible,.sv summary:focus-visible,.sv input:focus-visible,.sv select:focus-visible,.sv textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* barra */
+.bar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.96);border-bottom:1.5px solid var(--frame);backdrop-filter:blur(8px)}
+.bar .w{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+.logo{display:inline-flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font:700 21px var(--serif)}
+.sv a.logo{color:var(--ink)}
+.logo b{color:var(--acc)}
+.nv{display:flex;gap:24px}
+.nv a{color:var(--muted);text-decoration:none;font-size:14.5px;font-weight:500}
+.nv a:hover{color:var(--ink)}
+.acts{display:flex;gap:10px}
+/* cobertura */
+.cifras{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1.5px solid var(--frame);border-radius:14px;background:#fff;margin-top:28px}
+.cifras div{padding:20px 22px;border-left:1px solid var(--line)}
+.cifras div:first-child{border-left:0}
+.cifras b{display:block;font:700 40px/1 var(--serif)}
+.cifras span{display:block;margin-top:6px;font-size:14.5px;color:var(--muted)}
+/* precios */
+.tb{width:100%;border-collapse:collapse;font-size:15px}
+.tb th,.tb td{text-align:left;padding:11px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.tb th{font:500 12px "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tb td.pr{font:700 18px var(--serif);white-space:nowrap}
+.tb tr:last-child td{border-bottom:0}
+/* preguntas */
+details.q{border-bottom:1.5px solid var(--frame)}
+details.q summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:16px;padding:18px 2px;font:700 18px var(--serif)}
+details.q summary::-webkit-details-marker{display:none}
+details.q summary::after{content:"+";color:var(--acc);font:400 24px/1 Inter,sans-serif;transition:transform .2s}
+details.q[open] summary::after{transform:rotate(45deg)}
+details.q p{margin:0 2px 18px;color:#333}
+/* formulario */
+.fm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.fm .full{grid-column:1/-1}
+.fd{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600}
+.fd input,.fd select,.fd textarea{min-height:46px;border-radius:10px;border:1.5px solid var(--frame);background:#fff;color:var(--ink);font:400 16px Inter,sans-serif;padding:10px 12px}
+.fd textarea{min-height:96px;resize:vertical}
+.ck{display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:400;color:#333}
+.ck input{width:20px;height:20px;margin-top:2px;flex:none;accent-color:var(--acc)}
+.trampa{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.msg{margin:0;font-size:15px;padding:12px 14px;border-radius:10px}
+.msg.ok{background:#E3F1E8;color:#1E6B3F}
+.msg.err{background:#F8E3E1;color:#9A1F18}
+.pie{border-top:1.5px solid var(--frame);padding:32px 0 96px;font-size:14px;color:var(--muted)}
+.pie .w{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+.pie a{color:var(--muted)}
+@media (max-width:900px){.nv{display:none}.g3{grid-template-columns:minmax(0,1fr)}.cifras{grid-template-columns:repeat(2,minmax(0,1fr))}.cifras div:nth-child(3){border-left:0}.cifras div:nth-child(n+3){border-top:1px solid var(--line)}}
+@media (max-width:720px){.g2,.fm{grid-template-columns:minmax(0,1fr)}.sec{padding:56px 0}.w{padding:0 18px}.acts{gap:6px}.acts .btn.s{padding:0 12px;font-size:13.5px}}
+@media (max-width:440px){.logo span{display:none}.c{padding:18px}.tb{font-size:14px}.tb th,.tb td{padding:10px 5px}.tb td.pr{font-size:16px}}
+@media (max-width:360px){.tb td.pr{white-space:normal}}
+@media (prefers-reduced-motion:reduce){details.q summary::after{transition:none}}
+</style>
+<div class="sv">
+<header class="bar"><div class="w">
+<a class="logo" href="#portada" aria-label="PregonIA, portada"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="1" y="14" width="5.5" height="9" rx="1.5" style="fill:#2B4BE0;opacity:.55"></rect><rect x="9.25" y="8" width="5.5" height="15" rx="1.5" style="fill:#2B4BE0;opacity:.8"></rect><rect x="17.5" y="1" width="5.5" height="22" rx="1.5" style="fill:#2B4BE0"></rect></svg><span>Pregon<b>IA</b></span></a>
+<nav class="nv" aria-label="Secciones"><a href="#para-quien">Para quién</a><a href="#precios">Precios</a><a href="#preguntas">Preguntas</a><a href="#contacto">Contacto</a></nav>
+<div class="acts"><a class="btn s" href="/?ingresar">Ingresar</a><a class="btn s p" href="/?sin-portada#inicio">Ver demostración</a></div>
+</div></header>
 
-<div class="pg" style="width:100%;min-height:100%">
-
-<!-- BARRA SUPERIOR -->
-<header style="position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);border-bottom:1.5px solid #141414;backdrop-filter:blur(8px)">
-<div class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:68px;flex-wrap:wrap">
-<a href="#portada" aria-label="PregonIA, portada" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:#141414">
-<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><rect x="1" y="14" width="5.5" height="9" rx="1.5" style="fill:#2B4BE0"></rect><rect x="9.25" y="8" width="5.5" height="15" rx="1.5" style="fill:#2B4BE0"></rect><rect x="17.5" y="1" width="5.5" height="22" rx="1.5" style="fill:#2B4BE0"></rect></svg>
-<span style="font-family:'Source Serif 4',Georgia,serif;font-weight:700;font-size:21px;letter-spacing:-.01em">Pregon<span style="color:#2B4BE0">IA</span></span>
-</a>
-<nav class="nav navl" aria-label="Secciones">
-<a href="#problema">El problema</a>
-<a href="#solucion">La solución</a>
-<a href="#cobertura">Cobertura</a>
-<a href="#precios">Precios</a>
-<a href="#preguntas">Preguntas</a>
-</nav>
-<div style="display:flex;align-items:center;gap:16px">
-<span class="mono hide-m" style="display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#555555"><span class="live"></span>Monitoreando 100 medios</span>
-<a class="btn sec2 sm" href="/?ingresar">Ingresar</a><a class="btn pri sm" href="/?sin-portada#inicio">Ver demostración</a>
+<section id="para-quien" class="sec"><div class="w">
+<p class="k">Para quién</p>
+<h2 class="t">Saber a tiempo lo que dice la prensa, sin pasar el día buscándolo.</h2>
+<div class="g3" style="margin-top:32px">
+<div class="c"><h3>Municipios</h3><p class="mut">El alcalde se entera tarde, por un reenvío.</p><ul class="ls"><li>Aviso al celular ante una noticia crítica</li><li>Qué hacer y quién responde</li><li>Parte del lunes e informe de gestión</li></ul></div>
+<div class="c"><h3>Parlamentarios y autoridades</h3><p class="mut">El territorio es grande y el equipo, chico.</p><ul class="ls"><li>Parte diario de todas tus comunas</li><li>Conflictos locales antes de que escalen</li><li>Tus proyectos y comisiones en prensa</li></ul></div>
+<div class="c"><h3>Equipos de comunicaciones</h3><p class="mut">Horas revisando portales y todo parece urgente.</p><ul class="ls"><li>Noticias ordenadas por riesgo, sin repetidas</li><li>Hasta dónde llegó cada tema</li><li>Respuestas en borrador, listas para aprobar</li></ul></div>
 </div>
+</div></section>
+
+<section id="como" class="sec soft"><div class="w">
+<p class="k">Qué hace</p>
+<h2 class="t">Te avisa, te dice qué hacer y te deja la respuesta lista.</h2>
+<div class="g3" style="margin-top:32px">
+<div class="c"><h3>1. Te avisa a tiempo</h3><p class="mut">Lee los medios cada 15 a 30 minutos. Lo crítico te llega al celular en menos de media hora.</p></div>
+<div class="c"><h3>2. Te dice qué hacer</h3><p class="mut">Tono de la nota, si quedó en la comuna o ya llegó a la prensa regional o nacional, acción sugerida y responsable.</p></div>
+<div class="c"><h3>3. Te deja la respuesta lista</h3><p class="mut">Declaración, comunicado o aclaración en borrador, con tus datos. Nada se publica sin aprobación.</p></div>
 </div>
-</header>
+<p class="mut" style="margin:24px 0 0;font-size:15px">Se configura en minutos con tu cargo, tu comuna y tu nombre. Incluye avisos al celular, video resumen narrado, kit de vocería, calendario de riesgos e informe de gestión mensual.</p>
+</div></section>
 
-<!-- 1. ¿QUIÉN ERES? -->
-<section id="perfil" class="dots" style="padding:72px 0 80px">
-<div class="wrap">
-<div style="max-width:780px">
-<p class="kick">Elige tu perfil</p>
-<h2 class="h2" style="font-size:clamp(32px,4.2vw,50px)">Cada autoridad necesita saber algo distinto. <span class="blu">¿Quién eres?</span></h2>
-<p class="lead" style="margin-top:16px">Para instituciones y autoridades públicas. Elige tu perfil y te mostramos lo que obtienes.</p>
+<section id="cobertura" class="sec"><div class="w">
+<p class="k">Qué lee</p>
+<h2 class="t">De la prensa nacional al portal de tu comuna.</h2>
+<div class="cifras">
+<div><b>51</b><span>medios nacionales: Meganoticias, T13, BioBioChile, Cooperativa, El Mostrador, CIPER…</span></div>
+<div><b>16</b><span>regionales: El Mercurio de Valparaíso, Puranoticia, Epicentro, Radio Festival…</span></div>
+<div><b>42</b><span>comunales en las 8 provincias de la Región de Valparaíso</span></div>
+<div><b>+</b><span>cuentas de Facebook e Instagram de medios locales, y búsqueda en Google Noticias</span></div>
 </div>
-<div class="g3" style="margin-top:40px;align-items:stretch" role="group" aria-label="Elige tu perfil">
+<p class="mut" style="margin:16px 0 0;font-size:14.5px">Los medios que no permiten la lectura automatizada se siguen por Google Noticias, sin eludir sus bloqueos. PregonIA no copia notas: resume con palabras propias y enlaza al original.</p>
+</div></section>
 
-<a href="#inicio" data-c="cardCls.alc" data-on="pickAlc">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="pico"><svg class="ic l" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"></path></svg></span><div class="ifw" data-if="isAlc"><span class="chip info">Seleccionado</span></div></div>
-<p class="h3" style="font-size:23px;margin-top:22px">Alcalde o municipio</p>
-<p style="margin:8px 0 20px;font-size:15px;color:#9A1F18">Hoy te enteras tarde, por un reenvío.</p>
-<ul class="pfeat">
-<li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Aviso inmediato de las noticias críticas</li>
-<li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Qué hacer y quién debe responder</li>
-<li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Un parte semanal que se lee en 2 minutos</li>
-</ul>
-<div class="pfoot"><span>Demo con tu comuna</span><span class="pgo">Ver más<svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span></div>
-</a>
-
-<a href="#inicio" data-c="cardCls.par" data-on="pickPar">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="pico"><svg class="ic l" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></span><div class="ifw" data-if="isPar"><span class="chip info">Seleccionado</span></div></div>
-<p class="h3" style="font-size:23px;margin-top:22px">Parlamentario u otra autoridad</p>
-<p style="margin:8px 0 20px;font-size:15px;color:#9A1F18">Hoy tu territorio es grande y tu equipo, chico.</p>
-<ul class="pfeat">
-<li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Un parte diario de todas tus comunas</li>
-<li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Los conflictos locales antes de que escalen</li>
-<li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Tus proyectos y comisiones en la prensa</li>
-</ul>
-<div class="pfoot"><span>Prueba de 30 días</span><span class="pgo">Ver más<svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span></div>
-</a>
-
-<a href="#inicio" data-c="cardCls.com" data-on="pickCom">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="pico"><svg class="ic l" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span><div class="ifw" data-if="isCom"><span class="chip info">Seleccionado</span></div></div>
-<p class="h3" style="font-size:23px;margin-top:22px">Comunicaciones o prensa</p>
-<p style="margin:8px 0 20px;font-size:15px;color:#9A1F18">Hoy pasas horas buscando y todo parece urgente.</p>
-<ul class="pfeat">
-<li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Noticias ordenadas por riesgo, sin repetidas</li>
-<li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Hasta dónde ha llegado cada tema</li>
-<li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>La respuesta en borrador, lista para aprobar</li>
-</ul>
-<div class="pfoot"><span>Demo de 20 minutos</span><span class="pgo">Ver más<svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span></div>
-</a>
-
+<section id="precios" class="sec soft"><div class="w">
+<p class="k">Precios</p>
+<h2 class="t">Precios claros, por los temas que sigues.</h2>
+<div class="g2" style="margin-top:32px">
+<div class="c"><h3>Municipios</h3>
+<table class="tb"><thead><tr><th scope="col">Plan</th><th scope="col">Incluye</th><th scope="col">Mensual</th></tr></thead><tbody>
+<tr><td><b>Comunal</b></td><td class="mut">5 temas · 3 usuarios</td><td class="pr">$149.000</td></tr>
+<tr><td><b>Municipal</b></td><td class="mut">10 temas · 5 usuarios</td><td class="pr">$249.000</td></tr>
+<tr><td><b>Ciudad</b></td><td class="mut">20 temas · 10 usuarios</td><td class="pr">$390.000</td></tr>
+</tbody></table>
+<p class="mut" style="margin-top:12px;font-size:14.5px">Por Compra Ágil, sin licitación: cabe bajo 100 UTM. Te entregamos cotización y ficha técnica.</p></div>
+<div class="c"><h3>Parlamentarios y autoridades</h3>
+<table class="tb"><thead><tr><th scope="col">Plan</th><th scope="col">Incluye</th><th scope="col">Mensual</th></tr></thead><tbody>
+<tr><td><b>Diputado</b></td><td class="mut">12 temas · 4 usuarios · su distrito</td><td class="pr">$290.000</td></tr>
+<tr><td><b>Senador</b></td><td class="mut">20 temas · 6 usuarios · la región</td><td class="pr">$390.000</td></tr>
+<tr><td><b>Otras autoridades</b></td><td class="mut">Gobernador, consejeros, delegados, concejales</td><td class="pr">A cotizar</td></tr>
+</tbody></table>
+<p class="mut" style="margin-top:12px;font-size:14.5px">Licencia mensual de software, con prueba de 30 días. Bancadas de 3 o más: 15% menos.</p></div>
 </div>
-</div>
-</section>
+<p class="mut" style="margin:18px 0 0;font-size:14.5px"><b style="color:#141414">Cupos fundadores:</b> los primeros 6 municipios y 3 parlamentarios pagan 20% menos durante 12 meses. Precios netos, más IVA.</p>
+</div></section>
 
-<!-- 2. PROMESA -->
-<section id="inicio" class="dots" style="padding:56px 0 96px;border-top:1.5px solid #141414">
-<div class="wrap">
-<div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:36px">
-<span class="chip info" style="font-size:12.5px;padding:6px 12px">Versión para <span data-t="personaNombre"></span></span>
-<a href="#perfil" style="font-size:14.5px;font-weight:600">Cambiar perfil</a>
+<section id="confianza" class="sec"><div class="w">
+<p class="k">Confianza</p>
+<h2 class="t">Puedes usarlo tranquilo.</h2>
+<div class="g2" style="margin-top:28px;gap:14px 40px">
+<p style="margin:0"><b>Respeta a los medios.</b> <span class="mut">Resume y enlaza; no reproduce notas.</span></p>
+<p style="margin:0"><b>Tus datos son solo tuyos.</b> <span class="mut">Cada cuenta está aislada y se borra al terminar.</span></p>
+<p style="margin:0"><b>Neutral por contrato.</b> <span class="mut">Atiende a todos los sectores en las mismas condiciones.</span></p>
+<p style="margin:0"><b>Decide una persona.</b> <span class="mut">La IA propone; tu equipo aprueba antes de publicar.</span></p>
 </div>
-<div class="hero">
+</div></section>
+
+<section id="preguntas" class="sec soft"><div class="w">
+<p class="k">Preguntas frecuentes</p>
+<h2 class="t">Lo que más nos preguntan.</h2>
+<div style="margin-top:20px">
+<details class="q"><summary>¿No basta con Google Alertas o con alguien que revise?</summary><p>Llegan tarde, no conocen los portales comunales y no dicen qué es grave. PregonIA revisa los medios cada 15 a 30 minutos, junta la misma noticia publicada en varios medios y te dice qué hacer.</p></details>
+<details class="q"><summary>¿Cuánto demora en funcionar?</summary><p>Un día. Eliges tu cargo, tu comuna y tu nombre, te proponemos los temas y tú los confirmas. Te acompañamos en la puesta en marcha y después por WhatsApp.</p></details>
+<details class="q"><summary>¿Cómo se contrata?</summary><p>Los municipios, por Compra Ágil, sin licitación, con pago mensual. Los parlamentarios, como licencia mensual de software para su oficina, nunca como asesoría de imagen.</p></details>
+<details class="q"><summary>¿Mi adversario puede ver mi información?</summary><p>No. Cada cuenta está aislada: nadie ve tus temas, alertas ni borradores. La neutralidad es una cláusula del contrato.</p></details>
+<details class="q"><summary>¿Me llegan los avisos al celular?</summary><p>Sí. PregonIA se instala desde el navegador, sin tienda de aplicaciones, y avisa aunque esté cerrada. Cada persona elige qué recibir.</p></details>
+<details class="q"><summary>¿Es legal usar el contenido de los medios?</summary><p>PregonIA no reproduce notas: muestra título, medio, un resumen propio y el enlace al original. Respeta las reglas de cada medio y cualquiera puede pedir su exclusión.</p></details>
+</div>
+<p class="mut" style="margin:20px 0 0;font-size:15px">¿Otra duda? Pregúntale al asistente (abajo a la derecha) o escríbenos.</p>
+</div></section>
+
+<section id="contacto" class="sec"><div class="w">
+<div class="g2" style="gap:48px;align-items:start">
 <div>
-<div class="ifw" data-if="isAlc">
-<h2 class="h1">Entérate antes de que <span class="blu">te pregunten.</span></h2>
-<p class="lead" style="margin-top:22px;max-width:540px">Te avisamos cuando tu comuna aparece en la prensa, te decimos qué tan grave es y te dejamos la respuesta lista.</p>
-<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:30px"><a class="btn pri" href="#demo">Ver mi comuna en PregonIA</a><a class="btn sec2" href="#precios">Ver planes y precios</a></div>
-</div>
-<div class="ifw" data-if="isPar">
-<h2 class="h1">Todo tu distrito, <span class="blu">cada mañana en tu celular.</span></h2>
-<p class="lead" style="margin-top:22px;max-width:540px">Lo que dicen los medios de cada comuna, de tus proyectos y de los temas que te importan, en dos minutos.</p>
-<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:30px"><a class="btn pri" href="#demo">Ver mi distrito en PregonIA</a><a class="btn sec2" href="#precios">Prueba de 30 días</a></div>
-</div>
-<div class="ifw" data-if="isCom">
-<h2 class="h1">Deja de buscar noticias. <span class="blu">Empieza a responder.</span></h2>
-<p class="lead" style="margin-top:22px;max-width:540px">PregonIA revisa los medios por ti, separa lo urgente del ruido y te prepara el borrador.</p>
-<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:30px"><a class="btn pri" href="#demo">Pedir demo de 20 minutos</a><a class="btn sec2" href="#horas">¿Cuánto tiempo recupero?</a></div>
-</div>
-<div style="display:flex;flex-wrap:wrap;gap:12px 28px;margin-top:36px;font-size:14.5px">
-<span style="display:inline-flex;gap:8px;align-items:center"><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true" style="color:#2B4BE0"><polyline points="20 6 9 17 4 12"></polyline></svg>Más de 100 medios y sus redes</span>
-<span style="display:inline-flex;gap:8px;align-items:center"><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true" style="color:#2B4BE0"><polyline points="20 6 9 17 4 12"></polyline></svg>Aviso en menos de 30 minutos</span>
-<span style="display:inline-flex;gap:8px;align-items:center"><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true" style="color:#2B4BE0"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-t="compraCorta"></span></span>
-</div>
-</div>
-
-<div class="mockwrap">
-<p class="mono" style="margin:0 0 10px;font-size:11px;color:#555555">Ejemplo con noticias ficticias</p>
-<div class="win" role="img" aria-label="Pantalla de PregonIA con las noticias para revisar hoy">
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#FFFFFF;border-bottom:1px solid #DADADA">
-<div style="display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="1" y="14" width="5.5" height="9" rx="1.5" style="fill:#2B4BE0"></rect><rect x="9.25" y="8" width="5.5" height="15" rx="1.5" style="fill:#2B4BE0"></rect><rect x="17.5" y="1" width="5.5" height="22" rx="1.5" style="fill:#2B4BE0"></rect></svg><span style="font:700 13px 'Source Serif 4',Georgia,serif">Pregon<span style="color:#2B4BE0">IA</span></span><span class="mono" style="font-size:11.5px;color:#555555;margin-left:8px"><span data-t="mockTerritorio"></span></span></div>
-<span class="mono" style="font-size:11px;color:#555555;display:inline-flex;gap:7px;align-items:center"><span class="live"></span>08:31</span>
-</div>
-<div style="padding:18px;display:flex;flex-direction:column;gap:12px">
-<div style="font:600 15px Inter,sans-serif">Para revisar hoy</div>
-<div class="card" style="padding:14px 16px;background:#FFFFFF">
-<div style="display:flex;gap:8px;align-items:center"><span class="chip cri"><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4M12 17h.01"></path></svg>Crítica</span><span class="mono" style="font-size:11.5px;color:#555555">Agua · hace 19 min</span></div>
-<p class="news" style="margin:10px 0 8px;font-size:17px;line-height:1.3;font-weight:600">Vecinos denuncian cortes de agua de 18 horas en el sector alto</p>
-<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:12.5px;color:#555555"><span>3 medios</span><span style="display:inline-flex;gap:7px;align-items:center;color:#141414"><span class="reach" aria-hidden="true"><i class="f" style="height:6px"></i><i class="f" style="height:11px"></i><i style="height:16px"></i></span>Ya llegó a prensa regional</span></div>
-<div style="margin-top:10px;padding:10px 12px;border-radius:6px;background:#F5F5F2;border:1px solid #DADADA;font-size:12.5px;line-height:1.45"><strong style="color:#1F3BC0">Qué hacer:</strong> declaración institucional hoy. <span class="mut">Responde: Operaciones.</span></div>
-</div>
-<div class="card" style="padding:14px 16px;background:#FFFFFF">
-<div style="display:flex;gap:8px;align-items:center"><span class="chip pos"><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"></path></svg>Favorable</span><span class="mono" style="font-size:11.5px;color:#555555">Salud · hace 2 h</span></div>
-<p class="news" style="margin:10px 0 6px;font-size:16px;line-height:1.3;font-weight:600">Nuevo centro de salud supera las 2.000 atenciones</p>
-<div style="font-size:12.5px;color:#555555">Buena noticia que nadie ha difundido</div>
-</div>
-<div class="mock-more mono">+ 12 menciones más hoy</div>
-</div>
-</div>
-<div class="phone phone-abs">
-<div class="scr" style="padding:14px">
-<div class="mono" style="font-size:10.5px;color:#555555;display:flex;justify-content:space-between"><span>WhatsApp</span><span>08:31</span></div>
-<div class="ifw" data-if="notPar">
-<div style="margin-top:10px;padding:12px;border-radius:12px;background:#F5F5F2;border:1px solid #141414">
-<div style="font:600 12.5px Inter,sans-serif">PregonIA · Alerta crítica</div>
-<p style="margin:8px 0 0;font-size:12.5px;line-height:1.45">Cortes de agua en el sector alto. <strong>Ya llegó a prensa regional.</strong> Sugerido: declaración hoy.</p>
-</div>
-</div>
-<div class="ifw" data-if="isPar">
-<div style="margin-top:10px;padding:12px;border-radius:12px;background:#F5F5F2;border:1px solid #141414">
-<div style="font:600 12.5px Inter,sans-serif">PregonIA · Parte del distrito</div>
-<div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;font-size:12px">
-<div style="display:flex;justify-content:space-between"><span>Valparaíso</span><span class="mono">18</span></div>
-<div style="display:flex;justify-content:space-between"><span>San Antonio</span><span class="mono">9</span></div>
-<div style="display:flex;justify-content:space-between;color:#9A1F18"><span>Cartagena · crítica</span><span class="mono">3</span></div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-
-<!-- 3. EL PROBLEMA -->
-<section id="problema" class="sec">
-<div class="wrap">
-<div class="g2" style="gap:64px;align-items:start">
-<div>
-<p class="kick">El problema</p>
-<div class="ifw" data-if="isAlc"><h2 class="h2">Hoy, la noticia te encuentra a ti. Y llega tarde.</h2></div>
-<div class="ifw" data-if="isPar"><h2 class="h2">Hoy, tu distrito habla y tú no alcanzas a escucharlo.</h2></div>
-<div class="ifw" data-if="isCom"><h2 class="h2">Hoy, tu mañana se va en buscar lo que salió.</h2></div>
-<div class="card" style="margin-top:36px;padding:26px 28px">
-<p class="mono" style="margin:0 0 18px;font-size:12px;letter-spacing:.1em;color:#555555">ASÍ ESCALA UNA NOTICIA</p>
-<div style="display:flex;flex-direction:column;gap:14px;font-size:15px">
-<div style="display:grid;grid-template-columns:56px 28px 1fr;gap:10px;align-items:center"><span class="mono mut">08:12</span><span class="reach" aria-hidden="true"><i class="f" style="height:6px"></i><i style="height:11px"></i><i style="height:16px"></i></span><span>La publica un medio comunal</span></div>
-<div style="display:grid;grid-template-columns:56px 28px 1fr;gap:10px;align-items:center"><span class="mono mut">10:40</span><span class="reach" aria-hidden="true"><i class="f" style="height:6px"></i><i class="f" style="height:11px"></i><i style="height:16px"></i></span><span>La recoge un diario regional</span></div>
-<div style="display:grid;grid-template-columns:56px 28px 1fr;gap:10px;align-items:center"><span class="mono mut">13:05</span><span class="reach" aria-hidden="true"><i class="f" style="height:6px"></i><i class="f" style="height:11px"></i><i class="f" style="height:16px"></i></span><span>Llega a un medio nacional</span></div>
-<div style="display:grid;grid-template-columns:56px 28px 1fr;gap:10px;align-items:center;color:#9A1F18"><span class="mono">15:30</span><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>Te enteras por un reenvío</span></div>
-</div>
-<div style="margin-top:20px;padding:14px 16px;border-radius:8px;background:#EEF1FD;border:1px solid #2B4BE0;font-size:15px"><span class="mono blu">08:31</span> · Con PregonIA te enteras aquí, cuando todavía se contiene con una respuesta directa.</div>
-</div>
-</div>
-<div style="padding-top:8px">
-<div class="ifw" data-if="isAlc">
-<div class="prob"><span class="n">1</span><div><p class="h3" style="font-size:19px">Te enteras tarde</p><p class="mut" style="margin:6px 0 0">Un vecino te reenvía la nota cuando ya salió del medio local.</p></div></div>
-<div class="prob"><span class="n">2</span><div><p class="h3" style="font-size:19px">No sabes qué es grave</p><p class="mut" style="margin:6px 0 0">Muchas notas al día y ninguna te dice cuál puede escalar.</p></div></div>
-<div class="prob"><span class="n">3</span><div><p class="h3" style="font-size:19px">Respondes a la defensiva</p><p class="mut" style="margin:6px 0 0">Sin datos a mano, la versión del municipio llega última.</p></div></div>
-<div class="prob" style="border-bottom:1px solid #DADADA"><span class="n">4</span><div><p class="h3" style="font-size:19px">Lo bueno no se cuenta</p><p class="mut" style="margin:6px 0 0">Los logros de la gestión pasan sin que nadie los difunda.</p></div></div>
-</div>
-<div class="ifw" data-if="isPar">
-<div class="prob"><span class="n">1</span><div><p class="h3" style="font-size:19px">No llegas a todas las comunas</p><p class="mut" style="margin:6px 0 0">Doce o veintiséis comunas, la mayoría sin prensa propia.</p></div></div>
-<div class="prob"><span class="n">2</span><div><p class="h3" style="font-size:19px">Te enteras en terreno</p><p class="mut" style="margin:6px 0 0">Un dirigente te reclama un conflicto que ya salió en la prensa local.</p></div></div>
-<div class="prob"><span class="n">3</span><div><p class="h3" style="font-size:19px">Tu trabajo no se ve</p><p class="mut" style="margin:6px 0 0">No sabes qué medios cubrieron tus proyectos ni cuándo.</p></div></div>
-<div class="prob" style="border-bottom:1px solid #DADADA"><span class="n">4</span><div><p class="h3" style="font-size:19px">Tu equipo arma el resumen a mano</p><p class="mut" style="margin:6px 0 0">La primera hora del día se va en leer, no en decidir.</p></div></div>
-</div>
-<div class="ifw" data-if="isCom">
-<div class="prob"><span class="n">1</span><div><p class="h3" style="font-size:19px">Revisas todo a mano</p><p class="mut" style="margin:6px 0 0">Portales, Google y grupos de WhatsApp, cada mañana.</p></div></div>
-<div class="prob"><span class="n">2</span><div><p class="h3" style="font-size:19px">Todo parece urgente</p><p class="mut" style="margin:6px 0 0">No hay forma de saber qué responder y qué solo vigilar.</p></div></div>
-<div class="prob"><span class="n">3</span><div><p class="h3" style="font-size:19px">"¿Viste lo que salió?"</p><p class="mut" style="margin:6px 0 0">Tu jefatura se entera antes que tú y la respuesta parte de cero.</p></div></div>
-<div class="prob" style="border-bottom:1px solid #DADADA"><span class="n">4</span><div><p class="h3" style="font-size:19px">El informe se arma con capturas</p><p class="mut" style="margin:6px 0 0">Y nadie alcanza a leerlo.</p></div></div>
-</div>
-</div>
-</div>
-</div>
-</section>
-
-<!-- 4. LA SOLUCIÓN -->
-<section id="solucion" class="sec" style="background:#F5F5F2">
-<div class="wrap">
-<div style="max-width:740px">
-<p class="kick">La solución</p>
-<h2 class="h2">PregonIA hace tres cosas, y las hace todos los días.</h2>
-</div>
-<div class="g3" style="margin-top:44px">
-<div class="sol"><span class="k"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></span><p class="h3" style="margin-top:20px">Te avisa a tiempo</p><p class="mut" style="margin:10px 0 0;font-size:15.5px">Leemos 100 medios cada 15 a 30 minutos. Si aparece algo crítico, te llega al celular en menos de media hora.</p></div>
-<div class="sol"><span class="k"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"></path></svg></span><p class="h3" style="margin-top:20px">Te dice qué hacer</p><p class="mut" style="margin:10px 0 0;font-size:15.5px">Cada noticia trae su tono, hasta dónde llegó, la acción sugerida y quién debe responder.</p></div>
-<div class="sol"><span class="k"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg></span><p class="h3" style="margin-top:20px">Te deja la respuesta lista</p><p class="mut" style="margin:10px 0 0;font-size:15.5px">Declaración, comunicado o aclaración en borrador, con tus datos. Tu equipo aprueba y comparte.</p></div>
-</div>
-<p class="mut" style="margin:28px 0 0;font-size:15.5px;max-width:860px">Se configura en minutos: eliges tu cargo, tu comuna y tu nombre, y PregonIA arma tus temas con las preocupaciones propias de tu territorio. Tú confirmas. Una vez al mes recibes además el informe de gestión, con lo que se critica, lo que se valora y lo que no se ha contado.</p>
-<div class="g4" style="margin-top:28px;gap:14px">
-<div class="cov"><b>Avisos al celular</b><br><span class="mut">Con la app instalada en Android o iPhone, aunque esté cerrada. Tú eliges: solo lo urgente, lo crítico o todo.</span></div>
-<div class="cov"><b>Video resumen</b><br><span class="mut">La semana en un video vertical narrado, listo para compartir con tu equipo.</span></div>
-<div class="cov"><b>Kit de vocería</b><br><span class="mut">Mensajes clave y preguntas probables antes de cada punto de prensa.</span></div>
-<div class="cov"><b>Calendario de riesgos</b><br><span class="mut">Fechas que suelen traer prensa difícil, para prepararse con tiempo.</span></div>
-</div>
-</div>
-</section>
-
-<!-- 4b. COBERTURA -->
-<section id="cobertura" class="sec">
-<div class="wrap">
-<div style="max-width:760px">
-<p class="kick">Qué leemos</p>
-<h2 class="h2">De la prensa nacional al portal de tu comuna.</h2>
-<p class="lead" style="margin-top:16px">109 medios digitales en tres niveles: 51 nacionales, 16 regionales y 42 comunales de la Región de Valparaíso, más sus cuentas de Facebook e Instagram. Estos son los principales.</p>
-</div>
-
-<div style="display:flex;justify-content:center;margin-top:44px">
-<div style="display:inline-flex;align-items:center;gap:12px;padding:14px 24px;border-radius:12px;background:#2B4BE0;color:#fff">
-<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><rect x="1" y="14" width="5.5" height="9" rx="1.5" style="fill:#FFFFFF"></rect><rect x="9.25" y="8" width="5.5" height="15" rx="1.5" style="fill:#FFFFFF"></rect><rect x="17.5" y="1" width="5.5" height="22" rx="1.5" style="fill:#FFFFFF"></rect></svg>
-<span><b style="font:600 20px 'Source Serif 4',Georgia,serif">PregonIA</b><br><span style="font-size:14px">lee cada 15 a 30 minutos</span></span>
-</div>
-</div>
-<div class="hide-m" aria-hidden="true" style="position:relative;height:56px">
-<div style="position:absolute;left:50%;top:0;width:2px;height:28px;background:#2B4BE0"></div>
-<div style="position:absolute;left:16.66%;right:16.66%;top:28px;border-top:2px solid #2B4BE0"></div>
-<div style="position:absolute;left:16.66%;top:28px;width:2px;height:28px;background:#2B4BE0"></div>
-<div style="position:absolute;left:50%;top:28px;width:2px;height:28px;background:#2B4BE0"></div>
-<div style="position:absolute;right:16.66%;top:28px;width:2px;height:28px;background:#2B4BE0"></div>
-</div>
-
-<div class="g3" style="align-items:start;margin-top:0">
-
-<div style="display:flex;flex-direction:column;gap:12px">
-<div class="cov-h"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><rect x="1" y="14" width="5.5" height="9" rx="1.5" style="fill:#8FA2FF"></rect><rect x="9.25" y="8" width="5.5" height="15" rx="1.5" style="fill:#8FA2FF"></rect><rect x="17.5" y="1" width="5.5" height="22" rx="1.5" style="fill:#8FA2FF"></rect></svg><span><b>Prensa nacional</b><br><span class="cov-sub">51 medios</span></span></div>
-<div class="cov"><b>Televisión</b><br>Meganoticias · T13 · 24 Horas · CNN Chile · CHV Noticias · La Red</div>
-<div class="cov"><b>Radio</b><br>BioBioChile · Cooperativa · ADN Radio · Pauta · Duna · Radio Agricultura · Radio Universidad de Chile</div>
-<div class="cov"><b>Diarios</b><br>Diario Financiero · La Nación · El Siglo<br><span class="gn">Vía Google Noticias: Emol · La Tercera · El Mercurio · La Segunda · La Cuarta · Las Últimas Noticias · Publimetro</span></div>
-<div class="cov"><b>Digitales e investigación</b><br>El Mostrador · CIPER · The Clinic · Ex-Ante · El Líbero · El Desconcierto · El Dínamo · El Ciudadano · Interferencia · SoyChile</div>
-<div class="cov"><b>Especializados</b><br>Diario Constitucional · PortalPortuario · Estrategia · Chócale · Infobae · Bloomberg Línea · Fast Check · Mala Espina<br><span class="gn">Vía Google Noticias: El País</span></div>
-</div>
-
-<div style="display:flex;flex-direction:column;gap:12px">
-<div class="cov-h"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><rect x="1" y="14" width="5.5" height="9" rx="1.5" style="fill:#8FA2FF"></rect><rect x="9.25" y="8" width="5.5" height="15" rx="1.5" style="fill:#8FA2FF"></rect><rect x="17.5" y="1" width="5.5" height="22" rx="1.5" style="fill:#555555"></rect></svg><span><b>Prensa regional</b><br><span class="cov-sub">16 medios que cubren toda la región</span></span></div>
-<div class="cov"><b>Los de mayor alcance</b><br>El Mercurio de Valparaíso · La Estrella de Valparaíso · VTV<br><span class="gn">Vía Google Noticias</span></div>
-<div class="cov"><b>Portales regionales</b><br>Puranoticia · Epicentro Chile · G5noticias · SoyValparaíso · Alerta Noticias Valparaíso</div>
-<div class="cov"><b>Radios</b><br>Radio Festival · UCV Radio<br><span class="gn">Vía Google Noticias: Radio Universidad de Valparaíso</span></div>
-<div class="cov"><b>Secciones regionales de medios nacionales</b><br>BioBioChile · Meganoticias · 24 Horas Valparaíso</div>
-<div class="cov"><b>Interior de la región</b><br>Panorama Noticioso · TuOpinas, con foco en Quillota, Aconcagua y Petorca</div>
-<div class="cov"><b>Fuentes institucionales</b><br>Gobierno Regional · UV · PUCV · USM · UPLA · Municipalidades de Valparaíso, Viña del Mar, San Antonio, Quillota y Rapa Nui<br><span class="mut">Dan contexto; no cuentan como prensa en las alertas.</span></div>
-<div class="cov" style="background:#EEF1FD;border-style:dashed;border-color:#2B4BE0"><b>Red de seguridad: Google Noticias</b><br><span class="mut">Busca cada comuna y autoridad, para no perder notas de medios fuera del catálogo.</span></div>
-</div>
-
-<div style="display:flex;flex-direction:column;gap:12px">
-<div class="cov-h"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><rect x="1" y="14" width="5.5" height="9" rx="1.5" style="fill:#8FA2FF"></rect><rect x="9.25" y="8" width="5.5" height="15" rx="1.5" style="fill:#555555"></rect><rect x="17.5" y="1" width="5.5" height="22" rx="1.5" style="fill:#555555"></rect></svg><span><b>Prensa comunal</b><br><span class="cov-sub">42 medios en las 8 provincias, y sus redes</span></span></div>
-<div class="cov"><b>Provincia de Valparaíso</b><br>CasablancaHoy · Radio Quintay · La Voz de Concón · La Bahía on Line · El Martutino<br><span class="gn">Vía Google Noticias: Diario Casablanca · Concón al Día · Gran Valparaíso</span><br><span class="fb">Redes: 31TV Casablanca · Agenda Regional · Radio Quintay</span></div>
-<div class="cov"><b>San Antonio</b><br>El Diario de San Antonio · SoySanAntonio · Canal 2 · Radio Galactika · TV Cartagena · Santo News<br><span class="gn">Vía Google Noticias: El Líder de San Antonio</span><br><span class="fb">Redes: Canal 2 · Radio Galactika · Santo News</span></div>
-<div class="cov"><b>Marga Marga</b><br>Bicomunal · Quilpué Online · Diario Crónica · MargaMargaTV</div>
-<div class="cov"><b>Quillota</b><br>El Digital · SoyQuillota · El Observador · Radio Quillota · Radio Crystal<br><span class="gn">Vía Google Noticias: La Estrella de Quillota · De Quillota</span></div>
-<div class="cov"><b>San Felipe de Aconcagua</b><br>Diario El Trabajo · Aconcagua News · Aconcagua al Día · El Aconcagua · Aconcagua Digital · Preludio Radio · Putaendo Uno · Catemu Noticias · Radio Orolonco</div>
-<div class="cov"><b>Los Andes</b><br>Radio Superandina · El Informador<br><span class="gn">Vía Google Noticias: Andes Online</span></div>
-<div class="cov"><b>Petorca</b><br>La Ligua Noticias, con un canal por comuna<br><span class="gn">Vía Google Noticias: El Diario de La Ligua</span></div>
-<div class="cov"><b>Isla de Pascua y Juan Fernández</b><br>moeVarua Rapa Nui · Revista Arqueoturismo</div>
-</div>
-
-</div>
-
-<div class="g2" style="margin-top:24px;gap:16px">
-<div style="padding:20px 22px;border-radius:10px;background:#FBEFD9;border:1px solid #EBCB94;font-size:15px"><b style="color:#9A5B00">15 comunas no tienen un medio digital propio.</b> Las cubren medios provinciales con sección por comuna: La Calera, La Cruz, Nogales, Hijuelas, El Quisco, Algarrobo, Cabildo, Petorca, Papudo, Zapallar, Llaillay, Panquehue, Calle Larga, Rinconada y San Esteban.</div>
-<div style="padding:20px 22px;border-radius:10px;background:#F5F5F2;border:1px solid #DADADA;font-size:14.5px;color:#555555"><b style="color:#141414">Cómo leerlo.</b> En negro, medios que PregonIA lee directo. <span class="gn">En ámbar, medios que se siguen por Google Noticias,</span> porque no permiten la lectura automatizada o no tienen fuente propia; nunca se eluden sus bloqueos. <span class="fb">En azul, cuentas de Facebook e Instagram</span> de medios locales que se leen como fuente.</div>
-</div>
-</div>
-</section>
-
-<!-- 5. CÓMO SE VE -->
-<section id="pantallas" class="sec">
-<div class="wrap">
-<div style="max-width:700px"><p class="kick">Cómo se ve</p><h2 class="h2">Cada persona recibe solo lo que necesita.</h2></div>
-<div role="tablist" aria-label="Pantallas de PregonIA" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:32px">
-<button type="button" role="tab" data-c="tabCls.parte" data-a-aria-selected="tabSel.parte" data-on="goParte"><span data-t="parteLabel"></span></button>
-<button type="button" role="tab" data-c="tabCls.mesa" data-a-aria-selected="tabSel.mesa" data-on="goMesa">Mesa del día</button>
-<button type="button" role="tab" data-c="tabCls.responder" data-a-aria-selected="tabSel.responder" data-on="goResponder">Responder</button>
-</div>
-<div class="card tourcard" role="tabpanel">
-
-<div class="ifw" data-if="tParte">
-<div class="tour">
-<div>
-<p class="h3" style="font-size:26px"><span data-t="parteLabel"></span></p>
-<p class="lead" style="margin-top:12px;font-size:18px"><span data-t="parteQ"></span></p>
-<p class="mono mut" style="margin:22px 0 0;font-size:13px"><span data-t="parteMeta"></span></p>
-</div>
-<div style="display:flex;justify-content:center">
-<div class="phone" style="width:330px;max-width:100%">
-<div class="scr" style="padding:18px">
-<div class="ifw" data-if="notPar">
-<div class="mono" style="font-size:11px;color:#555555;letter-spacing:.06em">PARTE DEL ALCALDE · LUNES 8:00</div>
-<div style="margin-top:12px;font:600 28px 'Source Serif 4',Georgia,serif;color:#4F545C">Equilibrada</div>
-<div style="font-size:12.5px;color:#555555">Mejor que la semana pasada · 14 positivas, 22 neutras, 9 críticas</div>
-<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
-<div style="padding:11px;border-radius:8px;background:#FFFFFF;border:1px solid #DADADA"><span class="chip cri" style="font-size:10.5px">1 · Crítica</span><p class="news" style="margin:6px 0 4px;font-size:14px;line-height:1.3">Cortes de 18 horas en el sector alto</p><div style="font-size:11.5px;color:#1F3BC0">Hacer: declaración hoy · Operaciones</div></div>
-<div style="padding:11px;border-radius:8px;background:#FFFFFF;border:1px solid #DADADA"><span class="chip neu" style="font-size:10.5px">2 · Neutra</span><p class="news" style="margin:6px 0 4px;font-size:14px;line-height:1.3">Concejo aprueba modificación presupuestaria</p><div style="font-size:11.5px;color:#555555">Solo prensa comunal · Vigilar</div></div>
-<div style="padding:11px;border-radius:8px;background:#E3F1E8;border:1px solid #B9DCC6"><div style="font-size:11.5px;color:#1E6B3F;font-weight:600">Para aprovechar</div><p class="news" style="margin:4px 0 0;font-size:14px;line-height:1.3">El centro de salud supera las 2.000 atenciones</p></div>
-</div>
-<div style="display:flex;gap:6px;margin-top:14px"><span style="flex:1;text-align:center;padding:8px;border-radius:6px;background:#25D366;color:#06210F;font-size:12px;font-weight:700">WhatsApp</span><span style="flex:1;text-align:center;padding:8px;border-radius:6px;background:#D93B30;color:#fff;font-size:12px;font-weight:700">PDF</span></div>
-</div>
-<div class="ifw" data-if="isPar">
-<div class="mono" style="font-size:11px;color:#555555;letter-spacing:.06em">PARTE DEL DISTRITO · 7:30</div>
-<div style="margin-top:12px;font:600 15px Inter,sans-serif">Tus comunas, últimos 7 días</div>
-<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;font-size:12.5px">
-<div style="display:grid;grid-template-columns:96px 1fr 26px;gap:8px;align-items:center"><span>Valparaíso</span><span class="bar" style="width:100%;background:#2B4BE0"></span><span class="mono">18</span></div>
-<div style="display:grid;grid-template-columns:96px 1fr 26px;gap:8px;align-items:center"><span>Viña del Mar</span><span class="bar" style="width:78%;background:#2B4BE0"></span><span class="mono">14</span></div>
-<div style="display:grid;grid-template-columns:96px 1fr 26px;gap:8px;align-items:center"><span>San Antonio</span><span class="bar" style="width:50%;background:#2B4BE0"></span><span class="mono">9</span></div>
-<div style="display:grid;grid-template-columns:96px 1fr 26px;gap:8px;align-items:center;color:#9A1F18"><span>Cartagena</span><span class="bar" style="width:17%;background:#B3261E"></span><span class="mono">3</span></div>
-</div>
-<div style="margin-top:12px;padding:10px;border-radius:8px;background:#FBEFD9;color:#9A5B00;font-size:12px">2 comunas sin noticias esta semana</div>
-<div style="margin-top:8px;padding:10px;border-radius:8px;background:#EEF1FD;color:#1F3BC0;font-size:12px">Tu moción sobre seguridad portuaria: 3 medios</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-
-<div class="ifw" data-if="tMesa">
-<div class="tour">
-<div>
-<p class="h3" style="font-size:26px">Mesa del día</p>
-<p class="lead" style="margin-top:12px;font-size:18px">¿Qué respondo hoy, qué está creciendo y qué difundo?</p>
-<p class="mono mut" style="margin:22px 0 0;font-size:13px">Para comunicaciones · todos los días, 8:30 · 10 minutos</p>
-</div>
-<div class="win" style="box-shadow:none">
-<div style="padding:16px;display:flex;flex-direction:column;gap:14px">
-<div><div class="mono" style="font-size:11px;color:#9A1F18;letter-spacing:.08em;margin-bottom:8px">SIN RESPUESTA</div>
-<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 12px;border-radius:8px;background:#FFFFFF;border:1px solid #DADADA"><span class="news" style="font-size:14.5px">Cortes de agua en el sector alto</span><span class="btn pri sm" style="min-height:32px;font-size:12.5px">Responder</span></div></div>
-<div><div class="mono" style="font-size:11px;color:#9A5B00;letter-spacing:.08em;margin-bottom:8px">CRECIENDO</div>
-<div style="padding:11px 12px;border-radius:8px;background:#FFFFFF;border:1px solid #DADADA"><div class="news" style="font-size:14.5px">Reclamos por la recolección de basura</div><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;font-size:12px"><span class="chip neu">Comunal 08:12</span><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true" style="color:#555555"><path d="M5 12h14M13 6l6 6-6 6"></path></svg><span class="chip warn">Regional 10:40</span></div></div></div>
-<div><div class="mono" style="font-size:11px;color:#1E6B3F;letter-spacing:.08em;margin-bottom:8px">PARA DIFUNDIR</div>
-<div style="padding:11px 12px;border-radius:8px;background:#E3F1E8;border:1px solid #B9DCC6"><span class="news" style="font-size:14.5px">Centro de salud supera las 2.000 atenciones</span></div></div>
-</div>
-</div>
-</div>
-</div>
-
-<div class="ifw" data-if="tResponder">
-<div class="tour">
-<div>
-<p class="h3" style="font-size:26px">Responder</p>
-<p class="lead" style="margin-top:12px;font-size:18px">Eliges la noticia, el tipo de pieza y el enfoque. PregonIA escribe; tu equipo decide.</p>
-<p class="mono mut" style="margin:22px 0 0;font-size:13px">Solo usa los datos que tu equipo cargó · nada sale sin aprobación</p>
-</div>
-<div class="win" style="box-shadow:none;padding:22px">
-<div style="display:flex;flex-wrap:wrap;gap:8px"><span class="chip pos">Cortes de agua</span><span class="chip pos">Declaración breve</span><span class="chip info">Con datos</span></div>
-<div style="margin-top:16px;padding:18px;border-radius:8px;background:#F8F7F2;color:#141414">
-<div class="mono" style="font-size:11px;color:#A8650F;letter-spacing:.08em">BORRADOR · REQUIERE APROBACIÓN</div>
-<p class="news" style="margin:10px 0 0;font-size:16px;line-height:1.5">El corte en el sector alto se originó por una falla en la planta elevadora. Desde las 07:00 hay camiones aljibe en tres puntos y la reposición se estima para hoy a las 18:00. <span style="background:#FBEFD9;padding:0 4px;border-radius:3px">[Dato por validar]</span></p>
-</div>
-<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px"><span class="btn pri sm">Aprobar</span><span class="btn sec2 sm">Copiar</span><span style="display:inline-flex;align-items:center;padding:0 12px;min-height:36px;border-radius:6px;background:#25D366;color:#06210F;font-size:13px;font-weight:700">WhatsApp</span><span style="display:inline-flex;align-items:center;padding:0 12px;min-height:36px;border-radius:6px;background:#D93B30;color:#fff;font-size:13px;font-weight:700">PDF</span></div>
-</div>
-</div>
-</div>
-</div>
-<p class="mono" style="margin:12px 0 0;font-size:11px;color:#555555">Pantallas de la aplicación con datos ficticios.</p>
-</div>
-</section>
-
-<!-- 6. CUÁNTO CUESTA NO TENERLO -->
-<section id="horas" class="sec" style="background:#F5F5F2">
-<div class="wrap">
-<div class="g2" style="gap:48px;align-items:center">
-<div>
-<p class="kick">La alternativa</p>
-<h2 class="h2">Revisar a mano parece gratis. No lo es.</h2>
-<p class="lead" style="margin-top:18px">Hoy alguien de tu equipo dedica tiempo cada mañana a buscar noticias. Calcula cuánto vale ese tiempo y compáralo.</p>
-<p class="mut" style="margin-top:16px;font-size:15px">Y ese trabajo manual no cubre 50 medios regionales, no avisa a tiempo y no deja registro.</p>
-</div>
-<div class="card" style="padding:32px">
-<div class="fld"><label for="horas-r">Horas diarias buscando noticias: <span class="mono blu"><span data-t="horasTxt"></span></span></label><input id="horas-r" type="range" min="0.5" max="4" step="0.5" data-v="horas" data-change="setHoras"></div>
-<div class="fld" style="margin-top:20px"><label for="costo-r">Costo por hora de esa persona: <span class="mono blu"><span data-t="costoTxt"></span></span></label><input id="costo-r" type="range" min="4000" max="20000" step="500" data-v="costo" data-change="setCosto"></div>
-<div style="margin-top:26px;padding:20px;border-radius:8px;background:#EEF1FD;border:1px solid #2B4BE0">
-<div class="mono" style="font-size:11px;color:#555555;letter-spacing:.08em">ESE TIEMPO VALE AL MES</div>
-<div style="font:600 38px 'Source Serif 4',Georgia,serif;margin-top:4px"><span data-t="valorTxt"></span></div>
-<p style="margin:8px 0 0;font-size:15px"><span data-t="horasMesTxt"></span> al mes. El plan <span data-t="planNombre"></span> cuesta <strong><span data-t="planTxt"></span></strong> netos: ese tiempo vale <strong class="blu"><span data-t="ratioTxt"></span></strong> el plan.</p>
-</div>
-<p class="mono" style="margin:12px 0 0;font-size:11px;color:#555555">Cálculo referencial con 20 días hábiles.</p>
-</div>
-</div>
-</div>
-</section>
-
-<!-- 7. PRECIOS Y COMPRA -->
-<section id="precios" class="sec light">
-<div class="wrap">
-<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px">
-<div style="max-width:640px"><p class="kick">Precios</p><h2 class="h2">Precios claros. Compra simple.</h2><p class="mut" style="margin:14px 0 0;font-size:18px">Pagas por los temas que sigues: tu municipio, tu autoridad, un proyecto o un asunto.</p></div>
-<div class="seg" role="group" aria-label="Tipo de cliente">
-<button type="button" data-c="sCls.muni" data-a-aria-pressed="sPress.muni" data-on="segMuni">Municipios</button>
-<button type="button" data-c="sCls.par" data-a-aria-pressed="sPress.par" data-on="segPar">Parlamentarios</button>
-</div>
-</div>
-
-<div class="ifw" data-if="segIsMuni">
-<div class="g3" style="margin-top:32px;align-items:stretch">
-<div class="card plan" style="padding:28px;display:flex;flex-direction:column"><p class="h3">Comunal</p><p class="mut" style="margin:6px 0 18px;font-size:14.5px">Comunas pequeñas</p><div class="price">$149.000</div><div class="mut" style="font-size:13.5px;margin-top:6px">neto al mes</div><ul class="feat" style="margin:22px 0 26px"><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>5 temas y 3 usuarios</li><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>4 respuestas en borrador al mes</li><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Alertas, parte, mesa e informe mensual</li></ul><a class="btn sec2" href="#demo" style="margin-top:auto">Cotizar</a></div>
-<div class="card plan hl" style="padding:28px;display:flex;flex-direction:column"><p class="h3">Municipal</p><p class="mut" style="margin:6px 0 18px;font-size:14.5px">Comunas intermedias</p><div class="price">$249.000</div><div class="mut" style="font-size:13.5px;margin-top:6px">neto al mes</div><ul class="feat" style="margin:22px 0 26px"><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>10 temas y 5 usuarios</li><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>12 respuestas en borrador al mes</li><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Todo lo del plan Comunal</li></ul><a class="btn pri" href="#demo" style="margin-top:auto">Cotizar</a></div>
-<div class="card plan" style="padding:28px;display:flex;flex-direction:column"><p class="h3">Ciudad</p><p class="mut" style="margin:6px 0 18px;font-size:14.5px">Grandes comunas</p><div class="price">$390.000</div><div class="mut" style="font-size:13.5px;margin-top:6px">neto al mes</div><ul class="feat" style="margin:22px 0 26px"><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>20 temas y 10 usuarios</li><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>30 respuestas en borrador al mes</li><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Todo lo del plan Municipal</li></ul><a class="btn sec2" href="#demo" style="margin-top:auto">Cotizar</a></div>
-</div>
-<div class="card" style="margin-top:20px;padding:24px 28px">
-<p class="mono" style="margin:0 0 14px;font-size:12px;letter-spacing:.1em;color:#1F3BC0">CÓMO SE CONTRATA, SIN LICITACIÓN</p>
-<div class="g3" style="gap:18px;font-size:15px">
-<div><strong>1. Demo con tu comuna</strong><div class="mut">20 minutos con tus noticias reales.</div></div>
-<div><strong>2. Cotización formal</strong><div class="mut">Con ficha técnica y dossier de cumplimiento.</div></div>
-<div><strong>3. Compra Ágil</strong><div class="mut">Bajo 100 UTM, sin licitación. Activo en 24 horas y pago mensual.</div></div>
-</div>
-</div>
-</div>
-
-<div class="ifw" data-if="segIsPar">
-<div class="g3" style="margin-top:32px;align-items:stretch">
-<div class="card plan hl" style="padding:28px;display:flex;flex-direction:column"><p class="h3">Diputado</p><p class="mut" style="margin:6px 0 18px;font-size:14.5px">Las comunas de tu distrito</p><div class="price">$290.000</div><div class="mut" style="font-size:13.5px;margin-top:6px">neto al mes</div><ul class="feat" style="margin:22px 0 26px"><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>12 temas y 4 usuarios</li><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Parte diario por comuna</li><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Tus proyectos y comisiones en prensa</li></ul><a class="btn pri" href="#demo" style="margin-top:auto">Probar 30 días</a></div>
-<div class="card plan" style="padding:28px;display:flex;flex-direction:column"><p class="h3">Senador</p><p class="mut" style="margin:6px 0 18px;font-size:14.5px">Las 38 comunas de la región</p><div class="price">$390.000</div><div class="mut" style="font-size:13.5px;margin-top:6px">neto al mes</div><ul class="feat" style="margin:22px 0 26px"><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>20 temas y 6 usuarios</li><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Toda la región por comuna</li><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Todo lo del plan Diputado</li></ul><a class="btn sec2" href="#demo" style="margin-top:auto">Probar 30 días</a></div>
-<div class="card plan" style="padding:28px;display:flex;flex-direction:column"><p class="h3">Bancada</p><p class="mut" style="margin:6px 0 18px;font-size:14.5px">Tres o más parlamentarios</p><div class="price">15% menos</div><div class="mut" style="font-size:13.5px;margin-top:6px">por integrante</div><ul class="feat" style="margin:22px 0 26px"><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Cuentas separadas para cada uno</li><li><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Temas comunes de la bancada</li></ul><a class="btn sec2" href="#demo" style="margin-top:auto">Cotizar bancada</a></div>
-</div>
-<div class="card" style="margin-top:20px;padding:24px 28px">
-<p class="mono" style="margin:0 0 14px;font-size:12px;letter-spacing:.1em;color:#1F3BC0">CÓMO SE CONTRATA, EN DOS A CUATRO SEMANAS</p>
-<div class="g3" style="gap:18px;font-size:15px">
-<div><strong>1. Demo con tu distrito</strong><div class="mut">Para ti o tu jefe de prensa.</div></div>
-<div><strong>2. Prueba de 30 días</strong><div class="mut">El parte llega desde el primer día.</div></div>
-<div><strong>3. Licencia mensual</strong><div class="mut">De software, para tu oficina parlamentaria. Nunca como asesoría de imagen.</div></div>
-</div>
-</div>
-<p class="mut" style="margin:18px 0 0;font-size:14.5px">Gobernador, consejeros regionales, delegados presidenciales y concejales: también tienen su cuenta en PregonIA, a cotizar.</p>
-</div>
-
-<p class="mut" style="margin:22px 0 0;font-size:14.5px"><strong style="color:#141414">Cupos fundadores:</strong> los primeros 6 municipios y 3 parlamentarios pagan 20% menos durante 12 meses. Precios netos, en pesos. Puedes sumar temas ($49.000 por 5) o respuestas en borrador ($29.000 por 10).</p>
-</div>
-</section>
-
-<!-- 8. CONFIANZA -->
-<section id="confianza" class="sec">
-<div class="wrap">
-<div style="max-width:740px"><p class="kick">Confianza</p><h2 class="h2">Puedes usarlo tranquilo.</h2></div>
-<div class="g4" style="margin-top:40px">
-<div class="sol" style="padding:26px"><svg class="ic l" viewBox="0 0 24 24" aria-hidden="true" style="color:#2B4BE0"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"></path><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path></svg><p class="h3" style="font-size:18px;margin-top:16px">Respeta a los medios</p><p class="mut" style="margin:8px 0 0;font-size:15px">Resume con palabras propias y enlaza al original. No copia notas.</p></div>
-<div class="sol" style="padding:26px"><svg class="ic l" viewBox="0 0 24 24" aria-hidden="true" style="color:#2B4BE0"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><p class="h3" style="font-size:18px;margin-top:16px">Tus datos son solo tuyos</p><p class="mut" style="margin:8px 0 0;font-size:15px">Nadie más ve tu cuenta. Al terminar, se borra.</p></div>
-<div class="sol" style="padding:26px"><svg class="ic l" viewBox="0 0 24 24" aria-hidden="true" style="color:#2B4BE0"><path d="M12 3v18M5 21h14M6 7h12M6 7l-3 7a3 3 0 0 0 6 0zM18 7l-3 7a3 3 0 0 0 6 0z"></path></svg><p class="h3" style="font-size:18px;margin-top:16px">Neutral por contrato</p><p class="mut" style="margin:8px 0 0;font-size:15px">Atendemos a todos los sectores en las mismas condiciones.</p></div>
-<div class="sol" style="padding:26px"><svg class="ic l" viewBox="0 0 24 24" aria-hidden="true" style="color:#2B4BE0"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"></path></svg><p class="h3" style="font-size:18px;margin-top:16px">Decide una persona</p><p class="mut" style="margin:8px 0 0;font-size:15px">La IA propone. Tu equipo aprueba antes de publicar.</p></div>
-</div>
-<p class="mut" style="margin:24px 0 0;font-size:15px">Solo sigue a personas en su rol público. No vigila a periodistas ni a vecinos, y no sirve para hacer campaña con recursos públicos.</p>
-</div>
-</section>
-
-<!-- 9. PREGUNTAS -->
-<section id="preguntas" class="sec light">
-<div class="wrap">
-<div class="faqg">
-<div>
-<p class="kick">Preguntas frecuentes</p>
-<h2 class="h2">Las dudas de siempre, respondidas.</h2>
-<a class="btn pri" href="#demo" style="margin-top:28px">Agendar demo</a>
-</div>
-<div>
-<details class="q"><summary>¿No basta con Google Alertas o con alguien que revise?<svg class="ic pl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></summary><div class="ans"><p>Llegan tarde, no conocen los portales comunales y no te dicen qué es grave. PregonIA revisa 100 medios cada 15 a 30 minutos, junta la misma noticia publicada en varios medios y te dice qué hacer.</p></div></details>
-<details class="q"><summary>¿Qué medios cubre? ¿Radio, televisión, redes?<svg class="ic pl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></summary><div class="ans"><p>109 medios digitales: 51 nacionales, 16 regionales y 42 comunales de Valparaíso, más las cuentas de Facebook e Instagram de medios locales y 10 fuentes institucionales. Además busca tu comuna y tu nombre en Google Noticias, para no perder notas de medios fuera del catálogo. Radios y canales entran por sus sitios web; las transmisiones en vivo no.</p></div></details>
-<details class="q"><summary>¿Me llegan los avisos al celular?<svg class="ic pl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></summary><div class="ans"><p>Sí. PregonIA se instala en el celular desde el navegador, sin pasar por una tienda, y avisa aunque esté cerrada. Cada persona elige qué recibir (solo lo urgente, lo crítico o todo) y puede silenciar la noche. También llegan por correo.</p></div></details>
-<details class="q"><summary>¿Cuánto demora en funcionar?<svg class="ic pl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></summary><div class="ans"><p>Un día. Respondes unas preguntas en 10 minutos, te proponemos los temas y tú los confirmas. Te acompañamos en la puesta en marcha y después por WhatsApp.</p></div></details>
-<details class="q"><summary>¿Cómo evitan noticias que no tienen que ver conmigo?<svg class="ic pl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></summary><div class="ans"><p>Cada tema tiene exclusiones: para Casablanca, por ejemplo, se descartan Marruecos y la película. Antes de activarlo ves qué habría encontrado en el último mes, y cada noticia que marques como "no corresponde" afina la búsqueda.</p></div></details>
-<details class="q"><summary>¿Es legal usar el contenido de los medios?<svg class="ic pl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></summary><div class="ans"><p>PregonIA no reproduce notas: muestra título, medio, un resumen propio y el enlace al original. Respeta las reglas de cada medio y cualquiera puede pedir su exclusión.</p></div></details>
-<details class="q"><summary>¿Mi adversario puede ver mi información?<svg class="ic pl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></summary><div class="ans"><p>No. Cada cuenta está aislada y nadie ve tus temas, alertas ni borradores. PregonIA es de ALTKimia, empresa chilena de tecnología, y la neutralidad es una cláusula del contrato.</p></div></details>
-<details class="q"><summary>¿Cómo se paga?<svg class="ic pl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></summary><div class="ans"><p>Los municipios contratan por Compra Ágil, sin licitación, con orden de compra anual y pago mensual. Los parlamentarios contratan una licencia mensual de software para su oficina, facturada como tal y nunca como asesoría de imagen; la imputación la decide su oficina.</p></div></details>
-<details class="q"><summary>¿Sirve para campaña?<svg class="ic pl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></summary><div class="ans"><p>No con recursos públicos. Sigue temas de gestión y de trabajo legislativo, y avisa cuando un borrador promueve a una persona o a un partido.</p></div></details>
-</div>
-</div>
-</div>
-</section>
-
-<!-- 10. EMPIEZA -->
-<section id="demo" class="sec dots">
-<div class="wrap">
-<div class="g2" style="gap:56px;align-items:start">
-<div>
-<p class="kick">Empieza esta semana</p>
-<h2 class="h2">Mira lo que la prensa dijo de tu territorio este mes.</h2>
-<p class="lead" style="margin-top:18px">En 20 minutos te mostramos tus noticias reales y cómo se vería tu primer parte. Sin compromiso.</p>
-<p class="mut" style="margin-top:22px;font-size:15px">¿Concejal, consejero regional, gobernador, delegado o de otra región? Escríbenos y te cotizamos.</p>
-<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:26px"><a class="btn sec2" href="/?sin-portada#inicio">Ver demostración</a><a class="btn sec2" href="/?ingresar">Ya soy cliente: Ingresar</a></div>
-</div>
-<form class="card" style="padding:32px;display:flex;flex-direction:column;gap:18px" aria-label="Solicitar demo">
-<div class="fld"><label for="f-rol">Soy</label><select id="f-rol" data-v="fRol" data-change="setRol"><option value="Alcalde o municipio">Alcalde o municipio</option><option value="Diputado o senador">Diputado o senador</option><option value="Comunicaciones o prensa">Comunicaciones o prensa</option><option value="Concejal o consejero regional">Concejal o consejero regional</option><option value="Gobernador o delegado presidencial">Gobernador o delegado presidencial</option><option value="Otro">Otro</option></select></div>
-<div class="fld"><label for="f-ter">Comuna o distrito</label><input id="f-ter" type="text" autocomplete="address-level2" placeholder="Ej.: San Antonio o distrito 7" data-v="fTer" data-change="setTer"></div>
-<div class="g2" style="gap:14px">
-<div class="fld"><label for="f-nom">Nombre</label><input id="f-nom" type="text" autocomplete="name" data-v="fNom" data-change="setNom"></div>
-<div class="fld"><label for="f-tel">Celular</label><input id="f-tel" type="tel" autocomplete="tel" placeholder="+56 9" data-v="fTel" data-change="setTel"></div>
-</div>
-<div class="fld"><label for="f-cor">Correo</label><input id="f-cor" type="email" autocomplete="email" data-v="fCor" data-change="setCor"></div>
-<a class="btn pri" style="margin-top:6px" data-a-href="mailHref">Quiero ver mi territorio<svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
-<p class="mut" style="margin:0;font-size:13px">Te contactamos en menos de un día hábil.</p>
+<p class="k">Contacto</p>
+<h2 class="t">Mira lo que la prensa dijo de tu territorio este mes.</h2>
+<p class="mut" style="margin:16px 0 0;font-size:17px">Déjanos tus datos y te mostramos en 20 minutos tus noticias reales y cómo se vería tu primer parte. Te respondemos en menos de un día hábil.</p>
+<p class="mut" style="margin:16px 0 0;font-size:15px">También puedes escribir a <a href="mailto:soporte@altkimia.cl">soporte@altkimia.cl</a>.</p>
+</div>
+<form id="fContacto" class="c fm" novalidate>
+<div class="fd"><label for="cNom">Nombre *</label><input id="cNom" name="nombre" autocomplete="name" required maxlength="120"></div>
+<div class="fd"><label for="cCar">Cargo</label><input id="cCar" name="cargo" autocomplete="organization-title" maxlength="120"></div>
+<div class="fd full"><label for="cIns">Institución o comuna *</label><input id="cIns" name="institucion" autocomplete="organization" required maxlength="160" placeholder="Ej.: Municipalidad de San Antonio"></div>
+<div class="fd"><label for="cCor">Correo *</label><input id="cCor" name="correo" type="email" autocomplete="email" required maxlength="160"></div>
+<div class="fd"><label for="cTel">Celular</label><input id="cTel" name="telefono" type="tel" autocomplete="tel" maxlength="40" placeholder="+56 9"></div>
+<div class="fd full"><label for="cInt">Me interesa para</label><select id="cInt" name="interes"><option>Municipio</option><option>Parlamentario</option><option>Otra autoridad</option><option>Comunicaciones o prensa</option><option>Otro</option></select></div>
+<div class="fd full"><label for="cMen">Mensaje</label><textarea id="cMen" name="mensaje" maxlength="2000" placeholder="Cuéntanos qué necesitas (opcional)"></textarea></div>
+<div class="trampa" aria-hidden="true"><label for="cSit">No llenar</label><input id="cSit" name="sitio" tabindex="-1" autocomplete="off"></div>
+<label class="ck full"><input id="cOk" type="checkbox" required> <span>Autorizo a ALTKimia a usar estos datos para responder mi solicitud, según la <a href="/legal.html#privacidad" target="_blank" rel="noopener">política de privacidad</a>.</span></label>
+<div class="full" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><button class="btn p" type="submit" id="cEnv">Enviar solicitud</button><span class="mut" style="font-size:13px">* obligatorio</span></div>
+<p class="msg full" id="cMsg" role="status" aria-live="polite" hidden></p>
 </form>
 </div>
+</div></section>
+
+<footer class="pie"><div class="w">
+<span>Un producto de <b style="color:#141414"><span style="color:#2B4BE0">ALT</span>Kimia</b> · La prensa no espera. Tú tampoco.</span>
+<span><a href="/legal.html#privacidad">Privacidad</a> · <a href="/legal.html#terminos">Términos</a> · <a href="mailto:soporte@altkimia.cl">soporte@altkimia.cl</a></span>
+</div></footer>
 </div>
+<style>
+.ch-btn{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:max(18px,env(safe-area-inset-bottom,0px));z-index:60;display:inline-flex;align-items:center;gap:9px;min-height:52px;padding:0 20px;border-radius:999px;border:1.5px solid #141414;background:#2B4BE0;color:#fff;font:600 15px Inter,system-ui,sans-serif;cursor:pointer;box-shadow:4px 4px 0 #141414}
+.ch-btn:hover{background:#1F3BC0}
+.ch-btn:focus-visible{outline:2px solid #141414;outline-offset:3px}
+.ch-btn svg,.ch-x svg,.ch-send svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ch{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:max(18px,env(safe-area-inset-bottom,0px));z-index:61;width:min(390px,calc(100vw - 36px));height:min(600px,calc(100vh - 36px));display:flex;flex-direction:column;background:#fff;color:#141414;border:1.5px solid #141414;border-radius:16px;box-shadow:6px 6px 0 #141414;font:15px/1.5 Inter,system-ui,sans-serif;overflow:hidden}
+.ch[hidden]{display:none}
+.ch-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1.5px solid #141414}
+.ch-h b{font:700 17px "Source Serif 4",Georgia,serif}
+.ch-h small{display:block;font-size:12px;color:#555}
+.ch-x{width:40px;height:40px;border-radius:999px;border:1.5px solid #141414;background:#fff;color:#141414;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.ch-l{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain}
+.ch-m{max-width:88%;padding:10px 12px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word}
+.ch-m.a{align-self:flex-start;background:#F5F5F2;border:1px solid #DADADA}
+.ch-m.u{align-self:flex-end;background:#EEF1FD;border:1px solid #C9D2FB}
+.ch-m.e{align-self:flex-start;background:#F8E3E1;color:#9A1F18}
+.ch-m a.ch-go{display:inline-flex;margin-top:8px;padding:6px 14px;border-radius:999px;background:#2B4BE0;color:#fff;text-decoration:none;font-weight:600;font-size:14px}
+.ch-sug{display:flex;flex-wrap:wrap;gap:6px}
+.ch-sug button{min-height:36px;padding:0 12px;border-radius:999px;border:1.5px solid #141414;background:#fff;color:#141414;font:500 13.5px Inter,sans-serif;cursor:pointer}
+.ch-sug button:hover{background:#F5F5F2}
+.ch-f{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #DADADA}
+.ch-f textarea{flex:1;min-height:44px;max-height:110px;resize:none;border:1.5px solid #141414;border-radius:12px;padding:10px 12px;font:16px Inter,sans-serif;color:#141414}
+.ch-send{width:46px;height:46px;flex:none;border-radius:999px;border:0;background:#2B4BE0;color:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.ch-send:disabled{opacity:.5;cursor:default}
+.ch-n{margin:0;padding:0 14px 10px;font-size:11.5px;line-height:1.4;color:#555}
+.ch-n a{color:#555}
+.ch-x:focus-visible,.ch-send:focus-visible,.ch-sug button:focus-visible,.ch-f textarea:focus-visible{outline:2px solid #2B4BE0;outline-offset:2px}
+@media (max-width:520px){.ch-btn{width:56px;height:56px;padding:0;justify-content:center}.ch-btn span{display:none}.ch-btn svg{width:24px;height:24px}.ch{right:0;bottom:0;width:100vw;height:100dvh;border-radius:0;border:0;box-shadow:none}}
+</style>
+<button class="ch-btn" id="chAbrir" type="button" aria-controls="chPanel" aria-expanded="false" aria-label="Pregúntanos: abre el asistente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Pregúntanos</span></button>
+<section class="ch" id="chPanel" role="dialog" aria-modal="false" aria-labelledby="chT" hidden>
+<div class="ch-h"><div><b id="chT">Asistente PregonIA</b><small>Respuestas generadas con IA</small></div><button class="ch-x" id="chCerrar" type="button" aria-label="Cerrar asistente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+<div class="ch-l" id="chLista" aria-live="polite">
+<div class="ch-m a">Hola. Te ayudo con dudas sobre PregonIA: qué hace, qué medios lee, precios y cómo se contrata. ¿En qué te ayudo?</div>
+<div class="ch-sug" id="chSug"><button type="button">¿Cuánto cuesta para un municipio?</button><button type="button">¿Qué medios lee?</button><button type="button">¿Sirve para un diputado?</button><button type="button">Quiero una demostración</button></div>
+</div>
+<form class="ch-f" id="chForm"><label for="chTxt" class="trampa">Tu pregunta</label><textarea id="chTxt" rows="1" maxlength="600" placeholder="Escribe tu pregunta" autocomplete="off"></textarea><button class="ch-send" type="submit" id="chEnv" aria-label="Enviar pregunta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></form>
+<p class="ch-n">Puede equivocarse: confirma precios y condiciones con el equipo. No guardamos esta conversación. No escribas datos personales aquí: para eso está el <a href="#contacto">formulario</a>.</p>
 </section>
-
-<footer style="border-top:1px solid #DADADA;padding:44px 0 36px">
-<div class="wrap" style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;align-items:center">
-<div>
-<div style="display:flex;align-items:center;gap:10px"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="1" y="14" width="5.5" height="9" rx="1.5" style="fill:#2B4BE0"></rect><rect x="9.25" y="8" width="5.5" height="15" rx="1.5" style="fill:#2B4BE0"></rect><rect x="17.5" y="1" width="5.5" height="22" rx="1.5" style="fill:#2B4BE0"></rect></svg><span style="font:700 19px 'Source Serif 4',Georgia,serif">Pregon<span style="color:#2B4BE0">IA</span></span></div>
-<p class="mut" style="margin:10px 0 0;font-size:14.5px">La prensa no espera. Tú tampoco.</p>
-</div>
-<div style="text-align:right">
-<p style="margin:0;font:600 13px 'Source Serif 4',Georgia,serif;color:#555555">Un producto de <span style="color:#2B4BE0">ALT</span><span style="color:#141414">Kimia</span></p>
-<p style="margin:8px 0 0;font-size:14px"><a href="mailto:soporte@altkimia.cl">soporte@altkimia.cl</a> · <a href="/legal.html#privacidad">Privacidad</a> · <a href="/legal.html#terminos">Términos</a></p>
-</div>
-</div>
-<div class="wrap"><p class="mono" style="margin:28px 0 0;font-size:11px;color:#555555">© 2026 ALTKimia · Las pantallas muestran datos ficticios.</p></div>
-</footer>
-
-</div>
 <script>
-/* Lógica de la página del servicio: perfil elegido, pantallas de ejemplo, calculadora y formulario. Sin dependencias. */
+/* Página del servicio: formulario de contacto y asistente. Sin dependencias. */
 (() => {
-  const CORREO = "soporte@altkimia.cl";
-  const S = { persona: "alc", seg: null, tab: "parte", horas: 1.5, costo: 6700, fRol: "Alcalde o municipio", fTer: "", fNom: "", fCor: "", fTel: "" };
-  const set = p => { Object.assign(S, p); pintar(); };
-  const fmt = n => "$" + Math.round(n).toLocaleString("es-CL");
-  const rolMap = { alc: "Alcalde o municipio", par: "Diputado o senador", com: "Comunicaciones o prensa" };
-  function vals() {
-    const isAlc = S.persona === "alc", isPar = S.persona === "par", isCom = S.persona === "com";
-    const seg = S.seg || (isPar ? "par" : "muni"), tab = S.tab;
-    const horas = Number(S.horas), costo = Number(S.costo), horasMes = horas * 20, valor = horasMes * costo;
-    const plan = isPar ? 290000 : 149000, ratio = valor / plan;
-    const pick = p => () => { set({ persona: p, seg: null, fRol: rolMap[p] }); };
-    const go = t => () => set({ tab: t });
-    const field = k => e => { S[k] = e.target.value; if (k === "horas" || k === "costo") pintar(); else pintarCorreo(); };
-    const tabs = ["parte", "mesa", "responder"], tabCls = {}, tabSel = {};
-    tabs.forEach(t => { tabCls[t] = "tab" + (t === tab ? " on" : ""); tabSel[t] = t === tab ? "true" : "false"; });
-    return {
-      isAlc, isPar, isCom, notPar: !isPar,
-      pickAlc: pick("alc"), pickPar: pick("par"), pickCom: pick("com"),
-      cardCls: { alc: "pcard" + (isAlc ? " on" : ""), par: "pcard" + (isPar ? " on" : ""), com: "pcard" + (isCom ? " on" : "") },
-      personaNombre: isPar ? "parlamentarios y autoridades" : (isCom ? "comunicaciones y prensa" : "alcaldes y municipios"),
-      compraCorta: isPar ? "Licencia mensual de software" : "Sin licitación: Compra Ágil",
-      mockTerritorio: isPar ? "Distrito 7" : "Comuna de Puerto Claro",
-      segIsMuni: seg === "muni", segIsPar: seg === "par",
-      sCls: { muni: "sb" + (seg === "muni" ? " on" : ""), par: "sb" + (seg === "par" ? " on" : "") },
-      sPress: { muni: seg === "muni" ? "true" : "false", par: seg === "par" ? "true" : "false" },
-      segMuni: () => set({ seg: "muni" }), segPar: () => set({ seg: "par" }),
-      tabCls, tabSel, tParte: tab === "parte", tMesa: tab === "mesa", tResponder: tab === "responder",
-      goParte: go("parte"), goMesa: go("mesa"), goResponder: go("responder"),
-      parteLabel: isPar ? "Parte del distrito" : "Parte del alcalde",
-      parteQ: isPar ? "¿Qué pasa en mis comunas, dónde aparezco y qué se está calentando?" : "¿Cómo me trató la prensa, qué se puede complicar y qué hago?",
-      parteMeta: isPar ? "Para el parlamentario y su equipo · cada mañana, 7:30 · 2 minutos" : "Para el alcalde · cada lunes, 8:00 · 2 minutos en el celular",
-      horas, costo, horasTxt: String(horas).replace(".", ",") + " h", costoTxt: fmt(costo),
-      horasMesTxt: String(horasMes).replace(".", ",") + " horas", valorTxt: fmt(valor),
-      planNombre: isPar ? "Diputado" : "Comunal", planTxt: fmt(plan),
-      ratioTxt: ratio >= 1 ? ratio.toFixed(1).replace(".", ",") + " veces" : Math.round(ratio * 100) + "% de",
-      setHoras: field("horas"), setCosto: field("costo"),
-      fRol: S.fRol, fTer: S.fTer, fNom: S.fNom, fCor: S.fCor, fTel: S.fTel,
-      setRol: field("fRol"), setTer: field("fTer"), setNom: field("fNom"), setCor: field("fCor"), setTel: field("fTel"),
-      correo: CORREO, mailHref: mailHref()
-    };
-  }
-  function mailHref() {
-    const subject = "Demo PregonIA" + (S.fTer ? " · " + S.fTer : "");
-    const body = "Hola, quiero ver PregonIA con mi territorio.\n\nSoy: " + S.fRol + "\nComuna o distrito: " + S.fTer + "\nNombre: " + S.fNom + "\nCorreo: " + S.fCor + "\nCelular: " + S.fTel;
-    return "mailto:" + CORREO + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
-  }
-  const get = (o, path) => path.split(".").reduce((x, k) => (x == null ? x : x[k]), o);
-  let V = vals();
-  function pintarCorreo() { const h = mailHref(); document.querySelectorAll('[data-a-href="mailHref"]').forEach(a => a.setAttribute("href", h)); }
-  function pintar() {
-    V = vals();
-    document.querySelectorAll("[data-if]").forEach(el => { el.hidden = !get(V, el.dataset.if); });
-    document.querySelectorAll("[data-t]").forEach(el => { const v = get(V, el.dataset.t); if (el.textContent !== String(v)) el.textContent = v; });
-    document.querySelectorAll("[data-c]").forEach(el => { el.className = get(V, el.dataset.c); });
-    document.querySelectorAll("[data-v]").forEach(el => { const v = String(get(V, el.dataset.v) ?? ""); if (el.value !== v && document.activeElement !== el) el.value = v; });
-    document.querySelectorAll("*").forEach(el => { for (const a of el.getAttributeNames()) if (a.startsWith("data-a-")) el.setAttribute(a.slice(7), get(V, el.getAttribute(a))); });
-  }
-  document.addEventListener("click", e => { const b = e.target.closest("[data-on]"); if (!b) return; const f = V[b.dataset.on]; if (typeof f === "function") f(e); });
-  const cambio = e => { const el = e.target.closest("[data-change]"); if (!el) return; const f = V[el.dataset.change]; if (typeof f === "function") f(e); };
-  document.addEventListener("input", cambio); document.addEventListener("change", cambio);
+  const $ = s => document.querySelector(s);
   // Fecha del cabezal, como la de un diario
-  try { const f = new Date().toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long", year: "numeric" }); document.getElementById("ptFecha").textContent = f.charAt(0).toUpperCase() + f.slice(1); } catch (e) {}
-  pintar();
-})();
+  try { const f = new Date().toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long", year: "numeric"}); $("#ptFecha").textContent = f.charAt(0).toUpperCase() + f.slice(1); } catch (e) {}
 
+  /* Formulario de contacto */
+  const fm = $("#fContacto"), msg = $("#cMsg"), env = $("#cEnv");
+  const aviso = (t, ok) => { msg.hidden = false; msg.className = "msg full " + (ok ? "ok" : "err"); msg.textContent = t; };
+  fm.addEventListener("submit", async e => {
+    e.preventDefault();
+    const v = n => (fm.elements[n].value || "").trim();
+    if (!v("nombre") || !v("institucion")) { aviso("Completa tu nombre y tu institución o comuna.", false); (v("nombre") ? $("#cIns") : $("#cNom")).focus(); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v("correo"))) { aviso("Revisa el correo.", false); $("#cCor").focus(); return; }
+    if (!$("#cOk").checked) { aviso("Marca la autorización para que podamos responderte.", false); $("#cOk").focus(); return; }
+    env.disabled = true; env.textContent = "Enviando…";
+    try {
+      const r = await fetch("/api/contacto", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({
+        nombre: v("nombre"), cargo: v("cargo"), institucion: v("institucion"), correo: v("correo"), telefono: v("telefono"),
+        interes: v("interes"), mensaje: v("mensaje"), sitio: v("sitio"), consentimiento: true, origen: "servicio", version: "2026-11-13"})});
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || "No pudimos enviar tu solicitud.");
+      fm.reset(); aviso("Listo, recibimos tu solicitud. Te escribiremos en menos de un día hábil.", true);
+    } catch (er) {
+      aviso((er.message || "No pudimos enviar tu solicitud.") + " También puedes escribir a soporte@altkimia.cl.", false);
+    } finally { env.disabled = false; env.textContent = "Enviar solicitud"; }
+  });
+
+  /* Asistente */
+  const btn = $("#chAbrir"), panel = $("#chPanel"), lista = $("#chLista"), txt = $("#chTxt"), enviar = $("#chEnv");
+  const hist = []; let ocupado = false;
+  const abrir = on => { panel.hidden = !on; btn.hidden = on; btn.setAttribute("aria-expanded", String(on)); if (on) setTimeout(() => txt.focus(), 30); else btn.focus(); };
+  btn.addEventListener("click", () => abrir(true));
+  $("#chCerrar").addEventListener("click", () => abrir(false));
+  panel.addEventListener("keydown", e => { if (e.key === "Escape") abrir(false); });
+  panel.addEventListener("click", e => { if (e.target.closest('a[href="#contacto"]')) abrir(false); });
+  const burbuja = (cls, t) => { const d = document.createElement("div"); d.className = "ch-m " + cls; d.textContent = t; lista.appendChild(d); lista.scrollTop = lista.scrollHeight; return d; };
+  const ponerContacto = d => { const a = document.createElement("a"); a.className = "ch-go"; a.href = "#contacto"; a.textContent = "Dejar mis datos"; d.appendChild(document.createElement("br")); d.appendChild(a); };
+  async function preguntar(q){
+    q = q.trim().slice(0, 600); if (!q || ocupado) return;
+    ocupado = true; enviar.disabled = true; const sug = $("#chSug"); if (sug) sug.remove();
+    burbuja("u", q); hist.push({rol: "usuario", texto: q}); txt.value = "";
+    const d = burbuja("a", "…"); let r;
+    try {
+      r = await fetch("/api/asistente", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({mensajes: hist.slice(-12)})});
+      if (!r.ok || !r.body) { const j = await r.json().catch(() => ({})); throw new Error(j.error || "El asistente no respondió."); }
+      const lec = r.body.getReader(), dec = new TextDecoder(); let t = "";
+      for (;;) { const {done, value} = await lec.read(); if (done) break; t += dec.decode(value, {stream: true}); d.textContent = t.replace(/\[\[CONTACTO\]\]/g, "").trimEnd() || "…"; lista.scrollTop = lista.scrollHeight; }
+      const limpio = t.replace(/\[\[CONTACTO\]\]/g, "").trim();
+      d.textContent = limpio || "No tengo una respuesta para eso. Escríbenos por el formulario.";
+      if (/\[\[CONTACTO\]\]/.test(t)) ponerContacto(d);
+      hist.push({rol: "asistente", texto: limpio});
+    } catch (er) {
+      d.className = "ch-m e"; d.textContent = er.message + " Puedes escribirnos por el formulario."; ponerContacto(d); hist.pop();
+    } finally { ocupado = false; enviar.disabled = false; lista.scrollTop = lista.scrollHeight; txt.focus(); }
+  }
+  $("#chForm").addEventListener("submit", e => { e.preventDefault(); preguntar(txt.value); });
+  txt.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); preguntar(txt.value); } });
+  lista.addEventListener("click", e => { const b = e.target.closest(".ch-sug button"); if (b) preguntar(b.textContent); });
+})();
 </script>
 </body>
 </html>

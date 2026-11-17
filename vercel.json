@@ -20,6 +20,12 @@
     },
     "api/nota.js": {
       "maxDuration": 30
+    },
+    "api/asistente.js": {
+      "maxDuration": 30
+    },
+    "api/contacto.js": {
+      "maxDuration": 20
     }
   },
   "rewrites": [

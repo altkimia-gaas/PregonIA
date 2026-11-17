@@ -569,3 +569,23 @@ do $$ begin
 end $$;
 -- Para habilitar a un editor (una vez, en SQL Editor, con el correo de su cuenta de Supabase):
 --   insert into editores (usuario, nombre) select id, 'Nombre' from auth.users where email = 'correo@dominio.cl' on conflict do nothing;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Contacto (nov 2026): solicitudes del formulario de la página del servicio (/servicio).
+-- Solo las escribe y lee el servidor (api/contacto.js) con la clave secreta: sin políticas para anon ni authenticated.
+-- Plazo: 12 meses desde la solicitud, o antes si la persona pide eliminarla (ver legal.html).
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists contactos (
+  id                 bigint generated always as identity primary key,
+  creado_en          timestamptz not null default now(),
+  nombre             text not null,
+  cargo              text,
+  institucion        text not null,
+  correo             text not null,
+  telefono           text,
+  interes            text,
+  mensaje            text,
+  origen             text,
+  version_privacidad text
+);
+alter table contactos enable row level security;
