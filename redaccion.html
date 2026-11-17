@@ -344,7 +344,9 @@ function variantesNombre(a){
   const partes = a.n.split(" "), ap = partes[partes.length - 1], cargo = sin(cargoDe(a.rol, a.g));
   const out = new Set([sin(a.n), sin(a.c)]);
   out.add(cargo + " " + sin(ap));
-  if (a.rol === "core") out.add("core " + sin(ap));
+  // Primer nombre y primer apellido: la prensa suele omitir el segundo nombre («Juan Ibacache» por «Juan Bautista Ibacache»).
+  const pn = sin(a.c || a.n).split(" ")[0]; if (pn && partes.length > 1) out.add(pn + " " + sin(ap));
+  if (a.rol === "core") { out.add("core " + sin(ap)); out.add((a.g === "F" ? "consejera " : "consejero ") + sin(ap)); }  // «consejero Urrutia», sin «regional»
   // La prensa abrevia: «gobernador Mundaca», «delegado Millones», «delegada presidencial provincial Loyola».
   if (a.rol === "gobernador") out.add((a.g === "F" ? "gobernadora " : "gobernador ") + sin(ap));
   if (a.rol === "delegado") { const d = a.g === "F" ? "delegada " : "delegado "; out.add(d + sin(ap)); if (a.zona !== "REG") out.add(d + "presidencial provincial " + sin(ap)); else out.add(d + "presidencial regional " + sin(ap)); }

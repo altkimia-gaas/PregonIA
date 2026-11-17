@@ -12,7 +12,7 @@ const QUITAR = ["region de valparaiso", "cordillera de los andes", "universidad 
 const CONTEXTO = '(Valparaíso OR comuna OR municipalidad OR alcalde OR Chile OR "litoral central")';
 const EXCLUIR = ["marruecos", "marroqui", "colombia", "cartagena de indias", "texas", "spurs", "ibiza", "murcia"];
 const METODOS = new Set(["rss", "rss_filtrado", "sitemap_noticias", "sitemap_filtrado"]);
-const VENTANA_DIAS = 14, MAX_IA = 80, UA = "PregonIA/0.1 (monitoreo de prensa municipal; +https://pregonia.vercel.app)";
+const VENTANA_DIAS = 14, MAX_IA = 120, UA = "PregonIA/0.1 (monitoreo de prensa municipal; +https://pregonia.vercel.app)";
 
 const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const ENT = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
@@ -80,7 +80,9 @@ const linea = (n, i) => `${i}. [${n.medio} · ${n.ambito}] ${n.titulo}${n.desc ?
 function promptLote(comuna, notas, base){
   return `Eres analista de prensa de PregonIA para la Municipalidad de ${comuna}, Región de Valparaíso, Chile. Revisa estas notas de prensa:
 
-${notas.map((n, k) => linea(n, base + k)).join("\n")}
+${notas.map((n, k) => linea(n, base + k) + (n.sobre === "pc" ? " (hallada por la comuna)" : "")).join("\n")}
+
+Las notas marcadas «(hallada por la comuna)» salieron de una búsqueda de ${comuna} y la nombran en el cuerpo aunque el titular no lo diga: decide por su tema si trata de la comuna.
 
 Para cada nota devuelve un objeto con:
 - "i": su número.
@@ -148,7 +150,9 @@ export async function leerCatalogo(){
   fuentes.forEach(m => { if (!porUrl.has(m.url)) porUrl.set(m.url, []); porUrl.get(m.url).push(m); });
   const items = (await Promise.all([...porUrl.entries()].map(async ([url, ms]) => {
     try {
-      const its = parsear(await leer(url)), filtrados = ms.filter(m => FILTROS[m.id]), resto = ms.find(m => !FILTROS[m.id]);
+      // Un medio lento o caído en un momento no se pierde por esa pasada: un reintento con más plazo.
+      const xml = await leer(url).catch(() => leer(url, 12000));
+      const its = parsear(xml), filtrados = ms.filter(m => FILTROS[m.id]), resto = ms.find(m => !FILTROS[m.id]);
       return its.map(x => { const f = filtrados.find(m => FILTROS[m.id](x.url)); const m = f || resto; return m ? { ...x, m } : null; }).filter(Boolean);
     } catch(e) { ms.forEach(m => errores.push(m.nombre)); return []; }
   }))).flat();
@@ -158,16 +162,74 @@ const porDominio = new Map(), porNombre = new Map();
 /* Fuentes institucionales sin ficha propia (ministerios, servicios, municipalidades, Fuerzas Armadas): una ficha común que conserva el nombre real. */
 const INST = CATALOGO.find(m => m.id === 299);
 const esInstitucional = (d, nombre) => /(^|\.)(gob|mil)\.cl$/.test(d) || /municipalidad|^muni|imv\.cl$/.test(d) || /municipalidad|ministerio|gobierno regional|delegaci[oó]n presidencial|subsecretar|seremi|senapred|carabineros|fuerza a[eé]rea|armada de chile|ej[eé]rcito/i.test(nombre || "");
+/* Medios que Google News encuentra y no están en el catálogo: antes se descartaban (un tercio de lo hallado en Valparaíso y Viña del Mar).
+   Ahora entran con una ficha común que conserva el nombre real del medio: regional si el medio es de la región, nacional si no.
+   Quedan fuera los medios extranjeros (dominio de otro país) y los de deportes, clima o agregadores, que no traen noticias de gestión. */
+const OTRO_NAC = CATALOGO.find(m => m.id === 297), OTRO_REG = CATALOGO.find(m => m.id === 296);
+const RE_REGION = /valpara|vina del mar|aconcagua|litoral|quinta region|v region|san antonio|quillota|quilpue|villa alemana|casablanca|limache|la ligua|petorca|los andes|san felipe|rapa nui|con ?con|quintero|puchuncavi|cartagena|algarrobo|el quisco|el tabo|la calera/;
+const RE_AJENO = /(^|\.)(as\.com|365scores\.com|bolavip\.com|besoccer\.com|transfermarkt\.\w+|flashscore\.\w+|espn\.\w+|volcanodiscovery\.com|tutiempo\.net|accuweather\.com)$/;
+const extranjero = d => { const t = d.split(".").pop(); return t.length === 2 && t !== "cl"; };
+function otroMedio(d, nombre){
+  if (!d && !nombre) return null;
+  if (d && (extranjero(d) || RE_AJENO.test(d))) return null;
+  return RE_REGION.test(norm(nombre + " " + d)) ? OTRO_REG : OTRO_NAC;
+}
+const FICHA_COMUN = new Set([INST, OTRO_NAC, OTRO_REG].filter(Boolean));
 CATALOGO.forEach(m => { const d = dominio(m.url); if (d) porDominio.set(d, m); porNombre.set(norm(m.nombre), m); });
-export async function leerGoogleNews(comuna, dias = VENTANA_DIAS){ return leerGoogleNewsConsulta(`"${comuna}" ${CONTEXTO}`, dias); }
-/* Google News con una consulta cualquiera. Con catalogo = true solo quedan los medios del catálogo; con false, todo lo que encuentre (para contar). */
-export async function leerGoogleNewsConsulta(q, dias = VENTANA_DIAS, catalogo = true){
-  const gq = `${q} when:${dias}d`, gn = `https://news.google.com/rss/search?q=${encodeURIComponent(gq)}&hl=es-419&gl=CL&ceid=CL:es-419`;
-  const items = parsear(await leer(gn, 10000));
+
+/* Google News. Medido el 17-nov-2026: con varias consultas a la vez responde 429 (demasiadas solicitudes) y esa lectura se perdía;
+   además entrega como máximo 100 notas por consulta (Valparaíso en 14 días tiene más de 250).
+   Por eso: cola con pocas consultas a la vez y una pausa entre ellas, reintentos con espera creciente ante 429 o errores del servidor,
+   y si una consulta llega al tope, se vuelve a pedir por tramos de fechas hasta bajar del tope. Todo dentro del plazo de la función. */
+const GN = {activas: 0, cola: [], proximo: 0, limite: 0};
+const GN_PARALELO = 2, GN_PAUSA = 450, GN_TOPE = 100;
+const dormir = ms => new Promise(ok => setTimeout(ok, ms));
+/* Plazo para las consultas a Google News de esta invocación (los reintentos y tramos no lo pasan). */
+export const plazoGoogleNews = ms => { GN.limite = Date.now() + ms; };
+const limite = () => GN.limite > Date.now() ? GN.limite : Date.now() + 40000;
+async function turno(){
+  if (GN.activas >= GN_PARALELO) await new Promise(ok => GN.cola.push(ok));
+  GN.activas++;
+  const t = Math.max(Date.now(), GN.proximo); GN.proximo = t + GN_PAUSA;
+  if (t > Date.now()) await dormir(t - Date.now());
+}
+function soltar(){ GN.activas--; const sig = GN.cola.shift(); if (sig) sig(); }
+async function leerGN(url){
+  for (let k = 0; ; k++) {
+    await turno(); let err;
+    try { return await leer(url, 10000); } catch(e) { err = e; } finally { soltar(); }
+    const st = Number((/HTTP (\d+)/.exec(err && err.message) || [])[1]) || 0, reintentable = !st || st === 429 || st >= 500;
+    const espera = 1500 * 2 ** k;
+    if (st === 429) GN.proximo = Math.max(GN.proximo, Date.now() + espera);  // todas las consultas esperan, no solo esta
+    if (!reintentable || k >= 3 || Date.now() + espera + 3000 > limite()) throw err;
+    await dormir(espera);
+  }
+}
+const urlGN = q => `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=es-419&gl=CL&ceid=CL:es-419`;
+const diaISO = t => new Date(t).toISOString().slice(0, 10);
+/* Tramos de fechas de una consulta que llegó al tope: mitades sucesivas (hasta 8 tramos), sin repetir notas. Un tramo que falla no borra lo ya leído. */
+async function porTramos(q, desde, hasta, prof, vistos, out){
+  const medio = Math.floor((desde + hasta) / 2);
+  for (const [a, b] of [[desde, medio], [medio, hasta]]) {
+    let its; try { its = parsear(await leerGN(urlGN(`${q} after:${diaISO(a - 864e5)} before:${diaISO(b + 864e5)}`))); } catch(e) { continue; }
+    its.forEach(x => { const k = x.url || x.titulo; if (!vistos.has(k)) { vistos.add(k); out.push(x); } });
+    if (its.length >= GN_TOPE - 2 && prof > 1 && b - a > 1.5 * 864e5 && Date.now() + 8000 < limite()) await porTramos(q, a, b, prof - 1, vistos, out);
+  }
+}
+export async function leerGoogleNews(comuna, dias = VENTANA_DIAS){ return (await leerGoogleNewsConsulta(`"${comuna}" ${CONTEXTO}`, dias)).map(x => ({...x, q: "comuna"})); }
+/* Google News con una consulta cualquiera. Con catalogo = true quedan los medios del catálogo y los demás medios chilenos con ficha común;
+   con false, todo lo que encuentre (para contar). Con tramos = true, una consulta que llega al tope se completa por tramos de fechas. */
+export async function leerGoogleNewsConsulta(q, dias = VENTANA_DIAS, catalogo = true, tramos = catalogo){
+  let items = parsear(await leerGN(urlGN(`${q} when:${dias}d`)));
+  if (tramos && items.length >= GN_TOPE - 2) {
+    const vistos = new Set(items.map(x => x.url || x.titulo)), mas = [];
+    await porTramos(q, Date.now() - dias * 864e5, Date.now(), 3, vistos, mas);
+    items = items.concat(mas);
+  }
   if (!catalogo) return items;
   return items.map(x => {
-    const d = dominio(x.fuenteUrl), m = porDominio.get(d) || porNombre.get(norm(x.fuente)) || (INST && esInstitucional(d, x.fuente) ? INST : null); if (!m) return null;
-    return { ...x, titulo: x.titulo.replace(new RegExp("\\s+-\\s+" + x.fuente.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"), ""), desc: "", m, via: "google_news", fuente: m === INST ? x.fuente.replace(/^\|\s*/, "").slice(0, 80) : undefined };
+    const d = dominio(x.fuenteUrl), m = porDominio.get(d) || porNombre.get(norm(x.fuente)) || (INST && esInstitucional(d, x.fuente) ? INST : otroMedio(d, x.fuente)); if (!m) return null;
+    return { ...x, titulo: x.titulo.replace(new RegExp("\\s+-\\s+" + x.fuente.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"), ""), desc: "", m, via: "google_news", fuente: FICHA_COMUN.has(m) ? x.fuente.replace(/^\|\s*/, "").slice(0, 80) : undefined };
   }).filter(Boolean);
 }
 /* Candidatas de una autoridad, con las mismas reglas que una comuna (que lee lo que nombra a la comuna o sale en sus medios locales):
@@ -201,12 +263,14 @@ export function candidatasDe(comuna, items, desde, ahora = Date.now()){
   for (const x of items) {
     if (!Number.isFinite(x.fecha) || x.fecha < desde || x.fecha > ahora + 36e5) continue;
     const t = QUITAR.reduce((s, q) => s.split(q).join(" "), norm(x.titulo + " " + x.desc)), local = x.m.ambito === "local" && (x.m.comuna || "").split(";").map(norm).includes(norm(comuna));
-    if (!menciona(t) && !(local && !EXCLUIR.some(w => t.includes(w)))) continue;
+    // Lo que Google News halló buscando la comuna la nombra en el cuerpo aunque el titular no lo haga (un 30% en Viña del Mar).
+    const porConsulta = x.q === "comuna" && !EXCLUIR.some(w => t.includes(w));
+    if (!menciona(t) && !(local && !EXCLUIR.some(w => t.includes(w))) && !porConsulta) continue;
     const k1 = x.url, k2 = x.m.id + "|" + norm(x.titulo);
     if (vistos.has(k1) || vistos.has(k2)) continue; vistos.add(k1); vistos.add(k2);
-    out.push({ id: "r" + hash(x.url), m: x.m.id, medio: x.m.nombre, ambito: x.m.ambito, titulo: x.titulo, desc: x.desc, url: x.url, ts: Math.min(x.fecha, ahora), via: x.via || "lectura", ...(x.fuente ? {fuente: x.fuente} : {}) });
+    out.push({ id: "r" + hash(x.url), m: x.m.id, medio: x.m.nombre, ambito: x.m.ambito, titulo: x.titulo, desc: x.desc, url: x.url, ts: Math.min(x.fecha, ahora), via: x.via || "lectura", sobre: menciona(t) || local ? "p" : "pc", ...(x.fuente ? {fuente: x.fuente} : {}) });
   }
-  return out.sort((a, b) => b.ts - a.ts);
+  return out.sort((a, b) => (a.sobre === "pc") - (b.sobre === "pc") || b.ts - a.ts);  // lo que nombra la comuna primero, para el tope de clasificación
 }
 /* Salud de fuentes: qué entrega cada medio leído, qué dice su robots.txt y qué medios aparecen en Google News sin estar en el catálogo.
    Solo lectura de datos públicos; no clasifica con IA ni guarda nada. */

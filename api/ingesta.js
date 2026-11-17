@@ -8,7 +8,7 @@
 // Cuentas de Facebook e Instagram de medios: META_ACCESS_TOKEN, META_IG_USER_ID, META_FB_PPCA (ver api/_redes.js).
 // Después de guardar, revisa los hechos que recibieron notas nuevas y avisa lo urgente (notificación y correo).
 // Además, propone a los editores de PregonIA las noticias de alto impacto de sus territorios (api/_redaccion.js).
-import { COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre } from "./_lectura.js";
+import { COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, candidatasDe, candidatasPorNombre, plazoGoogleNews } from "./_lectura.js";
 import { variantesNombre } from "./_autoridades.js";
 import { sujetoDeCuenta, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
 import { avisar } from "./_avisos.js";
@@ -18,7 +18,7 @@ import { detectarRedaccion } from "./_redaccion.js";
 /* Cuentas de Facebook e Instagram de la base: las del catálogo fijo y las inscritas desde la aplicación. */
 const cuentaDe = r => ({id: r.id, nombre: r.nombre, ambito: r.ambito, comuna: r.comunas || "", red: r.metodo, usuario: r.usuario_red || usuarioDe(r.metodo, r.url_lectura)});
 
-const MAX_POR_COMUNA = 30;  // tope de notas nuevas que se clasifican por cuenta en cada pasada; el resto entra en la siguiente
+const MAX_POR_COMUNA = 50;  // tope de notas nuevas que se clasifican por cuenta en cada pasada; el resto entra en la siguiente
 
 async function sb(ruta, {method = "GET", body, prefer} = {}){
   const url = process.env.SUPABASE_URL, clave = process.env.SUPABASE_SECRET_KEY;
@@ -73,7 +73,7 @@ async function procesarCuenta(cta, items, desde, ahora){
   const filas = nuevas.map((n, i) => {
     const c = clas.porI.get(i), ok = Boolean(c && c.tono);
     return {nota_id: n.id, municipio_id, rel: c && c.rel === false ? false : true, tono: ok && ["cri", "neu", "pos"].includes(c.tono) ? c.tono : "neu",
-      resumen: c && c.res ? String(c.res).slice(0, 220) : n.titulo.slice(0, 220), palabras: c && c.x ? String(c.x).slice(0, 120) : "", grupo: grupoPorEtiqueta.get(etiquetaDe(n, c)), ia: ok, ...(n.sobre ? {sobre: n.sobre === "i" ? "institucion" : "persona"} : {})};
+      resumen: c && c.res ? String(c.res).slice(0, 220) : n.titulo.slice(0, 220), palabras: c && c.x ? String(c.x).slice(0, 120) : "", grupo: grupoPorEtiqueta.get(etiquetaDe(n, c)), ia: ok, ...(cta.autoridad && n.sobre ? {sobre: n.sobre === "i" ? "institucion" : "persona"} : {})};
   });
   // Lo que la IA no alcanzó a clasificar se guarda igual (neutro, con el titular) y queda marcado con ia = false para revisarlo.
   const guardar = body => sb("menciones?on_conflict=nota_id,municipio_id", {method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body});
@@ -87,7 +87,7 @@ async function manejar(req){
   if (!secreto) return json({error: "Falta configurar CRON_SECRET en el servidor"}, 503);
   if ((req.headers.get("authorization") || "").trim() !== "Bearer " + secreto) return json({error: "No autorizado"}, 401);
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SECRET_KEY) return json({error: "Falta configurar Supabase en el servidor"}, 503);
-  DIAG.length = 0;
+  DIAG.length = 0; plazoGoogleNews(30000);  // Google News va en cola (responde 429 si se le pide mucho a la vez); el resto del minuto es para clasificar
   const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
   const [lectura] = await sb("lecturas", {method: "POST", prefer: "return=representation", body: {inicio: new Date(ahora).toISOString()}});
   try {

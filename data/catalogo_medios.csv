@@ -125,4 +125,6 @@ id,nombre,ambito,provincia,comuna,tipo,nivel,metodo,url_lectura,estado,observaci
 207,Municipalidad de San Antonio,institucional,San Antonio,San Antonio,Fuente institucional,C,google_news,https://www.sanantonio.cl/,listo,Comunicados municipales
 208,Municipalidad de Quillota,institucional,Quillota,Quillota,Fuente institucional,C,google_news,https://www.quillota.cl/,listo,Comunicados municipales
 209,Municipalidad de Rapa Nui,institucional,Isla de Pascua,Isla de Pascua,Fuente institucional,C,google_news,https://www.rapanui.net/,listo,Comunicados municipales
+296,Otro medio regional (vía Google News),regional,,,Otro medio,C,google_news,,listo,"Medios de la región que Google News encuentra y no están en el catálogo; cada nota muestra el nombre real del medio"
+297,Otro medio nacional (vía Google News),nacional,,,Otro medio,C,google_news,,listo,"Medios chilenos que Google News encuentra y no están en el catálogo; cada nota muestra el nombre real del medio"
 299,Otra fuente institucional,institucional,,,Fuente institucional,C,google_news,,listo,"Ministerios, servicios, municipalidades y Fuerzas Armadas sin ficha propia; cada nota muestra el nombre real de la institución"

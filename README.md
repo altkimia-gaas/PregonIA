@@ -126,6 +126,20 @@ Para activarlo en una base existente:
    Mientras no se corra, la aplicación y la lectura programada siguen funcionando solo con municipios.
 2. Crear la cuenta de la autoridad y asignar a su equipo con el bloque B de `supabase/alta_usuario.sql`.
 
+### Búsqueda: cómo se asegura encontrar todas las noticias
+
+Medido el 17 de noviembre de 2026 con consultas reales a Google News. Estas eran las pérdidas, y esto es lo que hace hoy la lectura:
+
+| Pérdida medida | Qué hace la lectura |
+|---|---|
+| Google News responde 429 (demasiadas solicitudes) con varias consultas a la vez: en una prueba con 8 comunas en paralelo, 4 quedaron vacías | Cola con 2 consultas a la vez y una pausa entre ellas; ante un 429 o un error del servidor, todas las consultas esperan y se reintenta con una espera creciente (hasta 3 veces), dentro del plazo de la función |
+| Máximo 100 notas por consulta: Valparaíso tiene más de 250 en 14 días | Si una consulta llega al tope, se vuelve a pedir por tramos de fechas (mitades sucesivas, hasta 8 tramos), sin repetir notas |
+| Se descartaban los medios fuera del catálogo: un tercio en Valparaíso y Viña del Mar, y la mayoría de lo que nombra a algunas autoridades | Entran con una ficha común (296 regional, 297 nacional) que conserva el nombre real del medio. Quedan fuera los medios extranjeros y los de deportes, clima o agregadores |
+| El nombre de la comuna o de la autoridad se exigía en el titular, pero Google News no entrega la bajada: en Viña del Mar se perdía el 30% | Lo que Google News encontró buscando la comuna o la persona entra aunque el titular no la nombre; la IA lo sabe y decide por el tema |
+| Variantes de nombre incompletas | Se suma primer nombre y primer apellido («Juan Ibacache») y, en consejeros, «consejero Urrutia» |
+| Un medio lento en una pasada se perdía | Un reintento con más plazo |
+| Topes de clasificación | 120 notas por consulta al vuelo y 50 nuevas por cuenta en cada pasada programada (el resto entra en la siguiente); lo que nombra a la comuna o a la persona va primero |
+
 ## Avisos (alertas)
 
 PregonIA avisa de noticias críticas nuevas, de las que escalan a prensa regional o nacional y de los temas que crecen rápido (3 medios en 6 horas). Las reglas están en `src/reglas.js`; `scripts/build.py` las copia a `api/_reglas.js` para que la aplicación y el servidor avisen exactamente lo mismo.

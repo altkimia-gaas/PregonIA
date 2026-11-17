@@ -1135,6 +1135,24 @@ export const CATALOGO = [
 "estado": "listo"
 },
 {
+"id": 296,
+"nombre": "Otro medio regional (vía Google News)",
+"ambito": "regional",
+"comuna": "",
+"metodo": "google_news",
+"url": "",
+"estado": "listo"
+},
+{
+"id": 297,
+"nombre": "Otro medio nacional (vía Google News)",
+"ambito": "nacional",
+"comuna": "",
+"metodo": "google_news",
+"url": "",
+"estado": "listo"
+},
+{
 "id": 299,
 "nombre": "Otra fuente institucional",
 "ambito": "institucional",
