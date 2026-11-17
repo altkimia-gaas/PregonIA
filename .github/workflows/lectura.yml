@@ -1,9 +1,8 @@
-# Lectura programada de medios: cada 30 minutos llama a /api/ingesta en Vercel.
+# Lectura de medios a mano: llama a /api/ingesta en Vercel. La lectura cada 30 minutos la dispara el programador de Supabase
+# (pg_cron, ver supabase/programador.sql), porque GitHub posterga horas las tareas programadas de este repositorio.
 # Requiere el secreto CRON_SECRET en GitHub (Settings › Secrets and variables › Actions) con el mismo valor que en Vercel.
 name: Lectura de medios
 on:
-  schedule:
-    - cron: "7,37 * * * *"
   workflow_dispatch: {}
 concurrency:
   group: lectura
