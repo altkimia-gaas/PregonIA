@@ -110,7 +110,7 @@
 .sv *{box-sizing:border-box}
 .sv a{color:var(--acc)}
 .w{max-width:1100px;margin:0 auto;padding:0 24px}
-.sec{padding:72px 0;border-top:1.5px solid var(--frame)}
+.sec{padding:72px 0;border-top:1.5px solid var(--frame);scroll-margin-top:64px}
 .sec.soft{background:var(--soft)}
 .k{font-family:"DM Mono",ui-monospace,monospace;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin:0 0 12px}
 .t{font-family:var(--serif);font-weight:700;font-size:clamp(28px,3.4vw,40px);line-height:1.1;letter-spacing:-.01em;margin:0;border-left:4px solid var(--frame);padding-left:16px;text-wrap:balance}
@@ -175,7 +175,7 @@ details.q p{margin:0 2px 18px;color:#333}
 .pie .w{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 .pie a{color:var(--muted)}
 @media (max-width:900px){.nv{display:none}.g3{grid-template-columns:minmax(0,1fr)}.cifras{grid-template-columns:repeat(2,minmax(0,1fr))}.cifras div:nth-child(3){border-left:0}.cifras div:nth-child(n+3){border-top:1px solid var(--line)}}
-@media (max-width:720px){.g2,.fm{grid-template-columns:minmax(0,1fr)}.sec{padding:56px 0}.w{padding:0 18px}.acts{gap:6px}.acts .btn.s{padding:0 12px;font-size:13.5px}}
+@media (max-width:720px){.g2,.fm{grid-template-columns:minmax(0,1fr)}.sec{padding:56px 0}.w{padding:0 18px}.acts .btn.s{padding:0 16px;font-size:14px}}
 @media (max-width:440px){.logo span{display:none}.c{padding:18px}.tb{font-size:14px}.tb th,.tb td{padding:10px 5px}.tb td.pr{font-size:16px}}
 @media (max-width:360px){.tb td.pr{white-space:normal}}
 @media (prefers-reduced-motion:reduce){details.q summary::after{transition:none}}
@@ -184,7 +184,7 @@ details.q p{margin:0 2px 18px;color:#333}
 <header class="bar"><div class="w">
 <a class="logo" href="#portada" aria-label="PregonIA, portada"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="1" y="14" width="5.5" height="9" rx="1.5" style="fill:#2B4BE0;opacity:.55"></rect><rect x="9.25" y="8" width="5.5" height="15" rx="1.5" style="fill:#2B4BE0;opacity:.8"></rect><rect x="17.5" y="1" width="5.5" height="22" rx="1.5" style="fill:#2B4BE0"></rect></svg><span>Pregon<b>IA</b></span></a>
 <nav class="nv" aria-label="Secciones"><a href="#para-quien">Para quién</a><a href="#precios">Precios</a><a href="#preguntas">Preguntas</a><a href="#contacto">Contacto</a></nav>
-<div class="acts"><a class="btn s" href="/?ingresar">Ingresar</a><a class="btn s p" href="/?sin-portada#inicio">Ver demostración</a></div>
+<div class="acts"><a class="btn s p" href="#contacto">Agendar demostración</a></div>
 </div></header>
 
 <section id="para-quien" class="sec"><div class="w">
@@ -285,7 +285,7 @@ details.q p{margin:0 2px 18px;color:#333}
 <div class="fd full"><label for="cMen">Mensaje</label><textarea id="cMen" name="mensaje" maxlength="2000" placeholder="Cuéntanos qué necesitas (opcional)"></textarea></div>
 <div class="trampa" aria-hidden="true"><label for="cSit">No llenar</label><input id="cSit" name="sitio" tabindex="-1" autocomplete="off"></div>
 <label class="ck full"><input id="cOk" type="checkbox" required> <span>Autorizo a ALTKimia a usar estos datos para responder mi solicitud, según la <a href="/legal.html#privacidad" target="_blank" rel="noopener">política de privacidad</a>.</span></label>
-<div class="full" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><button class="btn p" type="submit" id="cEnv">Enviar solicitud</button><span class="mut" style="font-size:13px">* obligatorio</span></div>
+<div class="full" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><button class="btn p" type="submit" id="cEnv">Agendar demostración</button><span class="mut" style="font-size:13px">* obligatorio</span></div>
 <p class="msg full" id="cMsg" role="status" aria-live="polite" hidden></p>
 </form>
 </div>
@@ -358,10 +358,10 @@ details.q p{margin:0 2px 18px;color:#333}
         interes: v("interes"), mensaje: v("mensaje"), sitio: v("sitio"), consentimiento: true, origen: "servicio", version: "2026-11-13"})});
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || "No pudimos enviar tu solicitud.");
-      fm.reset(); aviso("Listo, recibimos tu solicitud. Te escribiremos en menos de un día hábil.", true);
+      fm.reset(); aviso("Listo, recibimos tu solicitud. Te escribiremos en menos de un día hábil para agendar la demostración.", true);
     } catch (er) {
       aviso((er.message || "No pudimos enviar tu solicitud.") + " También puedes escribir a soporte@altkimia.cl.", false);
-    } finally { env.disabled = false; env.textContent = "Enviar solicitud"; }
+    } finally { env.disabled = false; env.textContent = "Agendar demostración"; }
   });
 
   /* Asistente */
