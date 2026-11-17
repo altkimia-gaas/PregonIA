@@ -17,6 +17,9 @@
     },
     "api/publicar.js": {
       "maxDuration": 60
+    },
+    "api/nota.js": {
+      "maxDuration": 30
     }
   },
   "rewrites": [

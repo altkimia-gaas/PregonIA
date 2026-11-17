@@ -224,29 +224,49 @@ function fuentesDe(p){
   return [...porMedio.values()].sort((a, b) => (orden[a.ambito] ?? 3) - (orden[b.ambito] ?? 3)).slice(0, 5);
 }
 const temaPrincipal = p => ((p.detalle || {}).temas || [])[0] || "";
-function promptRedaccion(p){
+function promptRedaccion(p, textos = []){
   const notas = [...(p.notas || [])].sort((a, b) => a.ts - b.ts).slice(0, 8);
-  return `Eres editor de El Pregonero, un medio informativo digital de la Región de Valparaíso, Chile, con línea editorial NEUTRAL ESTRICTA. Prepara una publicación para las cuentas de El Pregonero en Facebook e Instagram sobre este hecho.
+  const leidos = (textos || []).filter(t => t && t.texto && t.texto.length > 200);
+  const original = leidos.length
+    ? leidos.map((t, i) => `${i ? "NOTA COMPLEMENTARIA" : "NOTA ORIGINAL (fuente principal)"} · ${t.medio}${t.fecha ? " · " + new Date(t.fecha).toLocaleString("es-CL") : ""}\nTítulo: ${t.titulo || ""}\n${t.bajada ? "Bajada: " + t.bajada + "\n" : ""}Texto:\n${t.texto}`).join("\n\n———\n\n")
+    : "(No se pudo leer el texto completo de la nota: trabaja solo con los titulares y extractos de abajo y no inventes lo que falta.)";
+  return `Eres editor de El Pregonero, un medio informativo digital de la Región de Valparaíso, Chile, con línea editorial NEUTRAL ESTRICTA.
 
-HECHO (${p.comunas.join(", ")}; alcance ${p.alcance || "comunal"}):
-${p.resumen ? "Resumen interno: " + p.resumen + "\n" : ""}Publicaciones de los medios (fuente · fecha · titular — extracto):
+TAREA: escribe una NUEVA VERSIÓN de la noticia para El Pregonero a partir de la nota original. Respeta el FONDO y cambia la FORMA:
+- Fondo: conserva todos los hechos relevantes de la nota (qué pasó, dónde, cuándo, a quién afecta, cifras, nombres, cargos, plazos, causas y consecuencias que la nota informa, y lo que dijeron las personas o instituciones), atribuidos a su fuente.
+- Forma: redacción y estructura propias, en pirámide invertida (lo más importante primero). No copies frases de la nota: reformula todo con palabras propias; como máximo una cita textual breve (menos de 15 palabras), entre comillas y atribuida a quien la dijo.
+- No agregues nada que no esté en la nota: ni datos, ni contexto, ni opinión, ni conclusiones. Si la nota no trae un dato imprescindible, no lo supongas.
+- Tu versión debe ser más breve que la original.
+
+${original}
+
+OTRAS PUBLICACIONES SOBRE EL MISMO HECHO (${p.comunas.join(", ")}; alcance ${p.alcance || "comunal"}):
 ${notas.map(n => `- ${n.medio} · ${new Date(n.ts).toLocaleString("es-CL")} · ${n.titulo}${n.desc ? " — " + n.desc.slice(0, 280) : ""}`).join("\n")}
 
 REGLAS OBLIGATORIAS
-1. Solo hechos que estén en las publicaciones de arriba, atribuidos a su fuente («según [medio]», «informó [institución]»). No agregues cifras, fechas, nombres, causas ni consecuencias. Si falta un dato imprescindible, escribe [completar: qué falta].
-2. Tono informativo y neutral: sin adjetivos valorativos (polémico, escandaloso, exitoso, histórico, grave…), sin signos de exclamación, sin mayúsculas sostenidas, sin opinión, sin llamados a apoyar o rechazar a nadie. Mismo trato para todos los sectores políticos. No menciones partidos políticos salvo que sean el centro del hecho.
-3. Redacción propia: no copies frases de los medios (máximo una cita breve entre comillas, atribuida).
-4. Facebook ("fb"): SOLO el cuerpo de la noticia, 2 a 4 párrafos cortos, máximo 800 caracteres. Empieza por el hecho principal (qué pasó, dónde, cuándo, a quién afecta). Sin titular, sin enlaces, sin la línea «Fuente:» y sin la mención de IA: el sistema agrega el titular, la fuente, el enlace a la nota original y la mención de IA.
-5. Instagram ("ig"): SOLO el cuerpo, máximo 900 caracteres, mismas reglas que Facebook (sin titular, sin enlaces, sin «Fuente:» ni mención de IA). Los hashtags van aparte.
-6. "hashtags": 3 a 5, de lugar y tema (por ejemplo #Casablanca #RegiónDeValparaíso). Nunca hashtags políticos ni de campaña.
-7. Pieza gráfica: "kicker" (antetítulo de 2 a 4 palabras: comuna · tema), "titular" (máximo 14 palabras), "bajada" (máximo 30 palabras) y "datos" (2 o 3 datos clave del hecho, verificables, máximo 14 palabras cada uno: qué pasó, cifras, lugar, plazos o quién lo informó). La pieza debe leerse como la noticia: nunca uses como dato que el medio publicó un artículo ni la fecha de publicación.
-8. "alt": texto alternativo de la imagen para personas ciegas, máximo 200 caracteres, que diga qué muestra la pieza.
-9. "historia": {"t": titular corto para la historia (máximo 10 palabras), "x": una frase de contexto}.
-10. "slides": 2 a 4 láminas para un carrusel, cada una {"t": subtítulo de máximo 7 palabras, "x": máximo 40 palabras}: qué pasó, dónde y a quién afecta, qué viene (solo si la fuente lo dice).
-11. "guion": guion para un reel narrado de 25 a 40 segundos: {"intro": máximo 22 palabras, "datos": una frase de máximo 20 palabras por cada dato clave, "cierre": máximo 14 palabras que nombre la fuente}. Frases cortas y fáciles de decir en voz alta; cifras con números.
+1. Tono informativo y neutral: sin adjetivos valorativos (polémico, escandaloso, exitoso, histórico, grave…), sin signos de exclamación, sin mayúsculas sostenidas, sin opinión, sin llamados a apoyar o rechazar a nadie. Mismo trato para todos los sectores políticos. No menciones partidos políticos salvo que sean el centro del hecho.
+2. Atribución: los hechos van atribuidos («según [medio]», «informó [institución]», «señaló [cargo y nombre]»).
+3. "nota": tu nueva versión de la noticia, 3 a 6 párrafos cortos, entre 500 y 1.300 caracteres. Sin titular, sin enlaces, sin la línea «Fuente:» y sin mención de IA: el sistema los agrega.
+4. "ig": versión condensada de "nota" para Instagram, máximo 800 caracteres, mismas reglas (sin titular, enlaces, «Fuente:» ni mención de IA). Los hashtags van aparte.
+5. "hashtags": 3 a 5, de lugar y tema (por ejemplo #Casablanca #RegiónDeValparaíso). Nunca hashtags políticos ni de campaña.
+6. Pieza gráfica, sacada de tu versión: "kicker" (antetítulo de 2 a 4 palabras: comuna · tema), "titular" (máximo 14 palabras, informativo, con el hecho principal), "bajada" (máximo 30 palabras, con el segundo dato más importante) y "datos" (3 datos clave del hecho, máximo 14 palabras cada uno: cifras, lugar, plazos, quién lo informó o qué viene). La pieza debe leerse como la noticia: nunca uses como dato que el medio publicó un artículo ni la fecha de publicación.
+7. "alt": texto alternativo de la imagen para personas ciegas, máximo 200 caracteres, que diga qué muestra la pieza.
+8. "historia": {"t": titular corto para la historia (máximo 10 palabras), "x": una frase con el hecho principal}.
+9. "slides": 3 o 4 láminas para un carrusel que cuenten la noticia en orden, cada una {"t": subtítulo de máximo 7 palabras, "x": máximo 40 palabras}: qué pasó, detalles y cifras, qué dijeron, qué viene (solo si la nota lo dice).
+10. "guion": guion para un reel narrado de 25 a 40 segundos: {"intro": máximo 22 palabras, "datos": una frase de máximo 20 palabras por cada dato clave, "cierre": máximo 14 palabras que nombre la fuente}. Frases cortas y fáciles de decir en voz alta; cifras con números.
 
-Escribe en español de Chile. Responde SOLO con un objeto JSON con las claves kicker, titular, bajada, datos, fb, ig, hashtags, alt, historia, slides, guion. Sin bloque de código ni texto adicional.`;
+Escribe en español de Chile. Responde SOLO con un objeto JSON con las claves kicker, titular, bajada, datos, nota, ig, hashtags, alt, historia, slides, guion. Sin bloque de código ni texto adicional.`;
 }
+/* Lee en el servidor el texto completo de las notas de la propuesta (solo las direcciones guardadas en ella). */
+async function leerNotas(p){
+  if (RD.modo !== "editor") return [];
+  try {
+    const {data: {session}} = await RD.sb.auth.getSession();
+    const r = await fetch("/api/nota", {method: "POST", headers: {"content-type": "application/json", authorization: "Bearer " + session.access_token}, body: JSON.stringify({propuesta_id: p.id})});
+    const j = await r.json().catch(() => ({})); return r.ok && Array.isArray(j.textos) ? j.textos : [];
+  } catch(e) { return []; }
+}
+const textoLeido = textos => (textos || []).filter(t => t && t.texto && t.texto.length > 200).map(t => ({medio: t.medio, url: t.url, texto: t.texto}));
 /* Texto de la publicación: el cuerpo lo redacta la IA (o el editor) y el sistema arma alrededor
    el titular, la fuente con su fecha, el enlace a la nota original (solo Facebook) y la mención de IA. */
 const RD_LINEA_SISTEMA = /^(fuentes?:|nota original|resumen elaborado con apoyo de ia)/i;
@@ -293,7 +313,7 @@ function plantilla(p){
 function limpiarIA(j, p){
   const s = (x, n = 2000) => String(x ?? "").replace(/[*#_]{2,}/g, "").trim().slice(0, n);
   const datos = (Array.isArray(j.datos) ? j.datos : []).map(x => s(x, 160)).filter(Boolean).slice(0, 3);
-  return {kicker: s(j.kicker, 60), titular: s(j.titular, 160), bajada: s(j.bajada, 260), datos, fb: s(j.fb, 2000), ig: s(j.ig, 2200),
+  return {kicker: s(j.kicker, 60), titular: s(j.titular, 160), bajada: s(j.bajada, 260), datos, fb: s(j.nota || j.fb, 2000), ig: s(j.ig, 2200),
     hashtags: (Array.isArray(j.hashtags) ? j.hashtags : String(j.hashtags || "").split(/\s+/)).map(h => s(h, 40).replace(/^#?/, "#")).filter(h => h.length > 1).slice(0, 8),
     alt: s(j.alt, 260), historia: {t: s(j.historia && j.historia.t, 120), x: s(j.historia && j.historia.x, 220)},
     slides: (Array.isArray(j.slides) ? j.slides : []).map(x => ({t: s(x && x.t, 80), x: s(x && x.x, 320)})).filter(x => x.t || x.x).slice(0, 4),
@@ -302,12 +322,14 @@ function limpiarIA(j, p){
 async function redactar(id, btn){
   const p = RD.props.find(x => x.id === id); if (!p) return;
   const existente = RD.posts.find(x => x.propuesta_id === id && x.estado !== "descartado"); if (existente) { location.hash = "post/" + existente.id; return; }
-  if (btn) { btn.disabled = true; btn.innerHTML = `${ico("ia")}Redactando…`; }
+  if (btn) { btn.disabled = true; btn.innerHTML = `${ico("ia")}Leyendo la nota original…`; }
+  const textos = await leerNotas(p), leido = textoLeido(textos);
+  if (btn) btn.innerHTML = `${ico("ia")}Redactando la nueva versión…`;
   let c, ia = false;
-  if (await RD.ia) { try { c = limpiarIA(await pedirIA(promptRedaccion(p)), p); ia = Boolean(c.titular && c.fb && c.ig); } catch(e) { toast(String(e.message || e) + " Se usó una plantilla."); } }
+  if (await RD.ia) { try { c = limpiarIA(await pedirIA(promptRedaccion(p, textos)), p); ia = Boolean(c.titular && c.fb && c.ig); } catch(e) { toast(String(e.message || e) + " Se usó una plantilla."); } }
   if (!ia) c = plantilla(p);
   const fs = fuentesDe(p);
-  Object.assign(c, {fuente: fs[0] || null, fuentes: fs, etiquetaIA: RD_ETIQUETA_IA.replace(/\.$/, ""), ia, version: 1, fechaPieza: Date.now()});
+  Object.assign(c, {fuente: fs[0] || null, fuentes: fs, etiquetaIA: RD_ETIQUETA_IA.replace(/\.$/, ""), ia, version: 1, fechaPieza: Date.now(), original: leido, notaCompleta: leido.length > 0});
   componerAmbos(c);
   const post = {id: uid(), propuesta_id: p.id, estado: "borrador", titulo: c.titular || p.titulo, contenido: c, formatos: ["feed", "historia"], comunas: p.comunas, sensible: !!p.sensible, programado: null, publicado: null, creado: new Date().toISOString()};
   try { await store.guardarPost(post); if (p.estado === "nueva") { await store.marcarPropuesta(p.id, "tomada"); p.estado = "tomada"; } }
@@ -317,8 +339,9 @@ async function redactar(id, btn){
 async function rehacer(btn){
   const post = RD.post, p = RD.props.find(x => x.id === post.propuesta_id); if (!p) return toast("La propuesta ya no está disponible para volver a redactar.");
   if (!(await RD.ia)) return toast("La IA no está disponible aquí.");
-  btn.disabled = true; btn.innerHTML = `${ico("ia")}Redactando…`;
-  try { const c = limpiarIA(await pedirIA(promptRedaccion(p)), p); Object.assign(post.contenido, c, {ia: true, version: (post.contenido.version || 1) + 1}); componerAmbos(post.contenido); post.titulo = c.titular; await guardarAhora(true); render(); toast("Nueva versión redactada. Revísala."); }
+  btn.disabled = true; btn.innerHTML = `${ico("ia")}Leyendo la nota original…`;
+  const textos = await leerNotas(p), leido = textoLeido(textos); btn.innerHTML = `${ico("ia")}Redactando la nueva versión…`;
+  try { const c = limpiarIA(await pedirIA(promptRedaccion(p, textos)), p); Object.assign(post.contenido, c, {ia: true, version: (post.contenido.version || 1) + 1, original: leido.length ? leido : (post.contenido.original || []), notaCompleta: leido.length > 0 || Boolean(post.contenido.notaCompleta)}); componerAmbos(post.contenido); post.titulo = c.titular; await guardarAhora(true); render(); toast("Nueva versión redactada. Revísala."); }
   catch(e) { btn.disabled = false; btn.innerHTML = `${ico("ia")}Redactar de nuevo con IA`; toast(String(e.message || e)); }
 }
 
@@ -328,7 +351,8 @@ const RD_PARTIDOS = ["republicano", "republicanos", "udi", "renovacion nacional"
 const RD_SIGLAS = /\b(RN|PS|PC|DC|PDG|FA|UDI|PPD)\b/;
 function textoFuentes(post){
   const p = RD.props.find(x => x.id === post.propuesta_id);
-  return rdNorm(((p && p.notas) || []).map(n => n.titulo + " " + (n.desc || "")).join(" ") + " " + ((p && p.resumen) || "") + " " + (p ? p.comunas.join(" ") : ""));
+  const orig = ((post.contenido && post.contenido.original) || []).map(o => o.texto || "").join(" ");
+  return rdNorm(((p && p.notas) || []).map(n => n.titulo + " " + (n.desc || "")).join(" ") + " " + ((p && p.resumen) || "") + " " + (p ? p.comunas.join(" ") : "") + " " + orig);
 }
 function revisar(post){
   const c = post.contenido || {}, out = [], add = (nivel, txt) => out.push({nivel, txt});
@@ -363,6 +387,8 @@ function revisar(post){
   copia ? add("adv", `Frase copiada de un medio: «${copia}…». Reescríbela con palabras propias o márcala como cita atribuida.`) : add("ok", "Redacción propia (sin frases copiadas de los medios).");
   const etq = rdNorm(RD_ETIQUETA_IA).slice(0, 30);
   (rdNorm(fb).includes(etq) && rdNorm(ig).includes(etq)) ? add("ok", "Lleva la mención de IA en ambos textos.") : add("adv", "Falta la mención de IA en Facebook o en Instagram (control 32).");
+  if (c.ia && c.notaCompleta === false) add("adv", "No se pudo leer el texto completo de la nota original: esta versión se hizo solo con el titular y el extracto. Revísala contra la nota antes de aprobar.");
+  else if (c.notaCompleta) add("ok", "Versión escrita a partir del texto completo de la nota original.");
   if (!c.alt) add("adv", "Falta el texto alternativo de la imagen (accesibilidad).");
   if (post.sensible) { const p = RD.props.find(x => x.id === post.propuesta_id); add("adv", `Revisión reforzada: la noticia toca ${(p && p.cercanos || []).join(", ") || "actores con los que declaraste relación"}. Compara el tratamiento con el que darías a cualquier otro actor.`); }
   return out;
@@ -405,7 +431,7 @@ function vistaEditor(p){
       <div class="ed-col">
         <section class="panel" aria-labelledby="hPieza"><h3 id="hPieza">Pieza gráfica</h3>${campo("kicker", "Antetítulo", {max: 60, ayuda: "comuna · tema"})}${campo("titular", "Titular", {area: true, filas: 2, max: 160})}${campo("bajada", "Bajada", {area: true, filas: 2, max: 260})}${datos}</section>
         <section class="panel" aria-labelledby="hTextos"><h3 id="hTextos">Textos</h3>
-          ${campo("fb", "Facebook", {area: true, filas: 8, max: 2000, ayuda: "con enlace a la fuente"})}
+          ${campo("fb", "Facebook", {area: true, filas: 12, max: 2000, ayuda: "nueva versión de la noticia, con fuente y enlace a la nota original"})}
           ${campo("ig", "Instagram", {area: true, filas: 8, max: 2200, ayuda: "sin enlaces"})}
           <label class="campo" for="f-hashtags">Hashtags <small>separados por espacio, 3 a 5</small><input class="inp" id="f-hashtags" data-k="hashtags" value="${esc((c.hashtags || []).join(" "))}" ${dis}></label>
           ${campo("alt", "Texto alternativo de la imagen", {area: true, filas: 2, max: 260, ayuda: "para personas ciegas; Instagram lo permite"})}

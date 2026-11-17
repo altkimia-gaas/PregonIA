@@ -6,7 +6,7 @@
 
 const MODELOS = { quick: "claude-haiku-5-5", default: "claude-sonnet-5-5" };
 const VENTANA_MS = 10 * 60 * 1000;
-const MAX_CARACTERES = 16000;
+const MAX_CARACTERES = 24000; // Redacción envía el texto completo de la nota original
 const MAX_TOKENS = 4096; // holgado: si el modelo razona antes de escribir, ese razonamiento también consume tokens
 const TIPOS_IMG = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_IMG = 2_800_000; // caracteres en base64, unos 2 MB
