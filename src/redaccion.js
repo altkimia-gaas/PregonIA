@@ -236,10 +236,10 @@ REGLAS OBLIGATORIAS
 1. Solo hechos que estén en las publicaciones de arriba, atribuidos a su fuente («según [medio]», «informó [institución]»). No agregues cifras, fechas, nombres, causas ni consecuencias. Si falta un dato imprescindible, escribe [completar: qué falta].
 2. Tono informativo y neutral: sin adjetivos valorativos (polémico, escandaloso, exitoso, histórico, grave…), sin signos de exclamación, sin mayúsculas sostenidas, sin opinión, sin llamados a apoyar o rechazar a nadie. Mismo trato para todos los sectores políticos. No menciones partidos políticos salvo que sean el centro del hecho.
 3. Redacción propia: no copies frases de los medios (máximo una cita breve entre comillas, atribuida).
-4. Facebook ("fb"): 2 a 4 párrafos cortos, máximo 900 caracteres. Termina con «Fuente: [medios]» seguido del enlace ${fuentesDe(p)[0] ? fuentesDe(p)[0].url : ""} y, en una línea aparte, «${RD_ETIQUETA_IA}».
-5. Instagram ("ig"): máximo 1.000 caracteres, sin enlaces. Termina con «Fuente: [medios]» y, en una línea aparte, «${RD_ETIQUETA_IA}». Los hashtags van aparte.
+4. Facebook ("fb"): SOLO el cuerpo de la noticia, 2 a 4 párrafos cortos, máximo 800 caracteres. Empieza por el hecho principal (qué pasó, dónde, cuándo, a quién afecta). Sin titular, sin enlaces, sin la línea «Fuente:» y sin la mención de IA: el sistema agrega el titular, la fuente, el enlace a la nota original y la mención de IA.
+5. Instagram ("ig"): SOLO el cuerpo, máximo 900 caracteres, mismas reglas que Facebook (sin titular, sin enlaces, sin «Fuente:» ni mención de IA). Los hashtags van aparte.
 6. "hashtags": 3 a 5, de lugar y tema (por ejemplo #Casablanca #RegiónDeValparaíso). Nunca hashtags políticos ni de campaña.
-7. Pieza gráfica: "kicker" (antetítulo de 2 a 4 palabras: comuna · tema), "titular" (máximo 14 palabras), "bajada" (máximo 30 palabras) y "datos" (2 o 3 datos clave verificables, máximo 14 palabras cada uno).
+7. Pieza gráfica: "kicker" (antetítulo de 2 a 4 palabras: comuna · tema), "titular" (máximo 14 palabras), "bajada" (máximo 30 palabras) y "datos" (2 o 3 datos clave del hecho, verificables, máximo 14 palabras cada uno: qué pasó, cifras, lugar, plazos o quién lo informó). La pieza debe leerse como la noticia: nunca uses como dato que el medio publicó un artículo ni la fecha de publicación.
 8. "alt": texto alternativo de la imagen para personas ciegas, máximo 200 caracteres, que diga qué muestra la pieza.
 9. "historia": {"t": titular corto para la historia (máximo 10 palabras), "x": una frase de contexto}.
 10. "slides": 2 a 4 láminas para un carrusel, cada una {"t": subtítulo de máximo 7 palabras, "x": máximo 40 palabras}: qué pasó, dónde y a quién afecta, qué viene (solo si la fuente lo dice).
@@ -247,6 +247,33 @@ REGLAS OBLIGATORIAS
 
 Escribe en español de Chile. Responde SOLO con un objeto JSON con las claves kicker, titular, bajada, datos, fb, ig, hashtags, alt, historia, slides, guion. Sin bloque de código ni texto adicional.`;
 }
+/* Texto de la publicación: el cuerpo lo redacta la IA (o el editor) y el sistema arma alrededor
+   el titular, la fuente con su fecha, el enlace a la nota original (solo Facebook) y la mención de IA. */
+const RD_LINEA_SISTEMA = /^(fuentes?:|nota original|resumen elaborado con apoyo de ia)/i;
+function fuentesPost(c){ return ((c.fuentes && c.fuentes.length ? c.fuentes : [c.fuente || {}]) || []).filter(f => f && f.medio); }
+function bloqueFuente(c, red){
+  const fs = fuentesPost(c); if (!fs.length) return "Fuente: [completar fuente]";
+  const conFecha = f => f.fecha ? `${f.medio}, ${pzFecha(f.fecha)}` : f.medio;
+  const lineas = [fs.length === 1 ? "Fuente: " + conFecha(fs[0]) : "Fuentes: " + fs.map(f => f.fecha ? `${f.medio} (${pzFecha(f.fecha)})` : f.medio).join("; ")];
+  if (red === "fb") { const conUrl = fs.filter(f => f.url).slice(0, 3); conUrl.forEach(f => lineas.push(conUrl.length === 1 ? "Nota original: " + f.url : `Nota original en ${f.medio}: ${f.url}`)); }
+  return lineas.join("\n");
+}
+/* Quita del texto lo que arma el sistema (titular al inicio, fuente, enlaces, mención de IA, hashtags al final) para quedarse con el cuerpo. */
+function cuerpoDe(txt, c){
+  let ls = String(txt || "").replace(/\r/g, "").split("\n");
+  ls = ls.filter(l => !RD_LINEA_SISTEMA.test(l.trim()) && !/^\s*https?:\/\/\S+\s*$/.test(l));
+  while (ls.length && /^(\s*#[\wÁÉÍÓÚÑáéíóúñ]+\s*)+$/.test(ls[ls.length - 1])) ls.pop();
+  let t = ls.join("\n").replace(/https?:\/\/\S+/g, "").replace(/\n{3,}/g, "\n\n").trim();
+  const tit = rdNorm(c.titular || "").replace(/[.\s]+$/, "");
+  if (tit) { const pri = t.split("\n")[0]; if (rdNorm(pri).replace(/[.\s]+$/, "") === tit) t = t.slice(pri.length).trim(); }
+  return t;
+}
+function componerTexto(c, red, cuerpo){
+  const tit = String(c.titular || "").trim(), partes = [tit, String(cuerpo ?? cuerpoDe(c[red], c)).trim(), bloqueFuente(c, red)];
+  const cierre = RD_ETIQUETA_IA + (red === "fb" && (c.hashtags || []).length ? "\n" + c.hashtags.join(" ") : "");
+  return partes.filter(Boolean).join("\n\n") + "\n\n" + cierre;
+}
+function componerAmbos(c){ c.fb = componerTexto(c, "fb"); c.ig = componerTexto(c, "ig"); return c; }
 async function pedirIA(prompt, signal){
   const r = await fetch("/api/ia", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({prompt, tier: "default"}), signal});
   if (r.status === 429) throw new Error("La IA recibió demasiadas solicitudes. Intenta en unos minutos.");
@@ -259,7 +286,7 @@ function plantilla(p){
   const fs = fuentesDe(p), medios = fs.map(f => f.medio).join(", ") || "[completar fuente]", lugar = p.comunas.filter(c => c !== "Región").join(", ") || "Región de Valparaíso";
   const res = p.resumen || (p.notas && p.notas[0] && p.notas[0].desc) || "[completar: resumen del hecho]";
   return {kicker: [lugar.split(",")[0], temaPrincipal(p)].filter(Boolean).join(" · "), titular: p.titulo, bajada: res, datos: [`Lugar: ${lugar}`, `Informan: ${fs.slice(0, 2).map(f => f.medio).join(" y ")}`],
-    fb: `${p.titulo}.\n\n${res}\n\nFuente: ${medios}${fs[0] ? " " + fs[0].url : ""}\n${RD_ETIQUETA_IA}`, ig: `${p.titulo}.\n\n${res}\n\nFuente: ${medios}\n${RD_ETIQUETA_IA}`,
+    fb: res, ig: res,
     hashtags: ["#" + lugar.split(",")[0].replace(/\s+/g, ""), "#RegiónDeValparaíso"], alt: `Pieza informativa de El Pregonero con el titular: ${p.titulo}`,
     historia: {t: p.titulo, x: res}, slides: [{t: "Qué pasó", x: res}], guion: {intro: p.titulo, datos: [], cierre: `Fuente: ${medios}. Esto fue El Pregonero.`}};
 }
@@ -281,6 +308,7 @@ async function redactar(id, btn){
   if (!ia) c = plantilla(p);
   const fs = fuentesDe(p);
   Object.assign(c, {fuente: fs[0] || null, fuentes: fs, etiquetaIA: RD_ETIQUETA_IA.replace(/\.$/, ""), ia, version: 1, fechaPieza: Date.now()});
+  componerAmbos(c);
   const post = {id: uid(), propuesta_id: p.id, estado: "borrador", titulo: c.titular || p.titulo, contenido: c, formatos: ["feed", "historia"], comunas: p.comunas, sensible: !!p.sensible, programado: null, publicado: null, creado: new Date().toISOString()};
   try { await store.guardarPost(post); if (p.estado === "nueva") { await store.marcarPropuesta(p.id, "tomada"); p.estado = "tomada"; } }
   catch(e) { if (btn) { btn.disabled = false; btn.innerHTML = `${ico("ia")}Redactar publicación`; } return toast("No se pudo guardar el borrador: " + (e.message || e)); }
@@ -290,7 +318,7 @@ async function rehacer(btn){
   const post = RD.post, p = RD.props.find(x => x.id === post.propuesta_id); if (!p) return toast("La propuesta ya no está disponible para volver a redactar.");
   if (!(await RD.ia)) return toast("La IA no está disponible aquí.");
   btn.disabled = true; btn.innerHTML = `${ico("ia")}Redactando…`;
-  try { const c = limpiarIA(await pedirIA(promptRedaccion(p)), p); Object.assign(post.contenido, c, {ia: true, version: (post.contenido.version || 1) + 1}); post.titulo = c.titular; await guardarAhora(true); render(); toast("Nueva versión redactada. Revísala."); }
+  try { const c = limpiarIA(await pedirIA(promptRedaccion(p)), p); Object.assign(post.contenido, c, {ia: true, version: (post.contenido.version || 1) + 1}); componerAmbos(post.contenido); post.titulo = c.titular; await guardarAhora(true); render(); toast("Nueva versión redactada. Revísala."); }
   catch(e) { btn.disabled = false; btn.innerHTML = `${ico("ia")}Redactar de nuevo con IA`; toast(String(e.message || e)); }
 }
 
@@ -311,6 +339,8 @@ function revisar(post){
   const citaFb = medios.some(m => rdNorm(fb).includes(rdNorm(m).split(" (")[0])), citaIg = medios.some(m => rdNorm(ig).includes(rdNorm(m).split(" (")[0]));
   if (!medios.length) add("err", "La publicación no tiene fuente asociada.");
   else { citaFb ? add("ok", "El texto de Facebook cita la fuente.") : add("err", "El texto de Facebook no nombra la fuente."); citaIg ? add("ok", "El texto de Instagram cita la fuente.") : add("err", "El texto de Instagram no nombra la fuente."); }
+  const urlFb = fuentesPost(c).map(f => f.url).filter(Boolean);
+  if (urlFb.length) urlFb.some(u => fb.includes(u)) ? add("ok", "El texto de Facebook trae el enlace a la nota original.") : add("err", "El texto de Facebook no trae el enlace a la nota original. Usa «Rearmar fuente y enlace».");
   if (/https?:\/\//i.test(ig)) add("err", "Instagram no muestra enlaces en el texto: quítalo y deja solo «Fuente: medio».");
   if (ig.length + (c.hashtags || []).join(" ").length > 2200) add("err", "El texto de Instagram supera los 2.200 caracteres.");
   if ((c.hashtags || []).length > 5) add("adv", `Usa ${c.hashtags.length} hashtags: con 3 a 5 basta para un medio informativo.`);
@@ -379,7 +409,7 @@ function vistaEditor(p){
           ${campo("ig", "Instagram", {area: true, filas: 8, max: 2200, ayuda: "sin enlaces"})}
           <label class="campo" for="f-hashtags">Hashtags <small>separados por espacio, 3 a 5</small><input class="inp" id="f-hashtags" data-k="hashtags" value="${esc((c.hashtags || []).join(" "))}" ${dis}></label>
           ${campo("alt", "Texto alternativo de la imagen", {area: true, filas: 2, max: 260, ayuda: "para personas ciegas; Instagram lo permite"})}
-          <div class="acciones"><button class="btn sm" type="button" data-act="copiar" data-q="fb">${ico("copiar")}Copiar texto para Facebook</button><button class="btn sm" type="button" data-act="copiar" data-q="ig">${ico("copiar")}Copiar texto para Instagram</button></div>
+          <div class="acciones">${bloqueado ? "" : `<button class="btn sm" type="button" data-act="fuente" title="Vuelve a poner el titular, la fuente, el enlace a la nota original y la mención de IA, sin tocar el cuerpo">Rearmar fuente y enlace</button>`}<button class="btn sm" type="button" data-act="copiar" data-q="fb">${ico("copiar")}Copiar texto para Facebook</button><button class="btn sm" type="button" data-act="copiar" data-q="ig">${ico("copiar")}Copiar texto para Instagram</button></div>
         </section>
         <section class="panel suave" aria-labelledby="hHist"><h3 id="hHist">Historia</h3>${campo("historia.t", "Titular de la historia", {max: 120})}${campo("historia.x", "Frase de contexto", {area: true, filas: 2, max: 220})}</section>
         ${(p.formatos || []).includes("carrusel") ? `<section class="panel suave" aria-labelledby="hCar"><h3 id="hCar">Carrusel</h3>${slides}${!bloqueado && (c.slides || []).length < 4 ? `<button class="btn sm" type="button" data-act="lamina">Agregar lámina</button>` : ""}</section>` : ""}
@@ -403,7 +433,7 @@ function vistaEditor(p){
       ${bloqueado ? "" : `<button class="btn" type="button" data-act="rehacer">${ico("ia")}Redactar de nuevo con IA</button>`}
       <span class="guardado" id="rdGuardado" aria-live="polite"></span><span class="sp"></span>
       ${p.estado === "borrador" ? `<button class="btn peligro" type="button" data-act="descartar-post">Descartar</button><button class="btn pri" type="button" data-act="aprobar">${ico("ok")}Aprobar</button>` : ""}
-      ${p.estado === "aprobado" ? `<button class="btn" type="button" data-act="volver-borrador">Volver a borrador</button><button class="btn" type="button" data-act="publicada">Marcar como publicada</button><button class="btn pri" type="button" data-act="programar">${ico("reloj")}Programar</button>` : ""}
+      ${p.estado === "aprobado" ? `<button class="btn" type="button" data-act="volver-borrador">Volver a borrador</button><button class="btn" type="button" data-act="publicada">Marcar como publicada</button><button class="btn" type="button" data-act="programar">${ico("reloj")}Programar</button><button class="btn pri" type="button" data-act="fb-ahora">Publicar ahora</button>` : ""}
       ${p.estado === "programado" ? `<button class="btn" type="button" data-act="programar">${ico("reloj")}Cambiar hora</button><button class="btn" type="button" data-act="desprogramar">Quitar de la agenda</button><button class="btn pri" type="button" data-act="publicada">Marcar como publicada</button>` : ""}
       ${p.estado === "publicado" && p.enlaces ? Object.entries(p.enlaces).filter(([, u]) => u).map(([k, u]) => `<a class="btn sm" href="${esc(u)}" target="_blank" rel="noopener noreferrer">Ver en ${k === "fb" ? "Facebook" : "Instagram"}</a>`).join("") : ""}
     </div>`;
@@ -504,6 +534,12 @@ async function compartirPieza(){
   if (!navigator.canShare || !navigator.canShare({files: fs})) return descargar(RD.fmt);
   try { await navigator.clipboard.writeText(texto).catch(() => {}); await navigator.share({files: fs, title: RD.post.titulo}); toast("Copié el texto de Instagram: pégalo al publicar."); } catch(e) { if (e && e.name !== "AbortError") toast("No se pudo compartir."); }
 }
+function rearmarFuente(){
+  const p = RD.post; if (!p) return; const c = p.contenido, antes = c.fb + "\u0000" + c.ig;
+  componerAmbos(c); if (c.fb + "\u0000" + c.ig === antes) return toast("La fuente y el enlace ya estaban completos.");
+  ["fb", "ig"].forEach(k => { const el = $("#f-" + k); if (el) { el.value = c[k]; alEditar(el); } });
+  toast("Listo: titular, fuente, enlace y mención de IA rearmados.");
+}
 async function copiarTexto(q){
   const c = RD.post.contenido || {}, txt = q === "ig" ? (c.ig || "") + ((c.hashtags || []).length ? "\n\n" + c.hashtags.join(" ") : "") : (c.fb || "");
   try { await navigator.clipboard.writeText(txt); toast(q === "ig" ? "Texto de Instagram copiado, con hashtags." : "Texto de Facebook copiado."); }
@@ -564,7 +600,7 @@ function aprobar(){
     p.aprobado = new Date().toISOString(); p.aprobado_por = RD.user.id; p.revision = {advertencias: advs.map(a => a.txt), confirmo: ["hechos", "neutralidad"].concat(p.sensible ? ["revision_reforzada"] : []), ts: p.aprobado};
     p.estado = p.programado && Date.parse(p.programado) > Date.now() ? "programado" : "aprobado";
     try { await store.guardarPost(p); } catch(e) { Object.assign(p, prev); toast("No se pudo aprobar: " + (e.message || e)); return false; }
-    toast(p.estado === "programado" ? "Aprobada y programada." : "Aprobada. Ahora prográmala o publícala."); render();
+    toast(p.estado === "programado" ? "Aprobada y programada." : "Aprobada. Ahora elige: «Publicar ahora» o «Programar»."); render();
   });
 }
 /* Horarios sugeridos: los primeros de la lista según la meta diaria, sin chocar (90 minutos) con otra publicación agendada. */
@@ -674,7 +710,9 @@ async function pintarFacebook(){
   if (p.estado === "publicado") { el.innerHTML = `<p class="info" style="margin:0">Marcada como publicada a mano.</p>`; return; }
   el.innerHTML = `<p style="margin:0 0 8px">Conectada a ${pag}.</p>${fbSelector(p, "fbImg")}<div class="acciones" style="margin-top:4px"><button class="btn pri sm" type="button" data-act="fb-ahora">Publicar ahora en Facebook</button></div><p class="info" style="margin:8px 0 0">Para dejarla agendada, usa «Programar»: Facebook la publica sola a la hora.</p>`;
 }
-function publicarAhoraFacebook(){
+async function publicarAhoraFacebook(){
+  const fb = await RD.fb;
+  if (!fb || !fb.facebook) return toast(fb && fb.prueba ? "En el modo de prueba no se publica en Facebook." : "Facebook no está conectado: descarga la pieza, copia el texto y usa «Marcar como publicada».");
   const p = RD.post, cual = $("#fbImg") ? $("#fbImg").value : "feed";
   dialogo(`<form><h2 id="dlgT">Publicar ahora en Facebook</h2><p class="lead" style="margin:0 0 10px">Sale de inmediato en la página de El Pregonero, con el texto de Facebook aprobado y ${cual === "carrusel" ? "las láminas del carrusel" : "la pieza del feed"}.</p>
     <p class="info" style="margin:0">Una vez publicada, cualquier corrección se hace en Facebook y se indica en la publicación, como dice la línea editorial.</p>
@@ -787,6 +825,7 @@ document.addEventListener("click", async e => {
   if (a === "dl") return descargar(b.dataset.f);
   if (a === "compartir-pieza") return compartirPieza();
   if (a === "copiar") return copiarTexto(b.dataset.q);
+  if (a === "fuente") return rearmarFuente();
   if (a === "rehacer") return rehacer(b);
   if (a === "aprobar") { await guardarAhora(true); return aprobar(); }
   if (a === "programar") return programar();
