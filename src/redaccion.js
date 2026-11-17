@@ -4,7 +4,7 @@
    a la hora programada llega un aviso al celular. En la fase 2 se conecta la API de Meta y la publicación queda automática.
    Modos: «editor» (Supabase, con la sesión de alguien inscrito en la tabla editores) y «prueba» (solo en localhost, datos ficticios
    guardados en el navegador). Fuera de localhost, sin sesión de editor, la página no muestra nada más que el ingreso. */
-const RD = {modo: null, sb: null, user: null, cfgPub: null, cfg: null, props: [], posts: [], post: null, fmt: "feed", lam: 0, ia: null, voz: null, reel: {}, guardando: null, timer: null, anim: 0};
+const RD = {modo: null, sb: null, user: null, cfgPub: null, cfg: null, props: [], posts: [], post: null, fmt: "feed", lam: 0, ia: null, voz: null, reel: {}, guardando: null, timer: null, anim: 0, fb: null};
 const RD_LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 const RD_KEY = "pregonia-redaccion-prueba-v1";
 const RD_ETIQUETA_IA = "Resumen elaborado con apoyo de IA y revisado por el equipo de El Pregonero.";
@@ -80,7 +80,7 @@ const store = {
     p.actualizado = new Date().toISOString();
     if (RD.modo === "prueba") { const d = prueba.leer(); d.posts = (d.posts || []).filter(x => x.id !== p.id).concat([p]); prueba.escribir(d); return p; }
     const fila = {id: p.id, propuesta_id: p.propuesta_id, estado: p.estado, titulo: p.titulo, contenido: p.contenido, formatos: p.formatos, comunas: p.comunas, sensible: p.sensible,
-      programado: p.programado, recordado: p.recordado || false, publicado: p.publicado, enlaces: p.enlaces || null, aprobado: p.aprobado, aprobado_por: p.aprobado_por, revision: p.revision || null, actualizado: p.actualizado};
+      programado: p.programado, recordado: p.recordado || false, publicado: p.publicado, enlaces: p.enlaces || null, aprobado: p.aprobado, aprobado_por: p.aprobado_por, revision: p.revision || null, meta: p.meta || null, actualizado: p.actualizado};
     const {error} = await RD.sb.from("redaccion_posts").upsert(fila, {onConflict: "id"}); if (error) throw error; return p;
   }
 };
@@ -135,7 +135,8 @@ async function salir(){ if (RD.sb) await RD.sb.auth.signOut().catch(() => {}); l
 async function cargarTodo(){
   try { RD.cfg = await store.cfg(); [RD.props, RD.posts] = await Promise.all([store.propuestas(), store.posts()]); }
   catch(e) { return pantallaError("No se pudieron cargar los datos: " + (e.message || e)); }
-  RD.ia = iaDisponible(); RD.voz = vozDisponible();
+  RD.ia = iaDisponible(); RD.voz = vozDisponible(); RD.fb = facebookEstado();
+  if (RD.modo === "editor") sincronizarFacebook();
   $("#rdTabs").hidden = false; pintarHerramientas(); abrirDesdeEnlace(); render();
 }
 function abrirDesdeEnlace(){
@@ -394,6 +395,7 @@ function vistaEditor(p){
           <div id="rdReelCtl"></div>
           <div class="descargas" id="rdDesc"></div>
         </section>
+        ${["aprobado", "programado", "publicado"].includes(p.estado) ? `<section class="panel" aria-labelledby="hFb"><h3 id="hFb">Facebook</h3><div id="rdFb"><p class="info" style="margin:0">Revisando la conexión…</p></div></section>` : ""}
         <section class="panel" aria-labelledby="hRev"><h3 id="hRev">Revisión editorial automática</h3><ul class="revision" id="rdRev"></ul><p class="info" style="margin:10px 0 0">Ayuda a detectar problemas; no reemplaza tu verificación en la fuente original.</p></section>
       </div></div>
     </div>
@@ -408,7 +410,7 @@ function vistaEditor(p){
 }
 function montarEditor(){
   const p = RD.post; if (!(p.formatos || []).includes(RD.fmt)) RD.fmt = "feed";
-  RD.lam = 0; pintarRevision(); pzFuentesListas().then(() => { if (RD.post === p) pintarVista(); });
+  RD.lam = 0; pintarRevision(); pzFuentesListas().then(() => { if (RD.post === p) pintarVista(); }); pintarFacebook();
 }
 function pintarRevision(){
   const r = revisar(RD.post), el = $("#rdRev"); if (!el) return;
@@ -522,7 +524,11 @@ function alEditar(el){
   if (k.startsWith("datos.")) p.contenido.datos = (p.contenido.datos || []).map(x => x || "");
   if (k === "titular") p.titulo = v;
   const cont = document.querySelector(`[data-cont="${k}"]`); if (cont) { const max = Number(el.getAttribute("maxlength")); cont.textContent = `${v.length} / ${max}`; cont.classList.toggle("mal", v.length >= max); }
-  if (p.estado === "aprobado" || p.estado === "programado") { p.estado = "borrador"; p.aprobado = null; p.aprobado_por = null; toast("Cambiaste una publicación aprobada: volvió a borrador y hay que aprobarla de nuevo."); render(); return; }
+  if (p.estado === "aprobado" || p.estado === "programado") {
+    const enFb = fbDe(p) && fbDe(p).estado === "programado";
+    p.estado = "borrador"; p.aprobado = null; p.aprobado_por = null;
+    (enFb ? cancelarFacebook(p) : Promise.resolve(true)).then(() => guardarAhora(true));
+    toast(enFb ? "Cambiaste una publicación aprobada: volvió a borrador y se quitó de la agenda de Facebook." : "Cambiaste una publicación aprobada: volvió a borrador y hay que aprobarla de nuevo."); render(); return; }
   $("#rdGuardado").textContent = "Cambios sin guardar…";
   clearTimeout(RD.timer); RD.timer = setTimeout(() => guardarAhora(), 700);
   clearTimeout(RD.tVista); RD.tVista = setTimeout(() => { pintarRevision(); pintarVista(); }, 250);
@@ -572,18 +578,25 @@ function sugerencias(n = 6){
   }
   return out;
 }
-function programar(){
-  const p = RD.post, sug = sugerencias(), ini = p.programado ? Date.parse(p.programado) : sug[0] || Date.now() + 36e5;
-  dialogo(`<form><h2 id="dlgT">Programar</h2><p class="lead" style="margin:0 0 10px">En la fase 1 te llega un aviso al celular a esa hora, con la pieza lista para descargar y el texto para copiar. En la fase 2 se publicará sola en Facebook e Instagram.</p>
+async function programar(){
+  const p = RD.post, sug = sugerencias(), ini = p.programado ? Date.parse(p.programado) : sug[0] || Date.now() + 36e5, fb = await RD.fb;
+  if (fbDe(p) && fbDe(p).estado === "programado") return toast("Ya está programada en Facebook. Usa «Quitar de la agenda» para cambiarle la hora.");
+  const conFb = fb && fb.facebook;
+  dialogo(`<form><h2 id="dlgT">Programar</h2><p class="lead" style="margin:0 0 10px">${conFb ? `Facebook la publica sola a esa hora en ${esc(fb.pagina.nombre)}. Para Instagram, historias y reels te llega un aviso al celular con la pieza lista.` : "A esa hora te llega un aviso al celular, con la pieza lista para descargar y el texto para copiar."}</p>
     <label class="campo" for="pgFecha">Fecha y hora<input class="inp" type="datetime-local" id="pgFecha" value="${localInput(ini)}" min="${localInput(Date.now())}" required></label>
     <p class="info" style="margin:0 0 6px">Horarios libres sugeridos (meta: ${RD.cfg.meta_diaria} al día):</p>
     <div class="acciones" style="margin-top:0">${sug.map(t => `<button class="btn sm" type="button" data-sug="${t}">${esc(fechaHora(t))}</button>`).join("") || `<span class="info">No quedan horarios libres en la semana.</span>`}</div>
+    ${conFb ? `<label class="ckl"><input type="checkbox" id="pgFb" checked> Que Facebook la publique sola a esa hora (${esc(fb.pagina.nombre)})</label>${fbSelector(p, "pgFbImg")}` : ""}
     <div class="acciones"><button class="btn" type="button" data-dlg="cerrar">Cancelar</button><button class="btn pri" type="submit">Programar</button></div></form>`, async ov => {
     const v = ov.querySelector("#pgFecha").value, t = Date.parse(v); if (!v || !Number.isFinite(t)) return false;
     if (t < Date.now() - 6e4) { toast("Elige una hora futura."); return false; }
+    const enFb = conFb && ov.querySelector("#pgFb") && ov.querySelector("#pgFb").checked, img = enFb && ov.querySelector("#pgFbImg") ? ov.querySelector("#pgFbImg").value : "feed";
+    if (enFb && (t - Date.now() < 11 * 6e4 || t - Date.now() > 29 * 864e5)) { toast("Facebook solo programa entre 11 minutos y 29 días desde ahora."); return false; }
     const prev = {...p}; Object.assign(p, {programado: new Date(t).toISOString(), estado: "programado", recordado: false});
     try { await store.guardarPost(p); } catch(e) { Object.assign(p, prev); toast("No se pudo programar: " + (e.message || e)); return false; }
-    toast("Programada para el " + fechaHora(t)); render();
+    if (enFb) { const ok = await enviarFacebook("programar", img, t); if (!ok) { render(); return; } toast("Programada en Facebook para el " + fechaHora(t) + ". Se publicará sola."); }
+    else toast("Programada para el " + fechaHora(t));
+    render();
   });
   document.querySelectorAll("[data-sug]").forEach(b => b.addEventListener("click", () => { $("#pgFecha").value = localInput(Number(b.dataset.sug)); }));
 }
@@ -601,10 +614,75 @@ function marcarPublicada(){
   });
 }
 async function cambiarEstado(estado, msg){
-  const p = RD.post, prev = {...p}; p.estado = estado;
+  const p = RD.post;
+  if (fbDe(p) && fbDe(p).estado === "programado" && !(await cancelarFacebook(p))) return;
+  const prev = {...p}; p.estado = estado;
   if (estado === "borrador") { p.aprobado = null; p.aprobado_por = null; }
   if (estado === "aprobado") p.programado = null;
   try { await store.guardarPost(p); toast(msg); render(); } catch(e) { Object.assign(p, prev); toast("No se pudo guardar: " + (e.message || e)); }
+}
+
+/* ─── Facebook (fase 2): publicación en la página de El Pregonero por /api/publicar ─── */
+const fbDe = p => (p && p.meta && p.meta.fb) || null;
+async function facebookEstado(){
+  if (RD.modo !== "editor" || !/^https?:$/.test(location.protocol)) return {facebook: false, prueba: RD.modo === "prueba"};
+  try { const r = await fetch("/api/publicar", {cache: "no-store"}); return r.ok ? await r.json() : {facebook: false}; } catch(e) { return {facebook: false}; }
+}
+async function llamarPublicar(cuerpo){
+  const {data: {session}} = await RD.sb.auth.getSession();
+  const r = await fetch("/api/publicar", {method: "POST", headers: {"content-type": "application/json", authorization: "Bearer " + session.access_token}, body: JSON.stringify(cuerpo)});
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || "Facebook no respondió.");
+  return j;
+}
+/* Lo programado en Facebook cuya hora pasó: se confirma con Meta y se marca publicado. */
+async function sincronizarFacebook(){
+  const fb = await RD.fb; if (!fb || !fb.facebook) return;
+  try { const j = await llamarPublicar({accion: "sincronizar"}); if (j.publicadas) { RD.posts = await store.posts(); render(); toast(`${j.publicadas} ${j.publicadas === 1 ? "publicación salió" : "publicaciones salieron"} en Facebook.`); } } catch(e) {}
+}
+/* Imágenes para Facebook: la pieza del feed o las láminas del carrusel, en JPEG para no pasar el límite de envío. */
+async function jpegsFacebook(c, cual){
+  await pzFuentesListas();
+  const uno = dibujar => { const cv = document.createElement("canvas"); cv.width = PZ.W; cv.height = PZ.FEED; dibujar(cv.getContext("2d")); return cv.toDataURL("image/jpeg", 0.9).split(",")[1]; };
+  return cual === "carrusel" ? pzLaminas(c).map((_, i) => uno(ctx => pzLamina(ctx, c, i))) : [uno(ctx => pzFeed(ctx, c))];
+}
+function fbSelector(p, id){
+  if (!(p.formatos || []).includes("carrusel")) return "";
+  return `<label class="campo" for="${id}">Imagen para Facebook<select class="sel" id="${id}"><option value="feed">Pieza del feed (1 imagen)</option><option value="carrusel">Carrusel (${pzLaminas(p.contenido || {}).length} imágenes)</option></select></label>`;
+}
+async function enviarFacebook(accion, cual, cuando){
+  const p = RD.post;
+  try {
+    const imagenes = await jpegsFacebook(p.contenido || {}, cual);
+    const j = await llamarPublicar({accion, post_id: p.id, imagenes, programado: cuando ? new Date(cuando).toISOString() : undefined});
+    p.meta = {...(p.meta || {}), fb: j.fb}; p.estado = j.estado;
+    if (j.estado === "publicado") { p.publicado = new Date().toISOString(); p.enlaces = {...(p.enlaces || {}), fb: j.fb.enlace}; }
+    else { p.recordado = true; }
+    return true;
+  } catch(e) { toast("Facebook: " + (e.message || e)); return false; }
+}
+async function cancelarFacebook(p){
+  try { await llamarPublicar({accion: "cancelar", post_id: p.id}); if (p.meta) delete p.meta.fb; return true; }
+  catch(e) { toast("No se pudo quitar de Facebook: " + (e.message || e) + " Revísalo en la página."); return false; }
+}
+async function pintarFacebook(){
+  const el = $("#rdFb"); if (!el) return; const p = RD.post, fb = await RD.fb, f = fbDe(p);
+  if (!$("#rdFb") || RD.post !== p) return;
+  if (!fb || !fb.facebook) { el.innerHTML = `<p class="info" style="margin:0">${fb && fb.prueba ? "En el modo de prueba no se publica en Facebook." : fb && fb.error ? esc(fb.error) : "La página de Facebook aún no está conectada. Mientras tanto, descarga la pieza y copia el texto."}</p>`; return; }
+  const pag = `${esc(fb.pagina.nombre)}${fb.pagina.usuario ? " (@" + esc(fb.pagina.usuario) + ")" : ""}`;
+  if (f && f.estado === "publicado") { el.innerHTML = `<p style="margin:0 0 8px">Publicada en ${pag}.</p>${f.enlace ? `<a class="btn sm" href="${esc(f.enlace)}" target="_blank" rel="noopener noreferrer">Ver en Facebook</a>` : ""}`; return; }
+  if (f && f.estado === "programado") { el.innerHTML = `<p style="margin:0 0 8px">Programada en ${pag} para el ${esc(fechaHora(Date.parse(f.programado)))}. Facebook la publicará sola.</p><p class="info" style="margin:0">Para cambiarle la hora o el contenido, primero quítala de la agenda.</p>`; return; }
+  if (p.estado === "publicado") { el.innerHTML = `<p class="info" style="margin:0">Marcada como publicada a mano.</p>`; return; }
+  el.innerHTML = `<p style="margin:0 0 8px">Conectada a ${pag}.</p>${fbSelector(p, "fbImg")}<div class="acciones" style="margin-top:4px"><button class="btn pri sm" type="button" data-act="fb-ahora">Publicar ahora en Facebook</button></div><p class="info" style="margin:8px 0 0">Para dejarla agendada, usa «Programar»: Facebook la publica sola a la hora.</p>`;
+}
+function publicarAhoraFacebook(){
+  const p = RD.post, cual = $("#fbImg") ? $("#fbImg").value : "feed";
+  dialogo(`<form><h2 id="dlgT">Publicar ahora en Facebook</h2><p class="lead" style="margin:0 0 10px">Sale de inmediato en la página de El Pregonero, con el texto de Facebook aprobado y ${cual === "carrusel" ? "las láminas del carrusel" : "la pieza del feed"}.</p>
+    <p class="info" style="margin:0">Una vez publicada, cualquier corrección se hace en Facebook y se indica en la publicación, como dice la línea editorial.</p>
+    <div class="acciones"><button class="btn" type="button" data-dlg="cerrar">Cancelar</button><button class="btn pri" type="submit">Publicar</button></div></form>`, async ov => {
+    const b = ov.querySelector("button[type=submit]"); b.disabled = true; b.textContent = "Publicando…";
+    const ok = await enviarFacebook("publicar", cual);
+    if (ok) toast("Publicada en Facebook."); render(); return ok;
+  });
 }
 
 /* ─── Calendario ─── */
@@ -717,6 +795,7 @@ document.addEventListener("click", async e => {
   if (a === "volver-borrador") return cambiarEstado("borrador", "Volvió a borrador.");
   if (a === "descartar-post") return cambiarEstado("descartado", "Publicación descartada.");
   if (a === "voz-reel") return grabarVoz(b);
+  if (a === "fb-ahora") return publicarAhoraFacebook();
   if (a === "mp4") return prepararMP4(b);
   if (a === "push") return activarPush();
   if (a === "piloto") return ponerComunas(RD_PILOTO);

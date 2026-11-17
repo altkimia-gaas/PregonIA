@@ -14,6 +14,9 @@
     },
     "api/redaccion.js": {
       "maxDuration": 60
+    },
+    "api/publicar.js": {
+      "maxDuration": 60
     }
   },
   "rewrites": [

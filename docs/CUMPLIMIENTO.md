@@ -94,3 +94,10 @@ Hallazgos del módulo:
 2. **Ley 19.733 (prensa).** Si PregonIA se presenta como medio, revisar con abogado si le aplican las obligaciones de un medio de comunicación social (director responsable, derecho de aclaración y rectificación). El borrador editorial ya ofrece un canal de correcciones.
 3. **Períodos electorales (Ley 18.700).** La línea neutral no es propaganda, pero en campaña conviene revisar con abogado el tratamiento de candidaturas y la publicidad pagada en redes.
 4. **Datos sensibles.** El prompt evita mencionar partidos salvo que sean el centro del hecho, y la revisión lo advierte.
+
+### Fase 2 · Facebook (17-nov-2026)
+
+- Publicación en la página @elpregonero por `api/publicar.js`. El servidor solo publica lo que en la base está **aprobado** (lee el texto de la base, no del navegador): la aprobación manual no se puede saltar desde la página.
+- Programar usa la programación nativa de Facebook; quitar de la agenda, volver a borrador o editar algo aprobado borra la publicación programada en Meta.
+- Control 35: Meta queda listada también como destino de publicación en `legal.html#proveedores`.
+- Instagram, historias y reels siguen a mano. Al publicar reels con voz sintética en Facebook, activar la etiqueta de IA de Meta.
