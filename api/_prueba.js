@@ -5,7 +5,8 @@
 // el resumen del código (SHA-256 con sal), nunca el código.
 // POST {accion: "verificar", id, codigo} lo compara (máximo 5 intentos) y, si coincide, marca el correo como verificado,
 // avisa al equipo comercial y devuelve la vigencia de la prueba.
-// Variables: SUPABASE_URL y SUPABASE_SECRET_KEY, RESEND_API_KEY y AVISOS_REMITENTE (remitente de un dominio verificado en
+// Variables: SUPABASE_URL y SUPABASE_SECRET_KEY, RESEND_API_KEY (integración Resend–Vercel) y AVISOS_REMITENTE (por defecto
+// pregonia@avala.altkimia.com, dominio verificado en Resend; debe ser de un dominio verificado en
 // Resend: con el remitente de pruebas solo llegan correos a la cuenta dueña), CONTACTO_DESTINO, PRUEBA_HORAS (por defecto 48).
 import { randomInt, randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import { sb, json } from "./_servidor.js";
@@ -29,7 +30,7 @@ async function correo(para, asunto, html, extra = {}){
   if (!process.env.RESEND_API_KEY) return false;
   const r = await fetch("https://api.resend.com/emails", {method: "POST", signal: AbortSignal.timeout(10000),
     headers: {authorization: "Bearer " + process.env.RESEND_API_KEY, "content-type": "application/json"},
-    body: JSON.stringify({from: process.env.AVISOS_REMITENTE || "PregonIA <onboarding@resend.dev>", to: [para], subject: asunto, html, ...extra})});
+    body: JSON.stringify({from: process.env.AVISOS_REMITENTE || "PregonIA <pregonia@avala.altkimia.com>", to: [para], subject: asunto, html, ...extra})});
   if (!r.ok) console.error("prueba correo", r.status, (await r.text()).slice(0, 200));
   return r.ok;
 }

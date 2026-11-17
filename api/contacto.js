@@ -25,7 +25,7 @@ async function avisarCorreo(c){
     .filter(([, v]) => v).map(([k, v]) => `<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top">${k}</td><td style="padding:6px 0;white-space:pre-wrap">${esc(v)}</td></tr>`).join("");
   const r = await fetch("https://api.resend.com/emails", {method: "POST", signal: AbortSignal.timeout(10000),
     headers: {authorization: "Bearer " + process.env.RESEND_API_KEY, "content-type": "application/json"},
-    body: JSON.stringify({from: process.env.AVISOS_REMITENTE || "PregonIA <onboarding@resend.dev>", to: [destino], reply_to: c.correo,
+    body: JSON.stringify({from: process.env.AVISOS_REMITENTE || "PregonIA <pregonia@avala.altkimia.com>", to: [destino], reply_to: c.correo,
       subject: `Contacto PregonIA · ${c.institucion || c.nombre}`,
       html: `<div style="font:14px/1.5 Arial,sans-serif;color:#141414;max-width:560px"><p style="font-weight:700;margin:0 0 10px">Nueva solicitud desde pregonia.vercel.app/servicio</p><table role="presentation" cellspacing="0" cellpadding="0">${filas}</table></div>`})});
   return r.ok;
