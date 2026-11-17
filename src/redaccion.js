@@ -433,7 +433,7 @@ function vistaEditor(p){
       ${bloqueado ? "" : `<button class="btn" type="button" data-act="rehacer">${ico("ia")}Redactar de nuevo con IA</button>`}
       <span class="guardado" id="rdGuardado" aria-live="polite"></span><span class="sp"></span>
       ${p.estado === "borrador" ? `<button class="btn peligro" type="button" data-act="descartar-post">Descartar</button><button class="btn pri" type="button" data-act="aprobar">${ico("ok")}Aprobar</button>` : ""}
-      ${p.estado === "aprobado" ? `<button class="btn" type="button" data-act="volver-borrador">Volver a borrador</button><button class="btn" type="button" data-act="publicada">Marcar como publicada</button><button class="btn pri" type="button" data-act="programar">${ico("reloj")}Programar</button>` : ""}
+      ${p.estado === "aprobado" ? `<button class="btn" type="button" data-act="volver-borrador">Volver a borrador</button><button class="btn" type="button" data-act="publicada">Marcar como publicada</button><button class="btn" type="button" data-act="programar">${ico("reloj")}Programar</button><button class="btn pri" type="button" data-act="fb-ahora">Publicar ahora</button>` : ""}
       ${p.estado === "programado" ? `<button class="btn" type="button" data-act="programar">${ico("reloj")}Cambiar hora</button><button class="btn" type="button" data-act="desprogramar">Quitar de la agenda</button><button class="btn pri" type="button" data-act="publicada">Marcar como publicada</button>` : ""}
       ${p.estado === "publicado" && p.enlaces ? Object.entries(p.enlaces).filter(([, u]) => u).map(([k, u]) => `<a class="btn sm" href="${esc(u)}" target="_blank" rel="noopener noreferrer">Ver en ${k === "fb" ? "Facebook" : "Instagram"}</a>`).join("") : ""}
     </div>`;
@@ -600,7 +600,7 @@ function aprobar(){
     p.aprobado = new Date().toISOString(); p.aprobado_por = RD.user.id; p.revision = {advertencias: advs.map(a => a.txt), confirmo: ["hechos", "neutralidad"].concat(p.sensible ? ["revision_reforzada"] : []), ts: p.aprobado};
     p.estado = p.programado && Date.parse(p.programado) > Date.now() ? "programado" : "aprobado";
     try { await store.guardarPost(p); } catch(e) { Object.assign(p, prev); toast("No se pudo aprobar: " + (e.message || e)); return false; }
-    toast(p.estado === "programado" ? "Aprobada y programada." : "Aprobada. Ahora prográmala o publícala."); render();
+    toast(p.estado === "programado" ? "Aprobada y programada." : "Aprobada. Ahora elige: «Publicar ahora» o «Programar»."); render();
   });
 }
 /* Horarios sugeridos: los primeros de la lista según la meta diaria, sin chocar (90 minutos) con otra publicación agendada. */
@@ -710,7 +710,9 @@ async function pintarFacebook(){
   if (p.estado === "publicado") { el.innerHTML = `<p class="info" style="margin:0">Marcada como publicada a mano.</p>`; return; }
   el.innerHTML = `<p style="margin:0 0 8px">Conectada a ${pag}.</p>${fbSelector(p, "fbImg")}<div class="acciones" style="margin-top:4px"><button class="btn pri sm" type="button" data-act="fb-ahora">Publicar ahora en Facebook</button></div><p class="info" style="margin:8px 0 0">Para dejarla agendada, usa «Programar»: Facebook la publica sola a la hora.</p>`;
 }
-function publicarAhoraFacebook(){
+async function publicarAhoraFacebook(){
+  const fb = await RD.fb;
+  if (!fb || !fb.facebook) return toast(fb && fb.prueba ? "En el modo de prueba no se publica en Facebook." : "Facebook no está conectado: descarga la pieza, copia el texto y usa «Marcar como publicada».");
   const p = RD.post, cual = $("#fbImg") ? $("#fbImg").value : "feed";
   dialogo(`<form><h2 id="dlgT">Publicar ahora en Facebook</h2><p class="lead" style="margin:0 0 10px">Sale de inmediato en la página de El Pregonero, con el texto de Facebook aprobado y ${cual === "carrusel" ? "las láminas del carrusel" : "la pieza del feed"}.</p>
     <p class="info" style="margin:0">Una vez publicada, cualquier corrección se hace en Facebook y se indica en la publicación, como dice la línea editorial.</p>
