@@ -27,7 +27,7 @@ function chile(ts = Date.now()){
 async function iaNeutral(grupos){
   const clave = process.env.ANTHROPIC_API_KEY; if (!clave || !grupos.length) return new Map();
   const lineas = grupos.map((g, i) => `${i}. ${g.notas.slice(0, 4).map(n => `[${n.medio}] ${n.titulo}${n.desc ? " — " + n.desc.slice(0, 200) : ""}`).join(" | ")}`).join("\n");
-  const prompt = `Eres editor de PregonIA, un medio informativo digital de la Región de Valparaíso, Chile, con línea editorial neutral estricta. Estos son hechos noticiosos; cada línea junta las notas de distintos medios sobre el mismo hecho:
+  const prompt = `Eres editor de El Pregonero, un medio informativo digital de la Región de Valparaíso, Chile, con línea editorial neutral estricta. Estos son hechos noticiosos; cada línea junta las notas de distintos medios sobre el mismo hecho:
 
 ${lineas}
 

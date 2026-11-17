@@ -7,7 +7,7 @@
 const RD = {modo: null, sb: null, user: null, cfgPub: null, cfg: null, props: [], posts: [], post: null, fmt: "feed", lam: 0, ia: null, voz: null, reel: {}, guardando: null, timer: null, anim: 0};
 const RD_LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 const RD_KEY = "pregonia-redaccion-prueba-v1";
-const RD_ETIQUETA_IA = "Resumen elaborado con apoyo de IA y revisado por el equipo de PregonIA.";
+const RD_ETIQUETA_IA = "Resumen elaborado con apoyo de IA y revisado por el equipo de El Pregonero.";
 const RD_PILOTO = ["Casablanca", "Algarrobo", "El Quisco", "El Tabo", "Cartagena", "San Antonio"];
 const RD_CFG0 = {comunas: RD_PILOTO, nacional: true, umbral: 80, silencio: true, resumen_hora: 8, cercanos: ["Casablanca", "Rodrigo Martínez", "Partido Republicano"], meta_diaria: 4};
 const RD_HORARIOS = ["08:30", "12:30", "18:30", "21:00", "10:30", "15:30", "20:00", "07:30", "13:30", "22:00"];
@@ -106,7 +106,7 @@ function pantallaError(msg){ $("#rdMain").innerHTML = `<div class="acceso"><h2>R
 function pantallaAcceso(err){
   $("#rdTabs").hidden = true; pintarHerramientas();
   $("#rdMain").innerHTML = `<form class="acceso" id="rdLogin" novalidate>
-    <h2>Redacción de PregonIA</h2><p class="lead">Espacio privado del editor de las cuentas de PregonIA en Facebook e Instagram.</p>
+    <h2>Redacción de PregonIA</h2><p class="lead">Espacio privado del editor de las cuentas de El Pregonero en Facebook e Instagram.</p>
     <label class="campo">Correo<input class="inp" id="rdCorreo" type="email" autocomplete="username" required></label>
     <label class="campo">Contraseña<input class="inp" id="rdClave" type="password" autocomplete="current-password" required></label>
     <p class="err" id="rdErr" role="alert" ${err ? "" : "hidden"}>${esc(err || "")}</p>
@@ -225,7 +225,7 @@ function fuentesDe(p){
 const temaPrincipal = p => ((p.detalle || {}).temas || [])[0] || "";
 function promptRedaccion(p){
   const notas = [...(p.notas || [])].sort((a, b) => a.ts - b.ts).slice(0, 8);
-  return `Eres editor de PregonIA, un medio informativo digital de la Región de Valparaíso, Chile, con línea editorial NEUTRAL ESTRICTA. Prepara una publicación para las cuentas de PregonIA en Facebook e Instagram sobre este hecho.
+  return `Eres editor de El Pregonero, un medio informativo digital de la Región de Valparaíso, Chile, con línea editorial NEUTRAL ESTRICTA. Prepara una publicación para las cuentas de El Pregonero en Facebook e Instagram sobre este hecho.
 
 HECHO (${p.comunas.join(", ")}; alcance ${p.alcance || "comunal"}):
 ${p.resumen ? "Resumen interno: " + p.resumen + "\n" : ""}Publicaciones de los medios (fuente · fecha · titular — extracto):
@@ -259,8 +259,8 @@ function plantilla(p){
   const res = p.resumen || (p.notas && p.notas[0] && p.notas[0].desc) || "[completar: resumen del hecho]";
   return {kicker: [lugar.split(",")[0], temaPrincipal(p)].filter(Boolean).join(" · "), titular: p.titulo, bajada: res, datos: [`Lugar: ${lugar}`, `Informan: ${fs.slice(0, 2).map(f => f.medio).join(" y ")}`],
     fb: `${p.titulo}.\n\n${res}\n\nFuente: ${medios}${fs[0] ? " " + fs[0].url : ""}\n${RD_ETIQUETA_IA}`, ig: `${p.titulo}.\n\n${res}\n\nFuente: ${medios}\n${RD_ETIQUETA_IA}`,
-    hashtags: ["#" + lugar.split(",")[0].replace(/\s+/g, ""), "#RegiónDeValparaíso"], alt: `Pieza informativa de PregonIA con el titular: ${p.titulo}`,
-    historia: {t: p.titulo, x: res}, slides: [{t: "Qué pasó", x: res}], guion: {intro: p.titulo, datos: [], cierre: `Fuente: ${medios}. Esto fue PregonIA.`}};
+    hashtags: ["#" + lugar.split(",")[0].replace(/\s+/g, ""), "#RegiónDeValparaíso"], alt: `Pieza informativa de El Pregonero con el titular: ${p.titulo}`,
+    historia: {t: p.titulo, x: res}, slides: [{t: "Qué pasó", x: res}], guion: {intro: p.titulo, datos: [], cierre: `Fuente: ${medios}. Esto fue El Pregonero.`}};
 }
 function limpiarIA(j, p){
   const s = (x, n = 2000) => String(x ?? "").replace(/[*#_]{2,}/g, "").trim().slice(0, n);
@@ -475,7 +475,7 @@ async function prepararMP4(btn){
     let blob = await pzMP4(plan, audio, av);
     if (!blob) { toast("Este navegador graba el video en tiempo real: deja la pestaña abierta unos " + Math.round(plan.total) + " segundos."); blob = await pzGrabado(plan, audio, av); }
     if (!blob) throw new Error("Este navegador no permite crear videos. Prueba con Chrome, Edge o Safari actualizados.");
-    plan.blob = blob; toast(plan.audio ? "Video listo con voz y música." : "Video listo con música (sin voz).");
+    plan.blob = blob; toast(plan.audioCodec === "opus" ? "Video listo, pero este navegador grabó el audio en Opus: Instagram pide AAC. Prepáralo en Chrome o Safari de escritorio." : plan.audio ? "Video listo con voz y música." : "Video listo con música (sin voz).");
   } catch(e) { toast(String(e.message || e)); }
   pintarVista();
 }
@@ -632,7 +632,7 @@ function vistaAjustes(){
     return `<div class="prov"><label class="prov-h"><input type="checkbox" data-prov="${esc(prov)}" ${todas ? "checked" : ""} ${!todas && alguna ? 'data-mixto="1"' : ""}> Provincia de ${esc(prov)}</label>
       <div class="comunas">${cs.map(x => `<label class="ck"><input type="checkbox" data-comuna="${esc(x)}" ${c.comunas.includes(x) ? "checked" : ""}>${esc(x)}</label>`).join("")}</div></div>`; }).join("");
   const push = "serviceWorker" in navigator && "PushManager" in window && RD.cfgPub && RD.cfgPub.avisos && RD.cfgPub.avisos.push && RD.modo === "editor";
-  return `<h2>Ajustes</h2><p class="lead">Territorios que cubre PregonIA como medio, avisos y revisión reforzada. Se guardan solos.</p>
+  return `<h2>Ajustes</h2><p class="lead">Territorios que cubre El Pregonero, avisos y revisión reforzada. Se guardan solos.</p>
     <div class="ajustes">
       <section class="panel" aria-labelledby="hTerr"><h3 id="hTerr">Territorios</h3>
         <p class="info" style="margin-top:0">${c.comunas.length} de 38 comunas de la Región de Valparaíso. <button class="btn sm ghost" type="button" data-act="piloto">Solo litoral central</button><button class="btn sm ghost" type="button" data-act="todas">Toda la región</button><button class="btn sm ghost" type="button" data-act="ninguna">Ninguna</button></p>
@@ -702,7 +702,7 @@ document.addEventListener("click", async e => {
   if (a === "fmt") { RD.fmt = b.dataset.f; RD.lam = 0; document.querySelectorAll("[data-act=fmt]").forEach(x => x.setAttribute("aria-pressed", x.dataset.f === RD.fmt)); return pintarVista(); }
   if (a === "generar") { const p = RD.post; if (!p.formatos.includes(b.dataset.f)) p.formatos.push(b.dataset.f);
     if (b.dataset.f === "carrusel" && !(p.contenido.slides || []).length) p.contenido.slides = [{t: "Qué pasó", x: p.contenido.bajada || ""}];
-    if (b.dataset.f === "reel" && !(p.contenido.guion && p.contenido.guion.intro)) p.contenido.guion = {intro: p.contenido.titular, datos: (p.contenido.datos || []).slice(0, 3), cierre: `Fuente: ${pzFuentes(p.contenido)}. Esto fue PregonIA.`};
+    if (b.dataset.f === "reel" && !(p.contenido.guion && p.contenido.guion.intro)) p.contenido.guion = {intro: p.contenido.titular, datos: (p.contenido.datos || []).slice(0, 3), cierre: `Fuente: ${pzFuentes(p.contenido)}. Esto fue El Pregonero.`};
     RD.fmt = b.dataset.f; await guardarAhora(); render(); return; }
   if (a === "lam") { RD.lam = Number(b.dataset.i); document.querySelectorAll("[data-act=lam]").forEach(x => x.setAttribute("aria-pressed", Number(x.dataset.i) === RD.lam)); return pintarVista(); }
   if (a === "lamina") { RD.post.contenido.slides = (RD.post.contenido.slides || []).concat([{t: "", x: ""}]); await guardarAhora(); return render(); }
