@@ -21,7 +21,7 @@ const COMPETENCIAS = {P: "Competencia propia", C: "Competencia compartida", I: "
 const PRIORIDADES = {P1: "P1 · Crisis", P2: "P2 · Atender", P3: "P3 · Oportunidad", P4: "P4 · Monitoreo", R: "Ruido"};
 const ACCIONES = {
   responder: ["Responder", "Dar la versión propia con vocería, por los canales que el tema exige."],
-  aclarar: ["Aclarar con datos", "Es de su competencia y la prensa no tiene su versión: entregar datos y una vocería breve."],
+  aclarar: ["Aclarar con datos", "Es de su competencia y la prensa no recoge su versión ni su gestión: informar qué se está haciendo, con datos y una vocería breve."],
   aportar: ["Aportar posición", "Tema de terceros donde la cuenta puede aportar: fijar posición o una gestión concreta."],
   amplificar: ["Amplificar", "Buena noticia: llevarla a más medios y a las redes propias."],
   anticipar: ["Anticipar", "Hay un hito cerca: preparar mensaje y vocería antes de que llegue."],
@@ -97,7 +97,8 @@ function fichaDe(m, c = cuenta()){
   const expuesta = ["prot", "fuente", "menc", "alud"].includes(papel);
   if (comp === "A" && expuesta) comp = "AE";
   // Vacío de vocería: tema crítico o grave de su competencia propia, en dos o más medios, sin su versión.
-  if (!cor.p && comp === "P" && papel === "no" && !["local", "politica"].includes(area) && (critico || gravedad >= 2) && medios >= 2) papel = "aus";
+  // No aplica a lo policial o judicial, a las historias humanas ni a la opinión: ahí no se espera una versión de la cuenta.
+  if (!cor.p && comp === "P" && papel === "no" && !["local", "politica"].includes(area) && !["judicial", "humano", "opinion"].includes(encuadre) && (critico || gravedad >= 2) && medios >= 2) papel = "aus";
   // Qué hacer: prioridad
   let prio;
   if (comp === "A") prio = "R";
