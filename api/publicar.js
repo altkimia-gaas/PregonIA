@@ -53,7 +53,11 @@ async function publicarEnFacebook(post, imagenes, programar){
     f.append("source", new Blob([Buffer.from(b64, "base64")], {type: "image/jpeg"}), "pieza.jpg");
     const r = await graph(`${id}/photos`, {method: "POST", form: f, token: t}); ids.push(r.id);
   }
-  const form = {message: (post.contenido && post.contenido.fb) || post.titulo || ""};
+  // Resguardo: toda publicación lleva el enlace a la nota original, aunque se haya borrado al editar.
+  let message = (post.contenido && post.contenido.fb) || post.titulo || "";
+  const fs = ((post.contenido && (post.contenido.fuentes && post.contenido.fuentes.length ? post.contenido.fuentes : [post.contenido.fuente])) || []).filter(f => f && f.url);
+  if (fs.length && !fs.some(f => message.includes(f.url))) message += `\n\nFuente: ${fs[0].medio || ""}\nNota original: ${fs[0].url}`;
+  const form = {message};
   ids.forEach((m, i) => { form[`attached_media[${i}]`] = JSON.stringify({media_fbid: m}); });
   if (programar) Object.assign(form, {published: "false", scheduled_publish_time: String(Math.floor(programar / 1000)), unpublished_content_type: "SCHEDULED"});
   const r = await graph(`${id}/feed`, {method: "POST", form, token: t});

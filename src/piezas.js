@@ -93,9 +93,13 @@ function pzKicker(ctx, txt, y, a = 1){
 /* Pie: fuente y mención de IA. */
 function pzPie(ctx, c, H, a = 1){
   const y = H - 140; ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = PZC.track; ctx.fillRect(PZ_MARGEN, y, PZ.W - 2 * PZ_MARGEN, 2); ctx.restore();
-  pzTexto(ctx, "Fuente: " + pzFuentes(c), PZ_MARGEN, y + 52, {px: 28, w: 600, a, max: 1});
+  pzTexto(ctx, pzFuenteLinea(c), PZ_MARGEN, y + 52, {px: 28, w: 600, a, max: 1});
   pzTexto(ctx, c.etiquetaIA || "Resumen elaborado con apoyo de IA y revisado por el equipo de " + PZ_MARCA, PZ_MARGEN, y + 94, {px: 23, w: 400, color: PZC.muted, a, max: 1});
 }
+const pzDominio = u => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch(e) { return ""; } };
+/* Línea de fuente de la pieza: con un solo medio agrega su dominio, para que se sepa dónde está la nota original. */
+const pzFuenteLinea = c => { const fs = (c.fuentes && c.fuentes.length ? c.fuentes : [c.fuente || {}]).filter(f => f && f.medio), d = fs.length === 1 ? pzDominio(fs[0].url) : ""; return "Fuente: " + pzFuentes(c) + (d && rdSinTildes(d) !== rdSinTildes(fs[0].medio) ? " · " + d : ""); };
+const rdSinTildes = t => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "");
 const pzFuentes = c => { const ms = [...new Set((c.fuentes && c.fuentes.length ? c.fuentes : [c.fuente || {}]).map(f => f.medio).filter(Boolean))]; return ms.length ? (ms.length > 2 ? ms.slice(0, 2).join(", ") + " y otros" : ms.join(" y ")) : "[completar fuente]"; };
 function pzDatos(ctx, datos, y, o = {}){
   const {px = 34, gap = 22, a = 1, max = 3, color = PZC.ink} = o;
@@ -131,7 +135,7 @@ function pzHistoria(ctx, c){
   const ty = Math.min(Math.max(y + 60, 1240), 1440); pzFuente(ctx, 700, 34, PZF.h); const lbl = "El detalle, en nuestra publicación", w = ctx.measureText(lbl).width + 80;
   ctx.fillStyle = PZC.papel; pzRR(ctx, PZ_MARGEN, ty, w, 84, 42); ctx.fill(); pzTexto(ctx, lbl, PZ_MARGEN + 40, ty + 54, {px: 34, w: 700, fam: PZF.h, color: PZC.bg});
   ctx.fillStyle = PZC.track; ctx.fillRect(PZ_MARGEN, 1540, PZ.W - 2 * PZ_MARGEN, 2);
-  pzTexto(ctx, "Fuente: " + pzFuentes(c), PZ_MARGEN, 1590, {px: 28, w: 600, max: 1});
+  pzTexto(ctx, pzFuenteLinea(c), PZ_MARGEN, 1590, {px: 28, w: 600, max: 1});
   pzTexto(ctx, c.etiquetaIA || "Resumen elaborado con apoyo de IA y revisado por el equipo de " + PZ_MARCA, PZ_MARGEN, 1630, {px: 23, w: 400, color: PZC.muted, max: 2});
 }
 /* Carrusel: portada y cierre en cobalto; las láminas del medio en papel blanco, para dar ritmo y leer mejor el texto largo. */
@@ -161,7 +165,7 @@ function pzLamina(ctx, c, i){
   } else {
     pzTexto(ctx, "FUENTES", PZ_MARGEN, y, {px: 26, w: 700, fam: PZF.h, ls: 4, color: PZC.muted}); y += 30;
     const fs = (c.fuentes && c.fuentes.length ? c.fuentes : [c.fuente || {}]).filter(f => f.medio).slice(0, 5);
-    fs.forEach(f => { y = pzTexto(ctx, f.medio, PZ_MARGEN, y + 24, {px: 40, w: 700, fam: PZF.h, max: 1}); if (f.fecha) y = pzTexto(ctx, pzFecha(f.fecha), PZ_MARGEN, y + 2, {px: 26, w: 400, color: PZC.muted}); y += 8; });
+    fs.forEach(f => { y = pzTexto(ctx, f.medio, PZ_MARGEN, y + 24, {px: 40, w: 700, fam: PZF.h, max: 1}); const sub = [pzDominio(f.url), f.fecha ? pzFecha(f.fecha) : ""].filter(Boolean).join(" · "); if (sub) y = pzTexto(ctx, sub, PZ_MARGEN, y + 2, {px: 26, w: 400, color: PZC.muted, max: 1}); y += 8; });
     if (!fs.length) y = pzTexto(ctx, "[completar fuente]", PZ_MARGEN, y + 24, {px: 40, w: 700, fam: PZF.h});
     y = Math.max(y + 70, 860);
     pzLogo(ctx, PZ_MARGEN, y - 60, 72);
