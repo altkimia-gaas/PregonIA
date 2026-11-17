@@ -54,9 +54,21 @@ def main():
         "\non conflict (id) do update set nombre = excluded.nombre, ambito = excluded.ambito, provincia = excluded.provincia, comunas = excluded.comunas, tipo = excluded.tipo,"
         " nivel = excluded.nivel, metodo = excluded.metodo, url_lectura = excluded.url_lectura, estado = excluded.estado, observacion = excluded.observacion;\n", encoding="utf-8")
     (RAIZ / "api" / "_catalogo.js").write_text("// Generado por scripts/build.py desde data/catalogo_medios.csv. No editar a mano.\nexport const CATALOGO = " + json.dumps(filas, ensure_ascii=False, indent=0) + ";\n", encoding="utf-8")
+    # Redacción (cuenta privada del editor de PregonIA): página aparte, /redaccion. Comparte con la aplicación la nómina y las zonas
+    # (autoridades.js) y con el servidor el puntaje de impacto (impacto.js → api/_impacto.js), para que ambos puntúen igual.
+    (RAIZ / "api" / "_impacto.js").write_text("// Generado por scripts/build.py desde src/impacto.js. No editar a mano.\n" + leer("impacto.js") +
+        "export { IMP_PESOS, IMP_TEMAS, IMP_REGION, impNorm, impTiene, impAutoridades, impPalabras, impParecido, impAgrupar, impAlcance, impInteraccion, impPuntaje, IMP_UMBRAL_GRUPO };\n", encoding="utf-8")
+    rd_js = "\n".join(leer(n) for n in ["autoridades.js", "impacto.js", "piezas.js", "redaccion-prueba.js", "redaccion.js"])
+    rd_cabeza = ('<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n'
+                 '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
+                 '<link rel="manifest" href="/manifest-redaccion.json">\n<meta name="theme-color" content="#FFFFFF">\n'
+                 '<link rel="icon" type="image/png" sizes="192x192" href="/icono-192.png">\n<link rel="apple-touch-icon" href="/icono-180.png">\n'
+                 '<meta name="apple-mobile-web-app-title" content="Redacción">\n<meta name="apple-mobile-web-app-capable" content="yes">\n')
+    (RAIZ / "redaccion.html").write_text(rd_cabeza + leer("redaccion.html").replace("</style>\n", "</style>\n</head>\n<body>\n", 1) +
+        "<script>\n" + rd_js + "\n</script>\n</body>\n</html>\n", encoding="utf-8")
     # Versión para publicar como artifact en claude.ai, que pone su propio esqueleto.
     (RAIZ / "artifact.html").write_text(cuerpo, encoding="utf-8")
-    print(f"index.html listo ({len(html.encode('utf-8')) // 1024} KB)")
+    print(f"index.html listo ({len(html.encode('utf-8')) // 1024} KB) · redaccion.html listo ({(RAIZ / 'redaccion.html').stat().st_size // 1024} KB)")
 
 if __name__ == "__main__":
     main()

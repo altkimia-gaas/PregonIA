@@ -43,7 +43,13 @@ self.addEventListener("notificationclick", e => {
   const url = new URL((e.notification.data && e.notification.data.url) || "/?sin-portada#inicio", self.location.origin);
   e.waitUntil((async () => {
     const ventanas = await self.clients.matchAll({type: "window", includeUncontrolled: true});
-    const abierta = ventanas.find(c => new URL(c.url).origin === self.location.origin);
+    // Avisos de Redacción: abren o enfocan la página del editor (/redaccion), no la aplicación de los clientes.
+    if (url.pathname.startsWith("/redaccion")) {
+      const rd = ventanas.find(c => new URL(c.url).pathname.startsWith("/redaccion"));
+      if (rd) { await rd.focus(); if (rd.navigate) await rd.navigate(url.href).catch(() => {}); return; }
+      await self.clients.openWindow(url.href); return;
+    }
+    const abierta = ventanas.find(c => new URL(c.url).origin === self.location.origin && !new URL(c.url).pathname.startsWith("/redaccion"));
     if (abierta) { await abierta.focus(); const g = url.searchParams.get("alerta"); if (g) abierta.postMessage({tipo: "abrir-aviso", g}); return; }
     await self.clients.openWindow(url.href);
   })());

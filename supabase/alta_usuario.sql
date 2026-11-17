@@ -30,3 +30,8 @@ select u.id, m.id, 'Nombre Apellido', 'comunicaciones'
 from auth.users u, municipios m
 where u.email = 'correo@ejemplo.cl' and m.tipo = 'diputado' and lower(m.autoridad ->> 'nombre') = lower('Nombre Apellido')
 on conflict (id) do update set municipio_id = excluded.municipio_id, nombre = excluded.nombre, rol = excluded.rol;
+
+-- C. Editor de Redacción (cuentas propias de PregonIA en Facebook e Instagram, página /redaccion).
+-- La persona debe existir antes en Authentication › Users (invitación por correo). No necesita municipio ni rol:
+-- un editor no ve datos de clientes y los clientes no ven Redacción.
+-- insert into editores (usuario, nombre) select id, 'Nombre Apellido' from auth.users where email = 'correo@dominio.cl' on conflict (usuario) do nothing;

@@ -1,0 +1,1532 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="/manifest-redaccion.json">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" type="image/png" sizes="192x192" href="/icono-192.png">
+<link rel="apple-touch-icon" href="/icono-180.png">
+<meta name="apple-mobile-web-app-title" content="Redacción">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Redacción · PregonIA</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+/* Redacción · identidad Edición de PregonIA: papel blanco, filete negro, titulares en serif, azul solo para lo que se toca. */
+:root{--bg:#FFFFFF;--paper:#FFFFFF;--soft:#F5F5F2;--ink:#141414;--muted:#555555;--line:#DADADA;--rule:#141414;--accent:#2B4BE0;--accent-h:#1F3BC0;--accent-soft:#EEF1FD;
+  --ok:#1E6B3F;--ok-soft:#E3F1E8;--warn:#8F560C;--warn-soft:#FBEFD9;--bad:#B3261E;--bad-soft:#F8E3E1;--f-ui:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--f-news:"Source Serif 4",Georgia,serif;--r:14px;color-scheme:light}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--f-ui);-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.skip{position:absolute;left:-999px;top:8px;z-index:50;background:var(--ink);color:#fff;padding:8px 12px;border-radius:8px}
+.skip:focus{left:8px}
+.rd-top{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:2px solid var(--rule);padding:0 max(16px,env(safe-area-inset-left))}
+.rd-top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;padding:12px 0 0}
+.logo{display:flex;align-items:center;gap:8px;font:700 22px/1 var(--f-news);letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.logo b{color:var(--accent);font-weight:700}
+.mk{display:inline-flex;align-items:flex-end;gap:3px;height:18px}.mk i{display:block;width:6px;background:var(--accent);border-radius:1.5px}.mk i:nth-child(1){height:42%}.mk i:nth-child(2){height:70%}.mk i:nth-child(3){height:100%}
+.seccion{font:600 12px/1 var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-left:1px solid var(--line);padding-left:12px}
+.rd-tools{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.modo{font-size:12.5px;color:var(--muted)}
+.modo b{color:var(--ink)}
+.tabs{max-width:1180px;margin:0 auto;display:flex;gap:2px;overflow-x:auto;margin-top:10px}
+.tabs a{padding:10px 14px;font-weight:600;font-size:14px;color:var(--muted);text-decoration:none;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs .n{display:inline-block;min-width:20px;padding:0 6px;margin-left:6px;border-radius:99px;background:var(--accent);color:#fff;font-size:11.5px;line-height:20px;text-align:center}
+main{max-width:1180px;margin:0 auto;padding:22px max(16px,env(safe-area-inset-left)) 120px}
+h1,h2{font-family:var(--f-news);letter-spacing:-.015em;margin:0}
+h2{font-size:30px;line-height:1.15}
+h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.lead{color:var(--muted);margin:6px 0 18px;max-width:70ch}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px 16px;border-radius:999px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);font:600 14px/1.2 var(--f-ui);cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--soft)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}.btn.pri:hover{background:var(--accent-h)}
+.btn.ghost{border-color:transparent;color:var(--accent);padding-inline:10px}.btn.ghost:hover{background:var(--accent-soft)}
+.btn.sm{min-height:34px;padding:5px 12px;font-size:13px}
+.btn.peligro{border-color:var(--bad);color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.barra{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 16px}
+.barra .sp{flex:1}
+.sel,.inp,textarea.inp{font:inherit;font-size:14px;color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;min-height:40px}
+textarea.inp{width:100%;resize:vertical;line-height:1.5}
+.inp:focus,.sel:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.campo{display:grid;gap:6px;margin:0 0 14px;font-weight:600;font-size:13.5px}
+.campo small{font-weight:400;color:var(--muted)}
+.campo .cont{font-weight:500;color:var(--muted);font-size:12px;justify-self:end;margin-top:-4px}
+.campo .cont.mal{color:var(--bad)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;background:var(--soft);font-size:12.5px;font-weight:500;white-space:nowrap}
+.chip.az{background:var(--accent-soft);color:var(--accent)}
+.chip.am{background:var(--warn-soft);color:var(--warn)}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.rj{background:var(--bad-soft);color:var(--bad)}
+.vacio{border:1.5px dashed var(--line);border-radius:var(--r);padding:28px;text-align:center;color:var(--muted)}
+/* Propuestas */
+.lista{display:grid;gap:14px}
+.prop{display:grid;grid-template-columns:76px 1fr;gap:16px;border:1.5px solid var(--rule);border-radius:var(--r);padding:16px 18px;background:var(--paper)}
+.prop.sobre{box-shadow:inset 6px 0 0 var(--accent)}
+.prop.desc{opacity:.6;border-color:var(--line)}
+.punt{display:grid;place-items:center;align-content:center;width:72px;height:72px;border-radius:50%;border:3px solid var(--line);font:700 26px/1 var(--f-news)}
+.punt small{font:600 10px/1 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.punt.alto{border-color:var(--accent);color:var(--accent)}
+.punt.medio{border-color:var(--ink)}
+.prop h4{font:700 21px/1.25 var(--f-news);margin:0 0 6px;letter-spacing:-.01em}
+.prop .res{margin:0 0 8px;color:#2A2A2A}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;color:var(--muted);font-size:13px;margin:0 0 10px}
+.senales{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:4px 0 12px}
+.sen{font-size:11.5px;color:var(--muted)}
+.sen b{display:block;color:var(--ink);font-size:13px}
+.sen .t{display:block;height:6px;border-radius:3px;background:var(--soft);margin-top:4px;overflow:hidden}
+.sen .t i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.alerta-rev{display:block;background:var(--warn-soft);color:#5A3700;border-radius:10px;padding:8px 12px;font-size:13.5px;margin:0 0 10px}
+details.fuentes summary{cursor:pointer;font-weight:600;font-size:13.5px;color:var(--accent);padding:4px 0}
+details.fuentes ul{margin:6px 0 0;padding-left:18px;display:grid;gap:4px;font-size:13.5px}
+details.fuentes li span{color:var(--muted)}
+.acciones{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+/* Publicaciones */
+.posts{display:grid;gap:10px}
+.post{display:grid;grid-template-columns:96px 1fr auto;gap:14px;align-items:center;border:1.5px solid var(--line);border-radius:var(--r);padding:12px 14px;background:var(--paper);cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+.post:hover{border-color:var(--ink)}
+.post canvas{width:96px;height:120px;border:1px solid var(--line);border-radius:6px;background:#fff}
+.post h4{font:700 18px/1.25 var(--f-news);margin:0 0 4px}
+.estado{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.estado.borrador{background:var(--soft);color:var(--muted)}.estado.aprobado{background:var(--ok-soft);color:var(--ok)}.estado.programado{background:var(--accent-soft);color:var(--accent)}.estado.publicado{background:var(--ink);color:#fff}.estado.descartado{background:var(--bad-soft);color:var(--bad)}
+/* Editor */
+.ed{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:24px;align-items:start}
+.ed-col{min-width:0}
+.panel{border:1.5px solid var(--rule);border-radius:var(--r);padding:16px 18px;margin-bottom:16px;background:var(--paper)}
+.panel.suave{border-color:var(--line)}
+.vista{position:sticky;top:120px}
+.fmt{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.fmt button{border:1.5px solid var(--line);background:var(--paper);border-radius:99px;padding:6px 12px;font:600 13px var(--f-ui);cursor:pointer;color:var(--muted)}
+.fmt button[aria-pressed="true"]{border-color:var(--ink);color:var(--ink);background:var(--soft)}
+.fmt button .mas{color:var(--accent)}
+.lienzo{background:var(--soft);border-radius:var(--r);padding:14px;display:grid;place-items:center}
+.lienzo canvas{max-width:100%;max-height:62vh;height:auto;border:1px solid var(--line);background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+.lam{display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.lam button{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--paper);font:600 13px var(--f-ui);cursor:pointer}
+.lam button[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:#fff}
+.descargas{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.revision{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:13.5px}
+.revision li{display:flex;gap:8px;align-items:flex-start}
+.revision li::before{content:"";flex:none;width:18px;height:18px;border-radius:50%;margin-top:1px;background:var(--ok-soft) center/12px no-repeat}
+.revision li.ok::before{background-color:var(--ok);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpath d='M5 12l5 5 9-10'/%3E%3C/svg%3E")}
+.revision li.adv::before{background-color:var(--warn);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpath d='M12 6v7M12 17.5v.5'/%3E%3C/svg%3E")}
+.revision li.err::before{background-color:var(--bad);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpath d='M7 7l10 10M17 7L7 17'/%3E%3C/svg%3E")}
+.accbar{position:sticky;bottom:0;z-index:15;background:var(--paper);border-top:2px solid var(--rule);margin:20px -4px 0;padding:12px 4px calc(12px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.accbar .sp{flex:1}
+.guardado{font-size:12.5px;color:var(--muted)}
+.prog{display:flex;align-items:center;gap:10px;margin-top:10px}
+.prog .bar{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden}.prog .bar i{display:block;height:100%;background:var(--accent);width:0}
+/* Calendario */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(140px,1fr));gap:10px;overflow-x:auto;padding-bottom:6px}
+.dia{border:1.5px solid var(--line);border-radius:var(--r);padding:10px;min-height:220px;background:var(--paper)}
+.dia.hoy{border-color:var(--rule)}
+.dia h4{margin:0 0 2px;font:700 16px var(--f-news)}
+.dia .cuenta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.dia .cuenta.ok{color:var(--ok)}
+.cita{display:block;width:100%;text-align:left;border:0;border-left:4px solid var(--accent);background:var(--accent-soft);border-radius:6px;padding:6px 8px;margin-bottom:6px;font:500 12.5px/1.35 var(--f-ui);cursor:pointer;color:var(--ink)}
+.cita.pub{border-left-color:var(--ink);background:var(--soft)}
+.cita b{display:block;font-size:12px}
+.hueco{display:block;font-size:12px;color:var(--muted);border:1px dashed var(--line);border-radius:6px;padding:5px 8px;margin-bottom:6px}
+/* Ajustes */
+.ajustes{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px;align-items:start}
+.prov{border-top:1px solid var(--line);padding:10px 0}
+.prov:first-of-type{border-top:0}
+.prov-h{display:flex;align-items:center;gap:8px;font-weight:700}
+.comunas{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ck{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:99px;padding:5px 12px;font-size:13.5px;cursor:pointer;user-select:none}
+.ck input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+.ck:has(input:checked){border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.fila{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.nota{font-size:13px;color:#5A3700;background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin:0}
+.info{font-size:13px;color:var(--muted)}
+/* Diálogos y avisos */
+.dlg-back{position:fixed;inset:0;background:rgba(20,20,20,.45);z-index:40;display:grid;place-items:center;padding:16px}
+.dlg{background:var(--paper);border-radius:18px;border:2px solid var(--rule);max-width:520px;width:100%;padding:20px 22px;max-height:90vh;overflow:auto}
+.dlg h2{font-size:24px;margin-bottom:6px}
+.dlg .acciones{justify-content:flex-end}
+.ckl{display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:14px}
+.ckl input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);flex:none}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:60;max-width:calc(100vw - 32px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.acceso{max-width:440px;margin:40px auto;border:2px solid var(--rule);border-radius:18px;padding:24px}
+.err{color:var(--bad);font-size:13.5px;margin:0}
+@media (max-width:900px){.ed,.ajustes{grid-template-columns:1fr}.vista{position:static}.senales{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:560px){h2{font-size:25px}.prop{grid-template-columns:1fr}.punt{width:auto;height:auto;display:inline-flex;gap:6px;align-items:baseline;padding:6px 14px;border-radius:99px;justify-self:start;font-size:22px}.punt small{margin:0}.post{grid-template-columns:64px 1fr}.post canvas{width:64px;height:80px}.post .estado{grid-column:2;justify-self:start}.seccion{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#rdMain">Ir al contenido</a>
+<header class="rd-top">
+  <div class="rd-top-in">
+    <a class="logo" href="/" aria-label="PregonIA, inicio"><span class="mk" aria-hidden="true"><i></i><i></i><i></i></span><span>Pregon<b>IA</b></span></a>
+    <span class="seccion">Redacción</span>
+    <div class="rd-tools" id="rdTools"></div>
+  </div>
+  <nav class="tabs" id="rdTabs" aria-label="Secciones de Redacción" hidden></nav>
+</header>
+<main id="rdMain" tabindex="-1"></main>
+<div class="toast" id="rdToast" role="status" aria-live="polite" hidden></div>
+<script>
+/* Autoridades electas de la Región de Valparaíso: zonas electorales y nómina vigente.
+   Lo usan la aplicación (entrada por rol, zona y nombre) y el servidor (lectura de noticias por autoridad):
+   scripts/build.py copia este archivo a api/_autoridades.js.
+   Nómina al inicio de cada período; verificar cambios posteriores (reemplazos, renuncias) antes de usarla con un cliente.
+   Fuentes: diputados 2026-2030 (Mala Espina Check, 17 nov 2025, distritos 6 y 7); senadores 2026-2034 (Meganoticias y T13, 11 mar 2026);
+   consejeros regionales 2025-2029 (Radio Universidad de Valparaíso, enero 2025); alcaldes 2024-2028 (resultados oficiales publicados por RedGol, oct 2024;
+   Nogales verificada con TuOpinas, oct 2026); gobernador regional 2025-2029 (elección del 24 nov 2024, Ex-Ante); delegado presidencial regional
+   (Diario Oficial, decreto publicado el 24 jul 2026) y delegados provinciales (nómina del Gobierno, 13 mar 2026, 24horas y G5noticias).
+   De los alcaldes y delegados provinciales no se registra partido: la ficha muestra solo el cargo.
+   Los delegados son de exclusiva confianza del Presidente: revisar la nómina ante cualquier cambio de gabinete. */
+const NOMINA_CORTE = "11 de noviembre de 2026";
+const PROVINCIAS = {
+  "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández"],
+  "Marga Marga": ["Quilpué", "Villa Alemana", "Limache", "Olmué"],
+  "Quillota": ["Quillota", "La Calera", "La Cruz", "Hijuelas", "Nogales"],
+  "San Antonio": ["San Antonio", "Cartagena", "El Tabo", "El Quisco", "Algarrobo", "Santo Domingo"],
+  "San Felipe de Aconcagua": ["San Felipe", "Llaillay", "Putaendo", "Santa María", "Catemu", "Panquehue"],
+  "Los Andes": ["Los Andes", "Calle Larga", "Rinconada", "San Esteban"],
+  "Petorca": ["La Ligua", "Petorca", "Cabildo", "Papudo", "Zapallar"],
+  "Isla de Pascua": ["Isla de Pascua"]
+};
+const COMUNAS_V = Object.values(PROVINCIAS).flat().sort((a, b) => a.localeCompare(b, "es"));
+const D6 = ["Cabildo", "Calle Larga", "Catemu", "Hijuelas", "La Calera", "La Cruz", "La Ligua", "Limache", "Llaillay", "Los Andes", "Nogales", "Olmué", "Panquehue", "Papudo", "Petorca", "Puchuncaví", "Putaendo", "Quillota", "Quilpué", "Quintero", "Rinconada", "San Esteban", "San Felipe", "Santa María", "Villa Alemana", "Zapallar"];
+const D7 = ["Algarrobo", "Cartagena", "Casablanca", "Concón", "El Quisco", "El Tabo", "Isla de Pascua", "Juan Fernández", "San Antonio", "Santo Domingo", "Valparaíso", "Viña del Mar"];
+/* Roles: cómo se nombra el cargo (femenino y masculino), qué zona lo define y su órgano. */
+const CARGOS = {
+  municipio: {n: "Municipio", f: "Municipio", m: "Municipio", zona: "Comuna", organo: "Municipalidad"},
+  diputado: {n: "Diputado o diputada", f: "Diputada", m: "Diputado", zona: "Distrito", organo: "Cámara de Diputadas y Diputados"},
+  senador: {n: "Senador o senadora", f: "Senadora", m: "Senador", zona: "Circunscripción", organo: "Senado"},
+  core: {n: "Consejero o consejera regional", f: "Consejera regional", m: "Consejero regional", zona: "Circunscripción provincial", organo: "Consejo Regional de Valparaíso"},
+  alcalde: {n: "Alcalde o alcaldesa", f: "Alcaldesa", m: "Alcalde", zona: "Comuna", organo: "Municipalidad"},
+  concejal: {n: "Concejal o concejala", f: "Concejala", m: "Concejal", zona: "Comuna", organo: "Concejo Municipal"},
+  gobernador: {n: "Gobernador o gobernadora regional", f: "Gobernadora regional", m: "Gobernador regional", zona: "Región", organo: "Gobierno Regional de Valparaíso"},
+  delegado: {n: "Delegado o delegada presidencial", f: "Delegada presidencial", m: "Delegado presidencial", zona: "Región o provincia", organo: "Delegación Presidencial"}
+};
+const ZONAS = {
+  diputado: [{id: "D6", n: "Distrito 6", comunas: D6}, {id: "D7", n: "Distrito 7", comunas: D7}],
+  senador: [{id: "C6", n: "Circunscripción 6 · Región de Valparaíso", comunas: COMUNAS_V}],
+  core: [
+    {id: "V1N", n: "Valparaíso I Norte", comunas: ["Viña del Mar", "Concón", "Quintero", "Puchuncaví"]},
+    {id: "V2S", n: "Valparaíso II Sur", comunas: ["Valparaíso", "Casablanca", "Juan Fernández"]},
+    {id: "MM", n: "Marga Marga", comunas: PROVINCIAS["Marga Marga"]},
+    {id: "QUI", n: "Quillota", comunas: PROVINCIAS["Quillota"]},
+    {id: "SA", n: "San Antonio", comunas: PROVINCIAS["San Antonio"]},
+    {id: "SF", n: "San Felipe de Aconcagua", comunas: PROVINCIAS["San Felipe de Aconcagua"]},
+    {id: "LA", n: "Los Andes", comunas: PROVINCIAS["Los Andes"]},
+    {id: "PET", n: "Petorca", comunas: PROVINCIAS["Petorca"]},
+    {id: "IP", n: "Isla de Pascua", comunas: PROVINCIAS["Isla de Pascua"]}
+  ],
+  concejal: COMUNAS_V.map(c => ({id: c, n: c, comunas: [c]})),
+  alcalde: COMUNAS_V.map(c => ({id: c, n: c, comunas: [c]})),
+  gobernador: [{id: "REG", n: "Región de Valparaíso", comunas: COMUNAS_V}],
+  // La delegación regional cubre la región y gobierna directamente la provincia de Valparaíso; las otras siete tienen delegación provincial.
+  // Los ids de provincia son los mismos de las circunscripciones del consejo regional, que coinciden con las provincias.
+  delegado: [{id: "REG", n: "Delegación regional · Región de Valparaíso", comunas: COMUNAS_V}].concat(
+    [["MM", "Marga Marga"], ["QUI", "Quillota"], ["SA", "San Antonio"], ["SF", "San Felipe de Aconcagua"], ["LA", "Los Andes"], ["PET", "Petorca"], ["IP", "Isla de Pascua"]]
+      .map(([id, pv]) => ({id, n: "Provincia de " + pv, comunas: PROVINCIAS[pv]})))
+};
+const provinciaDe = c => Object.keys(PROVINCIAS).find(k => PROVINCIAS[k].includes(c)) || "";
+/* n: nombre con que se le conoce; c: nombre completo; p: partido o pacto al momento de la elección; g: F o M. */
+const nuevaAut = (rol, zona, n, c, p, g) => ({id: rol.slice(0, 3) + "-" + n.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-"), rol, zona, n, c, p, g});
+const AUTORIDADES = [
+  nuevaAut("diputado", "D6", "Francisca Bello", "Francisca Bello Campos", "FA", "F"),
+  nuevaAut("diputado", "D6", "Nelson Venegas", "Nelson Venegas Salazar", "PS", "M"),
+  nuevaAut("diputado", "D6", "Sofía González", "Sofía González Cortés", "PC", "F"),
+  nuevaAut("diputado", "D6", "Cristian Mella", "Cristian Mella Andaur", "DC", "M"),
+  nuevaAut("diputado", "D6", "Javier Olivares", "Javier Olivares Avedaño", "PDG", "M"),
+  nuevaAut("diputado", "D6", "Luis Pardo", "Luis Pardo Sainz", "RN", "M"),
+  nuevaAut("diputado", "D6", "Chiara Barchiesi", "Chiara Barchiesi Chávez", "Republicanos", "F"),
+  nuevaAut("diputado", "D6", "Benjamín Lorca", "Benjamín Lorca Inzunza", "Republicanos", "M"),
+  nuevaAut("diputado", "D7", "Jorge Brito", "Jorge Brito Hasbún", "FA", "M"),
+  nuevaAut("diputado", "D7", "Jaime Bassa", "Jaime Bassa Mercado", "FA", "M"),
+  nuevaAut("diputado", "D7", "Luis Cuello", "Luis Cuello Peña y Lillo", "PC", "M"),
+  nuevaAut("diputado", "D7", "Juan Marcelo Valenzuela", "Juan Marcelo Valenzuela", "PDG", "M"),
+  nuevaAut("diputado", "D7", "Andrés Celis", "Andrés Celis Montt", "RN", "M"),
+  nuevaAut("diputado", "D7", "Hotuiti Teao", "Hotuiti Teao Drago", "Ind.-UDI", "M"),
+  nuevaAut("diputado", "D7", "Luis Sánchez", "Luis Sánchez Ossa", "Republicanos", "M"),
+  nuevaAut("diputado", "D7", "Sebastián Zamora", "Sebastián Zamora Soto", "Ind.-Republicanos", "M"),
+  nuevaAut("senador", "C6", "Karol Cariola", "Karol Cariola Oliva", "PC", "F"),
+  nuevaAut("senador", "C6", "Andrés Longton", "Andrés Longton Herrera", "RN", "M"),
+  nuevaAut("senador", "C6", "Arturo Squella", "Arturo Squella Ovalle", "Republicanos", "M"),
+  nuevaAut("senador", "C6", "Diego Ibáñez", "Diego Ibáñez Cotroneo", "FA", "M"),
+  nuevaAut("senador", "C6", "Camila Flores", "Camila Flores Oporto", "RN", "F"),
+  nuevaAut("core", "V1N", "Catalina Thauby", "Catalina María Thauby Krebs", "Republicanos", "F"),
+  nuevaAut("core", "V1N", "Javier Venegas", "Javier Ignacio Venegas Muñoz", "Republicanos", "M"),
+  nuevaAut("core", "V1N", "Osvaldo Urrutia", "Osvaldo Urrutia Soto", "UDI", "M"),
+  nuevaAut("core", "V1N", "Marcela Varas", "Marcela Alicia Varas Fuentes", "PPD", "F"),
+  nuevaAut("core", "V1N", "Tania Valenzuela", "Tania Estefanía Valenzuela Rossi", "FA", "F"),
+  nuevaAut("core", "V2S", "José Luis Miranda", "José Luis Miranda Muñoz", "Republicanos", "M"),
+  nuevaAut("core", "V2S", "Paulina Yáñez", "Paulina Yáñez Gula", "Republicanos", "F"),
+  nuevaAut("core", "V2S", "Omar Valdivia", "Omar Gabriel Valdivia Álvarez", "PPD", "M"),
+  nuevaAut("core", "V2S", "Paula Rosso", "Paula Rosso Montenegro", "FA", "F"),
+  nuevaAut("core", "MM", "Cristián Fuentes", "Cristián Humberto Fuentes Duque", "Republicanos", "M"),
+  nuevaAut("core", "MM", "Elsa Bueno", "Elsa Graciela Bueno Cortés", "Republicanos", "F"),
+  nuevaAut("core", "MM", "Emmanuel Olfos", "Emmanuel José Olfos Vargas", "Ind.-RN", "M"),
+  nuevaAut("core", "MM", "María Elena Rubilar", "María Elena Rubilar Muñoz", "FA", "F"),
+  nuevaAut("core", "QUI", "Felipe Córdoba", "Felipe Ignacio Sebastián Córdoba Araya", "Republicanos", "M"),
+  nuevaAut("core", "QUI", "Lautaro Correa", "Lautaro Correa Castillo", "PS", "M"),
+  nuevaAut("core", "QUI", "Giselle Ahumada", "Giselle Makarena Ahumada Espina", "Ind.-PC", "F"),
+  nuevaAut("core", "SA", "Mauricio López", "Mauricio Alejandro López Castillo", "Republicanos", "M"),
+  nuevaAut("core", "SA", "Paola Zamorano", "Paola Emilia Zamorano Arratia", "RN", "F"),
+  nuevaAut("core", "SA", "Romy Farías", "Romy Jesús Farías Caballero", "DC", "F"),
+  nuevaAut("core", "SF", "Fernando Astorga", "Fernando Marcelo Astorga Terraza", "Republicanos", "M"),
+  nuevaAut("core", "SF", "Rodolfo Silva", "Rodolfo Ignacio Silva González", "Ind.-RN", "M"),
+  nuevaAut("core", "SF", "Maricel Martínez", "Maricel Alejandra Martínez Vicencio", "PPD", "F"),
+  nuevaAut("core", "LA", "Edith Quiroz", "Edith Clarisa de las Nieves Quiroz Ortiz", "RN", "F"),
+  nuevaAut("core", "LA", "María Victoria Rodríguez", "María Victoria Rodríguez Herrera", "Ind.-FRVS", "F"),
+  nuevaAut("core", "PET", "Cristián Pinilla", "Cristián René Pinilla Ibacache", "Republicanos", "M"),
+  nuevaAut("core", "PET", "Juan Bautista Ibacache", "Juan Bautista Ibacache Ibacache", "RN", "M"),
+  nuevaAut("core", "IP", "Sabrina Tuki", "Sabrina Tuki Pont", "Ind.-Evópoli", "F"),
+  nuevaAut("core", "IP", "Francisco Haoa", "Francisco Haoa Hotus", "Ind.-PS", "M"),
+  /* Alcaldes 2024-2028: la zona es la comuna. */
+  nuevaAut("alcalde", "Algarrobo", "Marcos González", "Marcos González", "", "M"),
+  nuevaAut("alcalde", "Cabildo", "Víctor Donoso", "Víctor Donoso Oyanedel", "", "M"),
+  nuevaAut("alcalde", "Calle Larga", "Dina González", "Dina González Alfaro", "", "F"),
+  nuevaAut("alcalde", "Cartagena", "Lidia Silva", "Lidia Silva", "", "F"),
+  nuevaAut("alcalde", "Casablanca", "Rodrigo Martínez", "Rodrigo Martínez", "", "M"),
+  nuevaAut("alcalde", "Catemu", "Rodrigo Díaz", "Rodrigo Díaz Brito", "", "M"),
+  nuevaAut("alcalde", "Concón", "Freddy Ramírez", "Freddy Ramírez", "", "M"),
+  nuevaAut("alcalde", "El Quisco", "José Jofré", "José Jofré", "", "M"),
+  nuevaAut("alcalde", "El Tabo", "Alfonso Muñoz", "Alfonso Muñoz", "", "M"),
+  nuevaAut("alcalde", "Hijuelas", "Verónica Rossat", "Verónica Rossat Arriagada", "", "F"),
+  nuevaAut("alcalde", "Isla de Pascua", "Elizabeth Arévalo", "Elizabeth Arévalo Pakarati", "", "F"),
+  nuevaAut("alcalde", "Juan Fernández", "Pablo Manríquez", "Pablo Manríquez", "", "M"),
+  nuevaAut("alcalde", "La Calera", "Johnny Piraino", "Johnny Piraino Meneses", "", "M"),
+  nuevaAut("alcalde", "La Cruz", "Filomena Navia", "Filomena Navia Hevia", "", "F"),
+  nuevaAut("alcalde", "La Ligua", "Patricio Pallares", "Patricio Pallares Valenzuela", "", "M"),
+  nuevaAut("alcalde", "Limache", "Luciano Valenzuela", "Luciano Valenzuela Romero", "", "M"),
+  nuevaAut("alcalde", "Llaillay", "Edgardo González", "Edgardo González Arancibia", "", "M"),
+  nuevaAut("alcalde", "Los Andes", "Manuel Rivera", "Manuel Rivera Martínez", "", "M"),
+  nuevaAut("alcalde", "Nogales", "Leslie Pacheco", "Leslie Pacheco Ramírez", "", "F"),
+  nuevaAut("alcalde", "Olmué", "Jorge Jil", "Jorge Jil Herrera", "", "M"),
+  nuevaAut("alcalde", "Panquehue", "Gonzalo Vergara", "Gonzalo Vergara", "", "M"),
+  nuevaAut("alcalde", "Papudo", "Claudia Adasme", "Claudia Adasme", "", "F"),
+  nuevaAut("alcalde", "Petorca", "Gustavo Henríquez", "Gustavo Henríquez", "", "M"),
+  nuevaAut("alcalde", "Puchuncaví", "Marcos Morales", "Marcos Morales Ureta", "", "M"),
+  nuevaAut("alcalde", "Putaendo", "Mauricio Quiroz", "Mauricio Quiroz Chamorro", "", "M"),
+  nuevaAut("alcalde", "Quillota", "Luis Mella", "Luis Mella", "", "M"),
+  nuevaAut("alcalde", "Quilpué", "Carolina Corti", "Carolina Corti Badía", "", "F"),
+  nuevaAut("alcalde", "Quintero", "Rolando Silva", "Rolando Silva", "", "M"),
+  nuevaAut("alcalde", "Rinconada", "Juan Galdames", "Juan Galdames", "", "M"),
+  nuevaAut("alcalde", "San Antonio", "Omar Vera", "Omar Vera Castro", "", "M"),
+  nuevaAut("alcalde", "San Esteban", "Christian Ortega", "Christian Ortega", "", "M"),
+  nuevaAut("alcalde", "San Felipe", "Carmen Castillo", "Carmen Castillo", "", "F"),
+  nuevaAut("alcalde", "Santa María", "Claudio Zurita", "Claudio Zurita", "", "M"),
+  nuevaAut("alcalde", "Santo Domingo", "Fernando Rodríguez", "Fernando Rodríguez Larraín", "", "M"),
+  nuevaAut("alcalde", "Valparaíso", "Camila Nieto", "Camila Nieto Hernández", "", "F"),
+  nuevaAut("alcalde", "Villa Alemana", "Nelson Estay", "Nelson Estay", "", "M"),
+  nuevaAut("alcalde", "Viña del Mar", "Macarena Ripamonti", "Macarena Ripamonti", "", "F"),
+  nuevaAut("alcalde", "Zapallar", "Gustavo Alessandri", "Gustavo Alessandri", "", "M"),
+  nuevaAut("gobernador", "REG", "Rodrigo Mundaca", "Rodrigo Mundaca Cabrera", "Ind.-FA", "M"),
+  nuevaAut("delegado", "REG", "Manuel Millones", "Manuel Millones Chirino", "Ind.-Republicanos", "M"),
+  nuevaAut("delegado", "MM", "Gonzalo Azancot", "Gonzalo Azancot", "", "M"),
+  nuevaAut("delegado", "QUI", "Pilar Cuevas", "Pilar Cuevas", "", "F"),
+  nuevaAut("delegado", "SA", "Soledad Loyola", "Soledad Loyola", "", "F"),
+  nuevaAut("delegado", "SF", "Sebastián Caldera", "Sebastián Caldera", "", "M"),
+  nuevaAut("delegado", "LA", "Ricardo Figueroa", "Ricardo Figueroa", "", "M"),
+  nuevaAut("delegado", "PET", "Andrés Soza", "Andrés Soza", "", "M"),
+  nuevaAut("delegado", "IP", "Mai Teao", "Mai Teao", "", "M")
+];
+const zonaDe = (rol, id) => (ZONAS[rol] || []).find(z => z.id === id) || null;
+const cargoDe = (rol, g) => CARGOS[rol] ? (g === "F" ? CARGOS[rol].f : CARGOS[rol].m) : "";
+/* Formas en que la prensa nombra a una autoridad: nombre conocido, nombre completo y cargo + primer apellido. */
+function variantesNombre(a){
+  const sin = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const partes = a.n.split(" "), ap = partes[partes.length - 1], cargo = sin(cargoDe(a.rol, a.g));
+  const out = new Set([sin(a.n), sin(a.c)]);
+  out.add(cargo + " " + sin(ap));
+  if (a.rol === "core") out.add("core " + sin(ap));
+  // La prensa abrevia: «gobernador Mundaca», «delegado Millones», «delegada presidencial provincial Loyola».
+  if (a.rol === "gobernador") out.add((a.g === "F" ? "gobernadora " : "gobernador ") + sin(ap));
+  if (a.rol === "delegado") { const d = a.g === "F" ? "delegada " : "delegado "; out.add(d + sin(ap)); if (a.zona !== "REG") out.add(d + "presidencial provincial " + sin(ap)); else out.add(d + "presidencial regional " + sin(ap)); }
+  return [...out].filter(x => x.split(" ").length >= 2);
+}
+
+/* Redacción · puntaje de impacto de una noticia (0 a 100) para proponerla como publicación de las cuentas de PregonIA.
+   Lo usan la página /redaccion (modo de prueba) y el servidor (api/_redaccion.js, lectura programada):
+   scripts/build.py copia este archivo a api/_impacto.js para que ambos puntúen exactamente igual.
+   Cuatro señales que eligió el editor, más la recencia:
+     repercusión en medios (cuántos medios y de qué alcance), interacción en redes (cuentas de medios monitoreadas),
+     autoridades de la nómina que aparecen y temas críticos (agua, emergencias, seguridad, salud, grandes inversiones).
+   Todo es por palabras y conteos, sin IA: es barato, explicable y se puede auditar. */
+const IMP_PESOS = {repercusion: 35, redes: 20, autoridades: 15, temas: 20, recencia: 10};
+const IMP_TEMAS = {
+  agua: {n: "Agua y sequía", p: ["agua potable", "sequia", "escasez hidrica", "camion aljibe", "aljibe", "corte de agua", "sin agua", "esval", "embalse", "napas", "acuifero", "apr ", "agua potable rural", "derechos de agua", "desalinizadora"]},
+  emergencias: {n: "Emergencias", p: ["incendio", "evacuacion", "senapred", "alerta roja", "alerta amarilla", "temporal", "marejada", "tsunami", "sismo", "terremoto", "aluvion", "inundacion", "corte de luz", "sin luz", "emergencia", "bomberos", "derrame"]},
+  seguridad: {n: "Seguridad", p: ["homicidio", "balacera", "disparos", "baleado", "asalto", "portonazo", "robo", "delincuencia", "narcotrafico", "detenido", "carabineros", "pdi", "fiscalia", "seguridad publica", "toma de terreno", "crimen", "secuestro", "encerrona"]},
+  salud: {n: "Salud", p: ["hospital", "cesfam", "sapu", "urgencia", "lista de espera", "brote", "virus", "contagio", "vacunacion", "seremi de salud", "intoxicacion", "medicos", "salud primaria", "dengue", "influenza"]},
+  inversion: {n: "Grandes inversiones", p: ["millones de dolares", "mil millones", "inversion", "megaproyecto", "puerto", "plataforma logistica", "concesion", "licitacion", "proyecto inmobiliario", "planta", "seia", "evaluacion ambiental", "fndr", "gobierno regional aprobo", "core aprobo", "obra"]}
+};
+/* Palabras que agravan cualquier tema: vidas en riesgo o daño masivo. */
+const IMP_GRAVE = ["muerto", "muertos", "fallecido", "fallecidos", "fallecio", "victima fatal", "victimas fatales", "herido grave", "heridos", "desaparecido", "evacuados", "damnificados", "estado de catastrofe", "alerta roja", "zona de catastrofe"];
+/* Peso de cada cargo cuando aparece en la noticia. */
+const IMP_CARGO = {gobernador: 15, senador: 14, diputado: 13, delegado: 12, alcalde: 12, core: 9, concejal: 7};
+/* Términos de la región, para las noticias de alcance regional y nacional que afectan a los territorios elegidos. */
+const IMP_REGION = ["region de valparaiso", "quinta region", "v region", "gobierno regional de valparaiso", "gore valparaiso", "gobernador regional", "consejo regional de valparaiso", "delegacion presidencial regional", "litoral central", "provincia de san antonio", "provincia de valparaiso", "provincia de marga marga", "provincia de quillota", "provincia de los andes", "provincia de petorca", "provincia de san felipe"];
+
+const impNorm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ");
+const impEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const impTiene = (t, p) => new RegExp("(^|[^a-z0-9])" + impEsc(p.trim()) + "($|[^a-z0-9])").test(t);
+
+/* Nómina lista para buscar: [{n, rol, zona, re}]. Se arma una vez (variantes de nombre de src/autoridades.js). */
+function impAutoridades(lista, variantes){
+  return (lista || []).map(a => {
+    const vs = (variantes ? variantes(a) : [impNorm(a.n)]).map(impNorm).filter(v => v.split(" ").length >= 2);
+    return vs.length ? {n: a.n, rol: a.rol, zona: a.zona, re: new RegExp("(^|[^a-z])(" + vs.map(impEsc).join("|") + ")([^a-z]|$)")} : null;
+  }).filter(Boolean);
+}
+
+/* Palabras con contenido de un titular, para comparar si dos notas cuentan el mismo hecho. */
+const IMP_VACIAS = new Set("el la los las un una unos unas de del al a en y o u que por para con sin sobre tras ante entre hasta desde se su sus es son fue ser han ha hay mas muy ya no si lo le les como este esta estos estas ese esa eso tu mi nos ni pero porque cuando donde quien cual cuales tras segun".split(" "));
+function impPalabras(t){ return new Set(impNorm(t).replace(/[^a-z0-9ñ ]+/g, " ").split(" ").filter(w => w.length > 2 && !IMP_VACIAS.has(w))); }
+function impParecido(a, b){
+  const A = a instanceof Set ? a : impPalabras(a), B = b instanceof Set ? b : impPalabras(b);
+  if (!A.size || !B.size) return 0; let c = 0; A.forEach(w => { if (B.has(w)) c++; });
+  return c / Math.min(A.size, B.size) * 0.6 + c / (A.size + B.size - c) * 0.4;
+}
+/* Agrupa notas que cuentan el mismo hecho. Codicioso y barato: suficiente para proponer.
+   Dos notas son el mismo hecho si sus titulares se parecen mucho, o si tocan la misma comuna en menos de 36 horas,
+   comparten al menos dos palabras con contenido (sin contar el nombre de la comuna) y el mismo tema crítico. */
+const IMP_UMBRAL_GRUPO = 0.42;
+const impTemasDe = t => new Set(Object.entries(IMP_TEMAS).filter(([, x]) => x.p.some(p => impTiene(t, p))).map(([k]) => k));
+function impFicha(n){
+  const t = impNorm(n.titulo + " " + (n.desc || "")), com = new Set((n.comunas || []).filter(c => c !== "Región"));
+  const fuera = new Set([...com].flatMap(c => [...impPalabras(c)]));
+  return {p: impPalabras(n.titulo), q: new Set([...impPalabras(n.titulo)].filter(w => !fuera.has(w))), com, temas: impTemasDe(t), ts: n.ts};
+}
+function impMismoHecho(a, b){
+  if (impParecido(a.p, b.p) >= IMP_UMBRAL_GRUPO) return true;
+  if (![...a.com].some(c => b.com.has(c)) || Math.abs(a.ts - b.ts) > 36 * 36e5) return false;
+  let comunes = 0; a.q.forEach(w => { if (b.q.has(w)) comunes++; });
+  return comunes >= 2 && [...a.temas].some(t => b.temas.has(t));
+}
+function impAgrupar(notas, grupos = []){
+  const gs = grupos.map(g => ({...g, notas: [...g.notas], _f: g.notas.map(impFicha)}));
+  [...notas].sort((a, b) => a.ts - b.ts).forEach(n => {
+    if (gs.some(g => g.notas.some(x => x.url === n.url))) return;
+    const f = impFicha(n); let mejor = null, mv = 0;
+    gs.forEach(g => { const v = Math.max(...g._f.map(q => impMismoHecho(f, q) ? 1 + impParecido(f.p, q.p) : 0)); if (v > mv) { mv = v; mejor = g; } });
+    if (mejor) { mejor.notas.push(n); mejor._f.push(f); mejor.cambio = true; }
+    else gs.push({id: "h" + n.id, notas: [n], _f: [f], nuevo: true, cambio: true});
+  });
+  return gs.map(g => { delete g._f; return g; });
+}
+/* Alcance de un hecho: nacional si lo publicó un medio nacional; regional si uno regional; si no, comunal. */
+function impAlcance(notas){ const a = new Set(notas.map(n => n.ambito)); return a.has("nacional") ? "nacional" : a.has("regional") ? "regional" : "comunal"; }
+/* Interacción de una publicación de redes: me gusta + 2 × comentarios + 3 × compartidos. */
+const impInteraccion = n => n && n.int ? (Number(n.int.l) || 0) + 2 * (Number(n.int.c) || 0) + 3 * (Number(n.int.s) || 0) : 0;
+
+/* Puntaje de un hecho. ctx: {ahora, autoridades (de impAutoridades), cercanos: [términos de revisión reforzada], pesos}. */
+function impPuntaje(h, ctx = {}){
+  const P = {...IMP_PESOS, ...(ctx.pesos || {})}, ahora = ctx.ahora || Date.now(), notas = h.notas || [];
+  const texto = impNorm(notas.map(n => n.titulo + " " + (n.desc || "")).join(" · "));
+  // Repercusión: medios distintos y alcance del mayor.
+  const medios = [...new Set(notas.map(n => n.medio))], alc = impAlcance(notas);
+  const rep = Math.min(1, ([0, 6, 16, 24, 29, 32][Math.min(medios.length, 5)] + (alc === "nacional" ? 3 : alc === "regional" ? 1 : 0)) / 35);
+  // Redes: interacción sumada de las publicaciones de cuentas de medios (escala logarítmica, 2.000 puntos ≈ máximo).
+  const inter = notas.reduce((s, n) => s + impInteraccion(n), 0), red = inter ? Math.min(1, Math.log10(1 + inter) / Math.log10(2001)) : 0;
+  // Autoridades de la nómina.
+  const auts = (ctx.autoridades || []).filter(a => a.re.test(texto));
+  const aut = auts.length ? Math.min(1, (Math.max(...auts.map(a => IMP_CARGO[a.rol] || 8)) + 2 * (auts.length - 1)) / 15) : 0;
+  // Temas críticos y gravedad.
+  const temas = Object.entries(IMP_TEMAS).filter(([, t]) => t.p.some(p => impTiene(texto, p))).map(([k, t]) => ({k, n: t.n}));
+  const grave = IMP_GRAVE.some(p => impTiene(texto, p));
+  const tem = Math.min(1, ((temas.length ? 14 + 3 * (temas.length - 1) : 0) + (grave ? 6 : 0)) / 20);
+  // Recencia: la nota más nueva.
+  const ult = notas.length ? Math.max(...notas.map(n => n.ts)) : 0, horas = (ahora - ult) / 36e5;
+  const rec = horas < 3 ? 1 : horas < 6 ? 0.8 : horas < 12 ? 0.6 : horas < 24 ? 0.4 : horas < 48 ? 0.2 : 0;
+  const senales = {repercusion: Math.round(rep * P.repercusion), redes: Math.round(red * P.redes), autoridades: Math.round(aut * P.autoridades), temas: Math.round(tem * P.temas), recencia: Math.round(rec * P.recencia)};
+  const total = Object.values(P).reduce((s, v) => s + v, 0) || 100;
+  const puntaje = Math.round(Object.values(senales).reduce((s, v) => s + v, 0) / total * 100);
+  // Revisión reforzada: la noticia toca territorios o actores con los que el editor declaró relación.
+  const cercanos = (ctx.cercanos || []).filter(c => c && impTiene(texto, impNorm(c)));
+  return {puntaje, senales, alcance: alc, ultima: ult,
+    detalle: {medios: medios.length, nombres: medios.slice(0, 8), interaccion: inter, redes: notas.filter(n => n.via === "instagram" || n.via === "facebook").length,
+      autoridades: auts.map(a => a.n), temas: temas.map(t => t.n), grave},
+    sensible: cercanos.length > 0, cercanos};
+}
+
+/* Redacción · piezas para las redes de El Pregonero, el medio informativo de ALTKimia (marca distinta del servicio PregonIA),
+   dibujadas en canvas con su identidad: logo B «Las ondas» (P blanca con dos ondas coral), cobalto #1F4FD8, coral #FF6B4A,
+   azul noche #0E1A3A y Space Grotesk («el» regular, «pregonero» en negrita). El texto largo va en Inter.
+   Formatos: feed 4:5 (1080 × 1350), historia 9:16 (1080 × 1920), carrusel 4:5 y reel 9:16 con voz sintética y música.
+   Reglas que vienen de la línea editorial y del checklist legal:
+   - Sin fotos de los medios ni imágenes realistas hechas con IA: solo texto, datos y marca (derechos de autor y credibilidad).
+   - Cada pieza cita la fuente y lleva la mención de IA (control 32). Los medios se nombran, nunca se usan sus logos (control 25).
+   - El coral es solo gráfico (ondas, viñetas, barras): sobre cobalto no alcanza contraste para texto (control 26).
+   - La música la compone el propio navegador (acordes sintetizados): no hay pistas de terceros que licenciar (control 29).
+   Todo se genera en el navegador; nada se sube a un servidor en la fase 1. */
+const PZ = {W: 1080, FEED: 1350, HIST: 1920, FPS: 30, OUT: [720, 1280]};
+const PZC = {bg: "#1F4FD8", ink: "#FFFFFF", soft: "rgba(255,255,255,.82)", muted: "rgba(255,255,255,.72)", coral: "#FF6B4A", noche: "#0E1A3A", papel: "#FFFFFF", tinta: "#0E1A3A", gris: "#4A5470", track: "rgba(255,255,255,.22)", anillo: "rgba(255,255,255,.07)"};
+const PZF = {h: '"Space Grotesk", Inter, system-ui, sans-serif', b: 'Inter, system-ui, sans-serif'};
+const PZ_MARGEN = 84;
+const PZ_MARCA = "El Pregonero";
+
+function pzFuente(ctx, w, px, fam){ ctx.font = `${w} ${px}px ${fam}`; }
+function pzEsp(ctx, v){ if ("letterSpacing" in ctx) ctx.letterSpacing = v + "px"; }
+function pzLineas(ctx, txt, maxW){
+  const out = []; for (const par of String(txt || "").split("\n")) { let l = ""; for (const w of par.split(/\s+/).filter(Boolean)) { const p = l ? l + " " + w : w; if (ctx.measureText(p).width > maxW && l) { out.push(l); l = w; } else l = p; } out.push(l); }
+  return out.filter((l, i, a) => l || i < a.length - 1);
+}
+/* Texto con ajuste de línea; devuelve la y de la línea siguiente. a: opacidad (para las animaciones del reel). */
+function pzTexto(ctx, txt, x, y, o = {}){
+  const {px = 40, w = 400, fam = PZF.b, color = PZC.ink, maxW = PZ.W - 2 * PZ_MARGEN, lh = px * 1.24, a = 1, max = 99, align = "left", ls = 0} = o;
+  pzFuente(ctx, w, px, fam); pzEsp(ctx, ls); ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = "alphabetic";
+  let L = pzLineas(ctx, txt, maxW); if (L.length > max) { L = L.slice(0, max); L[max - 1] = L[max - 1].replace(/\s*\S*$/, "") + "…"; }
+  if (a > 0) { ctx.save(); ctx.globalAlpha *= Math.min(1, a); const dy = (1 - Math.min(1, a)) * 24; L.forEach((l, i) => ctx.fillText(l, x, y + dy + i * lh)); ctx.restore(); }
+  pzEsp(ctx, 0); return y + L.length * lh;
+}
+/* Tamaño de letra más grande (entre max y min) con el que el texto cabe en maxLineas. */
+function pzAjustar(ctx, txt, {w = 700, fam = PZF.h, max = 88, min = 50, maxW = PZ.W - 2 * PZ_MARGEN, maxLineas = 5}){
+  for (let px = max; px >= min; px -= 2) { pzFuente(ctx, w, px, fam); if (pzLineas(ctx, txt, maxW).length <= maxLineas) return px; }
+  return min;
+}
+function pzRR(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+/* Símbolo: P con dos ondas. Geometría tomada del archivo de perfil (lienzo de 1080): la P mide 433 de alto.
+   (x, y) es la esquina superior izquierda del asta; alto: altura de la P en píxeles; ondas: 0 a 1 (animación). */
+function pzSimbolo(ctx, x, y, alto, {a = 1, ondas = 1, color = PZC.ink} = {}){
+  const s = alto / 433, X = v => x + (v - 290) * s, Y = v => y + (v - 323) * s, R = v => v * s;
+  ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = color;
+  ctx.beginPath();
+  // Contorno: asta con esquinas redondeadas y panza semicircular (centro 470, 491.5; radio 168.5).
+  ctx.moveTo(X(306), Y(323)); ctx.lineTo(X(470), Y(323)); ctx.arc(X(470), Y(491.5), R(168.5), -Math.PI / 2, Math.PI / 2); ctx.lineTo(X(387), Y(660));
+  ctx.lineTo(X(387), Y(740)); ctx.arcTo(X(387), Y(756), X(371), Y(756), R(16)); ctx.lineTo(X(306), Y(756)); ctx.arcTo(X(290), Y(756), X(290), Y(740), R(16));
+  ctx.lineTo(X(290), Y(339)); ctx.arcTo(X(290), Y(323), X(306), Y(323), R(16)); ctx.closePath();
+  // Hueco de la panza (centro 470, 491; radio 72).
+  ctx.moveTo(X(387), Y(419)); ctx.lineTo(X(470), Y(419)); ctx.arc(X(470), Y(491), R(72), -Math.PI / 2, Math.PI / 2); ctx.lineTo(X(387), Y(563)); ctx.closePath();
+  ctx.fill("evenodd");
+  // Ondas coral, con remate redondo.
+  ctx.strokeStyle = PZC.coral; ctx.lineCap = "round"; ctx.lineWidth = R(38);
+  [[228, 0.61], [301, 0.52]].forEach(([r, ang], i) => { const v = Math.min(1, Math.max(0, ondas * 2 - i)); if (v <= 0) return;
+    ctx.save(); ctx.globalAlpha *= v; ctx.beginPath(); ctx.arc(X(470), Y(491.5), R(r), -ang * v, ang * v); ctx.stroke(); ctx.restore(); });
+  ctx.restore();
+  return {ancho: R(771 + 19 - 290)};
+}
+/* Logo horizontal: símbolo + «el pregonero». alto = altura de la P. Devuelve el ancho total. */
+function pzLogo(ctx, x, y, alto, {a = 1, ondas = 1, align = "left", color = PZC.ink} = {}){
+  const px = alto * 0.78, gap = alto * 0.42;
+  pzFuente(ctx, 400, px, PZF.h); const wEl = ctx.measureText("el ").width; pzFuente(ctx, 700, px, PZF.h); const wPr = ctx.measureText("pregonero").width;
+  const wSim = alto / 433 * 500, total = wSim + gap + wEl + wPr;
+  const x0 = align === "center" ? x - total / 2 : align === "right" ? x - total : x;
+  pzSimbolo(ctx, x0, y, alto, {a, ondas, color});
+  const base = y + alto * 0.74; ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = color; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  pzEsp(ctx, -px * 0.02); pzFuente(ctx, 400, px, PZF.h); ctx.fillText("el ", x0 + wSim + gap, base); pzFuente(ctx, 700, px, PZF.h); ctx.fillText("pregonero", x0 + wSim + gap + wEl, base); pzEsp(ctx, 0);
+  ctx.restore(); return total;
+}
+/* Fondo cobalto con los anillos de la portada (ondas que se expanden). fase: desplazamiento para animarlos en el reel. */
+function pzFondo(ctx, H, {fase = 0, lado = "der"} = {}){
+  ctx.fillStyle = PZC.bg; ctx.fillRect(0, 0, PZ.W, H);
+  const cx = lado === "der" ? PZ.W + 120 : -120, cy = H * 0.5;
+  ctx.save(); ctx.strokeStyle = PZC.anillo; ctx.lineWidth = 34;
+  for (let k = 0; k < 4; k++) { const r = 260 + k * 150 + (fase % 1) * 150; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); }
+  ctx.restore();
+}
+const pzFecha = ts => new Date(ts || Date.now()).toLocaleDateString("es-CL", {day: "numeric", month: "long", year: "numeric"});
+/* Cabezal: logo y fecha, con un filete fino. */
+function pzCabezal(ctx, c, y){
+  pzLogo(ctx, PZ_MARGEN, y, 58);
+  pzTexto(ctx, pzFecha(c.fechaPieza), PZ.W - PZ_MARGEN, y + 42, {px: 26, w: 500, color: PZC.muted, align: "right"});
+  ctx.fillStyle = PZC.track; ctx.fillRect(PZ_MARGEN, y + 92, PZ.W - 2 * PZ_MARGEN, 2);
+  return y + 92;
+}
+/* Antetítulo en píldora coral con texto azul noche (contraste alto). */
+function pzKicker(ctx, txt, y, a = 1){
+  const t = String(txt || "").toUpperCase(); if (!t) return y;
+  pzFuente(ctx, 700, 26, PZF.h); pzEsp(ctx, 3); const w = Math.min(PZ.W - 2 * PZ_MARGEN, ctx.measureText(t).width + 44); pzEsp(ctx, 0);
+  ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = PZC.coral; pzRR(ctx, PZ_MARGEN, y - 38, w, 54, 27); ctx.fill(); ctx.restore();
+  pzTexto(ctx, t, PZ_MARGEN + 22, y - 2, {px: 26, w: 700, fam: PZF.h, color: PZC.noche, ls: 3, a, max: 1, maxW: w - 30});
+  return y + 30;
+}
+/* Pie: fuente y mención de IA. */
+function pzPie(ctx, c, H, a = 1){
+  const y = H - 140; ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = PZC.track; ctx.fillRect(PZ_MARGEN, y, PZ.W - 2 * PZ_MARGEN, 2); ctx.restore();
+  pzTexto(ctx, "Fuente: " + pzFuentes(c), PZ_MARGEN, y + 52, {px: 28, w: 600, a, max: 1});
+  pzTexto(ctx, c.etiquetaIA || "Resumen elaborado con apoyo de IA y revisado por el equipo de " + PZ_MARCA, PZ_MARGEN, y + 94, {px: 23, w: 400, color: PZC.muted, a, max: 1});
+}
+const pzFuentes = c => { const ms = [...new Set((c.fuentes && c.fuentes.length ? c.fuentes : [c.fuente || {}]).map(f => f.medio).filter(Boolean))]; return ms.length ? (ms.length > 2 ? ms.slice(0, 2).join(", ") + " y otros" : ms.join(" y ")) : "[completar fuente]"; };
+function pzDatos(ctx, datos, y, o = {}){
+  const {px = 34, gap = 22, a = 1, max = 3, color = PZC.ink} = o;
+  (datos || []).filter(Boolean).slice(0, max).forEach(d => {
+    ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = PZC.coral; ctx.beginPath(); ctx.arc(PZ_MARGEN + 8, y - px * 0.36, 8, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    y = pzTexto(ctx, d, PZ_MARGEN + 36, y, {px, w: 500, a, color, maxW: PZ.W - 2 * PZ_MARGEN - 36, max: 3}) + gap;
+  });
+  return y;
+}
+
+/* Feed 4:5 */
+function pzFeed(ctx, c){
+  const H = PZ.FEED; pzFondo(ctx, H);
+  let y = pzCabezal(ctx, c, 84) + 100;
+  y = pzKicker(ctx, c.kicker, y) + 24;
+  const px = pzAjustar(ctx, c.titular, {max: 84, min: 54, maxLineas: 5});
+  y = pzTexto(ctx, c.titular || "[titular]", PZ_MARGEN, y + px * 0.6, {px, w: 700, fam: PZF.h, lh: px * 1.08, ls: -px * 0.02, max: 5}) + 14;
+  if (c.bajada) y = pzTexto(ctx, c.bajada, PZ_MARGEN, y + 22, {px: 34, w: 400, color: PZC.soft, max: 4, lh: 46}) + 26;
+  const restante = H - 180 - y, datos = (c.datos || []).filter(Boolean);
+  if (datos.length && restante > 160) pzDatos(ctx, datos, y + 34, {px: 31, max: restante > 330 ? 3 : 2, gap: 16});
+  pzPie(ctx, c, H);
+}
+/* Historia 9:16: el contenido evita los 250 px de arriba y los 300 de abajo, donde Instagram pone su interfaz. */
+function pzHistoria(ctx, c){
+  const H = PZ.HIST; pzFondo(ctx, H);
+  let y = pzCabezal(ctx, c, 280) + 130;
+  y = pzKicker(ctx, c.kicker, y) + 30;
+  const t = (c.historia && c.historia.t) || c.titular, px = pzAjustar(ctx, t, {max: 96, min: 60, maxLineas: 6});
+  y = pzTexto(ctx, t || "[titular]", PZ_MARGEN, y + px * 0.6, {px, w: 700, fam: PZF.h, lh: px * 1.08, ls: -px * 0.02, max: 6}) + 30;
+  const x = (c.historia && c.historia.x) || c.bajada;
+  if (x) y = pzTexto(ctx, x, PZ_MARGEN, y + 20, {px: 40, w: 400, color: PZC.soft, max: 5, lh: 54}) + 30;
+  // Llamado a ver el detalle en el feed: píldora blanca con texto cobalto.
+  const ty = Math.min(Math.max(y + 60, 1240), 1440); pzFuente(ctx, 700, 34, PZF.h); const lbl = "El detalle, en nuestra publicación", w = ctx.measureText(lbl).width + 80;
+  ctx.fillStyle = PZC.papel; pzRR(ctx, PZ_MARGEN, ty, w, 84, 42); ctx.fill(); pzTexto(ctx, lbl, PZ_MARGEN + 40, ty + 54, {px: 34, w: 700, fam: PZF.h, color: PZC.bg});
+  ctx.fillStyle = PZC.track; ctx.fillRect(PZ_MARGEN, 1540, PZ.W - 2 * PZ_MARGEN, 2);
+  pzTexto(ctx, "Fuente: " + pzFuentes(c), PZ_MARGEN, 1590, {px: 28, w: 600, max: 1});
+  pzTexto(ctx, c.etiquetaIA || "Resumen elaborado con apoyo de IA y revisado por el equipo de " + PZ_MARCA, PZ_MARGEN, 1630, {px: 23, w: 400, color: PZC.muted, max: 2});
+}
+/* Carrusel: portada y cierre en cobalto; las láminas del medio en papel blanco, para dar ritmo y leer mejor el texto largo. */
+function pzLaminas(c){ return [{k: "portada"}, ...((c.slides || []).filter(s => s && (s.t || s.x)).slice(0, 4).map(s => ({k: "punto", ...s}))), {k: "cierre"}]; }
+function pzPuntos(ctx, n, i, H, claro){ for (let k = 0; k < n; k++) { ctx.fillStyle = k === i ? (claro ? PZC.bg : PZC.ink) : (claro ? "#D6DCEB" : PZC.track); pzRR(ctx, PZ.W - PZ_MARGEN - (n - k) * 30 + 12, H - 76, 18, 18, 9); ctx.fill(); } }
+function pzLamina(ctx, c, i){
+  const H = PZ.FEED, L = pzLaminas(c), s = L[i] || L[0], n = L.length;
+  if (s.k === "punto") {
+    ctx.fillStyle = PZC.papel; ctx.fillRect(0, 0, PZ.W, H);
+    ctx.fillStyle = PZC.bg; ctx.fillRect(0, 0, PZ.W, 18);
+    pzSimbolo(ctx, PZ_MARGEN, 84, 58, {color: PZC.bg});
+    pzTexto(ctx, `${i} / ${n - 2}`, PZ.W - PZ_MARGEN, 128, {px: 30, w: 700, fam: PZF.h, color: PZC.bg, align: "right"});
+    const px = pzAjustar(ctx, s.t || "", {max: 76, min: 50, maxLineas: 3});
+    ctx.fillStyle = PZC.coral; ctx.fillRect(PZ_MARGEN, 300, 120, 10);
+    let y = pzTexto(ctx, s.t || "", PZ_MARGEN, 360 + px * 0.6, {px, w: 700, fam: PZF.h, color: PZC.tinta, lh: px * 1.08, ls: -px * 0.02, max: 3}) + 20;
+    pzTexto(ctx, s.x || "", PZ_MARGEN, y + 30, {px: 38, w: 400, color: PZC.gris, lh: 54, max: 9});
+    pzPuntos(ctx, n, i, H, true); return;
+  }
+  pzFondo(ctx, H, {lado: s.k === "cierre" ? "izq" : "der"});
+  let y = pzCabezal(ctx, c, 84) + 100;
+  if (s.k === "portada") {
+    y = pzKicker(ctx, c.kicker, y) + 24;
+    const px = pzAjustar(ctx, c.titular, {max: 92, min: 58, maxLineas: 6});
+    y = pzTexto(ctx, c.titular || "[titular]", PZ_MARGEN, y + px * 0.6, {px, w: 700, fam: PZF.h, lh: px * 1.08, ls: -px * 0.02, max: 6});
+    if (c.bajada) pzTexto(ctx, c.bajada, PZ_MARGEN, y + 50, {px: 34, w: 400, color: PZC.soft, max: 3, lh: 46});
+    pzTexto(ctx, "Desliza  →", PZ_MARGEN, H - 60, {px: 30, w: 700, fam: PZF.h});
+  } else {
+    pzTexto(ctx, "FUENTES", PZ_MARGEN, y, {px: 26, w: 700, fam: PZF.h, ls: 4, color: PZC.muted}); y += 30;
+    const fs = (c.fuentes && c.fuentes.length ? c.fuentes : [c.fuente || {}]).filter(f => f.medio).slice(0, 5);
+    fs.forEach(f => { y = pzTexto(ctx, f.medio, PZ_MARGEN, y + 24, {px: 40, w: 700, fam: PZF.h, max: 1}); if (f.fecha) y = pzTexto(ctx, pzFecha(f.fecha), PZ_MARGEN, y + 2, {px: 26, w: 400, color: PZC.muted}); y += 8; });
+    if (!fs.length) y = pzTexto(ctx, "[completar fuente]", PZ_MARGEN, y + 24, {px: 40, w: 700, fam: PZF.h});
+    y = Math.max(y + 70, 860);
+    pzLogo(ctx, PZ_MARGEN, y - 60, 72);
+    pzTexto(ctx, "Noticias de la Región de Valparaíso, comuna por comuna. Hechos con fuente, sin opinión.", PZ_MARGEN, y + 70, {px: 30, w: 400, color: PZC.soft, max: 3});
+    pzTexto(ctx, c.etiquetaIA || "Resumen elaborado con apoyo de IA y revisado por el equipo de " + PZ_MARCA, PZ_MARGEN, H - 120, {px: 24, w: 400, color: PZC.muted, max: 2, maxW: PZ.W - 2 * PZ_MARGEN - 200});
+  }
+  pzPuntos(ctx, n, i, H, false);
+}
+
+/* Reel 9:16: escenas (portada, un dato por escena, cierre) sincronizadas con la voz de cada escena. */
+const PZ_VOZ_INI = 0.35, PZ_VOZ_COLA = 0.7;
+function pzEscenas(c){
+  const g = c.guion || {}, datos = (c.datos || []).filter(Boolean).slice(0, 3);
+  const S = [{k: "intro", dur: 4.4, txt: g.intro || c.titular}];
+  datos.forEach((d, i) => S.push({k: "dato", dur: 4.6, i, de: datos.length, d, txt: (g.datos && g.datos[i]) || d}));
+  S.push({k: "cierre", dur: 4.6, txt: g.cierre || `Fuente: ${pzFuentes(c)}. Esto fue El Pregonero.`});
+  return S;
+}
+function pzRetimar(plan){ let t = 0; plan.escenas.forEach(s => { s.base ??= s.dur; s.dur = s.voz ? Math.max(s.base, PZ_VOZ_INI + s.voz.duration + PZ_VOZ_COLA) : s.base; s.t0 = t; t += s.dur; }); plan.total = t; return plan; }
+const pzEase = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+const pzIn = (l, t0, d = 0.6) => pzEase((l - t0) / d);
+function pzReelCuadro(ctx, plan, t){
+  const c = plan.c, H = PZ.HIST, k = ctx.canvas.width / PZ.W; ctx.setTransform(k, 0, 0, k, 0, 0); ctx.globalAlpha = 1;
+  const s = plan.escenas.find(x => t < x.t0 + x.dur) || plan.escenas[plan.escenas.length - 1], l = Math.min(t - s.t0, s.dur);
+  pzFondo(ctx, H, {fase: t / 4, lado: s.k === "cierre" ? "izq" : "der"});
+  // Progreso arriba, como en las historias.
+  const n = plan.escenas.length, gap = 10, w = (PZ.W - 2 * 60 - gap * (n - 1)) / n;
+  plan.escenas.forEach((x, i) => { const p = Math.min(1, Math.max(0, (t - x.t0) / x.dur)); ctx.fillStyle = PZC.track; pzRR(ctx, 60 + i * (w + gap), 60, w, 8, 4); ctx.fill(); if (p > 0) { ctx.fillStyle = PZC.ink; pzRR(ctx, 60 + i * (w + gap), 60, Math.max(8, w * p), 8, 4); ctx.fill(); } });
+  ctx.save(); ctx.globalAlpha = Math.min(1, (s.dur - l) / 0.35 + (s.k === "cierre" ? 1 : 0));
+  if (s.k === "intro") {
+    pzLogo(ctx, PZ.W / 2, 420, 96, {a: pzIn(l, 0), ondas: pzIn(l, 0.1, 1), align: "center"});
+    pzKicker(ctx, c.kicker, 740, pzIn(l, 0.4));
+    const px = pzAjustar(ctx, c.titular, {max: 100, min: 64, maxLineas: 6});
+    const y = pzTexto(ctx, c.titular, PZ_MARGEN, 820 + px * 0.6, {px, w: 700, fam: PZF.h, lh: px * 1.08, ls: -px * 0.02, a: pzIn(l, 0.65, 0.8), max: 6});
+    if (c.bajada) pzTexto(ctx, c.bajada, PZ_MARGEN, y + 50, {px: 40, w: 400, color: PZC.soft, lh: 54, a: pzIn(l, 1.4), max: 4});
+  } else if (s.k === "dato") {
+    pzLogo(ctx, PZ_MARGEN, 150, 54, {ondas: 0.5 + 0.5 * Math.abs(Math.sin(t * 2))});
+    pzKicker(ctx, c.kicker, 580, pzIn(l, 0));
+    pzTexto(ctx, `${s.i + 1} de ${s.de}`, PZ_MARGEN, 690, {px: 34, w: 700, fam: PZF.h, color: PZC.muted, a: pzIn(l, 0.15)});
+    ctx.save(); ctx.globalAlpha *= pzIn(l, 0.2); ctx.fillStyle = PZC.coral; ctx.fillRect(PZ_MARGEN, 750, 180 * pzIn(l, 0.2, 0.8), 12); ctx.restore();
+    const px = pzAjustar(ctx, s.d, {max: 84, min: 54, maxLineas: 7});
+    pzTexto(ctx, s.d, PZ_MARGEN, 860 + px * 0.6, {px, w: 700, fam: PZF.h, lh: px * 1.1, ls: -px * 0.015, a: pzIn(l, 0.35, 0.8), max: 7});
+  } else {
+    pzTexto(ctx, "FUENTE", PZ_MARGEN, 560, {px: 30, w: 700, fam: PZF.h, ls: 4, color: PZC.muted, a: pzIn(l, 0)});
+    let y = pzTexto(ctx, pzFuentes(c), PZ_MARGEN, 660, {px: 70, w: 700, fam: PZF.h, lh: 80, a: pzIn(l, 0.2), max: 3});
+    if (c.fuente && c.fuente.fecha) pzTexto(ctx, pzFecha(c.fuente.fecha), PZ_MARGEN, y + 10, {px: 36, w: 500, color: PZC.muted, a: pzIn(l, 0.4)});
+    pzLogo(ctx, PZ.W / 2, 1120, 120, {a: pzIn(l, 0.8), ondas: pzIn(l, 0.9, 1.2), align: "center"});
+    pzTexto(ctx, "Noticias de la Región de Valparaíso, comuna por comuna", PZ.W / 2, 1360, {px: 34, w: 400, fam: PZF.h, color: PZC.soft, a: pzIn(l, 1.1), align: "center", maxW: PZ.W - 160, max: 2});
+    pzTexto(ctx, "Guion con apoyo de IA, revisado por el equipo · Voz sintética", PZ.W / 2, 1520, {px: 28, w: 500, color: PZC.muted, a: pzIn(l, 1.3), align: "center", maxW: PZ.W - 160, max: 2});
+  }
+  ctx.restore();
+}
+
+/* Música propia: acordes suaves sintetizados (La menor, Fa, Do, Sol), con entrada y salida, bajo la voz. */
+async function pzMusica(total, SR = 48000){
+  const oc = new OfflineAudioContext(1, Math.ceil(total * SR), SR), maestro = oc.createGain(); maestro.gain.value = 1; maestro.connect(oc.destination);
+  const filtro = oc.createBiquadFilter(); filtro.type = "lowpass"; filtro.frequency.value = 1400; filtro.connect(maestro);
+  const ACORDES = [[220, 261.63, 329.63], [174.61, 220, 261.63], [261.63, 329.63, 392], [196, 246.94, 293.66]], DUR = 2.4;
+  for (let t = 0, k = 0; t < total; t += DUR, k++) {
+    ACORDES[k % 4].forEach((f, j) => {
+      const o = oc.createOscillator(), g = oc.createGain(); o.type = j === 0 ? "triangle" : "sine"; o.frequency.value = f; o.detune.value = (j - 1) * 4;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.05, t + 0.5); g.gain.setValueAtTime(0.05, t + DUR - 0.4); g.gain.linearRampToValueAtTime(0, t + DUR + 0.2);
+      o.connect(g); g.connect(filtro); o.start(t); o.stop(Math.min(total, t + DUR + 0.25));
+    });
+    // Pulso suave en cada tiempo.
+    for (let b = 0; b < 4; b++) { const tb = t + b * DUR / 4; if (tb >= total) break; const o = oc.createOscillator(), g = oc.createGain(); o.type = "sine"; o.frequency.value = ACORDES[k % 4][0] / 2;
+      g.gain.setValueAtTime(0.0001, tb); g.gain.exponentialRampToValueAtTime(0.07, tb + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, tb + 0.35); o.connect(g); g.connect(filtro); o.start(tb); o.stop(tb + 0.4); }
+  }
+  maestro.gain.setValueAtTime(0, 0); maestro.gain.linearRampToValueAtTime(1, 1.2); maestro.gain.setValueAtTime(1, Math.max(1.2, total - 1.5)); maestro.gain.linearRampToValueAtTime(0, total);
+  return await oc.startRendering();
+}
+/* Mezcla: la voz de cada escena en su tiempo y la música baja (más baja aún mientras se habla). */
+async function pzMezcla(plan, conMusica = true){
+  const SR = 48000, oc = new OfflineAudioContext(1, Math.ceil(plan.total * SR), SR);
+  if (conMusica) { const m = await pzMusica(plan.total, SR), src = oc.createBufferSource(), g = oc.createGain(); src.buffer = m; g.gain.value = 0.55;
+    plan.escenas.forEach(s => { if (!s.voz) return; const a = s.t0 + PZ_VOZ_INI, b = a + s.voz.duration; g.gain.setValueAtTime(0.55, Math.max(0, a - 0.25)); g.gain.linearRampToValueAtTime(0.22, a); g.gain.setValueAtTime(0.22, b); g.gain.linearRampToValueAtTime(0.55, b + 0.4); });
+    src.connect(g); g.connect(oc.destination); src.start(0); }
+  plan.escenas.forEach(s => { if (!s.voz) return; const src = oc.createBufferSource(); src.buffer = s.voz; src.connect(oc.destination); src.start(s.t0 + PZ_VOZ_INI); });
+  return await oc.startRendering();
+}
+
+/* Exportación a MP4 en el navegador (WebCodecs + mp4-muxer), como el video resumen del parte. */
+function pzScript(url, global){
+  pzScript.p ||= {};
+  return pzScript.p[url] ||= new Promise((ok, no) => { if (window[global]) return ok(window[global]); const s = document.createElement("script"); s.src = url;
+    s.onload = () => window[global] ? ok(window[global]) : no(new Error(global)); s.onerror = () => { delete pzScript.p[url]; s.remove(); no(new Error(global)); }; document.head.appendChild(s); });
+}
+async function pzMP4(plan, audio, onProg = () => {}, signal){
+  if (!window.VideoEncoder || !window.VideoFrame) return null;
+  const [w, h] = PZ.OUT, base = {width: w, height: h, bitrate: 3_500_000, framerate: PZ.FPS, avc: {format: "avc"}};
+  let cfg = null;
+  for (const codec of ["avc1.640028", "avc1.4d0028", "avc1.42e028", "avc1.42001f"]) { try { const c = {...base, codec}; if ((await VideoEncoder.isConfigSupported(c)).supported) { cfg = c; break; } } catch(e) {} }
+  if (!cfg) return null;
+  const Mx = await pzScript("https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.1/build/mp4-muxer.js", "Mp4Muxer").catch(() => null); if (!Mx) return null;
+  let acfg = null;
+  if (audio && window.AudioEncoder) for (const [codec, mx] of [["mp4a.40.2", "aac"], ["opus", "opus"]]) { try { const c = {codec, sampleRate: 48000, numberOfChannels: 1, bitrate: 128000}; if ((await AudioEncoder.isConfigSupported(c)).supported) { acfg = {c, mx}; break; } } catch(e) {} }
+  const muxer = new Mx.Muxer({target: new Mx.ArrayBufferTarget(), video: {codec: "avc", width: w, height: h, frameRate: PZ.FPS}, ...(acfg ? {audio: {codec: acfg.mx, numberOfChannels: 1, sampleRate: 48000}} : {}), fastStart: "in-memory"});
+  plan.audioCodec = acfg ? acfg.mx : null;
+  if (acfg) {
+    let fallo = null; const aenc = new AudioEncoder({output: (ch, m) => muxer.addAudioChunk(ch, m), error: e => { fallo = e; }}); aenc.configure(acfg.c);
+    const pcm = audio.getChannelData(0), PASO = 4800;
+    for (let i = 0; i < pcm.length; i += PASO) { const tr = pcm.slice(i, Math.min(pcm.length, i + PASO)); const ad = new AudioData({format: "f32-planar", sampleRate: 48000, numberOfFrames: tr.length, numberOfChannels: 1, timestamp: Math.round(i / 48000 * 1e6), data: tr}); aenc.encode(ad); ad.close(); while (aenc.encodeQueueSize > 20) await new Promise(r => setTimeout(r, 2)); }
+    await aenc.flush(); aenc.close(); if (fallo) throw fallo;
+  }
+  let fallo = null; const enc = new VideoEncoder({output: (ch, m) => muxer.addVideoChunk(ch, m), error: e => { fallo = e; }}); enc.configure(cfg);
+  const cv = document.createElement("canvas"); cv.width = w; cv.height = h; const ctx = cv.getContext("2d"), n = Math.ceil(plan.total * PZ.FPS);
+  try {
+    for (let f = 0; f < n; f++) {
+      if (signal && signal.aborted) throw {code: "cancelled"}; if (fallo) throw fallo;
+      pzReelCuadro(ctx, plan, f / PZ.FPS);
+      const vf = new VideoFrame(cv, {timestamp: Math.round(f * 1e6 / PZ.FPS), duration: Math.round(1e6 / PZ.FPS)}); enc.encode(vf, {keyFrame: f % (PZ.FPS * 2) === 0}); vf.close();
+      while (enc.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 4));
+      if (f % 6 === 0) { onProg(f / n); await new Promise(r => setTimeout(r, 0)); }
+    }
+    await enc.flush(); if (fallo) throw fallo; muxer.finalize();
+  } finally { if (enc.state !== "closed") enc.close(); }
+  onProg(1); return new Blob([muxer.target.buffer], {type: "video/mp4"});
+}
+/* Respaldo para navegadores sin WebCodecs: graba en tiempo real. */
+async function pzGrabado(plan, audio, onProg = () => {}, signal){
+  if (!window.MediaRecorder) return null;
+  const mime = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"].find(t => MediaRecorder.isTypeSupported(t)); if (!mime) return null;
+  const [w, h] = PZ.OUT, cv = document.createElement("canvas"); cv.width = w; cv.height = h; const ctx = cv.getContext("2d"); pzReelCuadro(ctx, plan, 0);
+  const pista = cv.captureStream(PZ.FPS); let ac = null, src = null;
+  if (audio) { try { ac = new AudioContext(); const d = ac.createMediaStreamDestination(); src = ac.createBufferSource(); src.buffer = audio; src.connect(d); d.stream.getAudioTracks().forEach(t => pista.addTrack(t)); } catch(e) { ac = null; } }
+  const rec = new MediaRecorder(pista, {mimeType: mime, videoBitsPerSecond: 3_500_000}), partes = []; rec.ondataavailable = e => { if (e.data && e.data.size) partes.push(e.data); };
+  const fin = new Promise(r => rec.onstop = r); rec.start(500); if (src) { await ac.resume().catch(() => {}); src.start(); }
+  const t0 = performance.now();
+  await new Promise(ok => { const loop = () => { const t = (performance.now() - t0) / 1000; if ((signal && signal.aborted) || t >= plan.total) return ok(); pzReelCuadro(ctx, plan, t); onProg(t / plan.total); requestAnimationFrame(loop); }; loop(); });
+  rec.stop(); await fin; if (ac) ac.close().catch(() => {}); if (signal && signal.aborted) throw {code: "cancelled"};
+  return new Blob(partes, {type: mime.split(";")[0]});
+}
+/* Imagen PNG de un formato. */
+function pzPNG(dibujar, alto){ const cv = document.createElement("canvas"); cv.width = PZ.W; cv.height = alto; dibujar(cv.getContext("2d")); return new Promise(ok => cv.toBlob(ok, "image/png")); }
+const PZ_FUENTES = ['400 40px Inter', '500 40px Inter', '600 40px Inter', '700 40px Inter', '400 60px "Space Grotesk"', '700 60px "Space Grotesk"'];
+const pzFuentesListas = () => Promise.all(PZ_FUENTES.map(f => document.fonts.load(f).catch(() => {})));
+
+/* Redacción · datos de prueba. Solo se usan en el computador de desarrollo (localhost), sin base de datos.
+   Noticias, medios, personas y cifras son FICTICIOS: sirven para probar el puntaje, la redacción y las piezas.
+   Las autoridades de prueba no existen; la nómina real de src/autoridades.js no se mezcla con noticias inventadas. */
+const RD_PRUEBA_AUT = [
+  {n: "Andrea Lagos", c: "Andrea Lagos Fuenzalida", rol: "alcalde", zona: "Ficticia", g: "F"},
+  {n: "Tomás Vera", c: "Tomás Vera Ibarra", rol: "diputado", zona: "Ficticia", g: "M"}
+];
+const RD_PRUEBA_NOTAS = (() => {
+  const h = x => Date.now() - x * 36e5, u = k => "https://ejemplo.invalid/nota-" + k;
+  const N = (k, medio, ambito, horas, titulo, desc, comunas, extra = {}) => ({id: "p" + k, medio, ambito, titulo, desc, url: u(k), ts: h(horas), via: "lectura", comunas, ...extra});
+  return [
+    N(1, "El Observador Costero", "regional", 1.5, "Corte de agua afectará a cuatro sectores de Casablanca durante 18 horas", "La sanitaria informó trabajos en la matriz principal; habrá camiones aljibe en tres puntos de la comuna.", ["Casablanca"]),
+    N(2, "Radio Litoral", "local", 2, "Casablanca: anuncian corte de agua de 18 horas por obras en matriz", "Vecinos de cuatro sectores quedarán sin suministro; la alcaldesa Andrea Lagos pidió acumular agua.", ["Casablanca"]),
+    N(3, "@noticiaslitoral (Instagram)", "local", 2.5, "Atención Casablanca: corte de agua de 18 horas en cuatro sectores", "Publicación con los sectores y puntos de camiones aljibe.", ["Casablanca"], {via: "instagram", int: {l: 640, c: 85, s: 0}}),
+    N(4, "Diario Nacional", "nacional", 3, "Sanitaria programa corte de agua en Casablanca por obras de mejoramiento", "El corte se extenderá por 18 horas y afectará a cuatro sectores, según la empresa.", ["Casablanca"]),
+    N(5, "Portal Quinta Región", "regional", 5, "Consejo regional aprueba 4.200 millones para nuevo centro de salud en San Antonio", "El proyecto contempla un CESFAM con capacidad para 30 mil inscritos; la obra comenzaría en 2027.", ["San Antonio"]),
+    N(6, "El Observador Costero", "regional", 6, "Aprueban recursos para CESFAM en San Antonio: inversión de 4.200 millones", "El diputado Tomás Vera valoró la votación del consejo regional.", ["San Antonio"]),
+    N(7, "Radio Litoral", "local", 9, "Feria costumbrista reunirá a 40 emprendedores en la plaza de Algarrobo", "La actividad se realizará el fin de semana con entrada liberada.", ["Algarrobo"]),
+    N(8, "Diario Nacional", "nacional", 4, "Incendio forestal obliga a evacuar sector rural de Quilpué; Senapred declara alerta roja", "Bomberos y brigadas trabajan en el control del fuego; hay 12 viviendas evacuadas.", ["Quilpué"]),
+    N(9, "Portal Quinta Región", "regional", 3.5, "Alerta roja en Quilpué por incendio forestal: evacúan 12 viviendas", "Senapred mantiene la alerta y pide evitar el sector.", ["Quilpué"]),
+    N(10, "Página Vecinal Quilpué (Facebook)", "local", 3.8, "Incendio en sector rural de Quilpué: vecinos reportan humo y evacuación", "Publicación de vecinos con fotos del humo.", ["Quilpué"], {via: "facebook", int: {l: 1200, c: 310, s: 450}}),
+    N(11, "Radio Litoral", "local", 20, "Liceo de El Quisco gana concurso regional de robótica escolar", "El equipo representará a la región en la final nacional.", ["El Quisco"]),
+    N(12, "Portal Quinta Región", "regional", 7, "Gobierno regional de Valparaíso licita estudio de plataforma logística para el puerto", "La licitación busca evaluar alternativas de ubicación y el impacto vial en la región.", ["Región"]),
+    N(13, "Radio Litoral", "local", 26, "Municipio de San Antonio inicia operativo de limpieza de playas", "La jornada contará con voluntarios y equipos municipales.", ["San Antonio"])
+  ];
+})();
+
+/* Redacción · cuenta privada del editor de PregonIA para las cuentas de Facebook e Instagram del medio.
+   Flujo: territorios elegidos → propuestas con puntaje de impacto → redacción con IA (neutral estricta) → revisión y edición
+   → aprobación (siempre manual) → programación → publicación. En la fase 1 se publica descargando las piezas y copiando el texto;
+   a la hora programada llega un aviso al celular. En la fase 2 se conecta la API de Meta y la publicación queda automática.
+   Modos: «editor» (Supabase, con la sesión de alguien inscrito en la tabla editores) y «prueba» (solo en localhost, datos ficticios
+   guardados en el navegador). Fuera de localhost, sin sesión de editor, la página no muestra nada más que el ingreso. */
+const RD = {modo: null, sb: null, user: null, cfgPub: null, cfg: null, props: [], posts: [], post: null, fmt: "feed", lam: 0, ia: null, voz: null, reel: {}, guardando: null, timer: null, anim: 0};
+const RD_LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+const RD_KEY = "pregonia-redaccion-prueba-v1";
+const RD_ETIQUETA_IA = "Resumen elaborado con apoyo de IA y revisado por el equipo de El Pregonero.";
+const RD_PILOTO = ["Casablanca", "Algarrobo", "El Quisco", "El Tabo", "Cartagena", "San Antonio"];
+const RD_CFG0 = {comunas: RD_PILOTO, nacional: true, umbral: 80, silencio: true, resumen_hora: 8, cercanos: ["Casablanca", "Rodrigo Martínez", "Partido Republicano"], meta_diaria: 4};
+const RD_HORARIOS = ["08:30", "12:30", "18:30", "21:00", "10:30", "15:30", "20:00", "07:30", "13:30", "22:00"];
+const RD_ESTADOS = {borrador: "Borrador", aprobado: "Aprobado", programado: "Programado", publicado: "Publicado", descartado: "Descartado"};
+
+/* Utilidades */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"})[c]);
+const rdNorm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const slug = s => rdNorm(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "pieza";
+const ICO = {
+  buscar: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', campana: '<path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 0 0 4 0"/>',
+  salir: '<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>', dl: '<path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/>', copiar: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+  ia: '<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/>', ok: '<path d="M5 12l5 5 9-10"/>', reloj: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  atras: '<path d="M15 6l-6 6 6 6"/>', compartir: '<path d="M12 15V4M8 8l4-4 4 4M5 13v6h14v-6"/>', voz: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>'
+};
+const ico = k => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
+function toast(msg){ const t = $("#rdToast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 4200); }
+const hace = ts => { const m = Math.round((Date.now() - ts) / 6e4); if (m < 60) return `hace ${Math.max(1, m)} min`; const h = Math.round(m / 60); return h < 24 ? `hace ${h} h` : `hace ${Math.round(h / 24)} d`; };
+const fechaHora = ts => new Date(ts).toLocaleString("es-CL", {weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"});
+const horaHM = ts => new Date(ts).toLocaleTimeString("es-CL", {hour: "2-digit", minute: "2-digit"});
+const diaClave = ts => { const d = new Date(ts); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const localInput = ts => { const d = new Date(ts); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : "x" + Math.random().toString(36).slice(2) + Date.now().toString(36));
+
+/* ─── Almacén: Supabase (editor) o navegador (prueba) ─── */
+const prueba = {
+  leer(){ try { return JSON.parse(localStorage.getItem(RD_KEY) || "null") || {}; } catch(e) { return {}; } },
+  escribir(d){ try { localStorage.setItem(RD_KEY, JSON.stringify(d)); } catch(e) { toast("El navegador no dejó guardar los cambios."); } }
+};
+const PRUEBA_AUTS = typeof impAutoridades === "function" && typeof RD_PRUEBA_AUT !== "undefined" ? impAutoridades(RD_PRUEBA_AUT, variantesNombre) : [];
+const store = {
+  async cfg(){
+    if (RD.modo === "prueba") return {...RD_CFG0, ...(prueba.leer().cfg || {})};
+    const {data, error} = await RD.sb.from("redaccion_config").select("*").eq("usuario", RD.user.id).maybeSingle();
+    if (error) throw error;
+    if (data) return {...RD_CFG0, ...data};
+    const nuevo = {usuario: RD.user.id, ...RD_CFG0};
+    const r = await RD.sb.from("redaccion_config").insert(nuevo).select("*").single(); if (r.error) throw r.error; return r.data;
+  },
+  async guardarCfg(c){
+    if (RD.modo === "prueba") { const d = prueba.leer(); d.cfg = c; prueba.escribir(d); return; }
+    const {usuario, resumen_enviado, ...resto} = c;
+    const {error} = await RD.sb.from("redaccion_config").update({...resto, actualizado: new Date().toISOString()}).eq("usuario", RD.user.id); if (error) throw error;
+  },
+  async propuestas(){
+    if (RD.modo === "prueba") {
+      const d = prueba.leer(), c = RD.cfg, est = d.estados || {};
+      const notas = RD_PRUEBA_NOTAS.filter(n => n.comunas.some(x => c.comunas.includes(x) || (x === "Región" && c.nacional)));
+      return impAgrupar(notas).map(g => {
+        const imp = impPuntaje(g, {autoridades: PRUEBA_AUTS, cercanos: c.cercanos}), lead = [...g.notas].sort((a, b) => a.ts - b.ts)[0];
+        return {id: g.id, titulo: lead.titulo, resumen: lead.desc, comunas: [...new Set(g.notas.flatMap(n => n.comunas))], alcance: imp.alcance, puntaje: imp.puntaje, senales: imp.senales, detalle: imp.detalle,
+          notas: g.notas, sensible: imp.sensible, cercanos: imp.cercanos, estado: (est[g.id] || {}).estado || "nueva", ia: false, detectado: new Date(lead.ts).toISOString(), ultima: new Date(imp.ultima).toISOString()};
+      });
+    }
+    const desde = new Date(Date.now() - 4 * 864e5).toISOString();
+    const {data, error} = await RD.sb.from("redaccion_propuestas").select("*").gte("actualizado", desde).order("puntaje", {ascending: false}).limit(300);
+    if (error) throw error; return data || [];
+  },
+  async marcarPropuesta(id, estado){
+    if (RD.modo === "prueba") { const d = prueba.leer(); (d.estados ||= {})[id] = {estado}; prueba.escribir(d); return; }
+    const {error} = await RD.sb.from("redaccion_propuestas").update({estado}).eq("id", id); if (error) throw error;
+  },
+  async posts(){
+    if (RD.modo === "prueba") return (prueba.leer().posts || []).sort((a, b) => Date.parse(b.actualizado) - Date.parse(a.actualizado));
+    const {data, error} = await RD.sb.from("redaccion_posts").select("*").order("actualizado", {ascending: false}).limit(300);
+    if (error) throw error; return data || [];
+  },
+  async guardarPost(p){
+    p.actualizado = new Date().toISOString();
+    if (RD.modo === "prueba") { const d = prueba.leer(); d.posts = (d.posts || []).filter(x => x.id !== p.id).concat([p]); prueba.escribir(d); return p; }
+    const fila = {id: p.id, propuesta_id: p.propuesta_id, estado: p.estado, titulo: p.titulo, contenido: p.contenido, formatos: p.formatos, comunas: p.comunas, sensible: p.sensible,
+      programado: p.programado, recordado: p.recordado || false, publicado: p.publicado, enlaces: p.enlaces || null, aprobado: p.aprobado, aprobado_por: p.aprobado_por, revision: p.revision || null, actualizado: p.actualizado};
+    const {error} = await RD.sb.from("redaccion_posts").upsert(fila, {onConflict: "id"}); if (error) throw error; return p;
+  }
+};
+
+/* ─── Arranque y acceso ─── */
+async function iniciar(){
+  pintarHerramientas();
+  let cfg = null;
+  if (/^https?:$/.test(location.protocol)) { try { const r = await fetch("/api/config", {cache: "no-store"}); if (r.ok) cfg = await r.json(); } catch(e) {} }
+  RD.cfgPub = cfg || {};
+  if (cfg && cfg.supabase) {
+    const lib = await pzScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js", "supabase").catch(() => null);
+    if (!lib) return pantallaError("No se pudo cargar el acceso. Revisa la conexión y recarga la página.");
+    RD.sb = lib.createClient(cfg.supabase.url, cfg.supabase.key, {auth: {persistSession: true, autoRefreshToken: true}});
+    const {data: {session}} = await RD.sb.auth.getSession();
+    if (session) return entrarEditor(session.user);
+    return pantallaAcceso();
+  }
+  if (RD_LOCAL) return entrarPrueba();
+  pantallaError("Redacción no está disponible en este sitio.");
+}
+function pantallaError(msg){ $("#rdMain").innerHTML = `<div class="acceso"><h2>Redacción</h2><p class="lead">${esc(msg)}</p><a class="btn" href="/">Volver a PregonIA</a></div>`; }
+function pantallaAcceso(err){
+  $("#rdTabs").hidden = true; pintarHerramientas();
+  $("#rdMain").innerHTML = `<form class="acceso" id="rdLogin" novalidate>
+    <h2>Redacción de PregonIA</h2><p class="lead">Espacio privado del editor de las cuentas de El Pregonero en Facebook e Instagram.</p>
+    <label class="campo">Correo<input class="inp" id="rdCorreo" type="email" autocomplete="username" required></label>
+    <label class="campo">Contraseña<input class="inp" id="rdClave" type="password" autocomplete="current-password" required></label>
+    <p class="err" id="rdErr" role="alert" ${err ? "" : "hidden"}>${esc(err || "")}</p>
+    <div class="acciones"><button class="btn pri" type="submit" id="rdEntrar">Ingresar</button><a class="btn ghost" href="/">Volver a PregonIA</a></div>
+    ${RD_LOCAL ? `<p class="info" style="margin-top:14px">En este computador también puedes <button class="btn sm" type="button" data-act="prueba">probar con datos ficticios</button></p>` : ""}
+  </form>`;
+  $("#rdCorreo").focus();
+}
+async function ingresar(e){
+  e.preventDefault();
+  const correo = $("#rdCorreo").value.trim(), clave = $("#rdClave").value, b = $("#rdEntrar");
+  if (!correo || !clave) return pantallaAcceso("Escribe tu correo y tu contraseña.");
+  b.disabled = true; b.textContent = "Ingresando…";
+  const {data, error} = await RD.sb.auth.signInWithPassword({email: correo, password: clave});
+  if (error) return pantallaAcceso(/invalid/i.test(error.message) ? "Correo o contraseña incorrectos." : "No se pudo ingresar: " + error.message);
+  entrarEditor(data.user);
+}
+async function entrarEditor(user){
+  const {data, error} = await RD.sb.rpc("es_editor");
+  if (error) return pantallaError("La base aún no tiene Redacción. Hay que correr de nuevo supabase/esquema.sql en Supabase.");
+  if (!data) { RD.user = user; RD.modo = "sin-permiso"; pintarHerramientas(); return pantallaError("Tu cuenta no está habilitada como editor de PregonIA. Esta sección es privada."); }
+  RD.user = user; RD.modo = "editor"; await cargarTodo();
+}
+async function entrarPrueba(){ RD.modo = "prueba"; RD.user = {id: "prueba", email: "editor@prueba"}; await cargarTodo(); }
+async function salir(){ if (RD.sb) await RD.sb.auth.signOut().catch(() => {}); location.reload(); }
+async function cargarTodo(){
+  try { RD.cfg = await store.cfg(); [RD.props, RD.posts] = await Promise.all([store.propuestas(), store.posts()]); }
+  catch(e) { return pantallaError("No se pudieron cargar los datos: " + (e.message || e)); }
+  RD.ia = iaDisponible(); RD.voz = vozDisponible();
+  $("#rdTabs").hidden = false; pintarHerramientas(); abrirDesdeEnlace(); render();
+}
+function abrirDesdeEnlace(){
+  const q = new URLSearchParams(location.search), post = q.get("post"), p = q.get("p");
+  if (post) location.hash = "post/" + post;
+  if (p) RD.resaltar = p;
+  if (post || p) history.replaceState(null, "", location.pathname + location.hash);
+}
+function pintarHerramientas(){
+  const t = $("#rdTools"); if (!t) return;
+  if (!RD.modo || RD.modo === "sin-permiso") { t.innerHTML = RD.user ? `<button class="btn sm" type="button" data-act="salir">${ico("salir")}Salir</button>` : ""; return; }
+  t.innerHTML = `<span class="modo">${RD.modo === "prueba" ? "<b>Modo prueba</b> · datos ficticios en este navegador" : `<b>Editor</b> · ${esc(RD.user.email)}`}</span>
+    <button class="btn sm" type="button" data-act="buscar">${ico("buscar")}Buscar ahora</button>
+    <button class="btn sm" type="button" data-act="salir">${ico("salir")}Salir</button>`;
+}
+
+/* ─── Navegación ─── */
+const ruta = () => { const h = (location.hash || "#propuestas").slice(1); return h.startsWith("post/") ? {v: "post", id: h.slice(5)} : {v: ["propuestas", "publicaciones", "calendario", "ajustes"].includes(h) ? h : "propuestas"}; };
+const enTerritorio = p => (p.comunas || []).some(c => RD.cfg.comunas.includes(c) || (c === "Región" && RD.cfg.nacional));
+const propuestasVisibles = () => RD.props.filter(enTerritorio);
+function pintarTabs(){
+  const r = ruta().v, nuevas = propuestasVisibles().filter(p => p.estado === "nueva" && p.puntaje >= RD.cfg.umbral).length, bor = RD.posts.filter(p => p.estado === "borrador").length;
+  const T = [["propuestas", "Propuestas", nuevas], ["publicaciones", "Publicaciones", bor], ["calendario", "Calendario", 0], ["ajustes", "Ajustes", 0]];
+  $("#rdTabs").innerHTML = T.map(([k, n, c]) => `<a href="#${k}" ${r === k || (r === "post" && k === "publicaciones") ? 'aria-current="page"' : ""}>${n}${c ? `<span class="n" aria-label="${c} pendientes">${c}</span>` : ""}</a>`).join("");
+}
+function render(foco){
+  cancelAnimationFrame(RD.anim);
+  pintarTabs(); const r = ruta(), m = $("#rdMain");
+  if (r.v === "post") { const p = RD.posts.find(x => x.id === r.id); if (!p) { location.hash = "publicaciones"; return; } RD.post = p; m.innerHTML = vistaEditor(p); montarEditor(); }
+  else { RD.post = null; m.innerHTML = {propuestas: vistaPropuestas, publicaciones: vistaPublicaciones, calendario: vistaCalendario, ajustes: vistaAjustes}[r.v](); if (r.v === "publicaciones") miniaturas(); }
+  if (foco) { const h = m.querySelector("h2"); if (h) { h.setAttribute("tabindex", "-1"); h.focus({preventScroll: true}); } }
+  if (RD.resaltar) { const el = document.getElementById("p-" + RD.resaltar); if (el) { el.scrollIntoView({block: "center"}); el.focus({preventScroll: true}); } RD.resaltar = null; }
+}
+window.addEventListener("hashchange", () => { render(true); window.scrollTo(0, 0); });
+
+/* ─── Propuestas ─── */
+const SENAL = [["repercusion", "Repercusión", 35], ["redes", "Redes", 20], ["autoridades", "Autoridades", 15], ["temas", "Temas críticos", 20], ["recencia", "Recencia", 10]];
+let filtroProp = {ver: "activas", com: "todas"};
+function vistaPropuestas(){
+  const c = RD.cfg, todas = propuestasVisibles(), com = [...new Set(todas.flatMap(p => p.comunas))].sort();
+  let ps = todas.filter(p => filtroProp.ver === "descartadas" ? p.estado === "descartada" : filtroProp.ver === "sobre" ? p.estado === "nueva" && p.puntaje >= c.umbral : p.estado !== "descartada");
+  if (filtroProp.com !== "todas") ps = ps.filter(p => p.comunas.includes(filtroProp.com));
+  ps.sort((a, b) => (a.estado === "tomada") - (b.estado === "tomada") || b.puntaje - a.puntaje);
+  const terr = c.comunas.length ? c.comunas.slice(0, 6).join(", ") + (c.comunas.length > 6 ? ` y ${c.comunas.length - 6} más` : "") : "ninguna comuna";
+  return `<h2>Propuestas</h2>
+    <p class="lead">Noticias de las últimas 48 horas en ${esc(terr)}${c.nacional ? ", más las regionales y nacionales que afectan a la región" : ""}. Se ordenan por impacto; desde ${c.umbral} puntos te llega un aviso. <a href="#ajustes">Cambiar territorios</a></p>
+    <div class="barra">
+      <label class="info" for="fVer">Mostrar</label><select class="sel" id="fVer" data-filtro="ver"><option value="activas" ${filtroProp.ver === "activas" ? "selected" : ""}>Activas</option><option value="sobre" ${filtroProp.ver === "sobre" ? "selected" : ""}>Sobre el umbral (${c.umbral}+)</option><option value="descartadas" ${filtroProp.ver === "descartadas" ? "selected" : ""}>Descartadas</option></select>
+      <label class="info" for="fCom">Territorio</label><select class="sel" id="fCom" data-filtro="com"><option value="todas">Todos</option>${com.map(x => `<option ${filtroProp.com === x ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>
+      <span class="sp"></span><span class="info">${ps.length} ${ps.length === 1 ? "hecho" : "hechos"}</span>
+    </div>
+    <div class="lista">${ps.length ? ps.map(propHtml).join("") : `<div class="vacio">${todas.length ? "Nada con este filtro." : "Aún no hay noticias de tus territorios en las últimas 48 horas. La lectura corre cada 30 minutos; también puedes tocar «Buscar ahora»."}</div>`}</div>`;
+}
+function propHtml(p){
+  const banda = p.puntaje >= RD.cfg.umbral ? "alto" : p.puntaje >= 50 ? "medio" : "", d = p.detalle || {}, post = RD.posts.find(x => x.propuesta_id === p.id && x.estado !== "descartado");
+  const notas = [...(p.notas || [])].sort((a, b) => b.ts - a.ts);
+  const tags = [...(d.temas || []).map(t => `<span class="chip am">${esc(t)}</span>`), ...(d.autoridades || []).map(a => `<span class="chip az">${esc(a)}</span>`), d.grave ? `<span class="chip rj">Vidas o daño masivo</span>` : ""].join("");
+  return `<article class="prop ${banda === "alto" && p.estado === "nueva" ? "sobre" : ""} ${p.estado === "descartada" ? "desc" : ""}" id="p-${esc(p.id)}" tabindex="-1" aria-labelledby="t-${esc(p.id)}">
+    <div class="punt ${banda}" aria-label="Puntaje de impacto ${p.puntaje} de 100">${p.puntaje}<small>impacto</small></div>
+    <div>
+      <h4 id="t-${esc(p.id)}">${esc(p.titulo)}</h4>
+      ${p.resumen ? `<p class="res">${esc(p.resumen)}</p>` : ""}
+      <p class="meta"><span>${esc(p.comunas.join(", "))}</span>·<span>alcance ${esc(p.alcance || "comunal")}</span>·<span>${d.medios || 1} ${d.medios === 1 ? "medio" : "medios"}</span>${d.interaccion ? `·<span>${d.interaccion.toLocaleString("es-CL")} interacciones en redes</span>` : ""}·<span>${p.ultima ? hace(Date.parse(p.ultima)) : ""}</span>${p.ia ? `· <span class="chip">Titular y resumen con IA</span>` : ""}${p.estado === "tomada" ? ` <span class="chip ok">En redacción</span>` : ""}</p>
+      ${p.sensible ? `<p class="alerta-rev"><b>Revisión reforzada.</b> Toca ${esc((p.cercanos || []).join(", "))}, con quien declaraste relación. Redacta con especial cuidado y aprueba solo si el tratamiento es el mismo que darías a cualquier otro actor.</p>` : ""}
+      <div class="senales" role="list" aria-label="Por qué tiene este puntaje">${SENAL.map(([k, n, max]) => { const v = (p.senales || {})[k] || 0; return `<div class="sen" role="listitem">${n}<b>${v} de ${max}</b><span class="t"><i style="width:${Math.round(v / max * 100)}%"></i></span></div>`; }).join("")}</div>
+      ${tags ? `<div class="meta">${tags}</div>` : ""}
+      <details class="fuentes"><summary>${notas.length} ${notas.length === 1 ? "publicación" : "publicaciones"} en medios y redes</summary><ul>${notas.map(n => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer">${esc(n.titulo)}</a> <span>· ${esc(n.medio)} · ${hace(n.ts)}${n.int ? ` · ${impInteraccion(n).toLocaleString("es-CL")} interacciones` : ""}</span></li>`).join("")}</ul></details>
+      <div class="acciones">${post ? `<a class="btn pri" href="#post/${post.id}">Ver publicación</a>` : p.estado === "descartada" ? `<button class="btn" type="button" data-act="reactivar" data-id="${esc(p.id)}">Volver a proponer</button>` : `<button class="btn pri" type="button" data-act="redactar" data-id="${esc(p.id)}">${ico("ia")}Redactar publicación</button><button class="btn" type="button" data-act="descartar" data-id="${esc(p.id)}">Descartar</button>`}</div>
+    </div></article>`;
+}
+
+/* ─── Redacción con IA ─── */
+async function iaDisponible(){
+  if (!/^https?:$/.test(location.protocol)) return false;
+  try { const r = await fetch("/api/ia", {cache: "no-store"}); return r.ok && (await r.json()).ok === true; } catch(e) { return false; }
+}
+async function vozDisponible(){
+  if (!/^https?:$/.test(location.protocol)) return false;
+  try { const r = await fetch("/api/voz", {cache: "no-store"}); return r.ok && (await r.json()).ok === true; } catch(e) { return false; }
+}
+function fuentesDe(p){
+  const porMedio = new Map();
+  [...(p.notas || [])].sort((a, b) => a.ts - b.ts).forEach(n => { if (!porMedio.has(n.medio)) porMedio.set(n.medio, {medio: n.medio, url: n.url, fecha: n.ts, ambito: n.ambito}); });
+  const orden = {nacional: 0, regional: 1, local: 2};
+  return [...porMedio.values()].sort((a, b) => (orden[a.ambito] ?? 3) - (orden[b.ambito] ?? 3)).slice(0, 5);
+}
+const temaPrincipal = p => ((p.detalle || {}).temas || [])[0] || "";
+function promptRedaccion(p){
+  const notas = [...(p.notas || [])].sort((a, b) => a.ts - b.ts).slice(0, 8);
+  return `Eres editor de El Pregonero, un medio informativo digital de la Región de Valparaíso, Chile, con línea editorial NEUTRAL ESTRICTA. Prepara una publicación para las cuentas de El Pregonero en Facebook e Instagram sobre este hecho.
+
+HECHO (${p.comunas.join(", ")}; alcance ${p.alcance || "comunal"}):
+${p.resumen ? "Resumen interno: " + p.resumen + "\n" : ""}Publicaciones de los medios (fuente · fecha · titular — extracto):
+${notas.map(n => `- ${n.medio} · ${new Date(n.ts).toLocaleString("es-CL")} · ${n.titulo}${n.desc ? " — " + n.desc.slice(0, 280) : ""}`).join("\n")}
+
+REGLAS OBLIGATORIAS
+1. Solo hechos que estén en las publicaciones de arriba, atribuidos a su fuente («según [medio]», «informó [institución]»). No agregues cifras, fechas, nombres, causas ni consecuencias. Si falta un dato imprescindible, escribe [completar: qué falta].
+2. Tono informativo y neutral: sin adjetivos valorativos (polémico, escandaloso, exitoso, histórico, grave…), sin signos de exclamación, sin mayúsculas sostenidas, sin opinión, sin llamados a apoyar o rechazar a nadie. Mismo trato para todos los sectores políticos. No menciones partidos políticos salvo que sean el centro del hecho.
+3. Redacción propia: no copies frases de los medios (máximo una cita breve entre comillas, atribuida).
+4. Facebook ("fb"): 2 a 4 párrafos cortos, máximo 900 caracteres. Termina con «Fuente: [medios]» seguido del enlace ${fuentesDe(p)[0] ? fuentesDe(p)[0].url : ""} y, en una línea aparte, «${RD_ETIQUETA_IA}».
+5. Instagram ("ig"): máximo 1.000 caracteres, sin enlaces. Termina con «Fuente: [medios]» y, en una línea aparte, «${RD_ETIQUETA_IA}». Los hashtags van aparte.
+6. "hashtags": 3 a 5, de lugar y tema (por ejemplo #Casablanca #RegiónDeValparaíso). Nunca hashtags políticos ni de campaña.
+7. Pieza gráfica: "kicker" (antetítulo de 2 a 4 palabras: comuna · tema), "titular" (máximo 14 palabras), "bajada" (máximo 30 palabras) y "datos" (2 o 3 datos clave verificables, máximo 14 palabras cada uno).
+8. "alt": texto alternativo de la imagen para personas ciegas, máximo 200 caracteres, que diga qué muestra la pieza.
+9. "historia": {"t": titular corto para la historia (máximo 10 palabras), "x": una frase de contexto}.
+10. "slides": 2 a 4 láminas para un carrusel, cada una {"t": subtítulo de máximo 7 palabras, "x": máximo 40 palabras}: qué pasó, dónde y a quién afecta, qué viene (solo si la fuente lo dice).
+11. "guion": guion para un reel narrado de 25 a 40 segundos: {"intro": máximo 22 palabras, "datos": una frase de máximo 20 palabras por cada dato clave, "cierre": máximo 14 palabras que nombre la fuente}. Frases cortas y fáciles de decir en voz alta; cifras con números.
+
+Escribe en español de Chile. Responde SOLO con un objeto JSON con las claves kicker, titular, bajada, datos, fb, ig, hashtags, alt, historia, slides, guion. Sin bloque de código ni texto adicional.`;
+}
+async function pedirIA(prompt, signal){
+  const r = await fetch("/api/ia", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({prompt, tier: "default"}), signal});
+  if (r.status === 429) throw new Error("La IA recibió demasiadas solicitudes. Intenta en unos minutos.");
+  if (!r.ok) throw new Error("La IA no respondió.");
+  const txt = await r.text(), j = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1));
+  return j;
+}
+/* Borrador sin IA (o si la IA falla): mismo formato, solo con lo que trae la propuesta. */
+function plantilla(p){
+  const fs = fuentesDe(p), medios = fs.map(f => f.medio).join(", ") || "[completar fuente]", lugar = p.comunas.filter(c => c !== "Región").join(", ") || "Región de Valparaíso";
+  const res = p.resumen || (p.notas && p.notas[0] && p.notas[0].desc) || "[completar: resumen del hecho]";
+  return {kicker: [lugar.split(",")[0], temaPrincipal(p)].filter(Boolean).join(" · "), titular: p.titulo, bajada: res, datos: [`Lugar: ${lugar}`, `Informan: ${fs.slice(0, 2).map(f => f.medio).join(" y ")}`],
+    fb: `${p.titulo}.\n\n${res}\n\nFuente: ${medios}${fs[0] ? " " + fs[0].url : ""}\n${RD_ETIQUETA_IA}`, ig: `${p.titulo}.\n\n${res}\n\nFuente: ${medios}\n${RD_ETIQUETA_IA}`,
+    hashtags: ["#" + lugar.split(",")[0].replace(/\s+/g, ""), "#RegiónDeValparaíso"], alt: `Pieza informativa de El Pregonero con el titular: ${p.titulo}`,
+    historia: {t: p.titulo, x: res}, slides: [{t: "Qué pasó", x: res}], guion: {intro: p.titulo, datos: [], cierre: `Fuente: ${medios}. Esto fue El Pregonero.`}};
+}
+function limpiarIA(j, p){
+  const s = (x, n = 2000) => String(x ?? "").replace(/[*#_]{2,}/g, "").trim().slice(0, n);
+  const datos = (Array.isArray(j.datos) ? j.datos : []).map(x => s(x, 160)).filter(Boolean).slice(0, 3);
+  return {kicker: s(j.kicker, 60), titular: s(j.titular, 160), bajada: s(j.bajada, 260), datos, fb: s(j.fb, 2000), ig: s(j.ig, 2200),
+    hashtags: (Array.isArray(j.hashtags) ? j.hashtags : String(j.hashtags || "").split(/\s+/)).map(h => s(h, 40).replace(/^#?/, "#")).filter(h => h.length > 1).slice(0, 8),
+    alt: s(j.alt, 260), historia: {t: s(j.historia && j.historia.t, 120), x: s(j.historia && j.historia.x, 220)},
+    slides: (Array.isArray(j.slides) ? j.slides : []).map(x => ({t: s(x && x.t, 80), x: s(x && x.x, 320)})).filter(x => x.t || x.x).slice(0, 4),
+    guion: {intro: s(j.guion && j.guion.intro, 220), datos: ((j.guion && j.guion.datos) || []).map(x => s(x, 200)).slice(0, 3), cierre: s(j.guion && j.guion.cierre, 160)}};
+}
+async function redactar(id, btn){
+  const p = RD.props.find(x => x.id === id); if (!p) return;
+  const existente = RD.posts.find(x => x.propuesta_id === id && x.estado !== "descartado"); if (existente) { location.hash = "post/" + existente.id; return; }
+  if (btn) { btn.disabled = true; btn.innerHTML = `${ico("ia")}Redactando…`; }
+  let c, ia = false;
+  if (await RD.ia) { try { c = limpiarIA(await pedirIA(promptRedaccion(p)), p); ia = Boolean(c.titular && c.fb && c.ig); } catch(e) { toast(String(e.message || e) + " Se usó una plantilla."); } }
+  if (!ia) c = plantilla(p);
+  const fs = fuentesDe(p);
+  Object.assign(c, {fuente: fs[0] || null, fuentes: fs, etiquetaIA: RD_ETIQUETA_IA.replace(/\.$/, ""), ia, version: 1, fechaPieza: Date.now()});
+  const post = {id: uid(), propuesta_id: p.id, estado: "borrador", titulo: c.titular || p.titulo, contenido: c, formatos: ["feed", "historia"], comunas: p.comunas, sensible: !!p.sensible, programado: null, publicado: null, creado: new Date().toISOString()};
+  try { await store.guardarPost(post); if (p.estado === "nueva") { await store.marcarPropuesta(p.id, "tomada"); p.estado = "tomada"; } }
+  catch(e) { if (btn) { btn.disabled = false; btn.innerHTML = `${ico("ia")}Redactar publicación`; } return toast("No se pudo guardar el borrador: " + (e.message || e)); }
+  RD.posts.unshift(post); toast(ia ? "Borrador listo. Revísalo antes de aprobar." : "Borrador con plantilla (sin IA). Complétalo antes de aprobar."); location.hash = "post/" + post.id;
+}
+async function rehacer(btn){
+  const post = RD.post, p = RD.props.find(x => x.id === post.propuesta_id); if (!p) return toast("La propuesta ya no está disponible para volver a redactar.");
+  if (!(await RD.ia)) return toast("La IA no está disponible aquí.");
+  btn.disabled = true; btn.innerHTML = `${ico("ia")}Redactando…`;
+  try { const c = limpiarIA(await pedirIA(promptRedaccion(p)), p); Object.assign(post.contenido, c, {ia: true, version: (post.contenido.version || 1) + 1}); post.titulo = c.titular; await guardarAhora(true); render(); toast("Nueva versión redactada. Revísala."); }
+  catch(e) { btn.disabled = false; btn.innerHTML = `${ico("ia")}Redactar de nuevo con IA`; toast(String(e.message || e)); }
+}
+
+/* ─── Revisión editorial automática ─── */
+const RD_VALORATIVAS = ["escandalo", "escandaloso", "escandalosa", "polemica", "polemico", "indignante", "indignacion", "vergonzoso", "vergonzosa", "brutal", "terrible", "increible", "impactante", "insolito", "insolita", "nefasto", "nefasta", "caos", "caotico", "desastroso", "lamentable", "lamentablemente", "afortunadamente", "por fin", "exitoso", "exitosa", "gran logro", "historico", "historica", "alarmante", "impresionante", "espectacular", "maravilloso", "excelente", "pesimo", "fracaso", "ineptitud", "abandono", "vergüenza", "urgente"];
+const RD_PARTIDOS = ["republicano", "republicanos", "udi", "renovacion nacional", "evopoli", "partido socialista", "ppd", "partido comunista", "frente amplio", "democracia cristiana", "partido de la gente", "partido liberal", "social cristiano", "democratas", "amarillos"];
+const RD_SIGLAS = /\b(RN|PS|PC|DC|PDG|FA|UDI|PPD)\b/;
+function textoFuentes(post){
+  const p = RD.props.find(x => x.id === post.propuesta_id);
+  return rdNorm(((p && p.notas) || []).map(n => n.titulo + " " + (n.desc || "")).join(" ") + " " + ((p && p.resumen) || "") + " " + (p ? p.comunas.join(" ") : ""));
+}
+function revisar(post){
+  const c = post.contenido || {}, out = [], add = (nivel, txt) => out.push({nivel, txt});
+  const fb = c.fb || "", ig = c.ig || "", pieza = [c.titular, c.bajada, ...(c.datos || []), (c.historia || {}).t, (c.historia || {}).x, ...(c.slides || []).flatMap(s => [s.t, s.x])].join(" ");
+  const todo = [fb, ig, pieza].join(" \n "), n = rdNorm(todo), medios = (c.fuentes || []).map(f => f.medio).filter(Boolean);
+  if (!c.titular) add("err", "Falta el titular de la pieza.");
+  if (/\[completar/i.test(todo)) add("err", "Quedan datos por completar ([completar: …]).");
+  const citaFb = medios.some(m => rdNorm(fb).includes(rdNorm(m).split(" (")[0])), citaIg = medios.some(m => rdNorm(ig).includes(rdNorm(m).split(" (")[0]));
+  if (!medios.length) add("err", "La publicación no tiene fuente asociada.");
+  else { citaFb ? add("ok", "El texto de Facebook cita la fuente.") : add("err", "El texto de Facebook no nombra la fuente."); citaIg ? add("ok", "El texto de Instagram cita la fuente.") : add("err", "El texto de Instagram no nombra la fuente."); }
+  if (/https?:\/\//i.test(ig)) add("err", "Instagram no muestra enlaces en el texto: quítalo y deja solo «Fuente: medio».");
+  if (ig.length + (c.hashtags || []).join(" ").length > 2200) add("err", "El texto de Instagram supera los 2.200 caracteres.");
+  if ((c.hashtags || []).length > 5) add("adv", `Usa ${c.hashtags.length} hashtags: con 3 a 5 basta para un medio informativo.`);
+  const val = RD_VALORATIVAS.filter(w => new RegExp("(^|[^a-z])" + rdNorm(w) + "($|[^a-z])").test(n));
+  val.length ? add("adv", `Palabras valorativas: ${val.map(v => "«" + v + "»").join(", ")}. La línea editorial pide solo hechos.`) : add("ok", "Sin palabras valorativas.");
+  if (/[!¡]/.test(todo)) add("adv", "Hay signos de exclamación: en un medio neutral no corresponden.");
+  const mays = (todo.match(/\b[A-ZÁÉÍÓÚÑ]{6,}\b/g) || []).filter(w => !["SENAPRED", "CESFAM", "CONAF", "SERVIU", "SERNAC", "SERNAGEOMIN"].includes(w));
+  if (mays.length) add("adv", `Mayúsculas sostenidas: ${[...new Set(mays)].slice(0, 3).join(", ")}.`);
+  const part = RD_PARTIDOS.filter(w => new RegExp("(^|[^a-z])" + w + "($|[^a-z])").test(n)).concat(RD_SIGLAS.test(todo) ? ["sigla de partido"] : []);
+  if (part.length) add("adv", `Menciona partidos (${[...new Set(part)].join(", ")}). Déjalo solo si es el centro del hecho.`);
+  // Cifras que no aparecen en las fuentes: la IA no debe inventar datos.
+  const fuentes = textoFuentes(post).replace(/[.,](?=\d)/g, ""), cifras = [...new Set((rdNorm([fb, ig, pieza].join(" ")).match(/\d[\d.,]*\d|\d/g) || []).map(x => x.replace(/[.,](?=\d)/g, "")))].filter(x => x.length > 1 || Number(x) > 3);
+  const raras = cifras.filter(x => !fuentes.includes(x));
+  raras.length ? add("adv", `Cifras que no están en las fuentes: ${raras.slice(0, 5).join(", ")}. Verifícalas en el original.`) : cifras.length && add("ok", "Las cifras están en las fuentes.");
+  // Frases copiadas: 8 palabras seguidas iguales a un titular o extracto de un medio.
+  const fw = textoFuentes(post).replace(/[^a-z0-9ñ ]+/g, " ").split(/\s+/).filter(Boolean), tejas = new Set();
+  for (let i = 0; i + 8 <= fw.length; i++) tejas.add(fw.slice(i, i + 8).join(" "));
+  const cw = rdNorm([fb, ig].join(" ")).replace(/[^a-z0-9ñ ]+/g, " ").split(/\s+/).filter(Boolean);
+  let copia = null; for (let i = 0; i + 8 <= cw.length && !copia; i++) { const t = cw.slice(i, i + 8).join(" "); if (tejas.has(t)) copia = t; }
+  copia ? add("adv", `Frase copiada de un medio: «${copia}…». Reescríbela con palabras propias o márcala como cita atribuida.`) : add("ok", "Redacción propia (sin frases copiadas de los medios).");
+  const etq = rdNorm(RD_ETIQUETA_IA).slice(0, 30);
+  (rdNorm(fb).includes(etq) && rdNorm(ig).includes(etq)) ? add("ok", "Lleva la mención de IA en ambos textos.") : add("adv", "Falta la mención de IA en Facebook o en Instagram (control 32).");
+  if (!c.alt) add("adv", "Falta el texto alternativo de la imagen (accesibilidad).");
+  if (post.sensible) { const p = RD.props.find(x => x.id === post.propuesta_id); add("adv", `Revisión reforzada: la noticia toca ${(p && p.cercanos || []).join(", ") || "actores con los que declaraste relación"}. Compara el tratamiento con el que darías a cualquier otro actor.`); }
+  return out;
+}
+
+/* ─── Publicaciones ─── */
+let filtroPost = "activas";
+function vistaPublicaciones(){
+  const orden = {borrador: 0, aprobado: 1, programado: 2, publicado: 3, descartado: 4};
+  let ps = RD.posts.filter(p => filtroPost === "activas" ? ["borrador", "aprobado", "programado"].includes(p.estado) : p.estado === filtroPost);
+  ps.sort((a, b) => orden[a.estado] - orden[b.estado] || (a.programado && b.programado ? Date.parse(a.programado) - Date.parse(b.programado) : Date.parse(b.actualizado) - Date.parse(a.actualizado)));
+  const cuenta = k => RD.posts.filter(p => p.estado === k).length;
+  return `<h2>Publicaciones</h2><p class="lead">Borradores redactados con IA, aprobados y programados. Nada sale sin tu aprobación.</p>
+    <div class="barra"><label class="info" for="fPost">Mostrar</label><select class="sel" id="fPost" data-filtro="post">
+      ${[["activas", `En curso (${cuenta("borrador") + cuenta("aprobado") + cuenta("programado")})`], ["publicado", `Publicadas (${cuenta("publicado")})`], ["descartado", `Descartadas (${cuenta("descartado")})`]].map(([k, n]) => `<option value="${k}" ${filtroPost === k ? "selected" : ""}>${n}</option>`).join("")}</select></div>
+    <div class="posts">${ps.length ? ps.map(p => `<button class="post" type="button" data-act="abrir" data-id="${p.id}"><canvas width="216" height="270" data-mini="${p.id}" aria-hidden="true"></canvas>
+      <span><h4>${esc(p.titulo || "Sin titular")}</h4><span class="meta">${esc((p.comunas || []).join(", "))}${p.programado ? ` · ${p.estado === "publicado" ? "publicada" : "programada"} ${esc(fechaHora(Date.parse(p.estado === "publicado" && p.publicado ? p.publicado : p.programado)))}` : ""} · ${esc((p.formatos || []).map(f => ({feed: "feed", historia: "historia", carrusel: "carrusel", reel: "reel"})[f]).join(", "))}${p.sensible ? ` · <span class="chip am">Revisión reforzada</span>` : ""}</span></span>
+      <span class="estado ${p.estado}">${RD_ESTADOS[p.estado]}</span></button>`).join("") : `<div class="vacio">No hay publicaciones aquí. Empieza desde una <a href="#propuestas">propuesta</a>.</div>`}</div>`;
+}
+async function miniaturas(){
+  await pzFuentesListas();
+  document.querySelectorAll("canvas[data-mini]").forEach(cv => { const p = RD.posts.find(x => x.id === cv.dataset.mini); if (!p) return; const ctx = cv.getContext("2d"); ctx.setTransform(0.2, 0, 0, 0.2, 0, 0); pzFeed(ctx, p.contenido || {}); });
+}
+
+/* ─── Editor de una publicación ─── */
+const FORMATOS = [["feed", "Feed 4:5"], ["historia", "Historia 9:16"], ["carrusel", "Carrusel"], ["reel", "Reel con voz"]];
+function vistaEditor(p){
+  const c = p.contenido || {}, bloqueado = ["publicado", "descartado"].includes(p.estado), dis = bloqueado ? "disabled" : "";
+  const campo = (k, lbl, {area = false, filas = 3, max = 0, ayuda = ""} = {}) => { const v = k.split(".").reduce((o, x) => o && o[x], c) ?? ""; const id = "f-" + k.replace(/\W/g, "-");
+    return `<label class="campo" for="${id}">${lbl}${ayuda ? ` <small>${ayuda}</small>` : ""}${area ? `<textarea class="inp" id="${id}" data-k="${k}" rows="${filas}" ${max ? `maxlength="${max}"` : ""} ${dis}>${esc(v)}</textarea>` : `<input class="inp" id="${id}" data-k="${k}" value="${esc(v)}" ${max ? `maxlength="${max}"` : ""} ${dis}>`}${max ? `<span class="cont" data-cont="${k}">${String(v).length} / ${max}</span>` : ""}</label>`; };
+  const datos = [0, 1, 2].map(i => campo("datos." + i, `Dato clave ${i + 1}`, {max: 140})).join("");
+  const slides = (c.slides && c.slides.length ? c.slides : [{t: "", x: ""}]).map((s, i) => campo(`slides.${i}.t`, `Lámina ${i + 1} · subtítulo`, {max: 80}) + campo(`slides.${i}.x`, `Lámina ${i + 1} · texto`, {area: true, filas: 3, max: 320})).join("");
+  const g = c.guion || {};
+  const prop = RD.props.find(x => x.id === p.propuesta_id);
+  return `<p><a class="btn ghost sm" href="#publicaciones">${ico("atras")}Publicaciones</a></p>
+    <div class="fila" style="justify-content:space-between"><h2>${esc(p.titulo || "Publicación")}</h2><span class="estado ${p.estado}">${RD_ESTADOS[p.estado]}</span></div>
+    <p class="lead">${esc((p.comunas || []).join(", "))}${prop ? ` · impacto ${prop.puntaje}` : ""}${p.programado ? ` · ${p.estado === "publicado" ? "publicada" : "programada para"} ${esc(fechaHora(Date.parse(p.estado === "publicado" && p.publicado ? p.publicado : p.programado)))}` : ""} · ${c.ia ? "redactado con IA" : "plantilla sin IA"} · versión ${c.version || 1}</p>
+    ${p.estado === "aprobado" || p.estado === "programado" ? `<p class="nota">Está aprobada: si cambias el contenido, vuelve a borrador y hay que aprobarla de nuevo.</p>` : ""}
+    <div class="ed">
+      <div class="ed-col">
+        <section class="panel" aria-labelledby="hPieza"><h3 id="hPieza">Pieza gráfica</h3>${campo("kicker", "Antetítulo", {max: 60, ayuda: "comuna · tema"})}${campo("titular", "Titular", {area: true, filas: 2, max: 160})}${campo("bajada", "Bajada", {area: true, filas: 2, max: 260})}${datos}</section>
+        <section class="panel" aria-labelledby="hTextos"><h3 id="hTextos">Textos</h3>
+          ${campo("fb", "Facebook", {area: true, filas: 8, max: 2000, ayuda: "con enlace a la fuente"})}
+          ${campo("ig", "Instagram", {area: true, filas: 8, max: 2200, ayuda: "sin enlaces"})}
+          <label class="campo" for="f-hashtags">Hashtags <small>separados por espacio, 3 a 5</small><input class="inp" id="f-hashtags" data-k="hashtags" value="${esc((c.hashtags || []).join(" "))}" ${dis}></label>
+          ${campo("alt", "Texto alternativo de la imagen", {area: true, filas: 2, max: 260, ayuda: "para personas ciegas; Instagram lo permite"})}
+          <div class="acciones"><button class="btn sm" type="button" data-act="copiar" data-q="fb">${ico("copiar")}Copiar texto para Facebook</button><button class="btn sm" type="button" data-act="copiar" data-q="ig">${ico("copiar")}Copiar texto para Instagram</button></div>
+        </section>
+        <section class="panel suave" aria-labelledby="hHist"><h3 id="hHist">Historia</h3>${campo("historia.t", "Titular de la historia", {max: 120})}${campo("historia.x", "Frase de contexto", {area: true, filas: 2, max: 220})}</section>
+        ${(p.formatos || []).includes("carrusel") ? `<section class="panel suave" aria-labelledby="hCar"><h3 id="hCar">Carrusel</h3>${slides}${!bloqueado && (c.slides || []).length < 4 ? `<button class="btn sm" type="button" data-act="lamina">Agregar lámina</button>` : ""}</section>` : ""}
+        ${(p.formatos || []).includes("reel") ? `<section class="panel suave" aria-labelledby="hGuion"><h3 id="hGuion">Guion del reel</h3>${campo("guion.intro", "Inicio", {area: true, filas: 2, max: 220})}${[0, 1, 2].map(i => (c.datos || [])[i] ? campo(`guion.datos.${i}`, `Dato ${i + 1}`, {area: true, filas: 2, max: 200}) : "").join("")}${campo("guion.cierre", "Cierre", {area: true, filas: 2, max: 160})}<p class="info">Cada parte se graba con voz sintética en español de Chile y marca la duración de su escena.</p></section>` : ""}
+        <section class="panel suave" aria-labelledby="hFuentes"><h3 id="hFuentes">Fuentes</h3><ul style="margin:0;padding-left:18px">${(c.fuentes || []).map(f => `<li><a href="${esc(f.url)}" target="_blank" rel="noopener noreferrer">${esc(f.medio)}</a> <span class="info">· ${esc(f.ambito || "")} · ${esc(new Date(f.fecha).toLocaleString("es-CL"))}</span></li>`).join("") || "<li>Sin fuentes</li>"}</ul>
+          ${prop ? `<details class="fuentes"><summary>Todas las publicaciones del hecho (${(prop.notas || []).length})</summary><ul>${[...prop.notas].sort((a, b) => b.ts - a.ts).map(n => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer">${esc(n.titulo)}</a> <span>· ${esc(n.medio)}</span></li>`).join("")}</ul></details>` : ""}</section>
+      </div>
+      <div class="ed-col"><div class="vista">
+        <section class="panel" aria-labelledby="hVista"><h3 id="hVista">Vista previa</h3>
+          <div class="fmt" role="group" aria-label="Formato">${FORMATOS.map(([k, n]) => (p.formatos || []).includes(k) ? `<button type="button" data-act="fmt" data-f="${k}" aria-pressed="${RD.fmt === k}">${n}</button>` : bloqueado ? "" : `<button type="button" data-act="generar" data-f="${k}" title="Se genera solo para esta noticia"><span class="mas">+</span> ${n}</button>`).join("")}</div>
+          <div class="lienzo"><canvas id="rdCanvas" role="img" aria-label="Vista previa de la pieza"></canvas></div>
+          <div class="lam" id="rdLam"></div>
+          <div id="rdReelCtl"></div>
+          <div class="descargas" id="rdDesc"></div>
+        </section>
+        <section class="panel" aria-labelledby="hRev"><h3 id="hRev">Revisión editorial automática</h3><ul class="revision" id="rdRev"></ul><p class="info" style="margin:10px 0 0">Ayuda a detectar problemas; no reemplaza tu verificación en la fuente original.</p></section>
+      </div></div>
+    </div>
+    <div class="accbar">
+      ${bloqueado ? "" : `<button class="btn" type="button" data-act="rehacer">${ico("ia")}Redactar de nuevo con IA</button>`}
+      <span class="guardado" id="rdGuardado" aria-live="polite"></span><span class="sp"></span>
+      ${p.estado === "borrador" ? `<button class="btn peligro" type="button" data-act="descartar-post">Descartar</button><button class="btn pri" type="button" data-act="aprobar">${ico("ok")}Aprobar</button>` : ""}
+      ${p.estado === "aprobado" ? `<button class="btn" type="button" data-act="volver-borrador">Volver a borrador</button><button class="btn" type="button" data-act="publicada">Marcar como publicada</button><button class="btn pri" type="button" data-act="programar">${ico("reloj")}Programar</button>` : ""}
+      ${p.estado === "programado" ? `<button class="btn" type="button" data-act="programar">${ico("reloj")}Cambiar hora</button><button class="btn" type="button" data-act="desprogramar">Quitar de la agenda</button><button class="btn pri" type="button" data-act="publicada">Marcar como publicada</button>` : ""}
+      ${p.estado === "publicado" && p.enlaces ? Object.entries(p.enlaces).filter(([, u]) => u).map(([k, u]) => `<a class="btn sm" href="${esc(u)}" target="_blank" rel="noopener noreferrer">Ver en ${k === "fb" ? "Facebook" : "Instagram"}</a>`).join("") : ""}
+    </div>`;
+}
+function montarEditor(){
+  const p = RD.post; if (!(p.formatos || []).includes(RD.fmt)) RD.fmt = "feed";
+  RD.lam = 0; pintarRevision(); pzFuentesListas().then(() => { if (RD.post === p) pintarVista(); });
+}
+function pintarRevision(){
+  const r = revisar(RD.post), el = $("#rdRev"); if (!el) return;
+  const orden = {err: 0, adv: 1, ok: 2}; el.innerHTML = [...r].sort((a, b) => orden[a.nivel] - orden[b.nivel]).map(x => `<li class="${x.nivel}">${esc(x.txt)}</li>`).join("");
+}
+function altoDe(f){ return f === "historia" || f === "reel" ? PZ.HIST : PZ.FEED; }
+function pintarVista(){
+  cancelAnimationFrame(RD.anim);
+  const cv = $("#rdCanvas"); if (!cv) return; const p = RD.post, c = p.contenido || {}, f = RD.fmt;
+  cv.width = PZ.W; cv.height = altoDe(f); const ctx = cv.getContext("2d"); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const lam = $("#rdLam"), desc = $("#rdDesc"), reel = $("#rdReelCtl"); lam.innerHTML = ""; reel.innerHTML = "";
+  const comp = navigator.canShare ? `<button class="btn sm" type="button" data-act="compartir-pieza">${ico("compartir")}Compartir</button>` : "";
+  if (f === "feed") { pzFeed(ctx, c); cv.setAttribute("aria-label", "Pieza para el feed: " + (c.titular || "")); desc.innerHTML = `<button class="btn sm" type="button" data-act="dl" data-f="feed">${ico("dl")}Descargar imagen</button>${comp}`; }
+  if (f === "historia") { pzHistoria(ctx, c); cv.setAttribute("aria-label", "Historia: " + ((c.historia || {}).t || c.titular || "")); desc.innerHTML = `<button class="btn sm" type="button" data-act="dl" data-f="historia">${ico("dl")}Descargar historia</button>${comp}`; }
+  if (f === "carrusel") {
+    const L = pzLaminas(c); RD.lam = Math.min(RD.lam, L.length - 1); pzLamina(ctx, c, RD.lam); cv.setAttribute("aria-label", `Carrusel, lámina ${RD.lam + 1} de ${L.length}`);
+    lam.innerHTML = L.map((_, i) => `<button type="button" data-act="lam" data-i="${i}" aria-pressed="${i === RD.lam}" aria-label="Lámina ${i + 1}">${i + 1}</button>`).join("");
+    desc.innerHTML = `<button class="btn sm" type="button" data-act="dl" data-f="carrusel">${ico("dl")}Descargar ${L.length} láminas</button>${comp}`;
+  }
+  if (f === "reel") pintarReel(cv, ctx);
+}
+/* Reel: vista animada, voz por escena (ElevenLabs vía /api/voz), música propia y exportación a MP4. */
+function planReel(){
+  const p = RD.post, guardado = RD.reel[p.id], c = p.contenido || {}, firma = JSON.stringify([c.titular, c.bajada, c.datos, c.guion, c.kicker, (c.fuentes || []).map(f => f.medio)]);
+  if (guardado && guardado.firma === firma) return guardado;
+  const plan = pzRetimar({c, escenas: pzEscenas(c)}); plan.firma = firma; RD.reel[p.id] = plan; return plan;
+}
+function pintarReel(cv, ctx){
+  const plan = planReel(), desc = $("#rdDesc"), ctl = $("#rdReelCtl"), t0 = performance.now(), quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  cv.setAttribute("aria-label", `Reel de ${Math.round(plan.total)} segundos: ${plan.escenas.length} escenas con el titular, los datos clave y la fuente.`);
+  const vozTxt = plan.audio ? `Con voz y música · ${Math.round(plan.total)} s` : `${Math.round(plan.total)} s · sin voz todavía`;
+  ctl.innerHTML = `<p class="info" style="margin:10px 0 0">${vozTxt}${plan.vozEstandar ? " · se usó la voz estándar (el plan de ElevenLabs no permite la voz chilena)" : ""}</p>
+    <div class="acciones">${RD.post.estado === "descartado" ? "" : `<button class="btn sm" type="button" data-act="voz-reel">${ico("voz")}${plan.audio ? "Grabar de nuevo la voz" : "Grabar voz"}</button>`}<button class="btn sm pri" type="button" data-act="mp4">Preparar video MP4</button></div>
+    <div class="prog" id="rdProg" hidden><span class="bar"><i></i></span><span class="info" id="rdPct">0%</span></div>`;
+  desc.innerHTML = plan.blob ? `<button class="btn sm" type="button" data-act="dl" data-f="reel">${ico("dl")}Descargar video</button>${navigator.canShare ? `<button class="btn sm" type="button" data-act="compartir-pieza">${ico("compartir")}Compartir</button>` : ""}` : "";
+  if (quieto) { pzReelCuadro(ctx, plan, Math.min(2, plan.total - 0.01)); return; }
+  const loop = now => { const t = ((now - t0) / 1000) % (plan.total + 0.8); pzReelCuadro(ctx, plan, Math.min(t, plan.total - 0.001)); RD.anim = requestAnimationFrame(loop); };
+  RD.anim = requestAnimationFrame(loop);
+}
+async function grabarVoz(btn){
+  const plan = planReel();
+  if (!(await RD.voz)) return toast(RD.modo === "prueba" ? "La voz se graba en pregonia.vercel.app (aquí no hay servidor de voz). Puedes preparar el video solo con música." : "Falta configurar la voz de ElevenLabs en Vercel.");
+  btn.disabled = true; btn.innerHTML = `${ico("voz")}Grabando…`;
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    for (const s of plan.escenas) {
+      const r = await fetch("/api/voz", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({texto: s.txt})});
+      if (!r.ok) { let m = ""; try { m = (await r.json()).error; } catch(e) {} throw new Error(m || "El servicio de voz no respondió"); }
+      if (r.headers.get("x-voz") === "estandar") plan.vozEstandar = true;
+      const buf = await r.arrayBuffer(); s.voz = await new Promise((ok, no) => { const q = ac.decodeAudioData(buf, ok, no); if (q && q.then) q.then(ok, no); });
+    }
+    ac.close().catch(() => {}); pzRetimar(plan); plan.audio = await pzMezcla(plan, true); plan.blob = null; toast("Voz grabada. Ahora prepara el video.");
+  } catch(e) { toast("No se pudo grabar la voz: " + (e.message || e)); }
+  pintarVista();
+}
+async function prepararMP4(btn){
+  const plan = planReel(), prog = $("#rdProg"), bar = prog.querySelector("i"), pct = $("#rdPct");
+  btn.disabled = true; prog.hidden = false;
+  const av = x => { bar.style.width = Math.round(x * 100) + "%"; pct.textContent = Math.round(x * 100) + "%"; };
+  try {
+    await pzFuentesListas();
+    const audio = plan.audio || await pzMezcla(plan, true);  // sin voz: solo la música propia
+    cancelAnimationFrame(RD.anim);
+    let blob = await pzMP4(plan, audio, av);
+    if (!blob) { toast("Este navegador graba el video en tiempo real: deja la pestaña abierta unos " + Math.round(plan.total) + " segundos."); blob = await pzGrabado(plan, audio, av); }
+    if (!blob) throw new Error("Este navegador no permite crear videos. Prueba con Chrome, Edge o Safari actualizados.");
+    plan.blob = blob; toast(plan.audioCodec === "opus" ? "Video listo, pero este navegador grabó el audio en Opus: Instagram pide AAC. Prepáralo en Chrome o Safari de escritorio." : plan.audio ? "Video listo con voz y música." : "Video listo con música (sin voz).");
+  } catch(e) { toast(String(e.message || e)); }
+  pintarVista();
+}
+
+/* Descargas y compartir */
+async function archivosDe(f){
+  const c = RD.post.contenido || {}, base = `PregonIA-${slug(c.titular)}`;
+  if (f === "feed") return [new File([await pzPNG(ctx => pzFeed(ctx, c), PZ.FEED)], base + "-feed.png", {type: "image/png"})];
+  if (f === "historia") return [new File([await pzPNG(ctx => pzHistoria(ctx, c), PZ.HIST)], base + "-historia.png", {type: "image/png"})];
+  if (f === "carrusel") { const L = pzLaminas(c), out = []; for (let i = 0; i < L.length; i++) out.push(new File([await pzPNG(ctx => pzLamina(ctx, c, i), PZ.FEED)], `${base}-carrusel-${i + 1}.png`, {type: "image/png"})); return out; }
+  if (f === "reel") { const plan = planReel(); return plan.blob ? [new File([plan.blob], base + "-reel." + (/webm/.test(plan.blob.type) ? "webm" : "mp4"), {type: plan.blob.type})] : []; }
+  return [];
+}
+async function descargar(f){
+  await pzFuentesListas();
+  const fs = await archivosDe(f); if (!fs.length) return toast("Primero prepara el video.");
+  for (const file of fs) { const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); await new Promise(r => setTimeout(r, 250)); }
+  toast(fs.length > 1 ? `Se descargaron ${fs.length} láminas.` : "Descargado.");
+}
+async function compartirPieza(){
+  await pzFuentesListas();
+  const fs = await archivosDe(RD.fmt); if (!fs.length) return toast("Primero prepara el video.");
+  const texto = (RD.post.contenido.ig || "") + "\n\n" + (RD.post.contenido.hashtags || []).join(" ");
+  if (!navigator.canShare || !navigator.canShare({files: fs})) return descargar(RD.fmt);
+  try { await navigator.clipboard.writeText(texto).catch(() => {}); await navigator.share({files: fs, title: RD.post.titulo}); toast("Copié el texto de Instagram: pégalo al publicar."); } catch(e) { if (e && e.name !== "AbortError") toast("No se pudo compartir."); }
+}
+async function copiarTexto(q){
+  const c = RD.post.contenido || {}, txt = q === "ig" ? (c.ig || "") + ((c.hashtags || []).length ? "\n\n" + c.hashtags.join(" ") : "") : (c.fb || "");
+  try { await navigator.clipboard.writeText(txt); toast(q === "ig" ? "Texto de Instagram copiado, con hashtags." : "Texto de Facebook copiado."); }
+  catch(e) { const el = $(q === "ig" ? "#f-ig" : "#f-fb"); if (el) { el.focus(); el.select(); } toast("Texto seleccionado: cópialo con el teclado."); }
+}
+
+/* Edición y guardado */
+function ponerValor(obj, ruta, v){
+  const ks = ruta.split("."); let o = obj;
+  for (let i = 0; i < ks.length - 1; i++) { const k = /^\d+$/.test(ks[i]) ? Number(ks[i]) : ks[i], sig = ks[i + 1]; if (o[k] == null) o[k] = /^\d+$/.test(sig) ? [] : {}; o = o[k]; }
+  const ult = /^\d+$/.test(ks[ks.length - 1]) ? Number(ks[ks.length - 1]) : ks[ks.length - 1]; o[ult] = v;
+}
+function alEditar(el){
+  const p = RD.post; if (!p || ["publicado", "descartado"].includes(p.estado)) return;
+  const k = el.dataset.k; let v = el.value;
+  if (k === "hashtags") v = v.split(/\s+/).map(h => h.trim()).filter(Boolean).map(h => h.replace(/^#?/, "#"));
+  ponerValor(p.contenido, k, v);
+  if (k.startsWith("datos.")) p.contenido.datos = (p.contenido.datos || []).map(x => x || "");
+  if (k === "titular") p.titulo = v;
+  const cont = document.querySelector(`[data-cont="${k}"]`); if (cont) { const max = Number(el.getAttribute("maxlength")); cont.textContent = `${v.length} / ${max}`; cont.classList.toggle("mal", v.length >= max); }
+  if (p.estado === "aprobado" || p.estado === "programado") { p.estado = "borrador"; p.aprobado = null; p.aprobado_por = null; toast("Cambiaste una publicación aprobada: volvió a borrador y hay que aprobarla de nuevo."); render(); return; }
+  $("#rdGuardado").textContent = "Cambios sin guardar…";
+  clearTimeout(RD.timer); RD.timer = setTimeout(() => guardarAhora(), 700);
+  clearTimeout(RD.tVista); RD.tVista = setTimeout(() => { pintarRevision(); pintarVista(); }, 250);
+}
+async function guardarAhora(silencio){
+  clearTimeout(RD.timer); const p = RD.post; if (!p) return;
+  try { await store.guardarPost(p); const g = $("#rdGuardado"); if (g) g.textContent = "Guardado " + horaHM(Date.now()); }
+  catch(e) { const g = $("#rdGuardado"); if (g) g.textContent = "No se pudo guardar"; if (!silencio) toast("No se pudo guardar: " + (e.message || e)); }
+}
+
+/* Aprobación, agenda y publicación */
+function dialogo(html, alAceptar){
+  const ov = document.createElement("div"); ov.className = "dlg-back"; ov.id = "rdDlg";
+  ov.innerHTML = `<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgT">${html}</div>`;
+  const origen = document.activeElement; document.body.appendChild(ov);
+  const cerrar = () => { ov.remove(); if (origen && origen.isConnected) origen.focus(); };
+  ov.addEventListener("click", e => { if (e.target === ov || e.target.closest("[data-dlg=cerrar]")) cerrar(); });
+  ov.addEventListener("keydown", e => { if (e.key === "Escape") cerrar(); if (e.key === "Tab") { const f = [...ov.querySelectorAll("button, input, select, textarea, a[href]")].filter(x => !x.disabled); if (!f.length) return; const a = f[0], z = f[f.length - 1]; if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); } else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); } } });
+  ov.querySelector("form").addEventListener("submit", async e => { e.preventDefault(); const ok = await alAceptar(ov); if (ok !== false) cerrar(); });
+  const f = ov.querySelector("input, select, textarea, button.pri"); if (f) f.focus();
+}
+function aprobar(){
+  const p = RD.post, r = revisar(p), errs = r.filter(x => x.nivel === "err"), advs = r.filter(x => x.nivel === "adv");
+  if (errs.length) { toast("Antes de aprobar, corrige lo marcado en rojo en la revisión."); $("#rdRev").scrollIntoView({block: "center"}); return; }
+  const prop = RD.props.find(x => x.id === p.propuesta_id);
+  dialogo(`<form><h2 id="dlgT">Aprobar publicación</h2><p class="lead" style="margin:0 0 8px">${esc(p.titulo)}</p>
+    ${advs.length ? `<p class="nota">${advs.length} ${advs.length === 1 ? "advertencia" : "advertencias"} en la revisión: ${esc(advs.map(a => a.txt.split(".")[0]).join(" · "))}.</p>` : ""}
+    <label class="ckl"><input type="checkbox" required id="ck1"> Verifiqué los hechos, las cifras y los nombres en la fuente original.</label>
+    <label class="ckl"><input type="checkbox" required id="ck2"> El texto es neutral: el mismo trato que daría a cualquier sector o autoridad.</label>
+    ${p.sensible ? `<label class="ckl"><input type="checkbox" required id="ck3"> Revisión reforzada: la noticia toca ${esc((prop && prop.cercanos || []).join(", ") || "actores cercanos")} y revisé que el tratamiento no favorezca ni perjudique.</label>` : ""}
+    <div class="acciones"><button class="btn" type="button" data-dlg="cerrar">Cancelar</button><button class="btn pri" type="submit">Aprobar</button></div></form>`, async () => {
+    const prev = {...p};
+    p.aprobado = new Date().toISOString(); p.aprobado_por = RD.user.id; p.revision = {advertencias: advs.map(a => a.txt), confirmo: ["hechos", "neutralidad"].concat(p.sensible ? ["revision_reforzada"] : []), ts: p.aprobado};
+    p.estado = p.programado && Date.parse(p.programado) > Date.now() ? "programado" : "aprobado";
+    try { await store.guardarPost(p); } catch(e) { Object.assign(p, prev); toast("No se pudo aprobar: " + (e.message || e)); return false; }
+    toast(p.estado === "programado" ? "Aprobada y programada." : "Aprobada. Ahora prográmala o publícala."); render();
+  });
+}
+/* Horarios sugeridos: los primeros de la lista según la meta diaria, sin chocar (90 minutos) con otra publicación agendada. */
+function sugerencias(n = 6){
+  const ocupados = RD.posts.filter(p => p.id !== (RD.post && RD.post.id) && ["programado", "publicado"].includes(p.estado) && (p.programado || p.publicado)).map(p => Date.parse(p.programado || p.publicado));
+  const slots = RD_HORARIOS.slice(0, RD.cfg.meta_diaria || 4).sort(), out = [], ahora = Date.now() + 10 * 6e4;
+  for (let d = 0; d < 8 && out.length < n; d++) for (const s of slots) {
+    const [h, m] = s.split(":").map(Number), t = new Date(); t.setDate(t.getDate() + d); t.setHours(h, m, 0, 0);
+    if (t.getTime() < ahora || ocupados.some(o => Math.abs(o - t.getTime()) < 90 * 6e4)) continue;
+    out.push(t.getTime()); if (out.length >= n) break;
+  }
+  return out;
+}
+function programar(){
+  const p = RD.post, sug = sugerencias(), ini = p.programado ? Date.parse(p.programado) : sug[0] || Date.now() + 36e5;
+  dialogo(`<form><h2 id="dlgT">Programar</h2><p class="lead" style="margin:0 0 10px">En la fase 1 te llega un aviso al celular a esa hora, con la pieza lista para descargar y el texto para copiar. En la fase 2 se publicará sola en Facebook e Instagram.</p>
+    <label class="campo" for="pgFecha">Fecha y hora<input class="inp" type="datetime-local" id="pgFecha" value="${localInput(ini)}" min="${localInput(Date.now())}" required></label>
+    <p class="info" style="margin:0 0 6px">Horarios libres sugeridos (meta: ${RD.cfg.meta_diaria} al día):</p>
+    <div class="acciones" style="margin-top:0">${sug.map(t => `<button class="btn sm" type="button" data-sug="${t}">${esc(fechaHora(t))}</button>`).join("") || `<span class="info">No quedan horarios libres en la semana.</span>`}</div>
+    <div class="acciones"><button class="btn" type="button" data-dlg="cerrar">Cancelar</button><button class="btn pri" type="submit">Programar</button></div></form>`, async ov => {
+    const v = ov.querySelector("#pgFecha").value, t = Date.parse(v); if (!v || !Number.isFinite(t)) return false;
+    if (t < Date.now() - 6e4) { toast("Elige una hora futura."); return false; }
+    const prev = {...p}; Object.assign(p, {programado: new Date(t).toISOString(), estado: "programado", recordado: false});
+    try { await store.guardarPost(p); } catch(e) { Object.assign(p, prev); toast("No se pudo programar: " + (e.message || e)); return false; }
+    toast("Programada para el " + fechaHora(t)); render();
+  });
+  document.querySelectorAll("[data-sug]").forEach(b => b.addEventListener("click", () => { $("#pgFecha").value = localInput(Number(b.dataset.sug)); }));
+}
+function marcarPublicada(){
+  const p = RD.post;
+  dialogo(`<form><h2 id="dlgT">Marcar como publicada</h2><p class="lead" style="margin:0 0 10px">Pega los enlaces de las publicaciones para dejar el registro (opcional).</p>
+    <label class="campo" for="enFb">Enlace en Facebook<input class="inp" id="enFb" type="url" placeholder="https://www.facebook.com/…" value="${esc((p.enlaces || {}).fb || "")}"></label>
+    <label class="campo" for="enIg">Enlace en Instagram<input class="inp" id="enIg" type="url" placeholder="https://www.instagram.com/p/…" value="${esc((p.enlaces || {}).ig || "")}"></label>
+    <div class="acciones"><button class="btn" type="button" data-dlg="cerrar">Cancelar</button><button class="btn pri" type="submit">Marcar publicada</button></div></form>`, async ov => {
+    const ok = u => !u || /^https:\/\/(www\.|m\.)?(facebook\.com|fb\.watch|instagram\.com)\//i.test(u), fb = ov.querySelector("#enFb").value.trim(), ig = ov.querySelector("#enIg").value.trim();
+    if (!ok(fb) || !ok(ig)) { toast("Los enlaces deben ser de facebook.com o instagram.com."); return false; }
+    const prev = {...p}; Object.assign(p, {estado: "publicado", publicado: new Date().toISOString(), enlaces: {fb, ig}, programado: p.programado || new Date().toISOString()});
+    try { await store.guardarPost(p); } catch(e) { Object.assign(p, prev); toast("No se pudo guardar: " + (e.message || e)); return false; }
+    toast("Registrada como publicada."); render();
+  });
+}
+async function cambiarEstado(estado, msg){
+  const p = RD.post, prev = {...p}; p.estado = estado;
+  if (estado === "borrador") { p.aprobado = null; p.aprobado_por = null; }
+  if (estado === "aprobado") p.programado = null;
+  try { await store.guardarPost(p); toast(msg); render(); } catch(e) { Object.assign(p, prev); toast("No se pudo guardar: " + (e.message || e)); }
+}
+
+/* ─── Calendario ─── */
+function vistaCalendario(){
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0); const meta = RD.cfg.meta_diaria || 4, slots = RD_HORARIOS.slice(0, meta).sort();
+  const agendados = RD.posts.filter(p => ["programado", "publicado"].includes(p.estado) && (p.programado || p.publicado));
+  const dias = Array.from({length: 7}, (_, i) => { const d = new Date(hoy); d.setDate(d.getDate() + i); return d; });
+  const aprobadas = RD.posts.filter(p => p.estado === "aprobado");
+  return `<h2>Calendario</h2><p class="lead">Próximos 7 días. Meta: ${meta} publicaciones al día (se cambia en Ajustes). Los huecos muestran los horarios sugeridos.</p>
+    ${aprobadas.length ? `<p class="nota">${aprobadas.length} ${aprobadas.length === 1 ? "publicación aprobada espera" : "publicaciones aprobadas esperan"} horario: ${aprobadas.map(p => `<a href="#post/${p.id}">${esc(p.titulo)}</a>`).join(" · ")}</p>` : ""}
+    <div class="cal" style="margin-top:14px">${dias.map(d => {
+      const k = diaClave(d), del = agendados.filter(p => diaClave(Date.parse(p.estado === "publicado" && p.publicado ? p.publicado : p.programado)) === k).sort((a, b) => Date.parse(a.programado || a.publicado) - Date.parse(b.programado || b.publicado));
+      const futuro = s => { const t = new Date(d); t.setHours(Number(s.slice(0, 2)), Number(s.slice(3)), 0, 0); return t.getTime() > Date.now(); };
+      const libres = slots.filter(futuro).filter(s => !del.some(p => { const t = new Date(Date.parse(p.programado || p.publicado)); return Math.abs(t.getHours() * 60 + t.getMinutes() - (Number(s.slice(0, 2)) * 60 + Number(s.slice(3)))) < 90; }));
+      return `<section class="dia ${k === diaClave(Date.now()) ? "hoy" : ""}" aria-label="${esc(d.toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long"}))}">
+        <h4>${esc(d.toLocaleDateString("es-CL", {weekday: "short", day: "numeric"}))}</h4><div class="cuenta ${del.length >= meta ? "ok" : ""}">${del.length} de ${meta}</div>
+        ${del.map(p => `<button class="cita ${p.estado === "publicado" ? "pub" : ""}" type="button" data-act="abrir" data-id="${p.id}"><b>${esc(horaHM(Date.parse(p.estado === "publicado" && p.publicado ? p.publicado : p.programado)))} · ${p.estado === "publicado" ? "publicada" : "programada"}</b>${esc(p.titulo)}</button>`).join("")}
+        ${libres.slice(0, Math.max(0, meta - del.length)).map(s => `<span class="hueco">${s} · libre</span>`).join("")}</section>`; }).join("")}</div>`;
+}
+
+/* ─── Ajustes ─── */
+function vistaAjustes(){
+  const c = RD.cfg;
+  const provs = Object.entries(PROVINCIAS).map(([prov, cs]) => { const todas = cs.every(x => c.comunas.includes(x)), alguna = cs.some(x => c.comunas.includes(x));
+    return `<div class="prov"><label class="prov-h"><input type="checkbox" data-prov="${esc(prov)}" ${todas ? "checked" : ""} ${!todas && alguna ? 'data-mixto="1"' : ""}> Provincia de ${esc(prov)}</label>
+      <div class="comunas">${cs.map(x => `<label class="ck"><input type="checkbox" data-comuna="${esc(x)}" ${c.comunas.includes(x) ? "checked" : ""}>${esc(x)}</label>`).join("")}</div></div>`; }).join("");
+  const push = "serviceWorker" in navigator && "PushManager" in window && RD.cfgPub && RD.cfgPub.avisos && RD.cfgPub.avisos.push && RD.modo === "editor";
+  return `<h2>Ajustes</h2><p class="lead">Territorios que cubre El Pregonero, avisos y revisión reforzada. Se guardan solos.</p>
+    <div class="ajustes">
+      <section class="panel" aria-labelledby="hTerr"><h3 id="hTerr">Territorios</h3>
+        <p class="info" style="margin-top:0">${c.comunas.length} de 38 comunas de la Región de Valparaíso. <button class="btn sm ghost" type="button" data-act="piloto">Solo litoral central</button><button class="btn sm ghost" type="button" data-act="todas">Toda la región</button><button class="btn sm ghost" type="button" data-act="ninguna">Ninguna</button></p>
+        ${provs}
+        <div class="prov"><label class="prov-h"><input type="checkbox" data-cfg="nacional" ${c.nacional ? "checked" : ""}> Noticias regionales y nacionales que afectan a la región</label><p class="info" style="margin:6px 0 0">Gobierno regional, consejo regional, delegación, puertos y temas de alcance provincial o regional, aunque no nombren una comuna.</p></div>
+      </section>
+      <div>
+        <section class="panel" aria-labelledby="hAv"><h3 id="hAv">Avisos</h3>
+          <label class="campo" for="cfUmbral">Avisar desde este puntaje de impacto: <b id="cfUmbralV">${c.umbral}</b><input type="range" id="cfUmbral" min="50" max="95" step="5" value="${c.umbral}" data-cfg="umbral"></label>
+          <label class="ckl"><input type="checkbox" data-cfg="silencio" ${c.silencio !== false ? "checked" : ""}> Silencio de 23:00 a 7:00, salvo puntaje 90 o más</label>
+          <label class="campo" for="cfHora">Resumen de la mañana<select class="sel" id="cfHora" data-cfg="resumen_hora">${[6, 7, 8, 9, 10].map(h => `<option value="${h}" ${c.resumen_hora === h ? "selected" : ""}>${String(h).padStart(2, "0")}:00</option>`).join("")}</select></label>
+          ${push ? `<button class="btn" type="button" data-act="push">${ico("campana")}Activar avisos en este dispositivo</button><p class="info">En iPhone, primero instala Redacción en la pantalla de inicio (Compartir › Agregar a inicio) y actívalos desde ahí.</p>` : `<p class="info">${RD.modo === "prueba" ? "Los avisos al celular funcionan con la cuenta de editor en pregonia.vercel.app." : "Faltan las llaves de avisos (VAPID) en Vercel para activarlos."}</p>`}
+        </section>
+        <section class="panel" aria-labelledby="hMeta"><h3 id="hMeta">Ritmo de publicación</h3>
+          <label class="campo" for="cfMeta">Publicaciones por día<select class="sel" id="cfMeta" data-cfg="meta_diaria">${[1, 2, 3, 4, 5, 6].map(n => `<option ${c.meta_diaria === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+          <p class="info" style="margin:0">Horarios sugeridos: ${RD_HORARIOS.slice(0, c.meta_diaria).sort().join(", ")}.</p>
+        </section>
+        <section class="panel" aria-labelledby="hRel"><h3 id="hRel">Revisión reforzada</h3>
+          <p class="info" style="margin-top:0">Si una noticia nombra alguno de estos términos, se marca y la aprobación pide una confirmación adicional. Úsala para territorios, personas u organizaciones con las que tienes relación.</p>
+          <label class="campo" for="cfCerc">Términos, separados por coma<textarea class="inp" id="cfCerc" rows="3" data-cfg="cercanos">${esc((c.cercanos || []).join(", "))}</textarea></label>
+        </section>
+        <section class="panel suave" aria-labelledby="hPeso"><h3 id="hPeso">Cómo se calcula el impacto</h3>
+          <p class="info" style="margin:0">Repercusión en medios (35 puntos: cuántos medios y de qué alcance) · interacción en redes de las cuentas de medios monitoreadas (20) · autoridades de la nómina que aparecen (15) · temas críticos: agua, emergencias, seguridad, salud y grandes inversiones, más gravedad (20) · recencia (10). Es por palabras y conteos, sin IA, para que sea explicable.</p>
+        </section>
+      </div>
+    </div>`;
+}
+let tCfg = null;
+function guardarCfgLuego(){ clearTimeout(tCfg); tCfg = setTimeout(async () => { try { await store.guardarCfg(RD.cfg); toast("Ajustes guardados."); if (RD.modo === "prueba") RD.props = await store.propuestas(); pintarTabs(); } catch(e) { toast("No se pudieron guardar los ajustes: " + (e.message || e)); } }, 500); }
+function ponerComunas(lista){ RD.cfg.comunas = [...new Set(lista)].sort((a, b) => a.localeCompare(b, "es")); guardarCfgLuego(); render(); }
+async function activarPush(){
+  try {
+    const per = await Notification.requestPermission(); if (per !== "granted") return toast("No se activaron: el navegador no dio permiso.");
+    const reg = await navigator.serviceWorker.register("/sw.js"), listo = await navigator.serviceWorker.ready;
+    const b64u = s => { const p = (s + "===".slice((s.length + 3) % 4)).replace(/-/g, "+").replace(/_/g, "/"), b = atob(p); return Uint8Array.from(b, c => c.charCodeAt(0)); };
+    const sub = await listo.pushManager.getSubscription() || await listo.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: b64u(RD.cfgPub.avisos.push)});
+    const j = sub.toJSON(), {error} = await RD.sb.from("redaccion_suscripciones").upsert({endpoint: j.endpoint, usuario: RD.user.id, p256dh: j.keys.p256dh, auth: j.keys.auth, dispositivo: navigator.userAgent.slice(0, 160)}, {onConflict: "endpoint"});
+    if (error) throw error; reg && toast("Avisos activados en este dispositivo.");
+  } catch(e) { toast("No se pudieron activar los avisos: " + (e.message || e)); }
+}
+
+/* Buscar ahora */
+async function buscarAhora(btn){
+  btn.disabled = true; const txt = btn.innerHTML; btn.innerHTML = `${ico("buscar")}Buscando…`;
+  try {
+    if (RD.modo === "editor") {
+      const {data: {session}} = await RD.sb.auth.getSession();
+      const r = await fetch("/api/redaccion", {method: "POST", headers: {authorization: "Bearer " + session.access_token}}), j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || "La búsqueda no respondió");
+      toast(`Búsqueda lista: ${j.hechos || 0} hechos revisados${j.nuevas ? `, ${j.nuevas} nuevos` : ""}.`);
+    } else toast("Modo prueba: se recalcularon los puntajes con los datos ficticios.");
+    RD.props = await store.propuestas(); render();
+  } catch(e) { toast(String(e.message || e)); }
+  btn.disabled = false; btn.innerHTML = txt;
+}
+
+/* ─── Eventos ─── */
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if (!b) return; const a = b.dataset.act;
+  if (a === "salir") return salir();
+  if (a === "prueba") return entrarPrueba();
+  if (a === "buscar") return buscarAhora(b);
+  if (a === "redactar") return redactar(b.dataset.id, b);
+  if (a === "descartar" || a === "reactivar") { const p = RD.props.find(x => x.id === b.dataset.id); if (!p) return; const est = a === "descartar" ? "descartada" : "nueva";
+    try { await store.marcarPropuesta(p.id, est); p.estado = est; render(); toast(a === "descartar" ? "Descartada. La encuentras en «Descartadas»." : "Volvió a las propuestas."); } catch(er) { toast("No se pudo guardar: " + (er.message || er)); } return; }
+  if (a === "abrir") { location.hash = "post/" + b.dataset.id; return; }
+  if (a === "fmt") { RD.fmt = b.dataset.f; RD.lam = 0; document.querySelectorAll("[data-act=fmt]").forEach(x => x.setAttribute("aria-pressed", x.dataset.f === RD.fmt)); return pintarVista(); }
+  if (a === "generar") { const p = RD.post; if (!p.formatos.includes(b.dataset.f)) p.formatos.push(b.dataset.f);
+    if (b.dataset.f === "carrusel" && !(p.contenido.slides || []).length) p.contenido.slides = [{t: "Qué pasó", x: p.contenido.bajada || ""}];
+    if (b.dataset.f === "reel" && !(p.contenido.guion && p.contenido.guion.intro)) p.contenido.guion = {intro: p.contenido.titular, datos: (p.contenido.datos || []).slice(0, 3), cierre: `Fuente: ${pzFuentes(p.contenido)}. Esto fue El Pregonero.`};
+    RD.fmt = b.dataset.f; await guardarAhora(); render(); return; }
+  if (a === "lam") { RD.lam = Number(b.dataset.i); document.querySelectorAll("[data-act=lam]").forEach(x => x.setAttribute("aria-pressed", Number(x.dataset.i) === RD.lam)); return pintarVista(); }
+  if (a === "lamina") { RD.post.contenido.slides = (RD.post.contenido.slides || []).concat([{t: "", x: ""}]); await guardarAhora(); return render(); }
+  if (a === "dl") return descargar(b.dataset.f);
+  if (a === "compartir-pieza") return compartirPieza();
+  if (a === "copiar") return copiarTexto(b.dataset.q);
+  if (a === "rehacer") return rehacer(b);
+  if (a === "aprobar") { await guardarAhora(true); return aprobar(); }
+  if (a === "programar") return programar();
+  if (a === "publicada") return marcarPublicada();
+  if (a === "desprogramar") return cambiarEstado("aprobado", "Se quitó de la agenda; sigue aprobada.");
+  if (a === "volver-borrador") return cambiarEstado("borrador", "Volvió a borrador.");
+  if (a === "descartar-post") return cambiarEstado("descartado", "Publicación descartada.");
+  if (a === "voz-reel") return grabarVoz(b);
+  if (a === "mp4") return prepararMP4(b);
+  if (a === "push") return activarPush();
+  if (a === "piloto") return ponerComunas(RD_PILOTO);
+  if (a === "todas") return ponerComunas(COMUNAS_V);
+  if (a === "ninguna") return ponerComunas([]);
+});
+document.addEventListener("input", e => {
+  const el = e.target;
+  if (el.dataset.k && RD.post) return alEditar(el);
+  if (el.id === "cfUmbral") { $("#cfUmbralV").textContent = el.value; RD.cfg.umbral = Number(el.value); guardarCfgLuego(); }
+  if (el.id === "cfCerc") { RD.cfg.cercanos = el.value.split(",").map(x => x.trim()).filter(Boolean).slice(0, 30); guardarCfgLuego(); }
+});
+document.addEventListener("change", e => {
+  const el = e.target;
+  if (el.dataset.filtro === "ver" || el.dataset.filtro === "com") { filtroProp[el.dataset.filtro] = el.value; return render(); }
+  if (el.dataset.filtro === "post") { filtroPost = el.value; return render(); }
+  if (el.dataset.comuna) { const x = el.dataset.comuna; ponerComunas(el.checked ? RD.cfg.comunas.concat([x]) : RD.cfg.comunas.filter(y => y !== x)); return; }
+  if (el.dataset.prov) { const cs = PROVINCIAS[el.dataset.prov]; ponerComunas(el.checked ? RD.cfg.comunas.concat(cs) : RD.cfg.comunas.filter(y => !cs.includes(y))); return; }
+  if (el.dataset.cfg === "nacional" || el.dataset.cfg === "silencio") { RD.cfg[el.dataset.cfg] = el.checked; guardarCfgLuego(); if (el.dataset.cfg === "nacional") render(); return; }
+  if (el.dataset.cfg === "resumen_hora" || el.dataset.cfg === "meta_diaria") { RD.cfg[el.dataset.cfg] = Number(el.value); guardarCfgLuego(); render(); }
+});
+document.addEventListener("submit", e => { if (e.target.id === "rdLogin") ingresar(e); });
+window.addEventListener("pagehide", () => { if (RD.timer) guardarAhora(true); });
+/* Casillas de provincia con selección parcial. */
+new MutationObserver(() => document.querySelectorAll("[data-mixto]").forEach(x => { x.indeterminate = true; })).observe(document.getElementById("rdMain"), {childList: true});
+iniciar();
+
+</script>
+</body>
+</html>

@@ -25,6 +25,8 @@ function titularDe(texto){
   const frase = (linea.match(/^.{20,}?[.!?](\s|$)/) || [linea])[0].replace(/(\s*#[\wáéíóúñ]+)+\s*$/i, "").replace(/\s+/g, " ").trim();
   return frase.length > 140 ? frase.slice(0, 138).replace(/\s+\S*$/, "") + "…" : frase;
 }
+/* Interacción pública de una publicación (me gusta, comentarios, compartidos): la usa el puntaje de impacto de Redacción. */
+function interaccion(l, c, s){ const x = {l: Number(l) || 0, c: Number(c) || 0, s: Number(s) || 0}; return x.l || x.c || x.s ? x : undefined; }
 function errorMeta(e, red){
   const c = e && e.code, sub = e && e.error_subcode, msg = String(e && e.message || "");
   if (c === 190) return "El token de Meta venció o fue revocado: hay que renovarlo";
@@ -44,9 +46,9 @@ async function graph(ruta, params){
 /* Una cuenta: sus publicaciones recientes como notas candidatas (mismo formato que un feed de prensa). */
 async function leerCuenta(m){
   if (m.red === "instagram") {
-    const j = await graph(process.env.META_IG_USER_ID, {fields: `business_discovery.username(${m.usuario}){username,name,media.limit(${POR_CUENTA}){caption,permalink,timestamp}}`});
+    const j = await graph(process.env.META_IG_USER_ID, {fields: `business_discovery.username(${m.usuario}){username,name,media.limit(${POR_CUENTA}){caption,permalink,timestamp,like_count,comments_count}}`});
     const media = (j.business_discovery && j.business_discovery.media && j.business_discovery.media.data) || [];
-    return media.filter(p => p.caption && p.permalink).map(p => ({titulo: titularDe(p.caption), desc: p.caption.replace(/\s+/g, " ").slice(0, 400), url: p.permalink, fecha: Date.parse(p.timestamp), m, via: "instagram"})).filter(x => x.titulo);
+    return media.filter(p => p.caption && p.permalink).map(p => ({titulo: titularDe(p.caption), desc: p.caption.replace(/\s+/g, " ").slice(0, 400), url: p.permalink, fecha: Date.parse(p.timestamp), m, via: "instagram", int: interaccion(p.like_count, p.comments_count, 0)})).filter(x => x.titulo);
   }
   const j = await graph(`${m.usuario}/posts`, {fields: "message,permalink_url,created_time", limit: String(POR_CUENTA)});
   return (j.data || []).filter(p => p.message && p.permalink_url).map(p => ({titulo: titularDe(p.message), desc: p.message.replace(/\s+/g, " ").slice(0, 400), url: p.permalink_url, fecha: Date.parse(p.created_time), m, via: "facebook"})).filter(x => x.titulo);
@@ -75,7 +77,8 @@ function itemAPost(red, it){
   const texto = red === "instagram" ? it.caption : it.text;
   const fecha = red === "instagram" ? Date.parse(it.timestamp) : (Number.isFinite(it.timestamp) ? it.timestamp * 1000 : Date.parse(it.time));
   const u = red === "instagram" ? (it.ownerUsername || usuarioDe("instagram", it.inputUrl)) : (usuarioDe("facebook", it.inputUrl) || usuarioDe("facebook", it.facebookUrl) || it.pageName);
-  return texto && u ? {u: String(u).toLowerCase(), texto, url: it.url, fecha} : null;
+  const int = red === "instagram" ? interaccion(it.likesCount, it.commentsCount, 0) : interaccion(it.likes, it.comments, it.shares);
+  return texto && u ? {u: String(u).toLowerCase(), texto, url: it.url, fecha, int} : null;
 }
 /* Gasto del mes en Apify (US$). null si no se puede saber: en ese caso no se pausa. */
 async function gastoApify(){
@@ -119,7 +122,7 @@ async function leerApify(red, cuentas, reg){
   const fallo = runs[0] && ["FAILED", "TIMED-OUT", "ABORTED"].includes(runs[0].status);
   cuentas.forEach(m => {
     const posts = porCuenta.get(clave(red, m.usuario)) || [];
-    posts.forEach(p => { const titulo = titularDe(p.texto); if (titulo) items.push({titulo, desc: p.texto.replace(/\s+/g, " ").slice(0, 400), url: p.url, fecha: p.fecha, m, via: red}); });
+    posts.forEach(p => { const titulo = titularDe(p.texto); if (titulo) items.push({titulo, desc: p.texto.replace(/\s+/g, " ").slice(0, 400), url: p.url, fecha: p.fecha, m, via: red, ...(p.int ? {int: p.int} : {})}); });
     if (posts.length) estado.push({id: m.id, ok: true, n: posts.length, via: "apify"});
     else if (reg.pausa && !reg.inicial[clave(red, m.usuario)]) estado.push({id: m.id, ok: false, via: "apify", error: "Lectura pausada: se alcanzó el presupuesto mensual de Apify"});
     else if (fallo) estado.push({id: m.id, ok: false, via: "apify", error: "El lector de redes falló en su última pasada; se reintenta en la próxima"});

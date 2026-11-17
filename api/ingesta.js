@@ -6,11 +6,13 @@
 // Variables: SUPABASE_URL, SUPABASE_SECRET_KEY, CRON_SECRET, ANTHROPIC_API_KEY. Para avisos: ver api/_avisos.js.
 // Cuentas de Facebook e Instagram de medios: META_ACCESS_TOKEN, META_IG_USER_ID, META_FB_PPCA (ver api/_redes.js).
 // Después de guardar, revisa los hechos que recibieron notas nuevas y avisa lo urgente (notificación y correo).
+// Además, propone a los editores de PregonIA las noticias de alto impacto de sus territorios (api/_redaccion.js).
 import { COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre } from "./_lectura.js";
 import { variantesNombre } from "./_autoridades.js";
 import { consulta, sujetoDeCuenta, fichaIA } from "./_sujetos.js";
 import { avisar } from "./_avisos.js";
 import { leerRedes, usuarioDe } from "./_redes.js";
+import { detectarRedaccion } from "./_redaccion.js";
 
 /* Cuentas de Facebook e Instagram de la base: las del catálogo fijo y las inscritas desde la aplicación. */
 const cuentaDe = r => ({id: r.id, nombre: r.nombre, ambito: r.ambito, comuna: r.comunas || "", red: r.metodo, usuario: r.usuario_red || usuarioDe(r.metodo, r.url_lectura)});
@@ -98,13 +100,19 @@ async function manejar(req){
     // Solo medios que ya existen en la base (clave foránea de notas): un medio nuevo del catálogo espera a que se cargue la semilla.
     const ids = new Set(enBase.map(x => x.id)), cat = {...cat0, items: cat0.items.filter(x => ids.has(x.m.id)).concat(rs.items), total: cat0.total + rs.total};
     const errores = cat.errores.concat(gns.some(g => !g) ? ["Google News"] : [], rs.errores);
-    const res = await Promise.all(munis.map((m, k) => procesarCuenta(m, cat.items.concat((gns[k] || []).filter(x => ids.has(x.m.id))), desde, ahora).catch(e => ({[m.autoridad ? "autoridad" : "comuna"]: m.etiqueta, error: String(e.message || e).slice(0, 200)}))));
+    // Redacción (cuentas propias de PregonIA): usa lo ya leído (prensa, redes y Google News de las comunas cliente), en paralelo
+    // con la clasificación de las cuentas y con su propio tope de tiempo, para que nunca demore ni rompa la lectura.
+    const gnPorComuna = Object.fromEntries(munis.map((m, k) => [m.autoridad ? null : m.comuna, gns[k]]).filter(([c, g]) => c && g));
+    const tope = new Promise(ok => setTimeout(() => ok({error: "tiempo agotado"}), 40000));
+    const [res, redaccion] = await Promise.all([
+      Promise.all(munis.map((m, k) => procesarCuenta(m, cat.items.concat((gns[k] || []).filter(x => ids.has(x.m.id))), desde, ahora).catch(e => ({[m.autoridad ? "autoridad" : "comuna"]: m.etiqueta, error: String(e.message || e).slice(0, 200)})))),
+      Promise.race([detectarRedaccion(sb, cat0.items.concat(rs.items), {gnPorComuna, ahora}), tope]).catch(e => ({error: String(e.message || e).slice(0, 200)}))]);
     // Avisos: un error aquí no debe perder la lectura ya guardada.
     await Promise.all(res.map(async (r, k) => { const grupos = r.grupos || []; delete r.grupos; if (!grupos.length) return;
       try { r.avisos = await avisar(sb, munis[k], grupos, Date.now()); } catch(e) { r.avisos = {error: String(e.message || e).slice(0, 160)}; } }));
     const suma = k => res.reduce((s, r) => s + (r[k] || 0), 0);
     const resumen = {fin: new Date().toISOString(), fuentes_ok: cat.total + 1 - errores.length, fuentes_total: cat.total + 1, errores: errores.slice(0, 60),
-      candidatas: suma("candidatas"), nuevas: suma("nuevas"), clasificadas: suma("clasificadas"), detalle: {comunas: res, ia: DIAG.slice(0, 8)}};
+      candidatas: suma("candidatas"), nuevas: suma("nuevas"), clasificadas: suma("clasificadas"), detalle: {comunas: res, ia: DIAG.slice(0, 8), redaccion}};
     await sb(`lecturas?id=eq.${lectura.id}`, {method: "PATCH", body: resumen, prefer: "return=minimal"});
     return json({ok: true, lectura: lectura.id, ...resumen}, 200, {"cache-control": "no-store"});
   } catch(e) {
