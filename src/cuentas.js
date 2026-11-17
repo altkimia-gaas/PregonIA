@@ -68,10 +68,8 @@ function cambiarCuenta(key){
 
 /* Entrada por rol, territorio y nombre, en pasos: 1 cargo (o búsqueda directa por nombre), 2 comuna, 3 persona, 4 revisión.
    Siempre se pregunta la comuna, que todos conocen; el distrito, la circunscripción o la circunscripción provincial se deducen de ella.
-   En el teléfono es una decisión por pantalla; desde 760 px se agrega un riel con los pasos. Para la demostración se pide una contraseña
-   común («pregonia») en la revisión; una vez ingresada en esta pestaña no se vuelve a pedir. Es un resguardo de acceso a la demo, no seguridad. */
-const CLAVE_DEMO = "pregonia", CLAVE_KEY = "pregonia-clave";
-const claveOk = () => { try { return sessionStorage.getItem(CLAVE_KEY) === "1"; } catch(e) { return false; } };
+   En el teléfono es una decisión por pantalla; desde 760 px se agrega un riel con los pasos. Sin sesión de cliente, la entrada exige
+   la prueba gratis con el correo validado (ver «Prueba gratis» más abajo); reemplaza a la antigua contraseña común de la demo. */
 const ENT = {paso: 1, rol: "", zona: "", comuna: "", sel: "", libre: "", g: "F", qn: "", qc: "", enPortada: false};
 const ENT_ROLES = [
   {k: "municipio", n: "Alcalde o alcaldesa", s: "Municipalidad", corto: "Alcaldía", ic: "M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"},
@@ -182,7 +180,6 @@ function entPaso(){
   return `<section class="ent-resumen"><div class="ent-quien"><span class="ent-av xl">${esc(iniciales(nom))}</span><div><b>${esc(nom)}</b><small>${esc(cuentaTx)}</small></div></div>
       <dl>${fila("Cargo", ENT_ROLES.find(r => r.k === ENT.rol).n, 1)}${fila("Territorio", entTerritorio(false), 2)}${fila(ENT.rol === "municipio" ? "Alcalde o alcaldesa" : "Persona", nom, 3)}${fila("Prensa que seguiremos", prensa, 0)}</dl></section>
     ${ENT.rol === "municipio" && !COMUNAS.includes(z.n) ? `<p class="ent-nota">Esta comuna se sigue con noticias reales; la demostración trae noticias ficticias solo del litoral central.</p>` : ""}
-    ${claveOk() ? "" : `<div class="ent-bloque"><label class="ent-campo" for="entClave">Contraseña de la demostración</label><input id="entClave" class="ent-in" type="password" autocomplete="current-password" autocapitalize="off" spellcheck="false" placeholder="Ingresa la contraseña"></div>`}
     <button type="button" class="ent-link ent-otra-aut" data-act="ent-reset">Elegir otra autoridad</button>`;
 }
 function entPuede(){
@@ -225,8 +222,136 @@ function entPintar(foco){
   if (el) { el.focus(); if (pos != null && el.setSelectionRange) try { el.setSelectionRange(pos, pos); } catch(e) {} }
 }
 function entIr(n){ ENT.paso = Math.max(1, Math.min(4, n)); if (ENT.paso <= 2) ENT.qc = ""; entPintar("titulo"); $("#entForm .ent-scroll")?.scrollTo(0, 0); }
-function entAbrir(enPortada){
-  Object.assign(ENT, {paso: 1, rol: "", zona: "", comuna: "", sel: "", libre: "", qn: "", qc: "", enPortada: !!enPortada});
+/* Prueba gratis · inscripción antes de elegir la autoridad: nombre, correo, tipo de autoridad y territorio. Al correo llega un
+   código de 6 dígitos generado al azar en el servidor (/api/prueba); al validarlo se abre la prueba en este navegador hasta la
+   fecha que devuelve el servidor y la entrada parte con el cargo y el territorio ya elegidos. Con sesión de cliente no se pide. */
+const PRUEBA_KEY = "pregonia-prueba";
+const pruebaGuardada = () => { try { return JSON.parse(localStorage.getItem(PRUEBA_KEY) || "null"); } catch(e) { return null; } };
+const pruebaVigente = () => { const p = pruebaGuardada(); return p && Date.parse(p.hasta) > Date.now() ? p : null; };
+const pruebaOk = () => !!pruebaVigente() || (typeof PILOTO !== "undefined" && !!PILOTO && !!PILOTO.activo);
+const INS = {etapa: "datos", nombre: "", correo: "", rol: "", terr: "", id: 0, minutos: 15, enPortada: false, ocupado: false};
+const REGION = "Región de Valparaíso";
+function insTerritorios(rol){
+  if (!rol) return {lbl: "Territorio", ops: []};
+  if (ZONA_FIJA[rol]) return {lbl: "Territorio", ops: [{v: ZONA_FIJA[rol], n: REGION}], fijo: true};
+  if (rol === "delegado") return {lbl: "Delegación", ops: ZONAS.delegado.map(z => ({v: z.id, n: z.n}))};
+  return {lbl: "Comuna", ops: COMUNAS_V.map(c => ({v: c, n: c})), nota: rol === "diputado" || rol === "core" ? "Con la comuna deducimos el distrito o la circunscripción." : ""};
+}
+const insTerrN = () => { const t = insTerritorios(INS.rol), o = t.ops.find(x => x.v === INS.terr); return o ? o.n : ""; };
+function insCuerpo(){
+  const cab = `<header class="ent-h"><span class="ins-esp" aria-hidden="true"></span><div class="ent-marca"><b>Pregon<span>IA</span></b><small>La prensa no espera. Tú tampoco.</small></div>
+      <span class="ent-pasoN">Prueba gratis</span><button class="ent-ib" type="button" data-act="ins-cerrar" aria-label="Cerrar">${eIco(I_X)}</button></header>`;
+  const vencida = pruebaGuardada() && !pruebaVigente();
+  let cuerpo, pie;
+  if (INS.etapa === "codigo") {
+    cuerpo = `<div class="ent-tit"><span class="ent-pasoT">Paso 2 de 2</span><h2 id="insT" tabindex="-1">Revisa tu correo</h2>
+        <p>Enviamos un código de 6 dígitos a <b>${esc(INS.correo)}</b>. Vence en ${INS.minutos} minutos.</p></div>
+      <div class="ent-bloque"><label class="ent-campo" for="insCod">Código de validación</label>
+        <input id="insCod" class="ent-in ins-cod" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" spellcheck="false"></div>
+      <p class="ent-nota">¿No llegó? Revisa la carpeta de spam o <button type="button" class="ent-link ins-link" data-act="ins-otro">corrige el correo y pide otro</button>.</p>`;
+    pie = "Validar y entrar";
+  } else if (vencida) {
+    cuerpo = `<div class="ent-tit"><span class="ent-pasoT">Prueba gratis</span><h2 id="insT" tabindex="-1">Tu prueba terminó</h2>
+        <p>Gracias por probar PregonIA. Para seguir recibiendo tu prensa, agenda una demostración y te mostramos los planes.</p></div>
+      <a class="btn alt ent-cta" href="/servicio#contacto">Agendar demostración</a>`;
+    pie = "";
+  } else {
+    const t = insTerritorios(INS.rol);
+    cuerpo = `<div class="ent-tit"><span class="ent-pasoT">Paso 1 de 2</span><h2 id="insT" tabindex="-1">Activa tu prueba gratis</h2>
+        <p>Sin costo ni tarjeta. Te enviaremos un código para validar tu correo.</p></div>
+      <div class="ent-bloque"><label class="ent-campo" for="insNom">Nombre y apellido</label><input id="insNom" class="ent-in" value="${esc(INS.nombre)}" autocomplete="name" maxlength="120"></div>
+      <div class="ent-bloque"><label class="ent-campo" for="insCor">Correo</label><input id="insCor" class="ent-in" type="email" value="${esc(INS.correo)}" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="160"></div>
+      <div class="ent-bloque"><label class="ent-campo" for="insRol">Tipo de autoridad</label><select id="insRol" class="ent-in"><option value="">Elige una opción</option>${ENT_ROLES.map(r => `<option value="${r.k}" ${INS.rol === r.k ? "selected" : ""}>${esc(r.n)}</option>`).join("")}</select></div>
+      <div class="ent-bloque"><label class="ent-campo" for="insTer">${t.lbl}</label><select id="insTer" class="ent-in" ${INS.rol && !t.fijo ? "" : "disabled"}>${INS.rol ? (t.fijo ? "" : `<option value="">Elige una opción</option>`) : `<option value="">Elige primero el tipo de autoridad</option>`}${t.ops.map(o => `<option value="${esc(o.v)}" ${INS.terr === o.v ? "selected" : ""}>${esc(o.n)}</option>`).join("")}</select>${t.nota ? `<p class="ent-nota">${t.nota}</p>` : ""}</div>
+      <input id="insSitio" name="sitio" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+      <label class="ins-ok"><input id="insOk" type="checkbox"><span>Soy mayor de 18 años y acepto los <a href="/legal.html#terminos" target="_blank" rel="noopener">Términos</a> y que ALTKIMIA use estos datos para validar mi correo y activar la prueba, según la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a>.</span></label>
+      <label class="ins-ok"><input id="insCom" type="checkbox"><span>Quiero recibir información comercial de PregonIA (opcional).</span></label>`;
+    pie = "Enviar código";
+  }
+  return `${cab}<div class="ent-cuerpo"><div class="ent-main"><div class="ent-scroll">${cuerpo}<p class="cap-err" id="insErr" role="alert" hidden></p></div>
+      ${pie ? `<footer class="ent-pie"><button class="btn alt ent-cta" type="submit" id="insEnv">${pie}</button></footer>` : ""}</div></div>`;
+}
+function insPintar(){ const f = $("#insForm"); if (!f) return; f.innerHTML = insCuerpo(); setTimeout(() => ($("#insCod") || (matchMedia("(pointer: coarse)").matches ? $("#insT") : $("#insNom")) || $("#insT"))?.focus(), 30); }
+function insAbrir(enPortada){
+  Object.assign(INS, {etapa: "datos", id: 0, enPortada: !!enPortada, ocupado: false});
+  $("#insBack")?.remove();
+  const ov = document.createElement("div"); ov.className = "vid-back ent-back"; ov.id = "insBack";
+  ov.innerHTML = `<section class="vid ent ins" role="dialog" aria-modal="true" aria-labelledby="insT"><form class="ent-f" id="insForm" novalidate></form></section>`;
+  document.body.appendChild(ov); document.body.classList.add("vid-on"); insAbrir.vuelta = document.activeElement;
+  insPintar();
+}
+function insCerrar(){ $("#insBack")?.remove(); if (!$("#entBack")) document.body.classList.remove("vid-on"); const o = insAbrir.vuelta; if (o && o.isConnected && !INS.enPortada) o.focus(); }
+function insError(msg, foco){ const e = $("#insErr"); if (!e) return; e.textContent = msg; e.hidden = false; if (foco) foco.focus(); }
+async function insLlamar(datos){
+  const r = await fetch("/api/prueba", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(datos)});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.ok) throw new Error(j.error || "No pudimos completar la inscripción. Intenta de nuevo.");
+  return j;
+}
+/* Abre la entrada con el cargo y el territorio de la inscripción: queda en el paso de la persona. */
+function insContinuar(p){
+  const pre = {rol: p.rol};
+  if (ZONA_FIJA[p.rol]) pre.zona = ZONA_FIJA[p.rol];
+  else if (p.rol === "delegado") pre.zona = p.terr;
+  else if (p.terr) Object.assign(pre, {comuna: p.terr, zona: zonaDeComuna(p.rol, p.terr)});
+  pre.paso = pre.zona ? 3 : 2;
+  const portada = INS.enPortada; insCerrar(); entAbrir(portada, pre);
+}
+async function insEnviar(e){
+  e.preventDefault(); if (INS.ocupado) return;
+  const b = $("#insEnv"), tx = b && b.textContent;
+  const fin = () => { INS.ocupado = false; if (b && b.isConnected) { b.disabled = false; b.textContent = tx; } };
+  if (INS.etapa === "codigo") {
+    const c = $("#insCod"), codigo = (c.value || "").replace(/\D/g, "");
+    if (codigo.length !== 6) return insError("Escribe los 6 dígitos del código.", c);
+    INS.ocupado = true; b.disabled = true; b.textContent = "Validando…";
+    try {
+      const {prueba} = await insLlamar({accion: "verificar", id: INS.id, codigo});
+      try { localStorage.setItem(PRUEBA_KEY, JSON.stringify({...prueba, terr: INS.terr})); } catch(err) {}
+      fin(); toast(`Correo validado. Tu prueba gratis está activa hasta el ${new Date(prueba.hasta).toLocaleDateString("es-CL", {day: "numeric", month: "long"})}.`);
+      insContinuar({rol: INS.rol || prueba.rol, terr: INS.terr});
+    } catch (err) { fin(); insError(err.message, c); c.select?.(); }
+    return;
+  }
+  INS.nombre = $("#insNom").value.trim().replace(/\s+/g, " "); INS.correo = $("#insCor").value.trim().toLowerCase();
+  INS.rol = $("#insRol").value; INS.terr = $("#insTer").value;
+  if (INS.nombre.length < 3 || INS.nombre.split(" ").length < 2) return insError("Escribe tu nombre y apellido.", $("#insNom"));
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(INS.correo)) return insError("Revisa el correo.", $("#insCor"));
+  if (!INS.rol) return insError("Elige el tipo de autoridad.", $("#insRol"));
+  if (!INS.terr) return insError("Elige el territorio.", $("#insTer"));
+  if (!$("#insOk").checked) return insError("Para activar la prueba debes aceptar los Términos y el uso de tus datos.", $("#insOk"));
+  INS.ocupado = true; b.disabled = true; b.textContent = "Enviando…";
+  try {
+    const j = await insLlamar({accion: "solicitar", nombre: INS.nombre, correo: INS.correo, rol: INS.rol, territorio: insTerrN(), consentimiento: true, contacto: $("#insCom").checked,
+      sitio: $("#insSitio").value, version: typeof LEGAL_VERSION !== "undefined" ? LEGAL_VERSION : ""});
+    fin(); Object.assign(INS, {etapa: "codigo", id: j.id, minutos: j.minutos || 15}); insPintar();
+  } catch (err) { fin(); insError(err.message); }
+}
+document.addEventListener("submit", e => { if (e.target.id === "insForm") insEnviar(e); });
+document.addEventListener("change", e => {
+  if (e.target.id !== "insRol") return;
+  INS.nombre = $("#insNom").value; INS.correo = $("#insCor").value; INS.rol = e.target.value;
+  const t = insTerritorios(INS.rol); INS.terr = t.fijo ? t.ops[0].v : t.ops.some(o => o.v === INS.terr) ? INS.terr : "";
+  insPintar(); setTimeout(() => $("#insRol")?.focus(), 40);
+});
+document.addEventListener("input", e => { if (e.target.id === "insCod") e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6); });
+document.addEventListener("click", e => {
+  if (e.target.id === "insBack" && !INS.enPortada) return insCerrar();
+  const b = e.target.closest("[data-act]"); if (!b || !b.closest("#insBack")) return;
+  if (b.dataset.act === "ins-cerrar") return insCerrar();
+  if (b.dataset.act === "ins-otro") { INS.etapa = "datos"; insPintar(); }
+});
+document.addEventListener("keydown", e => {
+  if (!$("#insBack")) return;
+  if (e.key === "Escape") { e.preventDefault(); insCerrar(); return; }
+  if (e.key !== "Tab") return;  // el foco queda dentro del diálogo
+  const f = [...document.querySelectorAll("#insBack button:not([disabled]), #insBack input:not([tabindex='-1']), #insBack select:not([disabled]), #insBack a[href]")].filter(x => x.offsetParent);
+  if (!f.length) return; const i = f.indexOf(document.activeElement);
+  if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && (i === f.length - 1 || i < 0)) { e.preventDefault(); f[0].focus(); }
+});
+function entAbrir(enPortada, pre){
+  if (!pruebaOk()) return insAbrir(enPortada);
+  Object.assign(ENT, {paso: 1, rol: "", zona: "", comuna: "", sel: "", libre: "", qn: "", qc: "", enPortada: !!enPortada}, pre || {});
   $("#entBack")?.remove();
   const ov = document.createElement("div"); ov.className = "vid-back ent-back"; ov.id = "entBack";
   ov.innerHTML = `<section class="vid ent" role="dialog" aria-modal="true" aria-labelledby="entT"><form class="ent-f" id="entForm" novalidate></form></section>`;
@@ -242,11 +367,7 @@ function entEntrar(e){
     if (!entPuede()) return;
     return entIr(ENT.paso + 1);
   }
-  if (!claveOk()) {
-    const c = $("#entClave");
-    if (!c || c.value.trim().toLowerCase() !== CLAVE_DEMO) return entError(c && c.value ? "Contraseña incorrecta." : "Ingresa la contraseña.", c);
-    try { sessionStorage.setItem(CLAVE_KEY, "1"); } catch(e) {}
-  }
+  if (!pruebaOk()) { const portada = ENT.enPortada; entCerrar(); return insAbrir(portada); }
   const a = entPersona(), libre = entLibre();
   if (!a && !entLibreOk()) return entIr(3);
   const key = ENT.rol === "municipio" ? crearCuentaMunicipio(ENT.zona, a, libre, ENT.g) : crearCuentaAutoridad({rol: ENT.rol, zona: ENT.zona, a, nombre: libre, g: ENT.g});

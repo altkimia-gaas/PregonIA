@@ -589,3 +589,22 @@ create table if not exists contactos (
   version_privacidad text
 );
 alter table contactos enable row level security;
+
+-- Prueba gratis (/api/prueba): inscripción con verificación del correo por código de 6 dígitos.
+-- Guarda solo el resumen con sal del código (se borra al verificar). Sin políticas: solo la clave secreta del servidor accede.
+create table if not exists public.pruebas (
+  id bigint generated always as identity primary key,
+  creado_en timestamptz not null default now(),
+  nombre text not null,
+  correo text not null,
+  rol text not null,
+  territorio text not null,
+  codigo_hash text,
+  expira timestamptz not null,
+  intentos int not null default 0,
+  verificado_en timestamptz,
+  acepta_contacto boolean not null default false,
+  version_privacidad text
+);
+create index if not exists pruebas_correo_creado on public.pruebas (correo, creado_en desc);
+alter table public.pruebas enable row level security;

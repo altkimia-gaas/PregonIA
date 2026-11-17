@@ -99,6 +99,7 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
         <tr><td>Publicaciones agregadas a mano y capturas de pantalla subidas para análisis. De la captura se guarda solo el titular, el resumen y palabras clave; la imagen no se almacena.</td><td>Usuarios del servicio</td><td>Incorporar al monitoreo notas que no se leen automáticamente</td><td>Ejecución del contrato</td></tr>
         <tr><td>Borradores de comunicados aprobados</td><td>Equipo municipal</td><td>Guardar las respuestas aprobadas por el municipio</td><td>Ejecución del contrato</td></tr>
         <tr><td>Formulario de contacto de la página del servicio: nombre, cargo, institución o comuna, correo, celular, interés y mensaje</td><td>Personas interesadas en contratar el servicio</td><td>Responder la consulta y coordinar una demostración o cotización</td><td>Consentimiento, que retiras escribiendo a soporte@altkimia.cl</td></tr>
+        <tr><td>Inscripción a la prueba gratis: nombre, correo, tipo de autoridad, territorio, fecha de validación del correo, si aceptas contacto comercial y versión de esta política. El código de validación se guarda solo como resumen cifrado y se borra al validarlo.</td><td>Personas que piden la prueba gratis</td><td>Validar que el correo es tuyo, activar la prueba por 14 días y evitar abusos. Solo si lo autorizas en una casilla aparte, opcional, contactarte con información comercial del servicio</td><td>Consentimiento, que retiras escribiendo a soporte@altkimia.cl</td></tr>
         <tr><td>Preguntas al asistente de la página del servicio. <b>No se guardan:</b> se envían a Anthropic solo para responder.</td><td>Visitantes de la página del servicio</td><td>Responder dudas sobre el servicio</td><td>Interés legítimo en atender consultas</td></tr>
       </tbody>
     </table></div>
@@ -117,6 +118,7 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
         <tr><td>Suscripciones a notificaciones</td><td>Hasta que desactives los avisos o el navegador invalide la suscripción (se borra automáticamente)</td></tr>
         <tr><td>Registro de aceptación de documentos</td><td>Mientras exista la cuenta y luego por el plazo de prescripción de las acciones legales aplicables</td></tr>
         <tr><td>Solicitudes del formulario de contacto</td><td>12 meses desde la solicitud, o antes si pides eliminarlas</td></tr>
+        <tr><td>Inscripciones a la prueba gratis</td><td>12 meses desde la inscripción, o antes si pides eliminarlas; las inscripciones con el correo sin validar se eliminan a los 30 días</td></tr>
         <tr><td>Datos de la demostración</td><td>Quedan en tu navegador hasta que los borres desde Ajustes o limpies los datos del sitio</td></tr>
       </tbody>
     </table></div>
@@ -151,6 +153,7 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
     <p>El servicio se entrega sin un nivel de disponibilidad garantizado, salvo el que se acuerde por escrito. La lectura de medios depende de que cada sitio y red social siga accesible; cuando una fuente no se puede leer, PregonIA lo muestra en Ajustes › Fuentes. Cualquier compromiso de disponibilidad se fija por escrito en el contrato con cada institución.</p>
     <h3>3.6 Precio</h3>
     <p>PregonIA no cobra en línea. El precio, el plan y su duración se acuerdan en el contrato con cada municipio, que indica también cómo terminarlo.</p>
+    <p>La prueba gratis dura 14 días desde que validas tu correo, una vez por correo. No pide tarjeta ni medio de pago y termina sola, sin cobro ni renovación. Durante la prueba la edición de ejemplo usa noticias ficticias junto a lecturas de medios reales, y lo que configures queda solo en tu navegador.</p>
     <h3>3.7 Propiedad intelectual</h3>
     <p>El software, la marca y los informes de PregonIA pertenecen a ALTKimia. Las noticias pertenecen a sus medios: PregonIA muestra titular, enlace y un resumen propio, y envía al lector al medio original (ver sección 6).</p>
     <h3>3.8 Cambios</h3>
@@ -190,7 +193,7 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
         <tr><td>Vercel</td><td>Alojamiento de la aplicación y funciones del servidor</td><td>EE.UU.</td><td>Solicitudes a la aplicación y textos enviados a la IA</td></tr>
         <tr><td>Anthropic</td><td>Inteligencia artificial (Claude)</td><td>EE.UU.</td><td>Textos de noticias, preguntas y datos del municipio necesarios para cada tarea</td></tr>
         <tr><td>ElevenLabs</td><td>Voz sintética del video resumen</td><td>EE.UU.</td><td>Guion del video resumen</td></tr>
-        <tr><td>Resend</td><td>Correos de aviso a usuarios del servicio y aviso interno de las solicitudes del formulario de contacto</td><td>EE.UU.</td><td>Correo del destinatario y el contenido del aviso</td></tr>
+        <tr><td>Resend</td><td>Correos de aviso a usuarios del servicio, código de validación de la prueba gratis y aviso interno de las solicitudes del formulario de contacto y de las pruebas activadas</td><td>EE.UU.</td><td>Correo del destinatario y el contenido del aviso</td></tr>
         <tr><td>Meta Platforms</td><td>Lectura de cuentas públicas de medios en Instagram y Facebook, y publicación en la página de Facebook de El Pregonero</td><td>EE.UU.</td><td>Ninguno de usuarios: consultas sobre cuentas públicas de medios y publicaciones ya aprobadas por el editor</td></tr>
         <tr><td>Apify</td><td>Lectura de publicaciones públicas de medios en redes sociales (etapa de demostración)</td><td>República Checa (UE)</td><td>Ninguno de usuarios: solo consultas sobre cuentas públicas de medios</td></tr>
         <tr><td>GitHub (Microsoft)</td><td>Ejecución programada de la lectura de medios</td><td>EE.UU.</td><td>Ninguno de usuarios: solo dispara la lectura programada</td></tr>
