@@ -1,5 +1,6 @@
 // Lectura programada (etapa 2): cada 30 minutos lee los medios, guarda las notas nuevas de cada cuenta cliente y las clasifica.
-// Cuentas: municipios (lo que menciona la comuna) y autoridades (lo que nombra a la persona, juzgado respecto de ella; ver _sujetos.js).
+// Cuentas: municipios (lo que menciona la comuna) y autoridades (lo que nombra a la persona y lo que trata de la institución que integra
+// en su territorio, juzgado respecto de ella; ver _sujetos.js).
 // Solo se clasifica lo nuevo (lo ya visto no se vuelve a pagar) y las notas nuevas se agrupan con los hechos de días anteriores,
 // para que el historial, las respuestas y las marcas queden en el mismo hecho aunque lleguen notas días después.
 // La llama un programador externo (GitHub Actions) con Authorization: Bearer CRON_SECRET.
@@ -9,7 +10,7 @@
 // Además, propone a los editores de PregonIA las noticias de alto impacto de sus territorios (api/_redaccion.js).
 import { COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre } from "./_lectura.js";
 import { variantesNombre } from "./_autoridades.js";
-import { consulta, sujetoDeCuenta, fichaIA } from "./_sujetos.js";
+import { sujetoDeCuenta, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
 import { avisar } from "./_avisos.js";
 import { leerRedes, usuarioDe } from "./_redes.js";
 import { detectarRedaccion } from "./_redaccion.js";
@@ -39,7 +40,7 @@ async function cuentasActivas(){
     const a = sujetoDeCuenta(f); if (!a) return null;
     const ficha = fichaIA(a), nombre = f.nombre || `${ficha.cargo} ${a.n}`;
     return {...f, etiqueta: nombre, institucion: nombre, ia: ficha, autoridad: true,
-      gn: () => leerGoogleNewsConsulta(consulta(a)), candidatas: (items, desde, ahora) => candidatasPorNombre(variantesNombre(a), items, desde, ahora)};
+      gn: () => leerSujeto(a), candidatas: (items, desde, ahora) => candidatasPorNombre(variantesNombre(a), items, desde, ahora, institucion(a))};
   }).filter(Boolean);
 }
 
@@ -72,10 +73,11 @@ async function procesarCuenta(cta, items, desde, ahora){
   const filas = nuevas.map((n, i) => {
     const c = clas.porI.get(i), ok = Boolean(c && c.tono);
     return {nota_id: n.id, municipio_id, rel: c && c.rel === false ? false : true, tono: ok && ["cri", "neu", "pos"].includes(c.tono) ? c.tono : "neu",
-      resumen: c && c.res ? String(c.res).slice(0, 220) : n.titulo.slice(0, 220), palabras: c && c.x ? String(c.x).slice(0, 120) : "", grupo: grupoPorEtiqueta.get(etiquetaDe(n, c)), ia: ok};
+      resumen: c && c.res ? String(c.res).slice(0, 220) : n.titulo.slice(0, 220), palabras: c && c.x ? String(c.x).slice(0, 120) : "", grupo: grupoPorEtiqueta.get(etiquetaDe(n, c)), ia: ok, ...(n.sobre ? {sobre: n.sobre === "i" ? "institucion" : "persona"} : {})};
   });
   // Lo que la IA no alcanzó a clasificar se guarda igual (neutro, con el titular) y queda marcado con ia = false para revisarlo.
-  await sb("menciones?on_conflict=nota_id,municipio_id", {method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body: filas});
+  const guardar = body => sb("menciones?on_conflict=nota_id,municipio_id", {method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body});
+  await guardar(filas).catch(e => { if (!/sobre/.test(String(e.message))) throw e; return guardar(filas.map(({sobre, ...f}) => f)); });  // esquema sin la columna sobre
   return {...quien, candidatas: candidatas.length, nuevas: nuevas.length, clasificadas: filas.filter(f => f.ia).length, descartadas: filas.filter(f => !f.rel).length, grupos: filas.filter(f => f.rel).map(f => f.grupo)};
 }
 

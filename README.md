@@ -113,13 +113,16 @@ Roles: `admin` y `comunicaciones` editan; `alcalde`, `autoridad`, `directivo` y 
 ### Autoridades en el piloto
 
 La tabla `municipios` guarda también cuentas de autoridad: `tipo` es el cargo y `autoridad` describe a la persona
-(`zona`, `nombre`, `g` y, si está en la nómina de `src/autoridades.js`, su `id`). La lectura programada busca lo que la nombra
-(Google News por nombre y cargo, más los medios del catálogo) y la IA juzga relevancia y tono respecto de la persona, igual que
+(`zona`, `nombre`, `g` y, si está en la nómina de `src/autoridades.js`, su `id`). Todas las autoridades se leen con las mismas
+reglas que un municipio, que sigue lo que trata de su comuna y de su municipalidad: lo que nombra a la persona (en el titular, en la
+bajada o, vía Google News, en el cuerpo de la nota) y lo que trata de la institución que integra en su territorio (Consejo Regional,
+Gobierno Regional, Delegación Presidencial, diputados del distrito, senadores por la región, concejo municipal). La IA juzga relevancia
+y tono respecto de la persona, y cada mención queda marcada como `persona` o `institucion` (columna `sobre` de `menciones`), igual que
 «Noticias reales» en la demostración. Los avisos llegan con el nombre de la autoridad.
 
 Para activarlo en una base existente:
 
-1. Correr de nuevo `supabase/esquema.sql` (agrega `tipo` y `autoridad` a `municipios`, deja la comuna opcional para autoridades y suma el rol `autoridad`).
+1. Correr de nuevo `supabase/esquema.sql` (agrega `tipo` y `autoridad` a `municipios`, deja la comuna opcional para autoridades, suma el rol `autoridad` y la columna `sobre` de `menciones`). Sin la columna, la lectura guarda y la app lee igual, pero sin distinguir lo de la persona de lo de su institución.
    Mientras no se corra, la aplicación y la lectura programada siguen funcionando solo con municipios.
 2. Crear la cuenta de la autoridad y asignar a su equipo con el bloque B de `supabase/alta_usuario.sql`.
 

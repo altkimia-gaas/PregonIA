@@ -91,17 +91,21 @@ Para cada nota devuelve un objeto con:
 
 Responde solo con un arreglo JSON compacto, en una sola línea, sin bloque de código ni texto adicional.`;
 }
-/* Autoridades: la relevancia y el tono se juzgan respecto de la persona, no de una comuna. */
+/* Autoridades: las mismas reglas que una comuna. Una comuna lee lo que trata de ella, de su municipio o de sus autoridades;
+   una autoridad lee lo que la nombra y lo que trata de la institución que integra en su territorio. La IA lo juzga respecto de la persona. */
 const esSujeto = x => x && typeof x === "object";
+const MARCA = {pc: " (hallada por su nombre)", i: " (sobre su institución)"};
+const lineaAut = (n, i) => linea(n, i) + (MARCA[n.sobre] || "");
 function promptLoteAut(a, notas, base){
+  const inst = a.institucion || a.zona;
   return `Eres analista de prensa de PregonIA para el equipo de ${a.cargo} ${a.nombre} (${a.zona}, Región de Valparaíso, Chile). Revisa estas notas de prensa:
 
-${notas.map((n, k) => linea(n, base + k)).join("\n")}
+${notas.map((n, k) => lineaAut(n, base + k)).join("\n")}
 
 Para cada nota devuelve un objeto con:
 - "i": su número.
-- "rel": true solo si la nota nombra a ${a.nombre} como ${a.cargo.toLowerCase()} o trata directamente de su labor; false si es otra persona con un nombre parecido o si no la nombra.
-- "tono": la postura de la nota hacia ${a.nombre}, no lo grave del hecho. "cri" si la critica, la cuestiona o la vincula a una polémica o denuncia; "pos" si la favorece (iniciativas, logros, reconocimientos); "neu" si es informativa, solo la cita o informa un hecho grave sin cuestionarla.
+- "rel": true si la nota nombra a ${a.nombre} como ${a.cargo.toLowerCase()} o trata directamente de su labor; también si trata de ${inst} (sus acuerdos, votaciones, proyectos, recursos, autoridades o polémicas), porque eso afecta a quien la integra. Las notas marcadas «(hallada por su nombre)» salieron de una búsqueda de su nombre y la mencionan en el cuerpo aunque el titular no lo diga: son true salvo que traten claramente de otra persona o de otro lugar. false si es otra persona con un nombre parecido, si es de otra región o si la institución o el territorio aparecen solo de pasada.
+- "tono": la postura de la nota hacia ${a.nombre} o, si la nota trata de su institución, hacia la gestión de ${inst}; no lo grave del hecho. "cri" si la critica, la cuestiona o la vincula a una polémica o denuncia; "pos" si la favorece (iniciativas, logros, reconocimientos); "neu" si es informativa, solo la cita o informa un hecho grave sin cuestionarla.
 - "res": un resumen propio de una frase, de máximo 20 palabras, en español de Chile, sin copiar frases del medio.
 - "x": entre 3 y 6 palabras clave en minúsculas separadas por espacios (temas, lugares, instituciones).
 
@@ -166,18 +170,28 @@ export async function leerGoogleNewsConsulta(q, dias = VENTANA_DIAS, catalogo = 
     return { ...x, titulo: x.titulo.replace(new RegExp("\\s+-\\s+" + x.fuente.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"), ""), desc: "", m, via: "google_news", fuente: m === INST ? x.fuente.replace(/^\|\s*/, "").slice(0, 80) : undefined };
   }).filter(Boolean);
 }
-/* Lo que nombra a una autoridad (por cualquiera de sus variantes de nombre) en la ventana, sin duplicados. */
-export function candidatasPorNombre(variantes, items, desde, ahora = Date.now()){
-  const re = new RegExp(`(^|[^a-z])(${variantes.map(v => norm(v).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})([^a-z]|$)`);
+/* Candidatas de una autoridad, con las mismas reglas que una comuna (que lee lo que nombra a la comuna o sale en sus medios locales):
+   - lo que la nombra por cualquiera de sus variantes, en el titular o la bajada ("p");
+   - lo que Google News encontró buscando su nombre ("pc"): Google lo halló en el cuerpo, aunque el titular no la nombre;
+   - lo que trata de la institución que integra en su territorio ("i"): un término del órgano más uno del territorio,
+     o un término del órgano en lo que Google News encontró buscando la institución en ese territorio.
+   Primero lo que trata de la persona, para que el tope de clasificación no lo deje fuera; dentro de cada grupo, lo más reciente. */
+export function candidatasPorNombre(variantes, items, desde, ahora = Date.now(), inst = null){
+  const rx = xs => new RegExp(`(^|[^a-z])(${xs.map(v => norm(v).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})([^a-z]|$)`);
+  const re = rx(variantes), reOrg = inst && inst.organo.length ? rx(inst.organo) : null, reTer = inst && inst.territorio.length ? rx(inst.territorio) : null;
   const vistos = new Set(), out = [];
   for (const x of items) {
     if (!Number.isFinite(x.fecha) || x.fecha < desde || x.fecha > ahora + 36e5) continue;
-    if (!re.test(norm(x.titulo + " " + x.desc))) continue;
+    const t = norm(x.titulo + " " + x.desc);
+    const sobre = re.test(t) ? "p" : x.q === "nombre" ? "pc"
+      : reOrg && reOrg.test(t) && (x.q === "inst" || (reTer && reTer.test(t))) && !EXCLUIR.some(w => t.includes(w)) ? "i" : "";
+    if (!sobre) continue;
     const k1 = x.url, k2 = x.m.id + "|" + norm(x.titulo);
     if (vistos.has(k1) || vistos.has(k2)) continue; vistos.add(k1); vistos.add(k2);
-    out.push({ id: "r" + hash(x.url), m: x.m.id, medio: x.m.nombre, ambito: x.m.ambito, titulo: x.titulo, desc: x.desc, url: x.url, ts: Math.min(x.fecha, ahora), via: x.via || "lectura", ...(x.fuente ? {fuente: x.fuente} : {}) });
+    out.push({ id: "r" + hash(x.url), m: x.m.id, medio: x.m.nombre, ambito: x.m.ambito, titulo: x.titulo, desc: x.desc, url: x.url, ts: Math.min(x.fecha, ahora), via: x.via || "lectura", sobre, ...(x.fuente ? {fuente: x.fuente} : {}) });
   }
-  return out.sort((a, b) => b.ts - a.ts);
+  const orden = {p: 0, pc: 0, i: 1};
+  return out.sort((a, b) => orden[a.sobre] - orden[b.sobre] || b.ts - a.ts);
 }
 /* Lo que menciona la comuna en la ventana, sin duplicados (mismo enlace o mismo titular en el mismo medio), del más reciente al más antiguo. */
 export function candidatasDe(comuna, items, desde, ahora = Date.now()){

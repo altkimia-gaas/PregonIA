@@ -3,7 +3,7 @@
 // La lectura y la clasificación viven en _lectura.js, compartido con la lectura programada (/api/ingesta).
 import { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre, saludFuentes } from "./_lectura.js";
 import { AUTORIDADES, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
-import { limpio, consulta, sujeto, fichaIA } from "./_sujetos.js";
+import { limpio, consulta, sujeto, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
 import { CATALOGO } from "./_catalogo.js";
 import { leerRedes, usuarioDe, cuentasCatalogo } from "./_redes.js";
 
@@ -31,8 +31,8 @@ async function paresDe(a, desde){
   if (lista.length < 2) return [];
   return Promise.all(lista.map(async x => {
     let n = 0; try {
-      const re = new RegExp(variantesNombre(x).map(v => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"));
-      n = (await leerGoogleNewsConsulta(consulta(x), VENTANA_DIAS, false)).filter(i => Number.isFinite(i.fecha) && i.fecha >= desde && re.test(norm(i.titulo + " " + i.desc))).length;
+      // La consulta exige el nombre, así que todo lo que devuelve la nombra (en el cuerpo, si no en el titular): se cuenta igual para todos los cargos.
+      n = (await leerGoogleNewsConsulta(consulta(x), VENTANA_DIAS, false)).filter(i => Number.isFinite(i.fecha) && i.fecha >= desde).length;
     } catch(e) { n = null; }
     return {n_: x.n, p: x.p || (a.rol === "alcalde" ? x.zona : ""), n, yo: x === a};
   })).then(r => r.filter(x => x.n !== null));
@@ -40,9 +40,9 @@ async function paresDe(a, desde){
 async function deAutoridad(u){
   const a = sujetoDe(u); if (!a) return json({ error: "Autoridad no disponible" }, 400);
   const z = zonaDe(a.rol, a.zona), cargo = cargoDe(a.rol, a.g), ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
-  const [cat, gn, pares, rs] = await Promise.all([leerCatalogo(), leerGoogleNewsConsulta(consulta(a)).catch(() => null), a.nomina ? paresDe(a, desde).catch(() => []) : [], leerRedes(redesDe(u))]);
+  const [cat, gn, pares, rs] = await Promise.all([leerCatalogo(), leerSujeto(a).catch(() => null), a.nomina ? paresDe(a, desde).catch(() => []) : [], leerRedes(redesDe(u))]);
   const errores = cat.errores.concat(gn ? [] : ["Google News"], rs.errores);
-  const candidatas = candidatasPorNombre(variantesNombre(a), cat.items.concat(gn || [], rs.items), desde, ahora), lote = candidatas.slice(0, MAX_IA);
+  const candidatas = candidatasPorNombre(variantesNombre(a), cat.items.concat(gn || [], rs.items), desde, ahora, institucion(a)), lote = candidatas.slice(0, MAX_IA);
   let clas = {porI: new Map(), ok: false}; try { clas = await clasificar(fichaIA(a), lote); } catch(e) { console.error("clasificar", e); }
   const notas = armar(lote, clas.porI);
   return json({
@@ -58,7 +58,7 @@ function armar(lote, porI){
     const c = porI.get(i);
     if (c && c.rel === false) return;
     const etiqueta = c && c.g ? "g:" + norm(c.g) : n.id, clasificada = Boolean(c && c.tono);
-    notas.push({ id: n.id, m: n.m, ts: n.ts, t: n.titulo, url: n.url, tono: c && ["cri", "neu", "pos"].includes(c.tono) ? c.tono : "neu", res: c && c.res ? String(c.res).slice(0, 220) : n.titulo, x: c && c.x ? String(c.x).slice(0, 120) : "", clasificada, etiqueta, ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via === "instagram" || n.via === "facebook" ? {via: n.via} : {}) });
+    notas.push({ id: n.id, m: n.m, ts: n.ts, t: n.titulo, url: n.url, tono: c && ["cri", "neu", "pos"].includes(c.tono) ? c.tono : "neu", res: c && c.res ? String(c.res).slice(0, 220) : n.titulo, x: c && c.x ? String(c.x).slice(0, 120) : "", clasificada, etiqueta, ...(n.sobre ? {sobre: n.sobre === "i" ? "institucion" : "persona"} : {}), ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via === "instagram" || n.via === "facebook" ? {via: n.via} : {}) });
   });
   // Grupo estable: el id de la nota más antigua del mismo hecho, para que "respondida" o "no corresponde" sobrevivan a una nueva lectura.
   notas.slice().sort((a, b) => a.ts - b.ts).forEach(n => { if (!grupos.has(n.etiqueta)) grupos.set(n.etiqueta, n.id); });
