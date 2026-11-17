@@ -324,7 +324,13 @@ async function insEnviar(e){
   try {
     const j = await insLlamar({accion: "solicitar", nombre: INS.nombre, correo: INS.correo, rol: INS.rol, territorio: insTerrN(), consentimiento: true, contacto: $("#insCom").checked,
       sitio: $("#insSitio").value, version: typeof LEGAL_VERSION !== "undefined" ? LEGAL_VERSION : ""});
-    fin(); Object.assign(INS, {etapa: "codigo", id: j.id, minutos: j.minutos || 15}); insPintar();
+    fin();
+    if (j.prueba) {  // correo de demostración comercial: entra sin código
+      try { localStorage.setItem(PRUEBA_KEY, JSON.stringify({...j.prueba, terr: INS.terr})); } catch(err) {}
+      toast("Modo demostración comercial: sin código y sin límite de tiempo en este navegador.");
+      return insContinuar({rol: INS.rol, terr: INS.terr});
+    }
+    Object.assign(INS, {etapa: "codigo", id: j.id, minutos: j.minutos || 15}); insPintar();
   } catch (err) { fin(); insError(err.message); }
 }
 document.addEventListener("submit", e => { if (e.target.id === "insForm") insEnviar(e); });

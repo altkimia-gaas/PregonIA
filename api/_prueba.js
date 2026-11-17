@@ -19,7 +19,8 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "
 const corto = (v, n) => String(v ?? "").trim().replace(/\s+/g, " ").slice(0, n);
 const resumen = (correo, codigo, sal) => createHash("sha256").update(`${sal}:${correo}:${codigo}`).digest("hex");
 // Correos de demostración comercial (PRUEBA_SIN_LIMITE, separados por coma): sin vencimiento, sin tope de envíos por correo,
-// sin aviso interno al validar y fuera de la limpieza automática. Siguen validando el correo con código.
+// sin aviso interno al validar, fuera de la limpieza automática y sin código: entran directo y el dueño del correo recibe
+// un aviso cada vez que se usa, para detectar si alguien más lo escribió.
 const SIN_LIMITE = (process.env.PRUEBA_SIN_LIMITE || "avillalobos@altkimia.com").split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
 const sinLimite = correo => SIN_LIMITE.includes(String(correo || "").toLowerCase());
 const fueraLimpieza = SIN_LIMITE.length ? `&correo=not.in.(${SIN_LIMITE.map(c => encodeURIComponent(`"${c}"`)).join(",")})` : "";
@@ -71,6 +72,15 @@ async function solicitar(d){
   const desde = new Date(Date.now() - VENTANA_MS).toISOString();
   const recientes = await sb(`pruebas?correo=eq.${encodeURIComponent(p.correo)}&creado_en=gte.${desde}&select=id`);
   if (!demo && (recientes || []).length >= POR_CORREO) return json({error: "Ya enviamos varios códigos a ese correo. Revisa tu bandeja (y la de spam) o intenta en 10 minutos."}, 429);
+  if (demo) {
+    const ahora = new Date().toISOString();
+    await sb("pruebas", {method: "POST", prefer: "return=minimal", body: {...p, expira: ahora, verificado_en: ahora,
+      acepta_contacto: false, version_privacidad: corto(d.version, 20) || null}});
+    await correo(p.correo, "Se usó tu acceso de demostración de PregonIA", `<div style="font:14px/1.5 Arial,sans-serif;color:#141414"><p style="margin:0 0 8px">Se abrió la demostración comercial con tu correo, sin código:</p>
+      <p style="margin:0">${esc(ROLES[p.rol] || p.rol)} · ${esc(p.territorio)}<br>${new Date().toLocaleString("es-CL", {timeZone: "America/Santiago"})}</p>
+      <p style="margin:10px 0 0;color:#555">Si no fuiste tú, avísanos a soporte@altkimia.cl para quitar este acceso.</p></div>`).catch(() => {});
+    return json({ok: true, prueba: {nombre: p.nombre, correo: p.correo, rol: p.rol, territorio: p.territorio, hasta: "2099-12-31T23:59:59.000Z", ilimitada: true}});
+  }
   const codigo = String(randomInt(0, 1000000)).padStart(6, "0"), sal = randomBytes(8).toString("hex");
   const [fila] = await sb("pruebas?select=id", {method: "POST", prefer: "return=representation", body: {...p,
     codigo_hash: sal + ":" + resumen(p.correo, codigo, sal), expira: new Date(Date.now() + VIGENCIA_MIN * 60000).toISOString(),
