@@ -131,7 +131,7 @@ PregonIA avisa de noticias críticas nuevas, de las que escalan a prensa regiona
 - **En el navegador:** notificación mientras PregonIA esté abierta o instalada. No requiere configuración.
 - **Con la aplicación cerrada (piloto):** la lectura programada evalúa las reglas y envía notificaciones (Web Push) y correos. Para activarlo:
   1. Correr de nuevo `supabase/esquema.sql` (agrega las tablas `alertas`, `avisos` y `suscripciones` y la función `destinatarios_avisos`, que solo puede usar el servidor).
-  2. Abrir `https://pregonia.vercel.app/llaves-avisos.html`, generar las llaves y crear en Vercel `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`. Las llaves se generan en el navegador; la privada va solo en Vercel.
+  2. Abrir `https://pregonia.vercel.app/llaves-avisos.html`, generar las llaves y crear en Vercel `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`. Las llaves se generan en el navegador; la privada va solo en Vercel. Hecho el 17 de noviembre de 2026 (producción, como secretas; `VAPID_SUBJECT` = `https://pregonia.vercel.app`). Si se cambian las llaves, cada dispositivo debe volver a activar los avisos.
   3. Correo (opcional): cuenta en Resend con el dominio verificado, y en Vercel `RESEND_API_KEY` y `AVISOS_REMITENTE` (por ejemplo `PregonIA <avisos@altkimia.com>`).
   4. Volver a desplegar. Cada persona activa los avisos en la campana de su celular.
 
