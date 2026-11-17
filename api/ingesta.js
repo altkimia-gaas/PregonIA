@@ -1,5 +1,6 @@
 // Lectura programada (etapa 2): cada 30 minutos lee los medios, guarda las notas nuevas de cada cuenta cliente y las clasifica.
-// Cuentas: municipios (lo que menciona la comuna) y autoridades (lo que nombra a la persona, juzgado respecto de ella; ver _sujetos.js).
+// Cuentas: municipios (lo que menciona la comuna) y autoridades (lo que nombra a la persona y lo que trata de la institución que integra
+// en su territorio, juzgado respecto de ella; ver _sujetos.js).
 // Solo se clasifica lo nuevo (lo ya visto no se vuelve a pagar) y las notas nuevas se agrupan con los hechos de días anteriores,
 // para que el historial, las respuestas y las marcas queden en el mismo hecho aunque lleguen notas días después.
 // La llama un programador externo (GitHub Actions) con Authorization: Bearer CRON_SECRET.
@@ -7,9 +8,9 @@
 // Cuentas de Facebook e Instagram de medios: META_ACCESS_TOKEN, META_IG_USER_ID, META_FB_PPCA (ver api/_redes.js).
 // Después de guardar, revisa los hechos que recibieron notas nuevas y avisa lo urgente (notificación y correo).
 // Además, propone a los editores de PregonIA las noticias de alto impacto de sus territorios (api/_redaccion.js).
-import { COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre } from "./_lectura.js";
+import { COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, json, leerCatalogo, leerGoogleNews, candidatasDe, candidatasPorNombre, plazoGoogleNews, statsGoogleNews } from "./_lectura.js";
 import { variantesNombre } from "./_autoridades.js";
-import { consulta, sujetoDeCuenta, fichaIA } from "./_sujetos.js";
+import { sujetoDeCuenta, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
 import { avisar } from "./_avisos.js";
 import { leerRedes, usuarioDe } from "./_redes.js";
 import { detectarRedaccion } from "./_redaccion.js";
@@ -17,7 +18,7 @@ import { detectarRedaccion } from "./_redaccion.js";
 /* Cuentas de Facebook e Instagram de la base: las del catálogo fijo y las inscritas desde la aplicación. */
 const cuentaDe = r => ({id: r.id, nombre: r.nombre, ambito: r.ambito, comuna: r.comunas || "", red: r.metodo, usuario: r.usuario_red || usuarioDe(r.metodo, r.url_lectura)});
 
-const MAX_POR_COMUNA = 30;  // tope de notas nuevas que se clasifican por cuenta en cada pasada; el resto entra en la siguiente
+const MAX_POR_COMUNA = 50;  // tope de notas nuevas que se clasifican por cuenta en cada pasada; el resto entra en la siguiente
 
 async function sb(ruta, {method = "GET", body, prefer} = {}){
   const url = process.env.SUPABASE_URL, clave = process.env.SUPABASE_SECRET_KEY;
@@ -39,7 +40,7 @@ async function cuentasActivas(){
     const a = sujetoDeCuenta(f); if (!a) return null;
     const ficha = fichaIA(a), nombre = f.nombre || `${ficha.cargo} ${a.n}`;
     return {...f, etiqueta: nombre, institucion: nombre, ia: ficha, autoridad: true,
-      gn: () => leerGoogleNewsConsulta(consulta(a)), candidatas: (items, desde, ahora) => candidatasPorNombre(variantesNombre(a), items, desde, ahora)};
+      gn: () => leerSujeto(a), candidatas: (items, desde, ahora) => candidatasPorNombre(variantesNombre(a), items, desde, ahora, institucion(a))};
   }).filter(Boolean);
 }
 
@@ -72,10 +73,11 @@ async function procesarCuenta(cta, items, desde, ahora){
   const filas = nuevas.map((n, i) => {
     const c = clas.porI.get(i), ok = Boolean(c && c.tono);
     return {nota_id: n.id, municipio_id, rel: c && c.rel === false ? false : true, tono: ok && ["cri", "neu", "pos"].includes(c.tono) ? c.tono : "neu",
-      resumen: c && c.res ? String(c.res).slice(0, 220) : n.titulo.slice(0, 220), palabras: c && c.x ? String(c.x).slice(0, 120) : "", grupo: grupoPorEtiqueta.get(etiquetaDe(n, c)), ia: ok};
+      resumen: c && c.res ? String(c.res).slice(0, 220) : n.titulo.slice(0, 220), palabras: c && c.x ? String(c.x).slice(0, 120) : "", grupo: grupoPorEtiqueta.get(etiquetaDe(n, c)), ia: ok, ...(cta.autoridad && n.sobre ? {sobre: n.sobre === "i" ? "institucion" : "persona"} : {})};
   });
   // Lo que la IA no alcanzó a clasificar se guarda igual (neutro, con el titular) y queda marcado con ia = false para revisarlo.
-  await sb("menciones?on_conflict=nota_id,municipio_id", {method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body: filas});
+  const guardar = body => sb("menciones?on_conflict=nota_id,municipio_id", {method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body});
+  await guardar(filas).catch(e => { if (!/sobre/.test(String(e.message))) throw e; return guardar(filas.map(({sobre, ...f}) => f)); });  // esquema sin la columna sobre
   return {...quien, candidatas: candidatas.length, nuevas: nuevas.length, clasificadas: filas.filter(f => f.ia).length, descartadas: filas.filter(f => !f.rel).length, grupos: filas.filter(f => f.rel).map(f => f.grupo)};
 }
 
@@ -85,7 +87,7 @@ async function manejar(req){
   if (!secreto) return json({error: "Falta configurar CRON_SECRET en el servidor"}, 503);
   if ((req.headers.get("authorization") || "").trim() !== "Bearer " + secreto) return json({error: "No autorizado"}, 401);
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SECRET_KEY) return json({error: "Falta configurar Supabase en el servidor"}, 503);
-  DIAG.length = 0;
+  DIAG.length = 0; plazoGoogleNews(30000);  // Google News va en cola (responde 429 si se le pide mucho a la vez); el resto del minuto es para clasificar
   const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
   const [lectura] = await sb("lecturas", {method: "POST", prefer: "return=representation", body: {inicio: new Date(ahora).toISOString()}});
   try {
@@ -112,7 +114,7 @@ async function manejar(req){
       try { r.avisos = await avisar(sb, munis[k], grupos, Date.now()); } catch(e) { r.avisos = {error: String(e.message || e).slice(0, 160)}; } }));
     const suma = k => res.reduce((s, r) => s + (r[k] || 0), 0);
     const resumen = {fin: new Date().toISOString(), fuentes_ok: cat.total + 1 - errores.length, fuentes_total: cat.total + 1, errores: errores.slice(0, 60),
-      candidatas: suma("candidatas"), nuevas: suma("nuevas"), clasificadas: suma("clasificadas"), detalle: {comunas: res, ia: DIAG.slice(0, 8), redaccion}};
+      candidatas: suma("candidatas"), nuevas: suma("nuevas"), clasificadas: suma("clasificadas"), detalle: {comunas: res, ia: DIAG.slice(0, 8), google_news: statsGoogleNews(), redaccion}};
     await sb(`lecturas?id=eq.${lectura.id}`, {method: "PATCH", body: resumen, prefer: "return=minimal"});
     return json({ok: true, lectura: lectura.id, ...resumen}, 200, {"cache-control": "no-store"});
   } catch(e) {

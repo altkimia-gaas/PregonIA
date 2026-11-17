@@ -113,15 +113,46 @@ Roles: `admin` y `comunicaciones` editan; `alcalde`, `autoridad`, `directivo` y 
 ### Autoridades en el piloto
 
 La tabla `municipios` guarda también cuentas de autoridad: `tipo` es el cargo y `autoridad` describe a la persona
-(`zona`, `nombre`, `g` y, si está en la nómina de `src/autoridades.js`, su `id`). La lectura programada busca lo que la nombra
-(Google News por nombre y cargo, más los medios del catálogo) y la IA juzga relevancia y tono respecto de la persona, igual que
+(`zona`, `nombre`, `g` y, si está en la nómina de `src/autoridades.js`, su `id`). Todas las autoridades se leen con las mismas
+reglas que un municipio, que sigue lo que trata de su comuna y de su municipalidad: lo que nombra a la persona (en el titular, en la
+bajada o, vía Google News, en el cuerpo de la nota) y lo que trata de la institución que integra en su territorio (Consejo Regional,
+Gobierno Regional, Delegación Presidencial, diputados del distrito, senadores por la región, concejo municipal). La IA juzga relevancia
+y tono respecto de la persona, y cada mención queda marcada como `persona` o `institucion` (columna `sobre` de `menciones`), igual que
 «Noticias reales» en la demostración. Los avisos llegan con el nombre de la autoridad.
 
 Para activarlo en una base existente:
 
-1. Correr de nuevo `supabase/esquema.sql` (agrega `tipo` y `autoridad` a `municipios`, deja la comuna opcional para autoridades y suma el rol `autoridad`).
+1. Correr de nuevo `supabase/esquema.sql` (agrega `tipo` y `autoridad` a `municipios`, deja la comuna opcional para autoridades, suma el rol `autoridad` y la columna `sobre` de `menciones`). Sin la columna, la lectura guarda y la app lee igual, pero sin distinguir lo de la persona de lo de su institución.
    Mientras no se corra, la aplicación y la lectura programada siguen funcionando solo con municipios.
 2. Crear la cuenta de la autoridad y asignar a su equipo con el bloque B de `supabase/alta_usuario.sql`.
+
+### Métodos de lectura de medios
+
+| Método | Para qué medio | Cómo |
+|---|---|---|
+| `rss`, `sitemap_noticias` | Los que publican feed o mapa de noticias | Titular, fecha y bajada del feed |
+| `sitemap`, `sitemap_mensual` | Mapas del sitio corrientes (Duna, UCV Radio, Radio Quintay) o índices de mapas mensuales comprimidos (24 Horas) | Dirección y fecha de modificación; titular del mapa o, si no trae, desde la dirección. Un índice se resuelve a sus dos hijos más recientes; los .gz se descomprimen; los mapas enormes ordenados del más nuevo se leen solo hasta 1,5 MB |
+| `portada` | Sin feed ni mapa con fechas (T13, SoyChile y sus ediciones, Radio U. de Chile, Radio Agricultura, El Observador, El Martutino, Quilpué Online) | Enlaces a notas de la portada o sección; fecha desde la dirección o, si no la trae, la de la primera lectura |
+| `*_filtrado` | Ediciones dentro del feed de otro medio (BioBío Región de Valparaíso, 24 Horas Valparaíso, Meganoticias Región de Valparaíso) | Se lee la fuente del medio padre una vez y la edición se queda con lo que calza con su filtro |
+| `google_news` | Bloquean la lectura o no tienen formato legible (El Mercurio, La Tercera, LUN, Publimetro…) | Solo vía Google News |
+
+Siempre se respeta robots.txt: si cierra el feed o los mapas, se usa una ruta permitida (portada o sección) o queda solo vía Google News.
+Verificar medios sin gastar la cuota de Google News: `/api/noticias?salud=1&ids=5,6,23`.
+
+### Búsqueda: cómo se asegura encontrar todas las noticias
+
+Medido el 17 de noviembre de 2026 con consultas reales a Google News. Estas eran las pérdidas, y esto es lo que hace hoy la lectura:
+
+| Pérdida medida | Qué hace la lectura |
+|---|---|
+| Google News responde 429 (demasiadas solicitudes) con varias consultas a la vez: en una prueba con 8 comunas en paralelo, 4 quedaron vacías. Producción, el 17-nov, perdió Google News en 5 de 9 lecturas | Cola con 2 consultas a la vez y una pausa entre ellas; ante un 429 o un error del servidor, todas las consultas esperan y se reintenta con una espera creciente (hasta 3 veces), dentro del plazo de la función |
+| Google limita también por volumen acumulado y a veces responde 200 sin notas | Las consultas son un recurso escaso: caché de 15 minutos por consulta; una respuesta vacía se reintenta una vez; tras el primer 429 entra en modo ahorro y lo prescindible (pares, tramos) cede el turno a las consultas principales. Cada respuesta trae `google_news` (consultas, caché, 429, reintentos, fallidas) para ver si algo se perdió |
+| Máximo 100 notas por consulta: Valparaíso tiene más de 250 en 14 días | Si una consulta llega al tope, se vuelve a pedir por tramos de fechas (mitades sucesivas, hasta 8 tramos), sin repetir notas |
+| Se descartaban los medios fuera del catálogo: un tercio en Valparaíso y Viña del Mar, y la mayoría de lo que nombra a algunas autoridades | Entran con una ficha común (296 regional, 297 nacional) que conserva el nombre real del medio. Quedan fuera los medios extranjeros y los de deportes, clima o agregadores |
+| El nombre de la comuna o de la autoridad se exigía en el titular, pero Google News no entrega la bajada: en Viña del Mar se perdía el 30% | Lo que Google News encontró buscando la comuna o la persona entra aunque el titular no la nombre; la IA lo sabe y decide por el tema |
+| Variantes de nombre incompletas | Se suma primer nombre y primer apellido («Juan Ibacache») y, en consejeros, «consejero Urrutia» |
+| Un medio lento en una pasada se perdía | Un reintento con más plazo |
+| Topes de clasificación | 120 notas por consulta al vuelo y 50 nuevas por cuenta en cada pasada programada (el resto entra en la siguiente); lo que nombra a la comuna o a la persona va primero |
 
 ## Avisos (alertas)
 
