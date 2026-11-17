@@ -308,7 +308,7 @@ async function insEnviar(e){
     try {
       const {prueba} = await insLlamar({accion: "verificar", id: INS.id, codigo});
       try { localStorage.setItem(PRUEBA_KEY, JSON.stringify({...prueba, terr: INS.terr})); } catch(err) {}
-      fin(); toast(`Correo validado. Tu prueba gratis de 48 horas está activa hasta el ${new Date(prueba.hasta).toLocaleString("es-CL", {weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"})}.`);
+      fin(); toast(prueba.ilimitada ? "Correo validado. Modo demostración comercial: sin límite de tiempo en este navegador." : `Correo validado. Tu prueba gratis de 48 horas está activa hasta el ${new Date(prueba.hasta).toLocaleString("es-CL", {weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"})}.`);
       insContinuar({rol: INS.rol || prueba.rol, terr: INS.terr});
     } catch (err) { fin(); insError(err.message, c); c.select?.(); }
     return;
