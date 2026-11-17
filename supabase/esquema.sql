@@ -537,5 +537,12 @@ drop trigger if exists act_redaccion on redaccion_posts;
 create trigger act_redaccion after insert or update of estado on redaccion_posts for each row execute function registrar_redaccion();
 drop policy if exists actividad_editor on actividad;
 create policy actividad_editor on actividad for select to authenticated using (municipio_id is null and accion like 'redaccion.%' and es_editor());
+-- es_editor() solo para sesiones iniciadas; la función del registro solo la usa el disparador (nadie la llama por la API).
+revoke execute on function es_editor() from public;
+revoke execute on function registrar_redaccion() from public;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then execute 'revoke execute on function es_editor() from anon'; execute 'revoke execute on function registrar_redaccion() from anon'; end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then execute 'grant execute on function es_editor() to authenticated'; execute 'revoke execute on function registrar_redaccion() from authenticated'; end if;
+end $$;
 -- Para habilitar a un editor (una vez, en SQL Editor, con el correo de su cuenta de Supabase):
 --   insert into editores (usuario, nombre) select id, 'Nombre' from auth.users where email = 'correo@dominio.cl' on conflict do nothing;
