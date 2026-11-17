@@ -1882,10 +1882,12 @@ window.addEventListener("hashchange", () => { if (location.hash === "#portada") 
   const f = document.getElementById("ptVideo"); if (!f) return;
   const src = (f.dataset.video || "").trim(), b = f.querySelector("button");
   if (!src) { b.disabled = true; return; }
-  document.getElementById("ptVideoS").textContent = "Video explicativo";
+  document.getElementById("ptVideoS").textContent = "Video explicativo · 24 segundos";
+  const poster = (f.dataset.poster || "").trim();
+  if (poster) { f.classList.add("con-poster"); f.style.setProperty("--poster", `url("${poster}")`); }
   b.addEventListener("click", () => {
     const yt = src.match(/(?:youtu\.be\/|[?&]v=|embed\/|shorts\/)([\w-]{11})/), vm = src.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-    f.innerHTML = /\.(mp4|webm)(\?|$)/i.test(src) ? `<video src="${src}" controls autoplay playsinline></video>`
+    f.innerHTML = /\.(mp4|webm)(\?|$)/i.test(src) ? `<video src="${src}"${poster ? ` poster="${poster}"` : ""} controls autoplay playsinline preload="none"></video>`
       : `<iframe src="${yt ? "https://www.youtube-nocookie.com/embed/" + yt[1] + "?autoplay=1&rel=0" : vm ? "https://player.vimeo.com/video/" + vm[1] + "?autoplay=1" : src}" title="Video explicativo de PregonIA" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
   });
 })();

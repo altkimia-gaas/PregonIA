@@ -1784,6 +1784,9 @@ a.pd-go{text-decoration:none}
 .pd-video iframe,.pd-video video{width:100%;height:100%;border:0;display:block;background:#000}
 .pd-video-b{display:grid;place-content:center;justify-items:center;gap:12px;width:100%;height:100%;border:0;background:transparent;color:var(--ink);font:inherit;cursor:pointer}
 .pd-video-b:disabled{cursor:default}
+.pd-video.con-poster .pd-video-b{background:#fff center/cover no-repeat var(--poster);place-content:end center;padding-bottom:9%}
+.pd-video.con-poster .pd-video-t,.pd-video.con-poster .pd-video-s{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.pd-video.con-poster .pd-video-i{box-shadow:0 4px 18px rgba(0,0,0,.18)}
 .pd-video-b:focus-visible{outline:2px solid var(--accent);outline-offset:-4px}
 .pd-video-i{width:68px;height:68px;border-radius:50%;background:var(--accent-bg);color:var(--accent-ink);display:grid;place-items:center;transition:transform .15s ease}
 .pd-video-b:not(:disabled):hover .pd-video-i{transform:scale(1.06)}
@@ -1906,7 +1909,7 @@ details.corr summary{cursor:pointer;font-size:13px;color:var(--muted)}
       <p class="pd-ante">Municipios · Concejos · Consejos regionales · Parlamentarios</p>
       <h1 class="pd-titulo">Detecta lo que la prensa dice de tu gestión, mide hasta dónde llegó y responde antes de que el tema escale.</h1>
       <p class="pd-bajada">PregonIA lee cada día más de 100 medios nacionales, regionales y locales, y sus redes, y entrega a quien decide alertas, informes y respuestas redactadas con IA.</p>
-      <figure class="pd-video" id="ptVideo" data-video="">
+      <figure class="pd-video" id="ptVideo" data-video="/video/pregonia-municipios.mp4" data-poster="/video/pregonia-municipios.jpg">
         <button class="pd-video-b" type="button" aria-label="Ver el video explicativo de PregonIA"><span class="pd-video-i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></span><span class="pd-video-t">Así funciona PregonIA</span><span class="pd-video-s" id="ptVideoS">Video explicativo · muy pronto</span></button>
       </figure>
       <div class="pd-acts">
