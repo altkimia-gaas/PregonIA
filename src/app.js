@@ -152,7 +152,7 @@ const ICO = {
 };
 const icon = k => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
 const MAIN = [["inicio","Inicio"],["menciones","Menciones"],["reportes","Reportes"],["comunicados","Comunicados"]];
-const CONFIG = [["temas","Mis temas"],["asistente","Asistente de temas"],["fuentes","Fuentes"]];
+const CONFIG = [["temas","Mis temas"],["asistente","Asistente de temas"],["prioridades","Prioridades"],["fuentes","Fuentes"]];
 const ALIAS = {panel:"inicio", caracterizacion:"asistente"};
 const route = () => { const k = (location.hash || "#inicio").slice(1); return ALIAS[k] || k; };
 const isConfig = k => CONFIG.some(([x]) => x === k);
@@ -510,10 +510,11 @@ function itemHtml(m){
   const otros = m.notas.filter(n => n !== m.lead).map(n => n.url ? `<a class="ext" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(nomMedio(n))}</a>` : esc(nomMedio(n)));
   return `<article class="item ${resp?"resp":(m.critico?"cri":"")}">
     <div class="meta">${pillTono(m.tono)}${m.grave ? '<span class="pill grave">Hecho grave</span>' : ""}${resp?'<span class="pill done">Respondida</span>':""}${nr && !resp ? `<span class="pill done" title="${esc(NO_RESP[nr.k] || "")}">No responder</span>` : ""}<span>${esc(medioN(m.lead))}</span><span>·</span><span title="${fecha(m.lead.ts)}">${ago(m.lead.ts)}</span>${m.notas.length>1?`<span>·</span><span>en ${m.notas.length} medios</span>`:""}</div>
-    <p class="clasif"><span class="cl-cat">${esc(categoriaDe(m).n)}</span><span>${esc(enfoqueDe(m).n)}</span><span>${esc(papelDe(m).n)}</span></p>
+    ${fichaHtml(m)}
     <h4>${m.lead.url ? `<a class="ext" href="${esc(m.lead.url)}" target="_blank" rel="noopener">${esc(m.lead.t)}<span class="sr"> (abre el medio en otra pestaña)</span></a>` : esc(m.lead.t)}</h4>
     <p class="res">${esc(m.lead.res)}</p>
     <details><summary>¿Por qué aparece?</summary><p>${temas.map(x => `Tema <b>${esc(x.tema.nombre)}</b>: contiene «${[...x.found].map(esc).join("», «")}»${x.enTitulo?" en el titular":""}.`).join(" ")}${otros.length?` También la publicaron ${otros.join(", ")}.`:""}</p></details>
+    ${correccionHtml(m)}
     <div class="acts">${resp ? `<button class="btn sm" data-act="responder" data-g="${m.g}" data-from="menciones">Ver respuesta</button>` : `<button class="btn ${m.critico?"primary":""} sm" data-act="responder" data-g="${m.g}" data-from="menciones">Responder</button>`}${m.tono === "cri" && !resp && !nr ? noRespHtml(m) : ""}<button class="btn ghost sm" data-act="vocero" data-g="${m.g}">${ri("mic")} Vocería</button><button class="btn ghost sm" data-act="fp" data-g="${m.g}">No corresponde</button>${m.notas.some(n => n.captura) ? `<button class="btn ghost sm" data-act="cap-del" data-g="${m.g}">Quitar lo que agregué</button>` : ""}</div>
   </article>`;
 }
@@ -530,10 +531,12 @@ function vMenciones(){
   if (tState.fcat) base = base.filter(m => categoriaDe(m, c).k === tState.fcat);
   if (tState.fenf) base = base.filter(m => enfoqueDe(m).k === tState.fenf);
   if (tState.fpap) base = base.filter(m => papelDe(m).k === tState.fpap);
+  if (tState.fprio) base = base.filter(m => fichaDe(m, c).prio === tState.fprio);
+  if (tState.fcomp) base = base.filter(m => fichaDe(m, c).comp === tState.fcomp);
   const cnt = k => k === "todos" ? base.length : base.filter(m => m.tono === k).length;
   const ms = tState.tono === "todos" ? base : base.filter(m => m.tono === tState.tono);
   const fps = Object.keys(S.fp).filter(k => k.startsWith(S.org+":")).length;
-  const activos = (tState.tema!=="todos") + (tState.tono!=="todos") + !!tState.q.trim() + (tState.llego != null) + (tState.medio != null) + !!tState.fcat + !!tState.fenf + !!tState.fpap;
+  const activos = (tState.tema!=="todos") + (tState.tono!=="todos") + !!tState.q.trim() + (tState.llego != null) + (tState.medio != null) + !!tState.fcat + !!tState.fenf + !!tState.fpap + !!tState.fprio + !!tState.fcomp;
   const chipsX = (tState.llego != null ? `<button class="btn sm fchip" data-act="f-x" data-k="llego" aria-label="Quitar filtro: ${esc(["Solo prensa comunal","Llegó a prensa regional","Llegó a prensa nacional"][tState.llego])}">${esc(["Solo prensa comunal","Llegó a prensa regional","Llegó a prensa nacional"][tState.llego])} ✕</button>` : "") + (tState.medio != null && MED[tState.medio] ? `<button class="btn sm fchip" data-act="f-x" data-k="medio" aria-label="Quitar filtro: ${esc(MED[tState.medio].n)}">${esc(MED[tState.medio].n)} ✕</button>` : "");
   let html = "", last = "";
   ms.forEach(m => { const d = dia(m.last); if (d !== last) { html += `<h3 class="day">${d}</h3>`; last = d; } html += itemHtml(m); });
@@ -543,6 +546,8 @@ function vMenciones(){
     <div class="seg" role="group" aria-label="Tono">${["todos","cri","neu","pos"].map(k => `<button data-act="f-tono" data-k="${k}" aria-pressed="${tState.tono===k}">${k==="todos"?"Todas":tonoPl[k]}<span class="c">${cnt(k)}</span></button>`).join("")}</div>
     
     <select id="fTema" aria-label="Tema"><option value="todos">Todos los temas</option>${c.temas.filter(t=>t.activo).map(t => `<option value="${t.id}" ${tState.tema===t.id?"selected":""}>${esc(t.nombre)}</option>`).join("")}</select>
+    <select id="fPrio" aria-label="Prioridad"><option value="">Prioridad</option>${Object.entries(PRIORIDADES).map(([k, n]) => `<option value="${k}" ${tState.fprio === k ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>
+    <select id="fComp" aria-label="Competencia"><option value="">Competencia</option>${Object.entries(COMPETENCIAS).map(([k, n]) => `<option value="${k}" ${tState.fcomp === k ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>
     <select id="fCat" aria-label="Categoría"><option value="">Categoría</option>${catsDe(c).concat([CAT_OTROS]).map(x => `<option value="${x.k}" ${tState.fcat === x.k ? "selected" : ""}>${esc(x.n)}</option>`).join("")}</select>
     <select id="fEnf" aria-label="Enfoque"><option value="">Enfoque</option>${ENF_NOTA.map(x => `<option value="${x.k}" ${tState.fenf === x.k ? "selected" : ""}>${esc(x.n)}</option>`).join("")}</select>
     <select id="fPap" aria-label="${esAut() ? "Papel de la autoridad" : "Papel del municipio"}"><option value="">${esAut() ? "Cualquier papel de la autoridad" : "Cualquier papel del municipio"}</option>${Object.entries(PAPELES).map(([k, n]) => `<option value="${k}" ${tState.fpap === k ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>
@@ -552,6 +557,20 @@ function vMenciones(){
   <div class="feed">${html || `<div class="card"><b>No hay noticias con estos filtros.</b><p class="muted" style="margin:4px 0 0">Prueba con un período más largo o <button class="btn ghost sm" data-act="f-reset">quita los filtros</button>.</p></div>`}</div>`;
 }
 
+/* Configuración › Prioridades: plazos por tipo de cliente, competencias del cargo (para validar) y correcciones del equipo. */
+function vPrioridades(){
+  const c = cuenta(), pl = plazosDe(c), base = PLAZOS[tipoCliente(c)], mat = MATRIZ[rolDe(c)] || MATRIZ.municipio, cors = Object.entries(c.correcciones || {}).sort((a, b) => b[1].ts - a[1].ts);
+  const etq = {a: "área", e: "encuadre", p: "papel", im: "impulsor", prio: "prioridad", acc: "acción"}, nom = {a: AREAS, e: ENCUADRES, p: PAPELES_F, im: IMPULSORES, prio: PRIORIDADES, acc: Object.fromEntries(Object.entries(ACCIONES).map(([k, v]) => [k, v[0]]))};
+  return `<div class="head"><div><h2 tabindex="-1">Prioridades</h2><p>Cómo decide PregonIA qué es urgente para ${esc(inst())}: plazos de respuesta, qué áreas son de su competencia y lo que el equipo ha corregido.</p></div></div>
+  ${subtabs()}
+  <section class="card"><h3>Plazos de respuesta · ${esc(base.n)}</h3><p class="hint" style="margin:0 0 10px">Corren desde la última publicación del hecho. P4 se revisa una vez por semana.</p>
+    <div class="plazos">${["P1", "P2", "P3"].map(k => `<label>${esc(PRIORIDADES[k])}<span><input type="number" min="1" max="720" step="1" data-plazo="${k}" value="${pl[k]}" aria-label="Plazo de ${esc(PRIORIDADES[k])} en horas"> horas</span><small>Base del cargo: ${base[k]} h</small></label>`).join("")}</div></section>
+  <section class="card" style="margin-top:14px"><h3>Competencias del cargo</h3><p class="hint" style="margin:0 0 10px">Borrador por validar. Define qué le corresponde resolver a la cuenta en cada área; de esto dependen la prioridad y la acción sugerida. Un cambio rige para todas las noticias del área.</p>
+    <table class="mtab comp"><thead><tr><th>Área</th><th>Competencia</th></tr></thead><tbody>${Object.entries(AREAS).map(([k, n]) => { const v = competenciaDe(k, c); return `<tr><td>${esc(n)}${v !== mat[k] ? ' <span class="rev ok">Ajustada</span>' : ""}</td><td><select data-comp="${k}" aria-label="Competencia en ${esc(n)}">${["P", "C", "I", "A"].map(x => `<option value="${x}" ${v === x ? "selected" : ""}>${esc(COMPETENCIAS[x])}</option>`).join("")}</select></td></tr>`; }).join("")}</tbody></table>
+    <button class="btn ghost sm" type="button" data-act="prio-reset" style="margin-top:10px">Volver a los valores base del cargo</button></section>
+  <section class="card" style="margin-top:14px"><h3>Correcciones del equipo<span class="c">${cors.length}</span></h3><p class="hint" style="margin:0 0 10px">${PILOTO && PILOTO.activo ? "Las 12 más recientes entran como criterio para la IA en cada lectura." : "En el piloto, las 12 más recientes entran como criterio para la IA en cada lectura."}</p>
+    ${cors.length ? `<ul class="cors">${cors.slice(0, 30).map(([g, x]) => `<li><b>${esc(x.t || "Noticia")}</b><span>${Object.keys(etq).filter(k => x[k]).map(k => `${etq[k]}: ${esc(nom[k][x[k]] || x[k])}`).join(" · ")} · ${fecha(x.ts)}</span><button class="btn ghost sm" type="button" data-act="cor-del" data-g="${esc(g)}">Quitar</button></li>`).join("")}</ul>` : `<p class="empty">Aún no hay correcciones. Se hacen desde «Corregir ficha», en cada noticia de Menciones.</p>`}</section>`;
+}
 /* Configuración */
 function subtabs(){ const k = route(); return `<div class="subtabs" role="navigation" aria-label="Configuración">${CONFIG.map(([key,n]) => `<a href="#${key}" ${key===k?'aria-current="page"':""}>${n}</a>`).join("")}</div>`; }
 function chipEd(t, k, label, hint, limit){
@@ -841,6 +860,7 @@ function repMesa(){
   const difundir = m30.filter(m => m.tono === "pos" && NOW - m.last < 14*DAY && escalera(m.notas).max < 2 && !respondida(m.g)).sort((a,b) => escalera(a.notas).max - escalera(b.notas).max || b.last - a.last);
   const md = {}; m30.forEach(m => m.notas.forEach(n => { const x = md[n.m] ||= {n:0, cri:0, pos:0}; x.n++; if (n.tono === "cri") x.cri++; if (n.tono === "pos") x.pos++; }));
   const medios = Object.entries(md).sort((a,b) => nivIdx(MED[a[0]].a) - nivIdx(MED[b[0]].a) || b[1].n - a[1].n).slice(0, 10);
+  const cola = colaDecisiones(menciones(c).filter(m => NOW - m.last < 7*DAY));
   const li = (m, btn, extra = "") => `<li><span class="kick">${esc(temaDe(m))} · ${tonoLbl[m.tono]}</span><b>${esc(m.lead.res)}</b><span class="sub">${enMedios(m)} · ${ago(m.last)}</span>${escHtml(escalera(m.notas))}${extra}${btn ? `<button class="btn sm" style="justify-self:start" data-act="responder" data-g="${m.g}" data-from="reportes">${btn}</button>` : ""}</li>`;
   const vacio = t => `<p class="empty">${t}</p>`;
   return `<div class="rhead"><h3>${esc(S.org)} · mesa de comunicaciones</h3><span class="per">${ri("cal")} ${new Date(NOW).toLocaleDateString("es-CL",{weekday:"long", day:"numeric", month:"long"})}</span></div>
@@ -850,6 +870,8 @@ function repMesa(){
     ${tile({icon:"pos", tone:"pos", label:"Para difundir", value: difundir.length, sub:"buenas noticias que aún no llegan a la prensa nacional"})}
     ${tile({icon:"noticias", label:"Publicadas en 24 horas", value: hoy.reduce((s,m) => s + m.notas.filter(n => NOW - n.ts < DAY).length, 0), sub:"notas nuevas sobre los temas monitoreados"})}
   </div>
+  <section class="card grp" style="margin-top:14px"><h4>${ri("cri")} Cola de decisiones<span class="c">${cola.length}</span></h4><p class="hint" style="margin:0 0 8px">Ordenada por prioridad y plazo. Cada hecho trae la acción sugerida; si no corresponde, corrige su ficha en Menciones.</p>
+    ${cola.length ? `<ul class="cola">${cola.slice(0, 10).map(({m, f}) => `<li><span class="kick"><span class="pill ${PRIO_CLS[f.prio]} prio">${PRIORIDADES[f.prio]}</span> ${esc(AREAS[f.area])} · ${esc(COMPETENCIAS[f.comp])}${venceTxt(f) ? ` · <span class="${f.vence < Date.now() ? "venc" : ""}">${venceTxt(f)}</span>` : ""}</span><b>${esc(m.lead.res)}</b><span class="sub">${enMedios(m)} · ${ago(m.last)}</span><p class="acc sm accion-${f.acc}"><b>${esc(ACCIONES[f.acc][0])}</b>${esc(ACCIONES[f.acc][1])}</p>${["responder", "aclarar", "aportar", "amplificar"].includes(f.acc) ? `<button class="btn sm" style="justify-self:start" data-act="responder" data-g="${m.g}" data-from="reportes">${f.acc === "amplificar" ? "Preparar comunicado" : "Preparar respuesta"}</button>` : ""}</li>`).join("")}</ul>${cola.length > 10 ? `<button class="btn ghost sm" data-act="goto" data-dias="7">Ver las ${cola.length} en Menciones</button>` : ""}` : vacio("Nada exige una decisión del equipo en los últimos 7 días.")}</section>
   <div class="rgrid r21" style="margin-top:14px">
     <section class="card grp"><h4>${ri("cri")} Por responder hoy<span class="c">${porResp.length}</span></h4>${porResp.length ? `<ul class="cola">${porResp.map(m => li(m, "Preparar respuesta", `<p class="acc sm"><b>Sugerido</b>${accion(m).a}</p>`)).join("")}</ul>` : vacio("No hay críticas pendientes de respuesta.")}</section>
     <section class="card grp"><h4>${ri("up")} Subiendo de nivel<span class="c">${subiendo.length}</span></h4>${subiendo.length ? `<ul class="cola">${subiendo.map(m => li(m, null, `<span class="sub">Recorrido: ${ruta(escalera(m.notas))}</span>`)).join("")}</ul>` : vacio("Ningún tema pasó de la prensa comunal a la regional o nacional esta semana.")}
@@ -1343,7 +1365,7 @@ async function compartir(b){
 }
 
 /* Render y navegación */
-const VIEWFN = {inicio:vInicio, menciones:vMenciones, reportes:vReportes, comunicados:vComunicados, temas:vTemas, asistente:vAsistente, fuentes:vFuentes};
+const VIEWFN = {inicio:vInicio, menciones:vMenciones, reportes:vReportes, comunicados:vComunicados, temas:vTemas, asistente:vAsistente, prioridades:vPrioridades, fuentes:vFuentes};
 function render(focus){
   // Mientras se leen los medios no se muestra una portada a medias: va la pantalla de lectura (Ajustes sigue disponible).
   if (MODO.cargando && !isConfig(route())) { renderChrome(); $("#view").innerHTML = procesandoHtml(); cerrarMenu(); procesandoPaso(); return; }
@@ -1356,12 +1378,15 @@ function render(focus){
 window.addEventListener("hashchange", () => { render(true); window.scrollTo(0,0); });
 $("#org").addEventListener("change", e => { if (e.target.value === "__entrar") { e.target.value = S.org; entAbrir(false); return; } S.org = e.target.value; tState = {...tState, tema:"todos", draft:null, from:null, pieza:null, enf:null, open:{}}; propuesta = null; lecturaTxt = {}; save(); render(true); toast(esAut() ? "Ahora ves la cuenta de " + inst() + ". Cada cuenta ve solo sus datos." : "Ahora ves " + S.org + ". Cada municipio ve solo sus datos."); });
 function perGuardar(v){ if (!["1", "7", "30"].includes(String(v))) return; tState.dias = String(v); try { localStorage.setItem(PER_KEY, tState.dias); } catch(e) {} }
-function goMenciones(patch){ Object.assign(tState, {tema:"todos", tono:"todos", q:"", llego:null, medio:null, fcat:null, fenf:null, fpap:null, alc:"sobre"}, patch); if (patch && patch.dias) perGuardar(patch.dias); if (route() === "menciones") render(true); else location.hash = "menciones"; }
+function goMenciones(patch){ Object.assign(tState, {tema:"todos", tono:"todos", q:"", llego:null, medio:null, fcat:null, fenf:null, fpap:null, fprio:null, fcomp:null, alc:"sobre"}, patch); if (patch && patch.dias) perGuardar(patch.dias); if (route() === "menciones") render(true); else location.hash = "menciones"; }
 
 document.addEventListener("change", e => {
   const id = e.target.id;
   if (id === "fTema") { tState.tema = e.target.value; render(); }
-  if (id === "fCat" || id === "fEnf" || id === "fPap") { tState[{fCat: "fcat", fEnf: "fenf", fPap: "fpap"}[id]] = e.target.value || null; render(); }
+  if (id === "fCat" || id === "fEnf" || id === "fPap" || id === "fPrio" || id === "fComp") { tState[{fCat: "fcat", fEnf: "fenf", fPap: "fpap", fPrio: "fprio", fComp: "fcomp"}[id]] = e.target.value || null; render(); }
+  // Configuración › Prioridades: plazos y competencias de la cuenta
+  if (e.target.dataset && e.target.dataset.plazo) { const c = cuenta(), v = Number(e.target.value); c.plazos = c.plazos || {}; if (v > 0) c.plazos[e.target.dataset.plazo] = v; else delete c.plazos[e.target.dataset.plazo]; c.fv = (c.fv || 0) + 1; save(); toast("Plazo actualizado."); }
+  if (e.target.dataset && e.target.dataset.comp) { const c = cuenta(), area = e.target.dataset.comp, base = (MATRIZ[rolDe(c)] || MATRIZ.municipio)[area]; c.compArea = c.compArea || {}; if (e.target.value === base) delete c.compArea[area]; else c.compArea[area] = e.target.value; c.fv = (c.fv || 0) + 1; save(); render(); toast("Competencia actualizada para " + AREAS[area] + "."); }
   if (id === "kBase") { cuenta().base = e.target.value; save(); }
   if (id === "kMen") { tState.draft = e.target.value || null; tState.pieza = null; tState.enf = null; render(); }
   if (e.target.name === "pieza") tState.pieza = e.target.value;
@@ -1411,10 +1436,14 @@ document.addEventListener("click", async e => {
   if (act === "no-resp") { const k = S.org + ":" + b.dataset.g; S.noResp = S.noResp || {}; S.noResp[k] = {k: b.dataset.k, ts: Date.now()}; save(); render();
     toast(`Registrado: no responder (${NO_RESP[b.dataset.k].toLowerCase()}). Cuenta como crítica atendida.`, () => { delete S.noResp[k]; save(); render(); }); }
   if (act === "f-dias" || act === "per") { perGuardar(b.dataset.k || b.dataset.v); render(); setTimeout(() => document.querySelector(`#${innerWidth <= 820 ? "view" : "perG"} [data-act="per"][data-v="${tState.dias}"]`)?.focus(), 0); }
-  if (act === "f-reset") { Object.assign(tState, {tema:"todos", tono:"todos", q:"", llego:null, medio:null, fcat:null, fenf:null, fpap:null, alc:"sobre"}); render(); }
+  if (act === "f-reset") { Object.assign(tState, {tema:"todos", tono:"todos", q:"", llego:null, medio:null, fcat:null, fenf:null, fpap:null, fprio:null, fcomp:null, alc:"sobre"}); render(); }
   if (act === "f-x") { tState[b.dataset.k] = null; render(); }
   if (act === "f-est") { tState.fuente.e = b.dataset.k; render(); }
   if (act === "f-amb") { tState.fuente.a = b.dataset.k; render(); }
+  if (act === "fic-guardar") { const g = b.dataset.g, box = b.closest(".corr-g"), campos = {}; box.querySelectorAll("[data-fic]").forEach(x => { campos[x.dataset.fic] = x.value; }); const m = menciones(cuenta(), 30).find(x => x.g === g); guardarCorreccion(g, campos, m); render(); toast(PILOTO && PILOTO.activo ? "Corrección guardada. La lectura siguiente la usa como criterio." : "Corrección guardada en esta cuenta."); }
+  if (act === "fic-borrar") { const c = cuenta(); if (c.correcciones) delete c.correcciones[b.dataset.g]; c.fv = (c.fv || 0) + 1; save(); render(); toast("La ficha volvió a la clasificación automática."); }
+  if (act === "prio-reset") { const c = cuenta(); delete c.plazos; delete c.compArea; c.fv = (c.fv || 0) + 1; save(); render(); toast("Plazos y competencias vuelven a los valores base del cargo."); }
+  if (act === "cor-del") { const c = cuenta(); if (c.correcciones) delete c.correcciones[b.dataset.g]; c.fv = (c.fv || 0) + 1; save(); render(); }
   if (act === "fp") { const key = S.org + ":" + b.dataset.g; S.fp[key] = true; save(); render(); toast("Marcada como “no corresponde”. Servirá para afinar las exclusiones.", () => { delete S.fp[key]; save(); render(); }); }
   if (act === "fp-reset") { Object.keys(S.fp).filter(k => k.startsWith(S.org+":")).forEach(k => delete S.fp[k]); save(); render(); }
   if (act === "onb-hide") { c.onbOculto = true; save(); render(); toast("Aviso oculto. Puedes afinar tus temas cuando quieras en Ajustes.", () => { c.onbOculto = false; save(); render(); }); }
@@ -1692,7 +1721,7 @@ async function cargarReales(force, silencioso){
     const q = !pa ? "comuna=" + encodeURIComponent(org) : pa.autoridadId ? "autoridad=" + encodeURIComponent(pa.autoridadId) : "rol=" + encodeURIComponent(pa.rol) + "&zona=" + encodeURIComponent(pa.zona) + "&nombre=" + encodeURIComponent(pa.nombre) + "&g=" + pa.g;
     const r = await fetch("/api/noticias?" + q + redesParam()); if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json(); if (PILOTO && PILOTO.activo) { MODO.cargando = false; render(); return; } if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
-    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via ? {via: n.via} : {}), hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? (n.sobre === "institucion" ? norm(CARGOS[pa.rol].organo) : pa.variantes[0]) : org + " comuna")), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna (o de la autoridad o su institución)
+    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via ? {via: n.via} : {}), ...(n.f ? {f: n.f} : {}), hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? (n.sobre === "institucion" ? norm(CARGOS[pa.rol].organo) : pa.variantes[0]) : org + " comuna")), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna (o de la autoridad o su institución)
     actualizarEstadoRedes(j.redes);  // estado de cada cuenta de Facebook e Instagram para la vista Fuentes
     MODO = {...MODO, tipo: "real", info: {...j, comuna: org, notas: nuevas}, cargando: false}; refrescarNotas(nuevas);  // el modo primero: los avisos se guardan por modo
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}

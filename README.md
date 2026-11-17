@@ -158,6 +158,15 @@ Medido el 17 de noviembre de 2026 con consultas reales a Google News. Estas eran
 
 La dispara el programador de Supabase (`supabase/programador.sql`: pg_cron a los minutos 7 y 37), con un pase de un solo uso que `/api/ingesta` valida y borra; no requiere copiar secretos. GitHub Actions (`lectura.yml`) quedó solo para lecturas a mano con `CRON_SECRET`, porque GitHub postergaba horas su tarea programada. Ver las últimas lecturas: tabla `lecturas`.
 
+## Clasificación editorial (ficha de cada hecho)
+
+Diseño completo y decisiones en el documento del proyecto «clasificacion-editorial-pregonia». Fase 1:
+
+- **IA (`api/_lectura.js`, misma llamada de clasificación):** área de gestión (14 áreas comunes), encuadre del medio, impulsor (quién puso el tema), papel de la cuenta, tono hacia la contraparte (persona o institución), gravedad (0 a 3) y confianza. Se guarda en `menciones.ficha` y viaja como `f` en `/api/noticias`.
+- **Reglas (`src/ficha.js`):** competencia según la matriz por cargo (propia, compartida, incidencia, ajena, ajena con exposición), vacío de vocería, prioridad P1 a P4 o ruido, acción sugerida (incluida «No amplificar») y plazo según el tipo de cliente. Sin ficha de la IA (demostración) se deduce de categoría, enfoque y papel por palabras clave.
+- **Pantallas:** ficha y acción en cada noticia de Menciones, filtros por prioridad y competencia, «Cola de decisiones» en la Mesa de comunicaciones y Configuración › Prioridades (plazos, matriz de competencias de la cuenta y correcciones).
+- **Correcciones y aprendizaje:** «Corregir ficha» en cada noticia. La corrección rige para ese hecho; la competencia corregida, para toda el área en la cuenta. En el piloto viajan en `municipios.config` y la lectura programada usa las 12 más recientes como criterios para la IA.
+
 ## Avisos (alertas)
 
 PregonIA avisa de noticias críticas nuevas, de las que escalan a prensa regional o nacional y de los temas que crecen rápido (3 medios en 6 horas). Las reglas están en `src/reglas.js`; `scripts/build.py` las copia a `api/_reglas.js` para que la aplicación y el servidor avisen exactamente lo mismo.

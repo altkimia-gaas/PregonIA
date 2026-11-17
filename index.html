@@ -1878,6 +1878,33 @@ a.pd-go{text-decoration:none}
 :root[data-theme="editorial"] .pr-s{font-size:1rem;max-width:34rem}
 :root[data-theme="editorial"] .pr-paso{border:1px solid var(--line);background:var(--surface);font-size:.875rem}
 :root[data-theme="editorial"] .ico-per{--tinta:var(--ink);--papel:var(--surface)}
+/* Ficha editorial: prioridad, plazo, revisión y corrección */
+.item .clasif.ficha{gap:6px}
+.item .clasif.ficha .pill.prio{border:0;padding:2px 9px}
+.pill.prio::before{display:none}
+.clasif .venc,.kick .venc{color:var(--cri-ink);font-weight:600;border-color:var(--cri)}
+.clasif .rev{border-color:var(--neu);color:var(--neu-ink)}
+.rev.ok{border:1px solid var(--pos);color:var(--pos-ink);border-radius:999px;padding:0 7px;font-size:12px}
+.acc.accion-noamp{background:var(--neu-soft);border-left:3px solid var(--neu)}
+.acc.accion-escalar,.acc.accion-responder{border-left:3px solid var(--cri)}
+.acc.accion-amplificar{background:var(--pos-soft);border-left:3px solid var(--pos)}
+.acc b{margin-right:6px}
+details.corr{margin:6px 0 0}
+details.corr summary{cursor:pointer;font-size:13px;color:var(--muted)}
+.corr-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 12px;margin-top:8px}
+.corr-g label{display:grid;gap:3px;font-size:12.5px;color:var(--muted)}
+.corr-g select{font-size:13.5px}
+.corr-b{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.corr-g .hint{grid-column:1/-1;margin:0}
+.plazos{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.plazos label{display:grid;gap:4px;font-weight:600}
+.plazos input{width:80px;margin-right:6px}
+.plazos small{font-weight:400;color:var(--muted)}
+.mtab.comp select{min-width:200px}
+.cors{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.cors li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.cors li span{grid-column:1;color:var(--muted);font-size:13px}
+.cors li button{grid-row:1/3;grid-column:2;align-self:center}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="pat-pos" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" style="fill:var(--pos)"/></pattern></defs></svg>
@@ -2836,6 +2863,177 @@ function papelDe(m){
   return (m._pap = {k, n: PAPELES[k]});
 }
 
+/* Ficha editorial de cada hecho (diseño en el proyecto: «clasificacion-editorial-pregonia»).
+   Qué es (área, encuadre, impulsor) · qué le implica a la cuenta (competencia, papel, tono doble) · qué hacer (prioridad, acción, plazo).
+   La IA entrega por nota: a (área), e (encuadre), im (impulsor), p (papel), t2 (tono hacia la contraparte), g (gravedad) y cf (confianza).
+   Sin esos datos (demostración o nota sin clasificar) se deduce de las capas por palabras clave (categoría, enfoque y papel).
+   Competencia, prioridad, acción y plazo salen de reglas explícitas, y el equipo puede corregir cada ficha: la corrección se aplica
+   al hecho, la competencia corregida rige para toda el área en la cuenta, y en el piloto las correcciones se guardan en la configuración
+   y entran como criterios para la IA en la lectura siguiente (aprendizaje). */
+
+const AREAS = {
+  agua: "Agua y saneamiento", seguridad: "Seguridad", salud: "Salud", educacion: "Educación", vivienda: "Vivienda y barrios",
+  obras: "Obras, vialidad y transporte", ambiente: "Residuos y medio ambiente", emergencias: "Emergencias", fomento: "Fomento y empleo",
+  social: "Desarrollo social", territorio: "Planificación territorial", probidad: "Presupuesto y probidad", politica: "Relación política", local: "Vida local"
+};
+const ENCUADRES = {
+  logro: "Logro o gestión", servicio: "Servicio", reclamo: "Reclamo ciudadano", conflicto: "Conflicto entre actores", emergencia: "Emergencia",
+  probidad: "Probidad o irregularidad", judicial: "Judicial", politico: "Político-electoral", opinion: "Opinión", humano: "Historia humana"
+};
+const IMPULSORES = {propia: "Agenda propia", autoridad: "Otra autoridad", vecinos: "Vecinos u organizaciones", gremio: "Gremio o empresa", fiscalizador: "Fiscalizador", medio: "Iniciativa del medio"};
+const PAPELES_F = {prot: "Protagonista", fuente: "Fuente citada", menc: "Mencionada", alud: "Aludida sin nombre", aus: "Ausente: vacío de vocería", no: "No aparece"};
+const COMPETENCIAS = {P: "Competencia propia", C: "Competencia compartida", I: "Incidencia (fiscaliza o legisla)", AE: "Ajena, pero la exponen", A: "Competencia ajena"};
+const PRIORIDADES = {P1: "P1 · Crisis", P2: "P2 · Atender", P3: "P3 · Oportunidad", P4: "P4 · Monitoreo", R: "Ruido"};
+const ACCIONES = {
+  responder: ["Responder", "Dar la versión propia con vocería, por los canales que el tema exige."],
+  aclarar: ["Aclarar con datos", "Es de su competencia y la prensa no recoge su versión ni su gestión: informar qué se está haciendo, con datos y una vocería breve."],
+  aportar: ["Aportar posición", "Tema de terceros donde la cuenta puede aportar: fijar posición o una gestión concreta."],
+  amplificar: ["Amplificar", "Buena noticia: llevarla a más medios y a las redes propias."],
+  anticipar: ["Anticipar", "Hay un hito cerca: preparar mensaje y vocería antes de que llegue."],
+  coordinar: ["Coordinar", "La solución depende de otra institución: coordinar con ella y comunicar la gestión, no prometer lo ajeno."],
+  escalar: ["Escalar a jurídico", "Probidad o tribunales: revisar con jurídico y la jefatura antes de cualquier declaración."],
+  monitorear: ["Monitorear", "Seguirlo sin acción por ahora; reaccionar si cambia el tono, el alcance o la gravedad."],
+  noamp: ["No amplificar", "Crítica aislada en un solo medio, de alcance local: responder en público la haría crecer. Resolver directo con los afectados y vigilar."],
+  archivar: ["Archivar", "No es de su competencia ni la expone."]
+};
+
+/* Matriz de competencias por cargo (borrador: la valida Antonio; editable por cuenta en Configuración › Prioridades).
+   P propia · C compartida · I incidencia · A ajena. Educación municipal: propia mientras no haya traspaso al SLEP. */
+const MATRIZ = {
+  municipio:  {agua: "C", seguridad: "C", salud: "P", educacion: "P", vivienda: "C", obras: "P", ambiente: "P", emergencias: "P", fomento: "C", social: "P", territorio: "P", probidad: "P", politica: "P", local: "P"},
+  concejal:   {agua: "I", seguridad: "I", salud: "I", educacion: "I", vivienda: "I", obras: "I", ambiente: "I", emergencias: "I", fomento: "I", social: "I", territorio: "P", probidad: "P", politica: "P", local: "I"},
+  core:       {agua: "C", seguridad: "C", salud: "C", educacion: "A", vivienda: "C", obras: "C", ambiente: "C", emergencias: "C", fomento: "C", social: "A", territorio: "P", probidad: "P", politica: "P", local: "A"},
+  gobernador: {agua: "C", seguridad: "C", salud: "C", educacion: "A", vivienda: "C", obras: "P", ambiente: "C", emergencias: "C", fomento: "P", social: "C", territorio: "P", probidad: "P", politica: "P", local: "A"},
+  delegado:   {agua: "C", seguridad: "P", salud: "C", educacion: "A", vivienda: "C", obras: "C", ambiente: "A", emergencias: "P", fomento: "A", social: "C", territorio: "A", probidad: "P", politica: "P", local: "A"},
+  diputado:   {agua: "I", seguridad: "I", salud: "I", educacion: "I", vivienda: "I", obras: "I", ambiente: "I", emergencias: "I", fomento: "I", social: "I", territorio: "A", probidad: "P", politica: "P", local: "A"},
+  senador:    {agua: "I", seguridad: "I", salud: "I", educacion: "I", vivienda: "I", obras: "I", ambiente: "I", emergencias: "I", fomento: "I", social: "I", territorio: "A", probidad: "P", politica: "P", local: "A"}
+};
+MATRIZ.alcalde = MATRIZ.municipio;
+
+/* Plazos de respuesta por tipo de cliente, en horas (P4 se revisa una vez por semana). Editables por cuenta. */
+const PLAZOS = {
+  municipio:     {n: "Municipio", P1: 2, P2: 24, P3: 72},
+  delegado:      {n: "Delegación presidencial", P1: 1, P2: 12, P3: 72},
+  gobernador:    {n: "Gobierno regional", P1: 2, P2: 24, P3: 72},
+  parlamentario: {n: "Diputado o senador", P1: 4, P2: 48, P3: 168},
+  colegiado:     {n: "Consejero regional o concejal", P1: 6, P2: 48, P3: 168}
+};
+const tipoCliente = (c = cuenta()) => { const r = rolDe(c); return r === "delegado" || r === "gobernador" ? r : r === "diputado" || r === "senador" ? "parlamentario" : r === "core" || r === "concejal" ? "colegiado" : "municipio"; };
+const plazosDe = (c = cuenta()) => ({...PLAZOS[tipoCliente(c)], ...((c && c.plazos) || {})});
+const competenciaDe = (area, c = cuenta()) => ((c && c.compArea) || {})[area] || (MATRIZ[rolDe(c)] || MATRIZ.municipio)[area] || "A";
+
+/* Sin ficha de la IA: la categoría por palabras clave da el área. */
+const CAT_AREA = {
+  agua: "agua", emergencias: "emergencias", seguridad: "seguridad", salud: "salud", educacion: "educacion", obras: "obras", ambiente: "ambiente",
+  economia: "fomento", social: "social", gestion: "probidad", politica: "politica", votaciones: "politica", fiscalizacion: "probidad",
+  presupuesto: "probidad", ordenanzas: "territorio", servicios: "obras", saludedu: "salud", comunidad: "social", inversion: "obras",
+  sesiones: "politica", gobernacion: "politica", probidad: "probidad", conectividad: "obras", productivo: "fomento", local: "local",
+  leyes: "politica", distrito: "local", acusaciones: "politica", nombramientos: "politica", region: "fomento", consejo: "politica",
+  transporte: "obras", territorio: "territorio", descentralizacion: "politica", gobierno: "politica", municipios: "politica",
+  orden: "seguridad", tomas: "vivienda", conflictos: "social", migracion: "social", programas: "social", voceria: "politica",
+  relacion: "politica", provincias: "politica"
+};
+const CAT_AREA_ROL = {delegado: {servicios: "politica"}};
+const ENF_ENCUADRE = {opinion: "opinion", emergencia: "emergencia", probidad: "probidad", judicial: "judicial", conflicto: "reclamo", politica: "politico"};
+
+/* Lo que más se repite entre las notas del hecho (empate: el primero). */
+const moda = xs => { const c = {}; let best = null; xs.filter(Boolean).forEach(x => { c[x] = (c[x] || 0) + 1; if (!best || c[x] > c[best]) best = x; }); return best; };
+const ORDEN_ENC = ["probidad", "judicial", "emergencia", "conflicto", "reclamo", "politico", "opinion", "humano", "servicio", "logro"];
+const ORDEN_PAP = ["prot", "fuente", "menc", "alud", "no"];
+const correccionDe = (g, c = cuenta()) => ((c && c.correcciones) || {})[g] || null;
+
+function fichaDe(m, c = cuenta()){
+  const clave = (c && c.fv || 0) + "|" + rolDe(c); m._fic = m._fic || {}; if (m._fic[clave]) return m._fic[clave];
+  const fs = m.notas.map(n => n.f).filter(Boolean), ia = fs.length > 0, cor = correccionDe(m.g, c) || {};
+  const cat = categoriaDe(m, c), enf = enfoqueDe(m), pap = papelDe(m);
+  // Qué es
+  const area = cor.a || moda(fs.map(f => f.a)) || ((CAT_AREA_ROL[rolDe(c)] || {})[cat.k]) || CAT_AREA[cat.k] || "local";
+  const encuadre = cor.e || ORDEN_ENC.find(k => fs.some(f => f.e === k)) || ENF_ENCUADRE[enf.k] || (m.tono === "pos" ? "logro" : "servicio");
+  const impulsor = cor.im || moda(fs.map(f => f.im)) || null;
+  // Qué le implica
+  let papel = cor.p || ORDEN_PAP.find(k => fs.some(f => f.p === k)) || (pap.k === "terr" ? "no" : pap.k);
+  const tono = m.tono, tono2 = fs.some(f => f.t2 === "cri") ? "cri" : fs.some(f => f.t2 === "pos") ? "pos" : fs.length ? "neu" : null;
+  const critico = tono === "cri" || tono2 === "cri";
+  const gravedad = fs.length ? Math.max(...fs.map(f => Number.isFinite(f.g) ? f.g : 0)) : (m.grave ? 2 : tono === "cri" ? 1 : 0);
+  const confianza = fs.some(f => f.cf === "b") ? "b" : fs.some(f => f.cf === "m") ? "m" : ia ? "a" : null;
+  const medios = new Set(m.notas.map(n => n.m)).size, alcance = escalera(m.notas).max;
+  const v6 = new Set(m.notas.filter(n => n.ts - m.first <= 6 * 36e5).map(n => n.m)).size;
+  let comp = cor.comp || competenciaDe(area, c);
+  const expuesta = ["prot", "fuente", "menc", "alud"].includes(papel);
+  if (comp === "A" && expuesta) comp = "AE";
+  // Vacío de vocería: tema crítico o grave de su competencia propia, en dos o más medios, sin su versión.
+  // No aplica a lo policial o judicial, a las historias humanas ni a la opinión: ahí no se espera una versión de la cuenta.
+  if (!cor.p && comp === "P" && papel === "no" && !["local", "politica"].includes(area) && !["judicial", "humano", "opinion"].includes(encuadre) && (critico || gravedad >= 2) && medios >= 2) papel = "aus";
+  // Qué hacer: prioridad
+  let prio;
+  if (comp === "A") prio = "R";
+  else if ((critico && (comp === "P" || papel === "prot") && (gravedad >= 3 || alcance >= 1 || v6 >= 3)) || (["probidad", "judicial"].includes(encuadre) && expuesta && (critico || gravedad >= 2))) prio = "P1";
+  else if ((critico && (comp === "P" || comp === "C" || (comp === "AE" && papel !== "menc"))) || papel === "aus" || (critico && papel === "prot")) prio = "P2";
+  else if ((tono === "pos" || tono2 === "pos") && (expuesta || comp === "P")) prio = "P3";
+  else if ((comp === "I" || comp === "C") && ["reclamo", "conflicto", "emergencia"].includes(encuadre) && gravedad >= 2) prio = "P3";
+  else prio = "P4";
+  // Una oportunidad que ya pasó no queda en la cola: baja a monitoreo (no hay nada que atender a destiempo).
+  if (prio === "P3" && !cor.prio && m.last + plazosDe(c).P3 * 36e5 < Date.now()) prio = "P4";
+  if (cor.prio) prio = cor.prio;
+  // Acción
+  let acc;
+  if (prio === "R") acc = "archivar";
+  else if (prio === "P1") acc = ["probidad", "judicial"].includes(encuadre) ? "escalar" : "responder";
+  else if (prio === "P2") acc = papel === "aus" ? "aclarar"
+    : (medios === 1 && alcance === 0 && gravedad <= 1 && papel !== "prot") ? "noamp"
+    : (comp === "C" || comp === "AE") && papel !== "prot" ? "coordinar" : "responder";
+  else if (prio === "P3") acc = (tono === "pos" || tono2 === "pos") ? "amplificar" : "aportar";
+  else acc = "monitorear";
+  if (cor.acc) acc = cor.acc;
+  // Plazo: corre desde la última publicación (cada nota nueva es un desarrollo del hecho).
+  const h = plazosDe(c)[prio], vence = h ? m.last + h * 36e5 : null;
+  const decidido = respondida(m.g) || !!noResp(m.g);
+  const f = {ia, area, encuadre, impulsor, papel, tono, tono2, gravedad, confianza, medios, alcance, v6, comp, prio, acc, vence, decidido, corregida: !!correccionDe(m.g, c),
+    revisar: confianza === "b" && !correccionDe(m.g, c)};
+  return (m._fic[clave] = f);
+}
+
+/* Presentación */
+const PRIO_CLS = {P1: "t-cri", P2: "t-neu", P3: "t-pos", P4: "", R: ""};
+function venceTxt(f){
+  if (!f.vence || f.decidido) return "";
+  const r = f.vence - Date.now(), hh = Math.abs(r) / 36e5;
+  const t = hh < 1 ? Math.max(1, Math.round(hh * 60)) + " min" : hh < 48 ? Math.round(hh) + " h" : Math.round(hh / 24) + " días";
+  return r < 0 ? `vencido hace ${t}` : `plazo: ${t}`;
+}
+function fichaHtml(m){
+  const f = fichaDe(m), [an, ad] = ACCIONES[f.acc];
+  return `<p class="clasif ficha"><span class="pill ${PRIO_CLS[f.prio]} prio" title="Prioridad">${PRIORIDADES[f.prio]}</span>${venceTxt(f) ? `<span class="${f.vence < Date.now() ? "venc" : ""}">${venceTxt(f)}</span>` : ""}<span class="cl-cat">${esc(AREAS[f.area])}</span><span>${esc(COMPETENCIAS[f.comp])}</span><span>${esc(ENCUADRES[f.encuadre])}</span><span>${esc(PAPELES_F[f.papel] || "")}</span>${f.impulsor ? `<span>${esc(IMPULSORES[f.impulsor])}</span>` : ""}${f.revisar ? `<span class="rev" title="La IA no está segura de esta ficha">Revisar</span>` : ""}${f.corregida ? `<span class="rev ok" title="Corregida por el equipo">Corregida</span>` : ""}</p>
+    ${f.decidido ? "" : `<p class="acc sm accion-${f.acc}"><b>${esc(an)}</b>${esc(ad)}</p>`}`;
+}
+/* Corrección de la ficha: los mismos campos que calcula el sistema; lo que no se toca queda automático. */
+function correccionHtml(m){
+  const f = fichaDe(m), cor = correccionDe(m.g) || {};
+  const sel = (k, label, opts, val) => `<label>${label}<select data-fic="${k}"><option value="">Automático${val ? " (" + esc(opts[val] || val) + ")" : ""}</option>${Object.entries(opts).map(([v, n]) => `<option value="${v}" ${cor[k] === v ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>`;
+  return `<details class="corr"><summary>Corregir ficha</summary><div class="corr-g" data-g="${esc(m.g)}">
+    ${sel("a", "Área", AREAS, f.area)}${sel("comp", "Competencia (rige para toda el área)", {P: COMPETENCIAS.P, C: COMPETENCIAS.C, I: COMPETENCIAS.I, A: COMPETENCIAS.A}, f.comp === "AE" ? "A" : f.comp)}
+    ${sel("e", "Encuadre", ENCUADRES, f.encuadre)}${sel("p", "Papel", PAPELES_F, f.papel)}${sel("im", "Impulsor", IMPULSORES, f.impulsor)}
+    ${sel("prio", "Prioridad", PRIORIDADES, f.prio)}${sel("acc", "Acción", Object.fromEntries(Object.entries(ACCIONES).map(([k, v]) => [k, v[0]])), f.acc)}
+    <div class="corr-b"><button class="btn sm primary" type="button" data-act="fic-guardar" data-g="${esc(m.g)}">Guardar corrección</button>${correccionDe(m.g) ? `<button class="btn sm ghost" type="button" data-act="fic-borrar" data-g="${esc(m.g)}">Volver a automático</button>` : ""}</div>
+    <p class="hint">La corrección queda en esta cuenta y enseña al sistema: en el piloto entra como criterio para clasificar las noticias siguientes.</p></div></details>`;
+}
+function guardarCorreccion(g, campos, m){
+  const c = cuenta(); c.correcciones = c.correcciones || {};
+  const limpio = Object.fromEntries(Object.entries(campos).filter(([k, v]) => v));
+  if (limpio.comp) { (c.compArea = c.compArea || {})[limpio.a || fichaDe(m).area] = limpio.comp; delete limpio.comp; }
+  if (Object.keys(limpio).length) c.correcciones[g] = {...limpio, t: m ? m.lead.t : "", ts: Date.now()};
+  else delete c.correcciones[g];
+  // Tope: las 60 más recientes (la IA usa las 12 últimas como criterio).
+  const ks = Object.keys(c.correcciones).sort((a, b) => c.correcciones[b].ts - c.correcciones[a].ts); ks.slice(60).forEach(k => delete c.correcciones[k]);
+  c.fv = (c.fv || 0) + 1; save();
+}
+/* Cola de decisiones: lo que exige una decisión del equipo, de lo más urgente a lo menos. */
+function colaDecisiones(ms){
+  const rank = {P1: 0, P2: 1, P3: 2};
+  return ms.map(m => ({m, f: fichaDe(m)})).filter(x => rank[x.f.prio] != null && !x.f.decidido)
+    .sort((a, b) => rank[a.f.prio] - rank[b.f.prio] || (a.f.vence || 0) - (b.f.vence || 0));
+}
+
 /* Cuentas: municipios con su alcalde o alcaldesa (las 38 comunas de la región) y autoridades (diputados, senadores, consejeros regionales, concejales,
    gobernador regional y delegados presidenciales).
    Una cuenta de autoridad funciona con la misma lógica que la de un municipio: temas, menciones, reportes, respuestas y avisos,
@@ -3429,7 +3627,7 @@ const ICO = {
 };
 const icon = k => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
 const MAIN = [["inicio","Inicio"],["menciones","Menciones"],["reportes","Reportes"],["comunicados","Comunicados"]];
-const CONFIG = [["temas","Mis temas"],["asistente","Asistente de temas"],["fuentes","Fuentes"]];
+const CONFIG = [["temas","Mis temas"],["asistente","Asistente de temas"],["prioridades","Prioridades"],["fuentes","Fuentes"]];
 const ALIAS = {panel:"inicio", caracterizacion:"asistente"};
 const route = () => { const k = (location.hash || "#inicio").slice(1); return ALIAS[k] || k; };
 const isConfig = k => CONFIG.some(([x]) => x === k);
@@ -3787,10 +3985,11 @@ function itemHtml(m){
   const otros = m.notas.filter(n => n !== m.lead).map(n => n.url ? `<a class="ext" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(nomMedio(n))}</a>` : esc(nomMedio(n)));
   return `<article class="item ${resp?"resp":(m.critico?"cri":"")}">
     <div class="meta">${pillTono(m.tono)}${m.grave ? '<span class="pill grave">Hecho grave</span>' : ""}${resp?'<span class="pill done">Respondida</span>':""}${nr && !resp ? `<span class="pill done" title="${esc(NO_RESP[nr.k] || "")}">No responder</span>` : ""}<span>${esc(medioN(m.lead))}</span><span>·</span><span title="${fecha(m.lead.ts)}">${ago(m.lead.ts)}</span>${m.notas.length>1?`<span>·</span><span>en ${m.notas.length} medios</span>`:""}</div>
-    <p class="clasif"><span class="cl-cat">${esc(categoriaDe(m).n)}</span><span>${esc(enfoqueDe(m).n)}</span><span>${esc(papelDe(m).n)}</span></p>
+    ${fichaHtml(m)}
     <h4>${m.lead.url ? `<a class="ext" href="${esc(m.lead.url)}" target="_blank" rel="noopener">${esc(m.lead.t)}<span class="sr"> (abre el medio en otra pestaña)</span></a>` : esc(m.lead.t)}</h4>
     <p class="res">${esc(m.lead.res)}</p>
     <details><summary>¿Por qué aparece?</summary><p>${temas.map(x => `Tema <b>${esc(x.tema.nombre)}</b>: contiene «${[...x.found].map(esc).join("», «")}»${x.enTitulo?" en el titular":""}.`).join(" ")}${otros.length?` También la publicaron ${otros.join(", ")}.`:""}</p></details>
+    ${correccionHtml(m)}
     <div class="acts">${resp ? `<button class="btn sm" data-act="responder" data-g="${m.g}" data-from="menciones">Ver respuesta</button>` : `<button class="btn ${m.critico?"primary":""} sm" data-act="responder" data-g="${m.g}" data-from="menciones">Responder</button>`}${m.tono === "cri" && !resp && !nr ? noRespHtml(m) : ""}<button class="btn ghost sm" data-act="vocero" data-g="${m.g}">${ri("mic")} Vocería</button><button class="btn ghost sm" data-act="fp" data-g="${m.g}">No corresponde</button>${m.notas.some(n => n.captura) ? `<button class="btn ghost sm" data-act="cap-del" data-g="${m.g}">Quitar lo que agregué</button>` : ""}</div>
   </article>`;
 }
@@ -3807,10 +4006,12 @@ function vMenciones(){
   if (tState.fcat) base = base.filter(m => categoriaDe(m, c).k === tState.fcat);
   if (tState.fenf) base = base.filter(m => enfoqueDe(m).k === tState.fenf);
   if (tState.fpap) base = base.filter(m => papelDe(m).k === tState.fpap);
+  if (tState.fprio) base = base.filter(m => fichaDe(m, c).prio === tState.fprio);
+  if (tState.fcomp) base = base.filter(m => fichaDe(m, c).comp === tState.fcomp);
   const cnt = k => k === "todos" ? base.length : base.filter(m => m.tono === k).length;
   const ms = tState.tono === "todos" ? base : base.filter(m => m.tono === tState.tono);
   const fps = Object.keys(S.fp).filter(k => k.startsWith(S.org+":")).length;
-  const activos = (tState.tema!=="todos") + (tState.tono!=="todos") + !!tState.q.trim() + (tState.llego != null) + (tState.medio != null) + !!tState.fcat + !!tState.fenf + !!tState.fpap;
+  const activos = (tState.tema!=="todos") + (tState.tono!=="todos") + !!tState.q.trim() + (tState.llego != null) + (tState.medio != null) + !!tState.fcat + !!tState.fenf + !!tState.fpap + !!tState.fprio + !!tState.fcomp;
   const chipsX = (tState.llego != null ? `<button class="btn sm fchip" data-act="f-x" data-k="llego" aria-label="Quitar filtro: ${esc(["Solo prensa comunal","Llegó a prensa regional","Llegó a prensa nacional"][tState.llego])}">${esc(["Solo prensa comunal","Llegó a prensa regional","Llegó a prensa nacional"][tState.llego])} ✕</button>` : "") + (tState.medio != null && MED[tState.medio] ? `<button class="btn sm fchip" data-act="f-x" data-k="medio" aria-label="Quitar filtro: ${esc(MED[tState.medio].n)}">${esc(MED[tState.medio].n)} ✕</button>` : "");
   let html = "", last = "";
   ms.forEach(m => { const d = dia(m.last); if (d !== last) { html += `<h3 class="day">${d}</h3>`; last = d; } html += itemHtml(m); });
@@ -3820,6 +4021,8 @@ function vMenciones(){
     <div class="seg" role="group" aria-label="Tono">${["todos","cri","neu","pos"].map(k => `<button data-act="f-tono" data-k="${k}" aria-pressed="${tState.tono===k}">${k==="todos"?"Todas":tonoPl[k]}<span class="c">${cnt(k)}</span></button>`).join("")}</div>
     
     <select id="fTema" aria-label="Tema"><option value="todos">Todos los temas</option>${c.temas.filter(t=>t.activo).map(t => `<option value="${t.id}" ${tState.tema===t.id?"selected":""}>${esc(t.nombre)}</option>`).join("")}</select>
+    <select id="fPrio" aria-label="Prioridad"><option value="">Prioridad</option>${Object.entries(PRIORIDADES).map(([k, n]) => `<option value="${k}" ${tState.fprio === k ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>
+    <select id="fComp" aria-label="Competencia"><option value="">Competencia</option>${Object.entries(COMPETENCIAS).map(([k, n]) => `<option value="${k}" ${tState.fcomp === k ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>
     <select id="fCat" aria-label="Categoría"><option value="">Categoría</option>${catsDe(c).concat([CAT_OTROS]).map(x => `<option value="${x.k}" ${tState.fcat === x.k ? "selected" : ""}>${esc(x.n)}</option>`).join("")}</select>
     <select id="fEnf" aria-label="Enfoque"><option value="">Enfoque</option>${ENF_NOTA.map(x => `<option value="${x.k}" ${tState.fenf === x.k ? "selected" : ""}>${esc(x.n)}</option>`).join("")}</select>
     <select id="fPap" aria-label="${esAut() ? "Papel de la autoridad" : "Papel del municipio"}"><option value="">${esAut() ? "Cualquier papel de la autoridad" : "Cualquier papel del municipio"}</option>${Object.entries(PAPELES).map(([k, n]) => `<option value="${k}" ${tState.fpap === k ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>
@@ -3829,6 +4032,20 @@ function vMenciones(){
   <div class="feed">${html || `<div class="card"><b>No hay noticias con estos filtros.</b><p class="muted" style="margin:4px 0 0">Prueba con un período más largo o <button class="btn ghost sm" data-act="f-reset">quita los filtros</button>.</p></div>`}</div>`;
 }
 
+/* Configuración › Prioridades: plazos por tipo de cliente, competencias del cargo (para validar) y correcciones del equipo. */
+function vPrioridades(){
+  const c = cuenta(), pl = plazosDe(c), base = PLAZOS[tipoCliente(c)], mat = MATRIZ[rolDe(c)] || MATRIZ.municipio, cors = Object.entries(c.correcciones || {}).sort((a, b) => b[1].ts - a[1].ts);
+  const etq = {a: "área", e: "encuadre", p: "papel", im: "impulsor", prio: "prioridad", acc: "acción"}, nom = {a: AREAS, e: ENCUADRES, p: PAPELES_F, im: IMPULSORES, prio: PRIORIDADES, acc: Object.fromEntries(Object.entries(ACCIONES).map(([k, v]) => [k, v[0]]))};
+  return `<div class="head"><div><h2 tabindex="-1">Prioridades</h2><p>Cómo decide PregonIA qué es urgente para ${esc(inst())}: plazos de respuesta, qué áreas son de su competencia y lo que el equipo ha corregido.</p></div></div>
+  ${subtabs()}
+  <section class="card"><h3>Plazos de respuesta · ${esc(base.n)}</h3><p class="hint" style="margin:0 0 10px">Corren desde la última publicación del hecho. P4 se revisa una vez por semana.</p>
+    <div class="plazos">${["P1", "P2", "P3"].map(k => `<label>${esc(PRIORIDADES[k])}<span><input type="number" min="1" max="720" step="1" data-plazo="${k}" value="${pl[k]}" aria-label="Plazo de ${esc(PRIORIDADES[k])} en horas"> horas</span><small>Base del cargo: ${base[k]} h</small></label>`).join("")}</div></section>
+  <section class="card" style="margin-top:14px"><h3>Competencias del cargo</h3><p class="hint" style="margin:0 0 10px">Borrador por validar. Define qué le corresponde resolver a la cuenta en cada área; de esto dependen la prioridad y la acción sugerida. Un cambio rige para todas las noticias del área.</p>
+    <table class="mtab comp"><thead><tr><th>Área</th><th>Competencia</th></tr></thead><tbody>${Object.entries(AREAS).map(([k, n]) => { const v = competenciaDe(k, c); return `<tr><td>${esc(n)}${v !== mat[k] ? ' <span class="rev ok">Ajustada</span>' : ""}</td><td><select data-comp="${k}" aria-label="Competencia en ${esc(n)}">${["P", "C", "I", "A"].map(x => `<option value="${x}" ${v === x ? "selected" : ""}>${esc(COMPETENCIAS[x])}</option>`).join("")}</select></td></tr>`; }).join("")}</tbody></table>
+    <button class="btn ghost sm" type="button" data-act="prio-reset" style="margin-top:10px">Volver a los valores base del cargo</button></section>
+  <section class="card" style="margin-top:14px"><h3>Correcciones del equipo<span class="c">${cors.length}</span></h3><p class="hint" style="margin:0 0 10px">${PILOTO && PILOTO.activo ? "Las 12 más recientes entran como criterio para la IA en cada lectura." : "En el piloto, las 12 más recientes entran como criterio para la IA en cada lectura."}</p>
+    ${cors.length ? `<ul class="cors">${cors.slice(0, 30).map(([g, x]) => `<li><b>${esc(x.t || "Noticia")}</b><span>${Object.keys(etq).filter(k => x[k]).map(k => `${etq[k]}: ${esc(nom[k][x[k]] || x[k])}`).join(" · ")} · ${fecha(x.ts)}</span><button class="btn ghost sm" type="button" data-act="cor-del" data-g="${esc(g)}">Quitar</button></li>`).join("")}</ul>` : `<p class="empty">Aún no hay correcciones. Se hacen desde «Corregir ficha», en cada noticia de Menciones.</p>`}</section>`;
+}
 /* Configuración */
 function subtabs(){ const k = route(); return `<div class="subtabs" role="navigation" aria-label="Configuración">${CONFIG.map(([key,n]) => `<a href="#${key}" ${key===k?'aria-current="page"':""}>${n}</a>`).join("")}</div>`; }
 function chipEd(t, k, label, hint, limit){
@@ -4118,6 +4335,7 @@ function repMesa(){
   const difundir = m30.filter(m => m.tono === "pos" && NOW - m.last < 14*DAY && escalera(m.notas).max < 2 && !respondida(m.g)).sort((a,b) => escalera(a.notas).max - escalera(b.notas).max || b.last - a.last);
   const md = {}; m30.forEach(m => m.notas.forEach(n => { const x = md[n.m] ||= {n:0, cri:0, pos:0}; x.n++; if (n.tono === "cri") x.cri++; if (n.tono === "pos") x.pos++; }));
   const medios = Object.entries(md).sort((a,b) => nivIdx(MED[a[0]].a) - nivIdx(MED[b[0]].a) || b[1].n - a[1].n).slice(0, 10);
+  const cola = colaDecisiones(menciones(c).filter(m => NOW - m.last < 7*DAY));
   const li = (m, btn, extra = "") => `<li><span class="kick">${esc(temaDe(m))} · ${tonoLbl[m.tono]}</span><b>${esc(m.lead.res)}</b><span class="sub">${enMedios(m)} · ${ago(m.last)}</span>${escHtml(escalera(m.notas))}${extra}${btn ? `<button class="btn sm" style="justify-self:start" data-act="responder" data-g="${m.g}" data-from="reportes">${btn}</button>` : ""}</li>`;
   const vacio = t => `<p class="empty">${t}</p>`;
   return `<div class="rhead"><h3>${esc(S.org)} · mesa de comunicaciones</h3><span class="per">${ri("cal")} ${new Date(NOW).toLocaleDateString("es-CL",{weekday:"long", day:"numeric", month:"long"})}</span></div>
@@ -4127,6 +4345,8 @@ function repMesa(){
     ${tile({icon:"pos", tone:"pos", label:"Para difundir", value: difundir.length, sub:"buenas noticias que aún no llegan a la prensa nacional"})}
     ${tile({icon:"noticias", label:"Publicadas en 24 horas", value: hoy.reduce((s,m) => s + m.notas.filter(n => NOW - n.ts < DAY).length, 0), sub:"notas nuevas sobre los temas monitoreados"})}
   </div>
+  <section class="card grp" style="margin-top:14px"><h4>${ri("cri")} Cola de decisiones<span class="c">${cola.length}</span></h4><p class="hint" style="margin:0 0 8px">Ordenada por prioridad y plazo. Cada hecho trae la acción sugerida; si no corresponde, corrige su ficha en Menciones.</p>
+    ${cola.length ? `<ul class="cola">${cola.slice(0, 10).map(({m, f}) => `<li><span class="kick"><span class="pill ${PRIO_CLS[f.prio]} prio">${PRIORIDADES[f.prio]}</span> ${esc(AREAS[f.area])} · ${esc(COMPETENCIAS[f.comp])}${venceTxt(f) ? ` · <span class="${f.vence < Date.now() ? "venc" : ""}">${venceTxt(f)}</span>` : ""}</span><b>${esc(m.lead.res)}</b><span class="sub">${enMedios(m)} · ${ago(m.last)}</span><p class="acc sm accion-${f.acc}"><b>${esc(ACCIONES[f.acc][0])}</b>${esc(ACCIONES[f.acc][1])}</p>${["responder", "aclarar", "aportar", "amplificar"].includes(f.acc) ? `<button class="btn sm" style="justify-self:start" data-act="responder" data-g="${m.g}" data-from="reportes">${f.acc === "amplificar" ? "Preparar comunicado" : "Preparar respuesta"}</button>` : ""}</li>`).join("")}</ul>${cola.length > 10 ? `<button class="btn ghost sm" data-act="goto" data-dias="7">Ver las ${cola.length} en Menciones</button>` : ""}` : vacio("Nada exige una decisión del equipo en los últimos 7 días.")}</section>
   <div class="rgrid r21" style="margin-top:14px">
     <section class="card grp"><h4>${ri("cri")} Por responder hoy<span class="c">${porResp.length}</span></h4>${porResp.length ? `<ul class="cola">${porResp.map(m => li(m, "Preparar respuesta", `<p class="acc sm"><b>Sugerido</b>${accion(m).a}</p>`)).join("")}</ul>` : vacio("No hay críticas pendientes de respuesta.")}</section>
     <section class="card grp"><h4>${ri("up")} Subiendo de nivel<span class="c">${subiendo.length}</span></h4>${subiendo.length ? `<ul class="cola">${subiendo.map(m => li(m, null, `<span class="sub">Recorrido: ${ruta(escalera(m.notas))}</span>`)).join("")}</ul>` : vacio("Ningún tema pasó de la prensa comunal a la regional o nacional esta semana.")}
@@ -4620,7 +4840,7 @@ async function compartir(b){
 }
 
 /* Render y navegación */
-const VIEWFN = {inicio:vInicio, menciones:vMenciones, reportes:vReportes, comunicados:vComunicados, temas:vTemas, asistente:vAsistente, fuentes:vFuentes};
+const VIEWFN = {inicio:vInicio, menciones:vMenciones, reportes:vReportes, comunicados:vComunicados, temas:vTemas, asistente:vAsistente, prioridades:vPrioridades, fuentes:vFuentes};
 function render(focus){
   // Mientras se leen los medios no se muestra una portada a medias: va la pantalla de lectura (Ajustes sigue disponible).
   if (MODO.cargando && !isConfig(route())) { renderChrome(); $("#view").innerHTML = procesandoHtml(); cerrarMenu(); procesandoPaso(); return; }
@@ -4633,12 +4853,15 @@ function render(focus){
 window.addEventListener("hashchange", () => { render(true); window.scrollTo(0,0); });
 $("#org").addEventListener("change", e => { if (e.target.value === "__entrar") { e.target.value = S.org; entAbrir(false); return; } S.org = e.target.value; tState = {...tState, tema:"todos", draft:null, from:null, pieza:null, enf:null, open:{}}; propuesta = null; lecturaTxt = {}; save(); render(true); toast(esAut() ? "Ahora ves la cuenta de " + inst() + ". Cada cuenta ve solo sus datos." : "Ahora ves " + S.org + ". Cada municipio ve solo sus datos."); });
 function perGuardar(v){ if (!["1", "7", "30"].includes(String(v))) return; tState.dias = String(v); try { localStorage.setItem(PER_KEY, tState.dias); } catch(e) {} }
-function goMenciones(patch){ Object.assign(tState, {tema:"todos", tono:"todos", q:"", llego:null, medio:null, fcat:null, fenf:null, fpap:null, alc:"sobre"}, patch); if (patch && patch.dias) perGuardar(patch.dias); if (route() === "menciones") render(true); else location.hash = "menciones"; }
+function goMenciones(patch){ Object.assign(tState, {tema:"todos", tono:"todos", q:"", llego:null, medio:null, fcat:null, fenf:null, fpap:null, fprio:null, fcomp:null, alc:"sobre"}, patch); if (patch && patch.dias) perGuardar(patch.dias); if (route() === "menciones") render(true); else location.hash = "menciones"; }
 
 document.addEventListener("change", e => {
   const id = e.target.id;
   if (id === "fTema") { tState.tema = e.target.value; render(); }
-  if (id === "fCat" || id === "fEnf" || id === "fPap") { tState[{fCat: "fcat", fEnf: "fenf", fPap: "fpap"}[id]] = e.target.value || null; render(); }
+  if (id === "fCat" || id === "fEnf" || id === "fPap" || id === "fPrio" || id === "fComp") { tState[{fCat: "fcat", fEnf: "fenf", fPap: "fpap", fPrio: "fprio", fComp: "fcomp"}[id]] = e.target.value || null; render(); }
+  // Configuración › Prioridades: plazos y competencias de la cuenta
+  if (e.target.dataset && e.target.dataset.plazo) { const c = cuenta(), v = Number(e.target.value); c.plazos = c.plazos || {}; if (v > 0) c.plazos[e.target.dataset.plazo] = v; else delete c.plazos[e.target.dataset.plazo]; c.fv = (c.fv || 0) + 1; save(); toast("Plazo actualizado."); }
+  if (e.target.dataset && e.target.dataset.comp) { const c = cuenta(), area = e.target.dataset.comp, base = (MATRIZ[rolDe(c)] || MATRIZ.municipio)[area]; c.compArea = c.compArea || {}; if (e.target.value === base) delete c.compArea[area]; else c.compArea[area] = e.target.value; c.fv = (c.fv || 0) + 1; save(); render(); toast("Competencia actualizada para " + AREAS[area] + "."); }
   if (id === "kBase") { cuenta().base = e.target.value; save(); }
   if (id === "kMen") { tState.draft = e.target.value || null; tState.pieza = null; tState.enf = null; render(); }
   if (e.target.name === "pieza") tState.pieza = e.target.value;
@@ -4688,10 +4911,14 @@ document.addEventListener("click", async e => {
   if (act === "no-resp") { const k = S.org + ":" + b.dataset.g; S.noResp = S.noResp || {}; S.noResp[k] = {k: b.dataset.k, ts: Date.now()}; save(); render();
     toast(`Registrado: no responder (${NO_RESP[b.dataset.k].toLowerCase()}). Cuenta como crítica atendida.`, () => { delete S.noResp[k]; save(); render(); }); }
   if (act === "f-dias" || act === "per") { perGuardar(b.dataset.k || b.dataset.v); render(); setTimeout(() => document.querySelector(`#${innerWidth <= 820 ? "view" : "perG"} [data-act="per"][data-v="${tState.dias}"]`)?.focus(), 0); }
-  if (act === "f-reset") { Object.assign(tState, {tema:"todos", tono:"todos", q:"", llego:null, medio:null, fcat:null, fenf:null, fpap:null, alc:"sobre"}); render(); }
+  if (act === "f-reset") { Object.assign(tState, {tema:"todos", tono:"todos", q:"", llego:null, medio:null, fcat:null, fenf:null, fpap:null, fprio:null, fcomp:null, alc:"sobre"}); render(); }
   if (act === "f-x") { tState[b.dataset.k] = null; render(); }
   if (act === "f-est") { tState.fuente.e = b.dataset.k; render(); }
   if (act === "f-amb") { tState.fuente.a = b.dataset.k; render(); }
+  if (act === "fic-guardar") { const g = b.dataset.g, box = b.closest(".corr-g"), campos = {}; box.querySelectorAll("[data-fic]").forEach(x => { campos[x.dataset.fic] = x.value; }); const m = menciones(cuenta(), 30).find(x => x.g === g); guardarCorreccion(g, campos, m); render(); toast(PILOTO && PILOTO.activo ? "Corrección guardada. La lectura siguiente la usa como criterio." : "Corrección guardada en esta cuenta."); }
+  if (act === "fic-borrar") { const c = cuenta(); if (c.correcciones) delete c.correcciones[b.dataset.g]; c.fv = (c.fv || 0) + 1; save(); render(); toast("La ficha volvió a la clasificación automática."); }
+  if (act === "prio-reset") { const c = cuenta(); delete c.plazos; delete c.compArea; c.fv = (c.fv || 0) + 1; save(); render(); toast("Plazos y competencias vuelven a los valores base del cargo."); }
+  if (act === "cor-del") { const c = cuenta(); if (c.correcciones) delete c.correcciones[b.dataset.g]; c.fv = (c.fv || 0) + 1; save(); render(); }
   if (act === "fp") { const key = S.org + ":" + b.dataset.g; S.fp[key] = true; save(); render(); toast("Marcada como “no corresponde”. Servirá para afinar las exclusiones.", () => { delete S.fp[key]; save(); render(); }); }
   if (act === "fp-reset") { Object.keys(S.fp).filter(k => k.startsWith(S.org+":")).forEach(k => delete S.fp[k]); save(); render(); }
   if (act === "onb-hide") { c.onbOculto = true; save(); render(); toast("Aviso oculto. Puedes afinar tus temas cuando quieras en Ajustes.", () => { c.onbOculto = false; save(); render(); }); }
@@ -4969,7 +5196,7 @@ async function cargarReales(force, silencioso){
     const q = !pa ? "comuna=" + encodeURIComponent(org) : pa.autoridadId ? "autoridad=" + encodeURIComponent(pa.autoridadId) : "rol=" + encodeURIComponent(pa.rol) + "&zona=" + encodeURIComponent(pa.zona) + "&nombre=" + encodeURIComponent(pa.nombre) + "&g=" + pa.g;
     const r = await fetch("/api/noticias?" + q + redesParam()); if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json(); if (PILOTO && PILOTO.activo) { MODO.cargando = false; render(); return; } if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
-    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via ? {via: n.via} : {}), hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? (n.sobre === "institucion" ? norm(CARGOS[pa.rol].organo) : pa.variantes[0]) : org + " comuna")), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna (o de la autoridad o su institución)
+    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via ? {via: n.via} : {}), ...(n.f ? {f: n.f} : {}), hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? (n.sobre === "institucion" ? norm(CARGOS[pa.rol].organo) : pa.variantes[0]) : org + " comuna")), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna (o de la autoridad o su institución)
     actualizarEstadoRedes(j.redes);  // estado de cada cuenta de Facebook e Instagram para la vista Fuentes
     MODO = {...MODO, tipo: "real", info: {...j, comuna: org, notas: nuevas}, cargando: false}; refrescarNotas(nuevas);  // el modo primero: los avisos se guardan por modo
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
@@ -6188,14 +6415,15 @@ function paginaFB(nombre, ambito){
   if (!p) { p = {id: FB_ID0 + S.fbPaginas.length + 1, n: nombre, a: ambito || "local", c: ambito === "local" ? S.org : ""}; S.fbPaginas.push(p); registrarPagina(p); }
   return p.id;
 }
-const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null, hitos: c.hitos || [], prep: c.prep || {}, tv: c.tv || 0});
+const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null, hitos: c.hitos || [], prep: c.prep || {}, tv: c.tv || 0,
+  correcciones: c.correcciones || {}, compArea: c.compArea || {}, plazos: c.plazos || {}, fv: c.fv || 0});  // ficha editorial: correcciones, competencias y plazos de la cuenta
 async function cargarDatosPiloto(){
   if (PILOTO.timer) await sincronizarYa();  // un cambio a medio guardar se envía antes de releer la base
   const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 32 * DAY).toISOString();
   const pide = q => q.then(r => { if (r.error) throw new Error(r.error.message); return r.data; });
   const menQ = cols => sb.from("menciones").select(cols + ", notas!inner(id, medio_id, url, titulo, publicado)").eq("municipio_id", mid).eq("rel", true).gte("notas.publicado", desde).limit(5000);
   const [men, mar, com, cap, lec, mun] = await Promise.all([
-    pide(menQ("tono, resumen, palabras, grupo, sobre")).catch(() => pide(menQ("tono, resumen, palabras, grupo"))),  // sin la columna sobre (esquema anterior), se lee sin ella
+    pide(menQ("tono, resumen, palabras, grupo, sobre, ficha")).catch(() => pide(menQ("tono, resumen, palabras, grupo, sobre"))).catch(() => pide(menQ("tono, resumen, palabras, grupo"))),  // sin la columna sobre (esquema anterior), se lee sin ella
     pide(sb.from("marcas").select("grupo, tipo").eq("municipio_id", mid)),
     pide(sb.from("comunicados").select("id, grupo, pieza, origen, texto, creado").eq("municipio_id", mid).order("creado", {ascending: false}).limit(300)),
     pide(sb.from("capturas").select("*").eq("municipio_id", mid).gte("publicado", desde)),
@@ -6216,7 +6444,7 @@ async function cargarDatosPiloto(){
   else if (mun.config && mun.config.temas) { Object.assign(c, mun.config); c.tv = mun.config.tv || 0; adaptarCuenta(c); }  // configuración guardada antes de los temas por territorio: se adapta al leerla
   else if (PILOTO.editor) await pide(sb.from("municipios").update({config: configDe(c)}).eq("id", mid).select("id"));  // primera vez: se sube la caracterización actual
   const notas = men.filter(r => MED[r.notas.medio_id]).map(r => { const n = r.notas, t = n.titulo, res = r.resumen || t, x = r.palabras || "";
-    return {id: n.id, m: n.medio_id, ts: Date.parse(n.publicado), t, b: "", x, tono: r.tono || "neu", res, g: String(r.grupo || n.id), url: n.url, hay: norm(t + " " + res + " " + x + anclaDe(r)), ht: norm(t), real: true}; });
+    return {id: n.id, m: n.medio_id, ts: Date.parse(n.publicado), t, b: "", x, tono: r.tono || "neu", res, g: String(r.grupo || n.id), url: n.url, ...(r.ficha ? {f: r.ficha} : {}), hay: norm(t + " " + res + " " + x + anclaDe(r)), ht: norm(t), real: true}; });
   Object.keys(S.fp).forEach(k => { if (k.startsWith(org + ":")) delete S.fp[k]; });
   Object.keys(S.resp).forEach(k => { if (k.startsWith(org + ":")) delete S.resp[k]; });
   mar.forEach(m => { (m.tipo === "respondida" ? S.resp : S.fp)[org + ":" + m.grupo] = true; });

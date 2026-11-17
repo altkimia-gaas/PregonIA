@@ -29,7 +29,7 @@ def main():
     # Usuario y enlace de cuentas de redes: el mismo archivo en la aplicación y en el servidor (api/_cuentasred.js).
     (RAIZ / "api" / "_cuentasred.js").write_text("// Generado por scripts/build.py desde src/cuentasred.js. No editar a mano.\n" + leer("cuentasred.js") +
         "export { usuarioDe, urlDe };\n", encoding="utf-8")
-    js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("calendario.js") + "\n" + leer("autoridades.js") + "\n" + leer("territorios.js") + "\n" + leer("categorias.js") + "\n" + leer("cuentas.js") + "\n" + leer("app.js") + "\n" + leer("captura.js") + "\n" + leer("cuentasred.js") + "\n" + leer("redes.js") + "\n" + leer("vocero.js") + "\n" + leer("compartir.js") + "\n" + leer("reglas.js") + "\n" + leer("alertas.js") + "\n" + leer("piloto.js") + "\n" + leer("video.js")
+    js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("calendario.js") + "\n" + leer("autoridades.js") + "\n" + leer("territorios.js") + "\n" + leer("categorias.js") + "\n" + leer("ficha.js") + "\n" + leer("cuentas.js") + "\n" + leer("app.js") + "\n" + leer("captura.js") + "\n" + leer("cuentasred.js") + "\n" + leer("redes.js") + "\n" + leer("vocero.js") + "\n" + leer("compartir.js") + "\n" + leer("reglas.js") + "\n" + leer("alertas.js") + "\n" + leer("piloto.js") + "\n" + leer("video.js")
     js = js.replace("/*CATALOG*/", json.dumps(catalogo(), ensure_ascii=False, separators=(",", ":")), 1)
     cuerpo = leer("shell.html") + "<script>\n" + js + "\n</script>\n"
     # Documento completo para Vercel o GitHub Pages: sin charset ni viewport el celular lo mostraría como escritorio.

@@ -101,6 +101,8 @@ create table if not exists menciones (
 -- En cuentas de autoridad: 'persona' si la nota la nombra, 'institucion' si trata del órgano que integra en su territorio
 -- (las mismas reglas que un municipio, que lee lo que trata de la comuna). En municipios queda vacío.
 alter table menciones add column if not exists sobre text check (sobre in ('persona', 'institucion'));
+-- Ficha editorial de la IA: área, encuadre, impulsor, papel, tono hacia la contraparte, gravedad y confianza (ver api/_lectura.js).
+alter table menciones add column if not exists ficha jsonb;
 create index if not exists menciones_muni on menciones (municipio_id, clasificado desc);
 create index if not exists menciones_grupo on menciones (municipio_id, grupo);
 
