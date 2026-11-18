@@ -413,7 +413,7 @@ function entEntrar(e){
   const portada = ENT.enPortada; entCerrar();
   if (portada) { mostrarPortada(false); if (!location.hash || location.hash === "#portada") location.hash = "inicio"; }
   if (key !== S.org) cambiarCuenta(key); else render(true);
-  if (esAut() || !COMUNAS.includes(S.org)) toast(`Entraste como ${esAut() ? inst() : inst() + (cuenta().perfil.autoridad ? " · " + cuenta().perfil.autoridad : "")}. ${typeof MODO !== "undefined" && MODO.disponible ? "Buscando sus menciones en medios reales…" : "Sus menciones se leen de medios reales en pregonia.vercel.app."}`);
+  if (esAut() || !COMUNAS.includes(S.org)) toast(`Entraste como ${esAut() ? inst() : inst() + (cuenta().perfil.autoridad ? " · " + cuenta().perfil.autoridad : "")}. ${typeof MODO !== "undefined" && MODO.disponible ? "Buscando sus menciones en medios reales…" : "Sus menciones se leen de medios reales en pregonia.cl."}`);
 }
 document.addEventListener("change", e => {
   const t = e.target; if (!t.closest || !t.closest("#entBack")) return;

@@ -33,7 +33,7 @@ function estadoRed(m){
   const M = META || {}, st = (RED_EST || {})[m.id] || (m.err ? {ok: false, error: m.err} : m.ult ? {ok: true, ts: Date.parse(m.ult)} : null);
   const activa = m.m === "instagram" ? M.instagram : M.facebook;
   if (!activa) return !M.sabido
-    ? {k: "requiere_ajuste", l: "Se lee en el sitio", o: "Se lee sola en pregonia.vercel.app. Aquí, sus publicaciones se agregan con Agregar publicación."}
+    ? {k: "requiere_ajuste", l: "Se lee en el sitio", o: "Se lee sola en pregonia.cl. Aquí, sus publicaciones se agregan con Agregar publicación."}
     : m.m === "instagram"
     ? {k: "requiere_ajuste", l: "Sin lector conectado", o: "Se leerá sola cuando PregonIA tenga conectado un lector de redes. Mientras tanto, sus publicaciones se agregan con Agregar publicación."}
     : {k: "captura_asistida", l: "Captura asistida", o: "Aún no hay lector de Facebook conectado. Sus publicaciones se agregan con Agregar publicación, en Menciones."};
