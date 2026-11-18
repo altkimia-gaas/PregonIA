@@ -1884,8 +1884,9 @@ window.addEventListener("hashchange", () => { if (location.hash === "#portada") 
 (() => { const f = $("#ptFecha"); if (!f) return; const d = new Date().toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long", year: "numeric"}); f.textContent = d.charAt(0).toUpperCase() + d.slice(1); })();
 
 /* Video explicativo de la portada: enlace (YouTube, Vimeo o .mp4) en data-video de #ptVideo.
-   Un .mp4 parte solo, sin sonido, la primera vez que el recuadro queda a la vista al bajar por la página (los navegadores
-   no permiten partir con sonido); con los controles se activa el audio. Tocarlo antes lo reproduce con sonido.
+   Un .mp4 parte solo la primera vez que el recuadro queda a la vista al bajar por la página: con sonido si la persona ya
+   tocó o hizo clic en la página (los navegadores solo lo permiten así), si no en silencio y con el botón «Activar sonido».
+   Tocarlo antes lo reproduce con sonido.
    «Prueba gratis» lo detiene; «Agendar demostración» no. Con «reducir movimiento» activado no parte solo. */
 var ptVideo = (() => {
   const f = document.getElementById("ptVideo"); if (!f) return {pausar(){}};
@@ -1894,6 +1895,8 @@ var ptVideo = (() => {
   const sub = document.getElementById("ptVideoS"); if (sub) sub.textContent = "Video explicativo";
   const mp4 = /\.(mp4|webm)(\?|$)/i.test(src);
   let v = null, auto = false;
+  let tocado = false; ["pointerdown", "keydown"].forEach(ev => addEventListener(ev, () => { tocado = true; }, {capture: true, passive: true}));
+  const activo = () => tocado || !!(navigator.userActivation && navigator.userActivation.hasBeenActive);
   const cargar = solo => {
     if (v) { if (!solo) { v.muted = false; v.play().catch(() => {}); } return; }
     if (!mp4) {
@@ -1901,8 +1904,15 @@ var ptVideo = (() => {
       f.innerHTML = `<iframe src="${yt ? "https://www.youtube-nocookie.com/embed/" + yt[1] + "?autoplay=1&rel=0" : vm ? "https://player.vimeo.com/video/" + vm[1] + "?autoplay=1" : src}" title="Video explicativo de PregonIA" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
       return;
     }
-    f.innerHTML = `<video src="${src}" controls playsinline preload="auto"${f.dataset.poster ? ` poster="${f.dataset.poster}"` : ""}></video>`;
-    v = f.querySelector("video"); v.muted = !!solo; v.play().catch(() => {});
+    f.innerHTML = `<video src="${src}" controls playsinline preload="auto"${f.dataset.poster ? ` poster="${f.dataset.poster}"` : ""}></video>
+      <button class="pd-video-son" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>Activar sonido</button>`;
+    v = f.querySelector("video"); const son = f.querySelector(".pd-video-son");
+    const marcar = () => { son.hidden = !(v.muted && !v.paused); };
+    son.addEventListener("click", () => { v.muted = false; if (v.paused) v.play().catch(() => {}); marcar(); });
+    ["volumechange", "play", "pause"].forEach(ev => v.addEventListener(ev, marcar));
+    // Con sonido si la persona ya tocó la página (o si lo pidió tocando el video); si el navegador lo bloquea, sin sonido y con el botón.
+    v.muted = !!solo && !activo();
+    v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }).finally(marcar);
   };
   b.addEventListener("click", () => cargar(false));
   const quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;

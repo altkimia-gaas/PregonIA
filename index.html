@@ -1806,6 +1806,12 @@ a.pd-go{text-decoration:none}
 .pd-video-b.con-poster::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(0,0,0,.35))}
 .pd-video-b.con-poster .pd-video-i{position:relative;box-shadow:0 8px 28px rgba(0,0,0,.35)}
 .pd-video-d{position:absolute;right:12px;bottom:12px;padding:3px 9px;border-radius:999px;background:rgba(20,20,20,.78);color:#fff;font-family:"DM Mono",ui-monospace,monospace;font-size:.75rem}
+.pd-video{position:relative}
+.pd-video-son{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border:0;border-radius:999px;background:var(--accent-bg);color:var(--accent-ink);font:inherit;font-size:.875rem;font-weight:600;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.pd-video-son:hover{background:var(--accent-bg-h)}
+.pd-video-son:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.pd-video-son[hidden]{display:none}
+.pd-video-son svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .pd-video-s{font-size:.8125rem;color:var(--muted);margin-top:-6px}
 @media (max-width:700px){.pd-desc{display:none}.pd-fecha{flex-wrap:nowrap}.pd-video{margin-top:22px;border-radius:12px}.pd-video-i{width:56px;height:56px}}
 @media (prefers-reduced-motion:reduce){.pd-video-i{transition:none}}
@@ -5422,8 +5428,9 @@ window.addEventListener("hashchange", () => { if (location.hash === "#portada") 
 (() => { const f = $("#ptFecha"); if (!f) return; const d = new Date().toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long", year: "numeric"}); f.textContent = d.charAt(0).toUpperCase() + d.slice(1); })();
 
 /* Video explicativo de la portada: enlace (YouTube, Vimeo o .mp4) en data-video de #ptVideo.
-   Un .mp4 parte solo, sin sonido, la primera vez que el recuadro queda a la vista al bajar por la página (los navegadores
-   no permiten partir con sonido); con los controles se activa el audio. Tocarlo antes lo reproduce con sonido.
+   Un .mp4 parte solo la primera vez que el recuadro queda a la vista al bajar por la página: con sonido si la persona ya
+   tocó o hizo clic en la página (los navegadores solo lo permiten así), si no en silencio y con el botón «Activar sonido».
+   Tocarlo antes lo reproduce con sonido.
    «Prueba gratis» lo detiene; «Agendar demostración» no. Con «reducir movimiento» activado no parte solo. */
 var ptVideo = (() => {
   const f = document.getElementById("ptVideo"); if (!f) return {pausar(){}};
@@ -5432,6 +5439,8 @@ var ptVideo = (() => {
   const sub = document.getElementById("ptVideoS"); if (sub) sub.textContent = "Video explicativo";
   const mp4 = /\.(mp4|webm)(\?|$)/i.test(src);
   let v = null, auto = false;
+  let tocado = false; ["pointerdown", "keydown"].forEach(ev => addEventListener(ev, () => { tocado = true; }, {capture: true, passive: true}));
+  const activo = () => tocado || !!(navigator.userActivation && navigator.userActivation.hasBeenActive);
   const cargar = solo => {
     if (v) { if (!solo) { v.muted = false; v.play().catch(() => {}); } return; }
     if (!mp4) {
@@ -5439,8 +5448,15 @@ var ptVideo = (() => {
       f.innerHTML = `<iframe src="${yt ? "https://www.youtube-nocookie.com/embed/" + yt[1] + "?autoplay=1&rel=0" : vm ? "https://player.vimeo.com/video/" + vm[1] + "?autoplay=1" : src}" title="Video explicativo de PregonIA" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
       return;
     }
-    f.innerHTML = `<video src="${src}" controls playsinline preload="auto"${f.dataset.poster ? ` poster="${f.dataset.poster}"` : ""}></video>`;
-    v = f.querySelector("video"); v.muted = !!solo; v.play().catch(() => {});
+    f.innerHTML = `<video src="${src}" controls playsinline preload="auto"${f.dataset.poster ? ` poster="${f.dataset.poster}"` : ""}></video>
+      <button class="pd-video-son" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>Activar sonido</button>`;
+    v = f.querySelector("video"); const son = f.querySelector(".pd-video-son");
+    const marcar = () => { son.hidden = !(v.muted && !v.paused); };
+    son.addEventListener("click", () => { v.muted = false; if (v.paused) v.play().catch(() => {}); marcar(); });
+    ["volumechange", "play", "pause"].forEach(ev => v.addEventListener(ev, marcar));
+    // Con sonido si la persona ya tocó la página (o si lo pidió tocando el video); si el navegador lo bloquea, sin sonido y con el botón.
+    v.muted = !!solo && !activo();
+    v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }).finally(marcar);
   };
   b.addEventListener("click", () => cargar(false));
   const quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;

@@ -1793,6 +1793,12 @@ a.pd-go{text-decoration:none}
 .pd-video-b.con-poster::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(0,0,0,.35))}
 .pd-video-b.con-poster .pd-video-i{position:relative;box-shadow:0 8px 28px rgba(0,0,0,.35)}
 .pd-video-d{position:absolute;right:12px;bottom:12px;padding:3px 9px;border-radius:999px;background:rgba(20,20,20,.78);color:#fff;font-family:"DM Mono",ui-monospace,monospace;font-size:.75rem}
+.pd-video{position:relative}
+.pd-video-son{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border:0;border-radius:999px;background:var(--accent-bg);color:var(--accent-ink);font:inherit;font-size:.875rem;font-weight:600;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.pd-video-son:hover{background:var(--accent-bg-h)}
+.pd-video-son:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.pd-video-son[hidden]{display:none}
+.pd-video-son svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .pd-video-s{font-size:.8125rem;color:var(--muted);margin-top:-6px}
 @media (max-width:700px){.pd-desc{display:none}.pd-fecha{flex-wrap:nowrap}.pd-video{margin-top:22px;border-radius:12px}.pd-video-i{width:56px;height:56px}}
 @media (prefers-reduced-motion:reduce){.pd-video-i{transition:none}}
