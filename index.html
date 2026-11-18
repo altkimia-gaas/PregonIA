@@ -6624,6 +6624,7 @@ async function salir(){
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-act]"); if (!b) return; const a = b.dataset.act;
   if (a === "login") abrirLogin();
+  if (a === "prueba-salir") { b.disabled = true; b.textContent = "Cerrando sesión…"; salirAPrueba(); return; }
   if (a === "dlg-close") cerrarDialogo();
   if (a === "olvide") olvide();
   if (a === "cuenta") menuCuenta(b);
@@ -6661,7 +6662,24 @@ setInterval(() => { if (PILOTO.activo && (document.visibilityState === "visible"
   const resto = location.search.slice(1).split("&").filter(x => x && !/^prueba(=|$)/.test(x)).join("&");
   history.replaceState(null, "", location.pathname + (resto ? "?" + resto : "") + location.hash);
   if (!PILOTO.activo) avisoLegal().then(ok => { if (ok) entAbrir(true); });
+  else pruebaConSesion();  // con sesión de cliente abierta: antes el enlace se ignoraba y llevaba a su edición sin explicar nada
 });
+/* «Prueba gratis» con una sesión de cliente abierta en este navegador: la prueba corre fuera de esa sesión, así que se ofrece
+   cerrarla y abrir la prueba, o seguir en la edición. Para mostrar la demo sin cerrar la sesión, conviene una ventana de incógnito. */
+function pruebaConSesion(){
+  const inst = (PILOTO.muni && PILOTO.muni.nombre) || "tu institución";
+  dialogo("prs", "Tienes una sesión de cliente abierta", `Estás dentro de la edición de ${esc(inst)}. La prueba gratis se abre fuera de esa sesión.`, `
+    <div class="cap-f">
+      <p class="hint" style="margin:0">Para mostrar la prueba sin cerrar tu sesión, ábrela en una ventana de incógnito.</p>
+      <div class="cap-acts"><button class="btn alt" type="button" data-act="prueba-salir">Cerrar sesión y abrir la prueba</button><button class="btn" type="button" data-act="dlg-close">Seguir en mi edición</button></div>
+    </div>`);
+}
+async function salirAPrueba(){
+  if (typeof avisosAlSalir === "function") await avisosAlSalir();
+  try { await PILOTO.sb.auth.signOut(); } catch(e) {}
+  try { localStorage.removeItem(KEY); localStorage.setItem(MODO_KEY, "demo"); } catch(e) {}
+  location.href = "/?prueba";
+}
 
 
 /* Video resumen del parte del alcalde.
