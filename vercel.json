@@ -30,16 +30,6 @@
   },
   "rewrites": [
     {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.pregonia.cl"
-        }
-      ],
-      "destination": "/servicio.html"
-    },
-    {
       "source": "/compartir",
       "destination": "/api/compartir"
     },
