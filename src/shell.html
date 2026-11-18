@@ -1801,7 +1801,7 @@ a.pd-go{text-decoration:none}
 .pd-video-son[hidden]{display:none}
 .pd-video-son svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .pd-video-s{font-size:.8125rem;color:var(--muted);margin-top:-6px}
-@media (max-width:700px){.pd-desc{display:none}.pd-fecha{flex-wrap:nowrap}.pd-video{margin-top:22px;border-radius:12px}.pd-video-i{width:56px;height:56px}}
+@media (max-width:700px){.pd-desc{display:none}.pd-fecha{flex-wrap:wrap;justify-content:center;row-gap:8px}.pd-fecha > span:first-child{flex-basis:100%;text-align:center}.pd-der{gap:8px;flex-wrap:wrap;justify-content:center}.pd-acceso{min-height:34px;padding:0 12px;font-size:.78rem}.pd-video{margin-top:22px;border-radius:12px}.pd-video-i{width:56px;height:56px}}
 @media (prefers-reduced-motion:reduce){.pd-video-i{transition:none}}
 /* Portada: «Acceso clientes» arriba; abajo la prueba gratis (principal) y agendar demostración. Con sesión queda una sola: su edición. */
 .pd-acts{margin-top:26px;display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
@@ -1909,7 +1909,7 @@ details.corr summary{cursor:pointer;font-size:13px;color:var(--muted)}
 <section class="portada" id="portada" aria-labelledby="ptT" hidden>
   <div class="pd">
     <header class="pd-cab">
-      <div class="pd-fecha"><span id="ptFecha">Edición digital</span><nav class="pd-der" aria-label="Acceso"><span class="pd-desc">Monitoreo de prensa para instituciones públicas</span><button class="pd-acceso" id="ptIn" type="button" data-act="login" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>Acceso clientes</button><button class="pd-acceso" id="ptOut" type="button" data-act="salir" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button></nav></div>
+      <div class="pd-fecha"><span id="ptFecha">Edición digital</span><nav class="pd-der" aria-label="Acceso"><span class="pd-desc">Monitoreo de prensa para instituciones públicas</span><a class="pd-acceso" id="ptMesa" href="/redaccion"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16v4M13.5 6.5l4 4"/></svg>Mesa de redacción</a><button class="pd-acceso" id="ptIn" type="button" data-act="login" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>Acceso clientes</button><button class="pd-acceso" id="ptOut" type="button" data-act="salir" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button></nav></div>
       <p class="pd-nombre" id="ptT">Pregon<b>IA</b></p>
       <p class="pd-lema">La prensa no espera. Tú tampoco.</p>
     </header>
