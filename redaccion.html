@@ -927,17 +927,24 @@ async function iniciar(){
   pantallaError("Redacción no está disponible en este sitio.");
 }
 function pantallaError(msg){ $("#rdMain").innerHTML = `<div class="acceso"><h2>Redacción</h2><p class="lead">${esc(msg)}</p><a class="btn" href="/">Volver a PregonIA</a></div>`; }
+/* Claves guardadas en el dispositivo. Los formularios llevan name y autocomplete para que el administrador de contraseñas
+   del teléfono o del navegador (Google, iCloud, Samsung, Microsoft) ofrezca guardarla y la complete sola la próxima vez;
+   en Chrome, Edge y Android además se guarda y se completa con la Credential Management API.
+   PregonIA nunca guarda la contraseña: queda solo en el llavero del dispositivo de la persona. */
+async function claveGuardar(correo, clave, nombre){ try { if (window.PasswordCredential && navigator.credentials && correo && clave) await navigator.credentials.store(new PasswordCredential({id: correo, password: clave, name: nombre || correo})); } catch(e) {} }
+async function claveRecordada(){ try { if (!window.PasswordCredential || !navigator.credentials) return null; const c = await navigator.credentials.get({password: true, mediation: "optional"}); return c && c.type === "password" && c.password ? c : null; } catch(e) { return null; } }
 function pantallaAcceso(err){
   $("#rdTabs").hidden = true; pintarHerramientas();
-  $("#rdMain").innerHTML = `<form class="acceso" id="rdLogin" novalidate>
+  $("#rdMain").innerHTML = `<form class="acceso" id="rdLogin" method="post" action="/redaccion" autocomplete="on" novalidate>
     <h2>Redacción de PregonIA</h2><p class="lead">Espacio privado del editor de las cuentas de El Pregonero en Facebook e Instagram.</p>
-    <label class="campo">Correo<input class="inp" id="rdCorreo" type="email" autocomplete="username" required></label>
-    <label class="campo">Contraseña<input class="inp" id="rdClave" type="password" autocomplete="current-password" required></label>
+    <label class="campo">Correo<input class="inp" id="rdCorreo" name="username" type="email" autocomplete="username" autocapitalize="off" spellcheck="false" required></label>
+    <label class="campo">Contraseña<input class="inp" id="rdClave" name="password" type="password" autocomplete="current-password" required></label>
     <p class="err" id="rdErr" role="alert" ${err ? "" : "hidden"}>${esc(err || "")}</p>
     <div class="acciones"><button class="btn pri" type="submit" id="rdEntrar">Ingresar</button><a class="btn ghost" href="/">Volver a PregonIA</a></div>
     ${RD_LOCAL ? `<p class="info" style="margin-top:14px">En este computador también puedes <button class="btn sm" type="button" data-act="prueba">probar con datos ficticios</button></p>` : ""}
   </form>`;
   $("#rdCorreo").focus();
+  claveRecordada().then(c => { const a = $("#rdCorreo"), b = $("#rdClave"); if (!c || !a || a.value || b.value) return; a.value = c.id; b.value = c.password; $("#rdEntrar")?.focus(); });
 }
 async function ingresar(e){
   e.preventDefault();
@@ -946,6 +953,7 @@ async function ingresar(e){
   b.disabled = true; b.textContent = "Ingresando…";
   const {data, error} = await RD.sb.auth.signInWithPassword({email: correo, password: clave});
   if (error) return pantallaAcceso(/invalid/i.test(error.message) ? "Correo o contraseña incorrectos." : "No se pudo ingresar: " + error.message);
+  claveGuardar(correo, clave);
   entrarEditor(data.user);
 }
 async function entrarEditor(user){
@@ -1742,7 +1750,7 @@ iniciar();
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "9ef180c434e2", K = "redaccion";
+  const V = "ffeb6de8b7ad", K = "redaccion";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;

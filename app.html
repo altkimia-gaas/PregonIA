@@ -5537,7 +5537,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingr
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "8aa9f31c6737", K = "app";
+  const V = "f4275086a0ad", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
@@ -6458,24 +6458,37 @@ function dialogo(id, titulo, sub, cuerpo){
   const f = ov.querySelector("input, button.btn:not(.ghost)"); if (f) f.focus();
 }
 function cerrarDialogo(){ const o = $("#dlgBack"); if (!o) return; if (aceptacion.pend) { const r = aceptacion.pend; aceptacion.pend = null; r(false); } if (avisoLegal.pend) { const r = avisoLegal.pend; avisoLegal.pend = null; r(false); } o.remove(); document.body.classList.remove("vid-on"); if (dialogo.origen && dialogo.origen.isConnected) dialogo.origen.focus(); }
+/* Claves guardadas en el dispositivo. Los formularios llevan name y autocomplete para que el administrador de contraseñas
+   del teléfono o del navegador (Google, iCloud, Samsung, Microsoft) ofrezca guardarla y la complete sola la próxima vez;
+   en Chrome, Edge y Android además se guarda y se completa con la Credential Management API.
+   PregonIA nunca guarda la contraseña: queda solo en el llavero del dispositivo de la persona. */
+async function claveGuardar(correo, clave, nombre){ try { if (window.PasswordCredential && navigator.credentials && correo && clave) await navigator.credentials.store(new PasswordCredential({id: correo, password: clave, name: nombre || correo})); } catch(e) {} }
+async function claveRecordada(){ try { if (!window.PasswordCredential || !navigator.credentials) return null; const c = await navigator.credentials.get({password: true, mediation: "optional"}); return c && c.type === "password" && c.password ? c : null; } catch(e) { return null; } }
 function abrirLogin(){
   dialogo("login", "Ingresar a PregonIA", "Para los equipos de municipios y autoridades clientes. Si aún no tienes cuenta, pide una invitación a ALTKimia.", `
-    <form class="cap-f" id="loginForm" novalidate>
-      <label class="cap-l">Correo<input id="lgCorreo" type="email" autocomplete="username" inputmode="email" required></label>
-      <label class="cap-l">Contraseña<input id="lgClave" type="password" autocomplete="current-password" required></label>
+    <form class="cap-f" id="loginForm" method="post" action="/" autocomplete="on" novalidate>
+      <label class="cap-l">Correo<input id="lgCorreo" name="username" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" required></label>
+      <label class="cap-l">Contraseña<input id="lgClave" name="password" type="password" autocomplete="current-password" required></label>
       <p class="cap-err" id="lgErr" role="alert" hidden></p>
       <p class="hint" style="margin:0">El uso del servicio se rige por los <a href="/legal.html#terminos" target="_blank" rel="noopener">Términos de uso</a> y la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a>.</p>
       <div class="cap-acts"><button class="btn alt" type="submit" id="lgOk">Ingresar</button><button class="btn" type="button" data-act="dlg-close">Cancelar</button><button class="btn ghost" type="button" data-act="olvide">Olvidé mi contraseña</button></div>
+      <p class="hint" style="margin:0">Cuando el teléfono o el navegador ofrezcan guardar la contraseña, acepta: la próxima vez se completa sola.</p>
     </form>`);
+  // Si el dispositivo ya tiene la clave guardada (Chrome, Edge, Android), se completa sola.
+  claveRecordada().then(c => { const a = $("#lgCorreo"), b = $("#lgClave"); if (!c || !a || a.value || b.value) return; a.value = c.id; b.value = c.password; $("#lgOk")?.focus(); });
 }
 function pedirClave(tipo){
   dialogo("clave", tipo === "invite" ? "Crea tu contraseña" : "Nueva contraseña", "Mínimo 10 caracteres. Úsala junto a tu correo para ingresar desde cualquier equipo.", `
-    <form class="cap-f" id="claveForm" novalidate>
-      <label class="cap-l">Contraseña<input id="ckA" type="password" autocomplete="new-password" minlength="10" required></label>
-      <label class="cap-l">Repítela<input id="ckB" type="password" autocomplete="new-password" minlength="10" required></label>
+    <form class="cap-f" id="claveForm" method="post" action="/" autocomplete="on" novalidate>
+      <label class="cap-l">Correo<input id="ckU" name="username" type="email" autocomplete="username" readonly></label>
+      <label class="cap-l">Contraseña<input id="ckA" name="new-password" type="password" autocomplete="new-password" minlength="10" required></label>
+      <label class="cap-l">Repítela<input id="ckB" name="confirm-password" type="password" autocomplete="new-password" minlength="10" required></label>
       <p class="cap-err" id="ckErr" role="alert" hidden></p>
       <div class="cap-acts"><button class="btn alt" type="submit">Guardar contraseña</button></div>
     </form>`);
+  $("#ckA").focus();
+  // El correo va en el formulario (solo lectura) para que el llavero guarde la clave junto a la cuenta correcta.
+  Promise.resolve().then(() => PILOTO.sb.auth.getSession()).then(({data}) => { const u = $("#ckU"), e = data && data.session && data.session.user.email; if (u && e) u.value = e; else if (u) u.closest("label").hidden = true; }).catch(() => {});
 }
 function errorEn(id, msg, foco){ const e = $(id); e.textContent = msg; e.hidden = false; if (foco) $(foco).focus(); }
 async function ingresar(e){
@@ -6486,6 +6499,7 @@ async function ingresar(e){
   ok.disabled = true; ok.textContent = "Ingresando…";
   const {data, error} = await PILOTO.sb.auth.signInWithPassword({email: correo, password: clave});
   if (error) { ok.disabled = false; ok.textContent = "Ingresar"; return errorEn("#lgErr", /invalid/i.test(error.message) ? "Correo o contraseña incorrectos." : "No se pudo ingresar: " + error.message, "#lgClave"); }
+  claveGuardar(correo, clave, data.user.user_metadata && data.user.user_metadata.full_name);
   cerrarDialogo(); await entrarPiloto(data.user, true);
 }
 async function guardarClave(e){
@@ -6495,7 +6509,8 @@ async function guardarClave(e){
   if (a !== b) return errorEn("#ckErr", "Las contraseñas no coinciden.", "#ckB");
   const {error} = await PILOTO.sb.auth.updateUser({password: a});
   if (error) return errorEn("#ckErr", "No se pudo guardar: " + error.message);
-  cerrarDialogo(); toast("Contraseña guardada.");
+  claveGuardar(($("#ckU") && $("#ckU").value) || (PILOTO.user && PILOTO.user.email), a);
+  cerrarDialogo(); toast("Contraseña guardada. Si el dispositivo ofrece recordarla, acepta.");
 }
 async function olvide(){
   const correo = ($("#lgCorreo") && $("#lgCorreo").value.trim()) || "";
