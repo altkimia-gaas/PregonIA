@@ -1923,6 +1923,58 @@ details.corr summary{cursor:pointer;font-size:13px;color:var(--muted)}
 .cors li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;border-bottom:1px solid var(--line);padding-bottom:8px}
 .cors li span{grid-column:1;color:var(--muted);font-size:13px}
 .cors li button{grid-row:1/3;grid-column:2;align-self:center}
+/* Informe ejecutivo: tres horizontes comparados, pulso, qué cambió, emergencias y oportunidades. */
+.parte.ej{max-width:1040px}
+.ej-sint p{margin:6px 0 12px;font-family:var(--f-news);font-size:clamp(1.125rem,2.2vw,1.375rem);line-height:1.4;font-weight:600;border-left:4px solid var(--rule,var(--ink));padding-left:12px}
+.ej-sint .kick{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)}
+.ej-chips{display:flex;flex-wrap:wrap;gap:8px}
+.ej-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid var(--line);border-radius:999px;font-size:13.5px;color:var(--muted)}
+.ej-chip b{font-family:var(--f-news);font-size:18px;color:var(--ink)}
+.ej-chip .ico{width:16px;height:16px}
+.ej-chip.cri{border-color:var(--cri);color:var(--cri-ink)}.ej-chip.cri b{color:var(--cri-ink)}
+.ej-chip.pos{border-color:var(--pos);color:var(--pos-ink)}.ej-chip.pos b{color:var(--pos-ink)}
+.ej-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.ej-col{padding:4px 18px 4px;border-left:1px solid var(--line);display:grid;gap:8px;align-content:start;min-width:0}
+.ej-col:first-child{border-left:0;padding-left:0}.ej-col:last-child{padding-right:0}
+.ej-k{margin:0;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.ej-vol{margin:0;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px}
+.ej-vol b{font-family:var(--f-news);font-size:44px;line-height:1;font-weight:700}
+.ej-vol span{font-size:13px;color:var(--muted)}
+.ej-dl{display:inline-flex;align-items:center;gap:2px;font-family:var(--f-mono);font-size:12.5px;color:var(--muted)}
+.ej-dl .ico{width:14px;height:14px}.ej-dl.up,.ej-dl.down{color:var(--ink)}
+.ej-ver{margin:0;font-family:var(--f-news);font-weight:700;font-size:22px;line-height:1.15}
+.ej-ver.pos{color:var(--pos-ink)}.ej-ver.cri{color:var(--cri-ink)}.ej-ver.neu{color:var(--neu-ink)}
+.ej-cnt{margin:0;font-size:12.5px;color:var(--muted)}
+.ej-bal{width:100%;max-width:260px;height:auto;display:block;margin-top:4px}
+.ej-bt{margin:4px 0 0;font-size:12px;font-weight:600;color:var(--muted)}
+.ej-bal .ej-ax,.ej-bal .ej-sd{font-size:10px;fill:var(--muted);font-family:var(--f-ui)}
+.ej-bal .ej-nv{font-size:11px;font-weight:700;fill:var(--ink);font-family:var(--f-mono)}
+.ej-bal-l{display:flex;gap:12px;font-size:11.5px;color:var(--muted)}
+.ej-bal-l i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.ej-bal-l i.ahora{background:var(--ink)}.ej-bal-l i.antes{background:var(--track)}
+.ej-dat{margin:4px 0 0;display:grid;gap:4px}
+.ej-dat div{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;border-top:1px solid var(--line);padding-top:4px}
+.ej-dat dt{color:var(--muted)}.ej-dat dd{margin:0}.ej-dat dd.c{color:var(--cri-ink)}
+.ej-ley{margin:8px 0 0;display:flex;gap:14px;font-size:12px;color:var(--muted)}
+.ej-ley i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.ej-eo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.ej-sub{margin:0 0 10px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.ej-sub .ico{width:16px;height:16px}.ej-sub.cri{color:var(--cri-ink)}.ej-sub.pos{color:var(--pos-ink)}
+.ej-cam{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.ej-cam li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 10px;padding:8px 0;border-top:1px solid var(--line)}
+.ej-cam li span{font-weight:600}.ej-cam li b{font-size:18px;grid-row:span 2;align-self:center}.ej-cam b.c{color:var(--cri-ink)}.ej-cam b.p{color:var(--pos-ink)}
+.ej-cam li small{color:var(--muted);font-size:12px}
+.ej-h{display:grid;gap:12px}
+.parte .ej-hh{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 12px;border-bottom:3px solid var(--rule,var(--ink));padding-bottom:6px}
+.parte .ej-hh h4,:root[data-theme="editorial"] .parte .ej-hh h4{margin:0;font-family:var(--f-news);font-size:22px;font-weight:700;text-transform:none;letter-spacing:-.01em;color:var(--ink)}
+.ej-hh span{font-size:13px;color:var(--muted)}
+.ej-h .empty{margin:0;font-size:13.5px;color:var(--muted)}
+@media (max-width:760px){
+  .ej-cols{grid-template-columns:minmax(0,1fr)}
+  .ej-col,.ej-col:first-child{border-left:0;padding:14px 0;border-top:1px solid var(--line)}
+  .ej-col:first-child{border-top:0;padding-top:0}
+  .ej-eo{grid-template-columns:minmax(0,1fr)}
+}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="pat-pos" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" style="fill:var(--pos)"/></pattern></defs></svg>
@@ -3739,7 +3791,7 @@ function veredicto(M){ if (!M.vol) return {n:"Sin noticias", f:"no hubo noticias
 const conteo = M => `${plural(M.pos,"positiva","positivas")} · ${plural(M.neu,"neutra","neutras")} · ${plural(M.cri,"crítica","críticas")}`;
 
 const PER_OPS = [["1", "24 horas"], ["7", "Semana"], ["30", "30 días"]];
-const perAplica = () => !isConfig(route());
+const perAplica = () => !isConfig(route()) && !(route() === "reportes" && tState.rep === "ejecutivo");  // el informe ejecutivo trae los tres períodos
 function perNota(){
   if (route() !== "reportes" || tState.rep === "gestion") return "";
   const f = {diario: "diario", mesa: "diario", crisis: "últimos 7 días", calendario: "próximos 12 meses"}[tState.rep];
@@ -4290,6 +4342,7 @@ function chartDias(ms, n = 30){
 /* Informes por lector. El nivel del medio (comunal, regional, nacional) no es un informe:
    es un dato de cada asunto, "hasta dónde llegó". */
 const REPS = [
+  ["ejecutivo","Informe ejecutivo",{para:"Alcalde y equipo directivo", cuando:"Cada mañana, o antes de una reunión o vocería", lectura:"1 minuto, en el celular", responde:"¿Cómo voy hoy, esta semana y este mes, qué emergencia atiendo y qué oportunidad aprovecho?"}],
   ["alcalde","Parte del alcalde",{para:"Alcalde", cuando:"Lunes, 8:00 · semanal", lectura:"2 minutos, en el celular", responde:"¿Cómo me trató la prensa, qué se puede complicar y qué hago?"}],
   ["diario","Informe diario",{para:"Alcalde, equipo directivo y comunicaciones", cuando:"Todos los días, 8:00", lectura:"3 minutos los indicadores; el clipping, como respaldo", responde:"¿Qué se publicó sobre la comuna, con qué tono y dónde está cada nota?"}],
   ["mesa","Mesa de comunicaciones",{para:"Encargado(a) de comunicaciones", cuando:"Todos los días, 8:30", lectura:"10 a 15 minutos", responde:"¿Qué respondo hoy, qué está escalando y qué difundo?"}],
@@ -4299,16 +4352,17 @@ const REPS = [
 ];
 function vReportes(){
   if (!REPS.some(r => r[0] === tState.rep)) tState.rep = "alcalde";
+  if (esAut() && !tState.repElegido) tState.rep = "ejecutivo";  // la autoridad parte por su informe ejecutivo
   const cur = REPS.find(r => r[0] === tState.rep), p = repMeta(cur[0], cur[2]);
   return `<div class="head"><div><h2 tabindex="-1">Reportes</h2><p>Un informe por lector. Cada uno responde una sola pregunta, con el nivel de detalle que esa persona necesita.</p></div></div>
   <div class="tabs" role="tablist">${REPS.map(([k,n]) => `<button role="tab" aria-selected="${tState.rep===k}" data-act="rep" data-k="${k}">${esAut() && k === "alcalde" ? "Parte semanal" : k === "alcalde" && cuenta().perfil.g === "F" && cuenta().perfil.autoridad ? "Parte de la alcaldesa" : n}</button>`).join("")}</div>
   <dl class="para"><div><dt>Para</dt><dd>${p.para}</dd></div><div><dt>Cuándo</dt><dd>${p.cuando}</dd></div><div><dt>Lectura</dt><dd>${p.lectura}</dd></div><div class="q"><dt>Responde</dt><dd>${p.responde}</dd></div></dl>
-  ${({alcalde:repAlcalde, diario:repDiario, mesa:repMesa, gestion:repGestion, crisis:repCrisis, calendario:repCalendario})[tState.rep]()}`;
+  ${({ejecutivo:repEjecutivo, alcalde:repAlcalde, diario:repDiario, mesa:repMesa, gestion:repGestion, crisis:repCrisis, calendario:repCalendario})[tState.rep]()}`;
 }
 /* Para una autoridad, los lectores de cada informe son la autoridad y su equipo, no el alcalde. */
 function repMeta(k, p){
   if (!esAut()) return p;
-  const c = cargoCuenta(), m = {alcalde: {para: c}, diario: {para: c + " y su equipo de prensa"}, mesa: {para: "Jefatura de prensa", responde: "¿Qué respondo hoy, qué está escalando y qué difundo?"}, gestion: {para: c + " y su equipo", responde: "¿Cómo se percibe su trabajo, por tema, y cómo está frente a sus pares?"}, crisis: {para: c + " y jefatura de prensa"}, calendario: {para: c + " y su equipo"}}[k] || {};
+  const c = cargoCuenta(), m = {ejecutivo: {para: c + " y su equipo"}, alcalde: {para: c}, diario: {para: c + " y su equipo de prensa"}, mesa: {para: "Jefatura de prensa", responde: "¿Qué respondo hoy, qué está escalando y qué difundo?"}, gestion: {para: c + " y su equipo", responde: "¿Cómo se percibe su trabajo, por tema, y cómo está frente a sus pares?"}, crisis: {para: c + " y jefatura de prensa"}, calendario: {para: c + " y su equipo"}}[k] || {};
   return {...p, ...m, responde: (m.responde || p.responde).replace("¿Cómo me trató la prensa", "¿Cómo le trató la prensa")};
 }
 const muestra = n => n < 20 ? `<p class="note" style="margin-top:14px">Muestra pequeña (${plural(n,"noticia","noticias")}): las proporciones pueden cambiar mucho con pocas notas nuevas.</p>` : "";
@@ -4688,6 +4742,7 @@ function shareDoc(src, i){
   }
   if (src === "vocero") return vocDoc();
   if (src === "diario") { const t = diarioTexto(), d = diarioData(); return {titulo: "Informe diario de prensa", sub: d.etiqueta, sinFecha: true, tipo: "diario", texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
+  if (src === "ejec") { const t = ejecTexto(); return {titulo: "Informe ejecutivo · " + inst(), sub: fechaLarga(NOW), sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "parte") { const t = parteTexto(); return {titulo: esAut() ? partePer().rotulo + " · " + inst() : partePer().rotulo + " del alcalde", sub: "Período: " + parteData().per, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "aprob") { const x = S.comunicados.filter(y => y.org === S.org)[i]; return x && x.texto ? {titulo: x.pieza, sub: "Responde a: " + x.origen + " · aprobado el " + fecha(x.ts), texto: x.texto, cuerpo: x.texto} : null; }
   return null;
@@ -4891,6 +4946,7 @@ async function compartir(b){
   const aviso = d.borrador && /\[completar/i.test(d.texto) ? " Ojo: aún hay partes marcadas [completar]." : "";
   const asunto = d.titulo + " · " + inst(), cuerpo = plano(d.texto);
   if (via === "wa") {
+    if (b.dataset.src === "ejec") return ejecWhatsApp();  // el informe ejecutivo va por WhatsApp como imagen
     if (await compartirArchivo(d, "WhatsApp")) return;
     // Computador: WhatsApp Web no recibe archivos por enlace. Se abre el chat y se guarda el PDF para adjuntarlo.
     abrirEnlace("https://wa.me/?text=" + encodeURIComponent(`*${asunto}*\nTe envío el documento en PDF.`), true);
@@ -5011,7 +5067,7 @@ document.addEventListener("click", async e => {
   if (act === "addsug") { const i = c.sugeridos.findIndex(t => t.id === b.dataset.id); if (i >= 0) { const t = c.sugeridos.splice(i,1)[0], pl = PLANES[c.perfil.plan], lleno = c.temas.filter(x => x.activo).length >= pl.temas; if (lleno) t.origen = "Paquete adicional"; c.temas.push(t); save(); render(); toast(lleno ? `${t.nombre} agregado. Supera el plan: en producción se suma el paquete de 5 temas.` : `${t.nombre} agregado.`, () => { c.temas.splice(c.temas.indexOf(t),1); c.sugeridos.splice(i,0,t); save(); render(); }); } }
   if (act === "activar" && propuesta) { const prev = {perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos}; c.perfil = propuesta.perfil; c.temas = propuesta.base; c.sugeridos = propuesta.sugeridos; c.caracterizada = true; propuesta = null; save(); location.hash = "temas"; toast("Listo: " + c.temas.length + " temas activos en " + S.org + ".", () => { Object.assign(c, prev); save(); render(); }); }
   if (act === "descartar") { propuesta = null; $("#propOut").innerHTML = ""; }
-  if (act === "rep") { tState.rep = b.dataset.k; render(); }
+  if (act === "rep") { tState.rep = b.dataset.k; tState.repElegido = true; render(); }
   if (act === "dia") { tState.dia = b.dataset.k; render(); }
   if (act === "copiar-parte") { const txt = parteTexto(); try { await navigator.clipboard.writeText(txt); toast("Parte copiado. Pégalo en WhatsApp o en un correo."); } catch(err) { const ta = document.createElement("textarea"); ta.value = txt; ta.className = "draft"; ta.style.marginTop = "12px"; b.closest(".acts").after(ta); ta.focus(); ta.select(); toast("Texto seleccionado: cópialo con el teclado."); } }
   if (act === "share") compartir(b);
@@ -5482,7 +5538,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingr
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "177049b3948d", K = "app";
+  const V = "dc270b5bcc16", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
@@ -6389,7 +6445,7 @@ function pintarAcceso(){
   if (typeof pintarAccesoPortada === "function") pintarAccesoPortada();
 }
 function pintarPiloto(){
-  const el = $("#demo"), p = PILOTO, l = p.lectura, n = NOTAS.length;
+  const el = $("#demo"), p = PILOTO, l = p.lectura, n = NOTAS.filter(x => NOW - x.ts < 30 * DAY).length;
   el.className = "demo real";
   el.innerHTML = `<span class="demo-txt"><b>Piloto</b>${esc(p.muni.nombre)}<span class="demo-mas"> · ${MODO.cargando ? "preparando tu edición…" : plural(n, "nota", "notas") + " en 30 días"}${MODO.cargando ? "" : l ? ` · última lectura de medios ${horaCorta(l.fin)} (${l.fuentes_ok} de ${l.fuentes_total} fuentes)` : " · aún sin lecturas de medios"}${p.estado ? " · " + p.estado : ""}</span></span>${p.editor ? "" : `<span class="solo-lect">Solo lectura</span>`}`;
 }
@@ -6557,7 +6613,7 @@ const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos
   correcciones: c.correcciones || {}, compArea: c.compArea || {}, plazos: c.plazos || {}, fv: c.fv || 0});  // ficha editorial: correcciones, competencias y plazos de la cuenta
 async function cargarDatosPiloto(){
   if (PILOTO.timer) await sincronizarYa();  // un cambio a medio guardar se envía antes de releer la base
-  const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 32 * DAY).toISOString();
+  const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 62 * DAY).toISOString();  // 30 días y los 30 anteriores, para comparar (informe ejecutivo)
   const pide = q => q.then(r => { if (r.error) throw new Error(r.error.message); return r.data; });
   const menQ = cols => sb.from("menciones").select(cols + ", notas!inner(id, medio_id, url, titulo, publicado)").eq("municipio_id", mid).eq("rel", true).gte("notas.publicado", desde).limit(5000);
   const [men, mar, com, cap, lec, mun] = await Promise.all([
@@ -6807,7 +6863,7 @@ function guionBase(plan){
 async function guionIA(plan, base, signal){
   const sample = await samplePromise; if (!sample) return null;
   const n = base.length, lista = plan.scenes.map((s, i) => `${i + 1}. [${VNOMBRE[s.k]}${s.k === "asunto" ? " " + (s.i + 1) : ""}, máximo ${VPAL[s.k]} palabras] ${base[i]}`).join("\n");
-  const p = `Eres guionista de PregonIA. Reescribe, para que lo lea en voz alta un locutor, el guion de un video interno de alrededor de un minuto para el alcalde de ${plan.org} y su equipo directivo. Escribe en español de Chile.
+  const p = `Eres guionista de PregonIA. Reescribe, para que lo lea en voz alta un locutor, el guion de un video interno de alrededor de un minuto para ${esAut() ? plan.inst + " y su equipo" : "el alcalde de " + plan.org + " y su equipo directivo"}. Escribe en español de Chile.
 
 Reglas obligatorias:
 1. Conserva exactamente los hechos, cifras, nombres de temas y medios, niveles de difusión, recomendaciones y responsables del texto base. No agregues datos, opiniones, adjetivos sobre autoridades ni frases de promoción personal o partidaria.
@@ -6828,11 +6884,18 @@ async function vozDisponible(){
   if (!/^https?:$/.test(location.protocol)) return "sin-servidor";
   try { const r = await fetch("/api/voz", {cache: "no-store"}); if (!r.ok) return "sin-servidor"; const j = await r.json(); return j.ok ? "ok" : "sin-clave"; } catch(e) { return "sin-servidor"; }
 }
+/* Caché de la sesión: el mismo texto no se vuelve a grabar ni el mismo guion a escribir al reabrir el video (cuida los créditos de ElevenLabs). */
+const VOZ_CACHE = new Map(), GUION_CACHE = new Map();
 async function vozGrabar(texto, ac, signal){
-  const r = await fetch("/api/voz", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({texto}), signal});
-  if (!r.ok) { let m = ""; try { m = (await r.json()).error; } catch(e) {} throw {code: r.status === 429 ? "rate_limited" : "voz", message: m || "El servicio de voz no respondió"}; }
-  if (r.headers.get("x-voz") === "estandar" && VID) VID.vozEstandar = true;  // la cuenta de ElevenLabs no permite la voz chilena
-  const buf = await r.arrayBuffer();
+  let buf = VOZ_CACHE.get(texto); delete VOZ_CACHE.sinCredito;
+  if (!buf) {
+    const r = await fetch("/api/voz", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({texto}), signal});
+    if (!r.ok) { let m = ""; try { m = (await r.json()).error; } catch(e) {} throw {code: r.status === 429 ? "rate_limited" : "voz", message: m || "El servicio de voz no respondió"}; }
+    if (r.headers.get("x-voz") === "estandar") VOZ_CACHE.estandar = true;  // la cuenta de ElevenLabs no permite la voz chilena
+    buf = await r.arrayBuffer(); if (VOZ_CACHE.size > 60) VOZ_CACHE.clear(); VOZ_CACHE.set(texto, buf);
+  }
+  if (VOZ_CACHE.estandar && VID) VID.vozEstandar = true;
+  buf = buf.slice(0);  // decodeAudioData consume el buffer: se decodifica una copia
   return await new Promise((ok, no) => { const p = ac.decodeAudioData(buf, ok, no); if (p && p.then) p.then(ok, no); });
 }
 async function vozMezcla(plan){
@@ -7075,7 +7138,7 @@ function videoAbrir(){
         <p class="vid-meta">${Math.round(plan.total)} segundos · vertical, para ver en el celular · ${plan.scenes.length} escenas con las noticias ${esc(plan.P.de)}: tono, hasta dónde llegaron, respuestas y temas.</p>
         <div class="vid-ctrl"><button class="btn" type="button" data-act="vid-play" id="vidPlay">Pausa</button><button class="btn" type="button" data-act="vid-replay">Desde el inicio</button></div>
         <div class="vid-voz" id="vozBox"><div class="vid-voz-h"><b>Voz</b><span id="vozEstado">Revisando…</span></div>
-          <button class="btn" type="button" data-act="voz-add" id="vozAdd" disabled><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Agregar voz</button>
+          <button class="btn" type="button" data-act="voz-add" id="vozAdd" disabled><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Escribir y grabar de nuevo</button>
           <details id="vozGuion" hidden><summary>Ver y editar el guion</summary><div class="vid-lineas" id="vozLineas"></div><button class="btn sm" type="button" data-act="voz-regrabar">Grabar de nuevo con este guion</button></details>
         </div>
         <button class="btn alt" type="button" data-act="vid-make" id="vidMake">Preparar video MP4</button>
@@ -7086,10 +7149,14 @@ function videoAbrir(){
     </div></section>`;
   document.body.appendChild(ov); document.body.classList.add("vid-on");
   const cv = $("#vidCv"), ctx = cv.getContext("2d"), quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  VID = {plan, ctx, t: quieto ? 2 : 0, play: !quieto, last: null, raf: 0, blob: null, ctl: null, origen: document.activeElement, ac: null, src: null, a0: 0};
-  vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const b = $("#vozAdd"), st = $("#vozEstado");
-    if (e === "ok") { b.disabled = false; st.textContent = "Sin voz · voz chilena con ElevenLabs"; }
-    else st.textContent = e === "sin-clave" ? "Falta configurar la clave de ElevenLabs en Vercel" : "Disponible en pregonia.cl"; });
+  // El audio se habilita aquí, dentro del toque que abrió el video: así la voz puede sonar sola cuando llegue.
+  let ac0 = null; try { ac0 = new (window.AudioContext || window.webkitAudioContext)(); ac0.resume().catch(() => {}); } catch(e) {}
+  VID = {plan, ctx, t: quieto ? 2 : 0, play: !quieto, last: null, raf: 0, blob: null, ctl: null, origen: document.activeElement, ac: ac0, src: null, a0: 0};
+  // La voz se genera sola al abrir: guion con los datos del período y narración con ElevenLabs. Si falla, el video sigue sin voz.
+  vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const st = $("#vozEstado");
+    if (e === "ok" && VOZ_CACHE.sinCredito) { st.textContent = `Sin voz · ${VOZ_CACHE.sinCredito}. El video funciona igual, sin narración.`; const b = $("#vozAdd"); b.disabled = false; b.lastChild.textContent = "Intentar la voz de nuevo"; }
+    else if (e === "ok") VID.vozPromesa = vozAgregar(false).finally(() => { if (VID) VID.vozPromesa = null; });
+    else st.textContent = e === "sin-clave" ? "Sin voz: falta configurar la clave de ElevenLabs en Vercel" : "Sin voz: la voz se genera en pregonia.cl"; });
   const fuentes = ['400 40px Inter', '500 40px Inter', '600 40px Inter', '700 40px Inter', '500 60px "Source Serif 4"', '600 60px "Source Serif 4"', '700 60px "Source Serif 4"'];
   Promise.all(fuentes.map(f => document.fonts.load(f).catch(() => {})));
   const loop = now => {
@@ -7119,6 +7186,7 @@ async function videoPreparar(){
   const ctl = VID.ctl = new AbortController(), plan = VID.plan;
   const avance = p => { bar.style.width = Math.round(p * 100) + "%"; pct.textContent = Math.round(p * 100) + "%"; };
   try { await Promise.all(['700 80px Inter', '600 60px Newsreader', '500 40px Inter'].map(f => document.fonts.load(f).catch(() => {}))); } catch(e) {}
+  if (VID.vozPromesa) { note.textContent = "Esperando que termine la voz para incluirla en el video…"; await VID.vozPromesa.catch(() => {}); if (!VID) return; }
   let blob = null;
   try {
     plan.audioCodec = undefined; blob = await videoMP4(plan, avance, ctl.signal);
@@ -7154,7 +7222,7 @@ document.addEventListener("click", e => {
   if (a === "vid-close") videoCerrar();
   if (a === "vid-play") vidAlternar();
   if (a === "vid-replay") { VID.t = 0; VID.play = true; VID.last = null; vidEstado(); vozSonar(); }
-  if (a === "voz-add") vozAgregar(false);
+  if (a === "voz-add") { GUION_CACHE.delete(guionBase(VID.plan).join("\u0001")); vozAgregar(false); }  // a mano: guion nuevo
   if (a === "voz-regrabar") vozAgregar(true);
   if (a === "vid-make") videoPreparar();
   if (a === "vid-stop") VID.ctl?.abort();
@@ -7186,19 +7254,22 @@ async function vozAgregar(regrabar){
   let lineas;
   try {
     if (regrabar) lineas = [...document.querySelectorAll("#vozLineas textarea")].map(t => t.value.replace(/\s+/g, " ").trim());
-    else { st.textContent = "Escribiendo el guion…"; const base = guionBase(plan); lineas = (await guionIA(plan, base, ctl.signal)) || base; }
+    else { st.textContent = "Preparando la voz: escribiendo el guion…"; const base = guionBase(plan), kb = base.join("\u0001"); lineas = GUION_CACHE.get(kb) || (await guionIA(plan, base, ctl.signal)) || base; GUION_CACHE.set(kb, lineas); }
     if (lineas.some(x => x.length > 650)) throw {code: "largo"};
     $("#vozLineas").innerHTML = plan.scenes.map((s, i) => `<label><span>${i + 1}. ${VNOMBRE[s.k]}${s.k === "asunto" ? " " + (s.i + 1) : ""}</span><textarea rows="3">${esc(lineas[i])}</textarea></label>`).join("");
     det.hidden = false;
-    let hechas = 0; st.textContent = `Grabando la voz… 0 de ${lineas.length}`;
+    let hechas = 0; st.textContent = `Preparando la voz: grabando 0 de ${lineas.length}…`;
     const voces = new Array(lineas.length); let k = 0;
-    await Promise.all([0, 1, 2].map(async () => { while (k < lineas.length) { const i = k++; voces[i] = lineas[i] ? await vozGrabar(lineas[i], VID.ac, ctl.signal) : null; hechas++; if (VID) st.textContent = `Grabando la voz… ${hechas} de ${lineas.length}`; } }));
+    await Promise.all([0, 1, 2].map(async () => { while (k < lineas.length) { const i = k++; voces[i] = lineas[i] ? await vozGrabar(lineas[i], VID.ac, ctl.signal) : null; hechas++; if (VID) st.textContent = `Preparando la voz: grabando ${hechas} de ${lineas.length}…`; } }));
     if (!VID || ctl.signal.aborted) return;
     plan.scenes.forEach((s, i) => { s.voz = voces[i]; s.texto = lineas[i]; });
     retimar(plan); plan.audio = await vozMezcla(plan);
   } catch(err) {
     if (!VID || (err && err.name === "AbortError") || (err && err.code === "cancelled")) return;
-    btn.disabled = false; st.textContent = err && err.code === "largo" ? "Una escena es demasiado larga: acórtala a unas 90 palabras." : err && err.code === "rate_limited" ? "El servicio de voz está ocupado. Intenta en unos minutos." : (err && err.message) || "No se pudo grabar la voz.";
+    btn.disabled = false; btn.lastChild.textContent = "Intentar la voz de nuevo";
+    const motivo = (err && err.code === "largo" ? "una escena es demasiado larga: acórtala a unas 90 palabras" : err && err.code === "rate_limited" ? "el servicio de voz está ocupado; intenta en unos minutos" : (err && err.message) || "no se pudo grabar la voz").replace(/\.$/, "");
+    if (/créditos/.test(motivo)) VOZ_CACHE.sinCredito = motivo;  // sin saldo: en esta sesión no se vuelve a intentar sola
+    st.textContent = `Sin voz · ${motivo}. El video funciona igual, sin narración.`;
     return;
   }
   VID.blob = null; $("#vidOut").hidden = true; $("#vidMake").textContent = "Preparar video MP4";
@@ -7206,6 +7277,255 @@ async function vozAgregar(regrabar){
   st.textContent = `Voz lista · ${Math.round(plan.total)} segundos${VID.vozEstandar ? " · voz estándar (la chilena requiere un plan pagado de ElevenLabs)" : ""}`; btn.disabled = false; btn.lastChild.textContent = "Escribir y grabar de nuevo";
   VID.t = 0; VID.play = true; VID.last = null; $("#vidPlay").textContent = "Pausa"; vozSonar();
 }
+
+/* Informe ejecutivo: tres horizontes separados (24 horas, 7 días y 30 días), cada uno comparado con el período anterior de igual largo,
+   con foco en emergencias (lo que hay que atender) y oportunidades (lo que conviene difundir).
+   Se lee en un minuto en el celular y se comparte por WhatsApp como imagen vertical con el formato de PregonIA (Edición),
+   dibujada en canvas en el navegador; también como texto y PDF.
+   Cada asunto aparece una sola vez: en el horizonte más corto donde corresponde. Para una autoridad cuenta solo lo que la nombra. */
+const EJ_H = [
+  {dias: 1, n: "24 horas", t: "Últimas 24 horas", ant: "24 h anteriores", tag: "Hoy"},
+  {dias: 7, n: "7 días", t: "Últimos 7 días", ant: "7 días anteriores", tag: "Esta semana"},
+  {dias: 30, n: "30 días", t: "Últimos 30 días", ant: "30 días anteriores", tag: "Este mes"}];
+const EJ_MAX = 3;  // emergencias y oportunidades por horizonte
+
+/* Emergencia: un hecho grave, o una crítica que nadie ha atendido. Oportunidad: una buena noticia que aún no se difunde. */
+const ejEmergencia = m => (m.grave || m.tono === "cri") && !atendida(m.g);
+const ejOportunidad = m => m.tono === "pos" && !respondida(m.g);
+const ejPrioOport = (a, b) => escalera(b.notas).max - escalera(a.notas).max || b.notas.length - a.notas.length || b.last - a.last;
+
+/* Días que cubren los datos cargados: el piloto trae 62; «Noticias reales» lo que lee al vuelo (14); la demostración, su corpus.
+   Un período anterior sin noticias es un dato (cero); uno que los datos no alcanzan a cubrir, no se compara. */
+function ejCobertura(){
+  if (typeof PILOTO !== "undefined" && PILOTO.activo) return 62;
+  if (MODO.tipo === "real" && MODO.info) return MODO.info.ventana_dias || 14;
+  return NOTAS.length ? Math.ceil((NOW - Math.min(...NOTAS.map(n => n.ts))) / DAY) : 0;
+}
+function ejecData(){
+  const c = cuenta(), todas = sobreCuenta(menciones(c, 60), c), mostradas = new Set(), cob = ejCobertura();
+  const hs = EJ_H.map(h => {
+    const cur = todas.filter(m => NOW - m.last < h.dias * DAY), ant = todas.filter(m => NOW - m.last >= h.dias * DAY && NOW - m.last < 2 * h.dias * DAY);
+    const M = metricas(cur), Ma = metricas(ant), v = veredicto(M), va = veredicto(Ma);
+    const niv = [0, 1, 2].map(i => cur.filter(m => escalera(m.notas).max === i).length);
+    const cris = cur.filter(m => exigeRespuesta(m, c)), resp = cris.filter(m => atendida(m.g)).length;
+    // Las de un horizonte más corto ya se mostraron: aquí van las siguientes, para que nada se repita y nada se pierda.
+    const libres = cur.filter(m => !mostradas.has(m.g));
+    const emerg = libres.filter(ejEmergencia).sort((a, b) => riesgo(b) - riesgo(a)).slice(0, EJ_MAX);
+    const oport = libres.filter(ejOportunidad).sort(ejPrioOport).slice(0, EJ_MAX);
+    emerg.concat(oport).forEach(m => mostradas.add(m.g));
+    return {...h, cur, M, Ma, v, va, hayAnt: cob >= 2 * h.dias - 0.5, niv, criTot: cris.length, resp, graves: cur.filter(m => m.grave).length,
+      emergTot: cur.filter(ejEmergencia).length, oportTot: cur.filter(ejOportunidad).length, emergLib: libres.filter(ejEmergencia).length, oportLib: libres.filter(ejOportunidad).length, emerg, oport};
+  });
+  // Qué cambió en la semana: temas (categorías del cargo) que suben en críticas o en positivas frente a la semana anterior.
+  const cuenta7 = (ms, t) => { const r = {}; ms.forEach(m => { if (m.tono !== t) return; const k = categoriaDe(m).n; r[k] = (r[k] || 0) + 1; }); return r; };
+  const s7 = todas.filter(m => NOW - m.last < 7 * DAY), a7 = todas.filter(m => NOW - m.last >= 7 * DAY && NOW - m.last < 14 * DAY);
+  const suben = t => { const a = cuenta7(s7, t), b = cuenta7(a7, t); return Object.keys(a).map(k => ({k, n: a[k], d: a[k] - (b[k] || 0)})).filter(x => x.d > 0 && x.k !== CAT_OTROS.n).sort((x, y) => y.d - x.d || y.n - x.n).slice(0, 3); };
+  const [h1, h7, h30] = hs, abiertas = h30.emergTot, buenas = h30.oportTot;
+  const sint = !h30.M.vol ? `Ningún medio publicó sobre ${inst()} en los últimos 30 días.`
+    : `${h7.M.vol ? `Semana ${h7.v.n.toLowerCase()}` : "Semana sin noticias"}${h7.hayAnt && h7.va.i >= 0 && h7.M.vol ? (h7.v.i < h7.va.i ? ", mejor que la anterior" : h7.v.i > h7.va.i ? ", peor que la anterior" : ", igual que la anterior") : ""}; `
+      + `${h1.M.vol ? plural(h1.M.vol, "noticia", "noticias") + " en 24 horas" : "nada nuevo en 24 horas"}. `
+      + `${abiertas ? plural(abiertas, "emergencia abierta", "emergencias abiertas") : "Sin emergencias abiertas"} y ${buenas ? plural(buenas, "oportunidad", "oportunidades") + " para difundir" : "ninguna oportunidad pendiente"} en 30 días.`;
+  return {hs, sint, abiertas, buenas, criTot: h30.criTot, resp: h30.resp, subenCri: suben("cri"), subenPos: suben("pos"), m30: h30.cur, fecha: (f => f.charAt(0).toUpperCase() + f.slice(1))(fechaLarga(NOW))};
+}
+
+/* Comparación del balance del tono (positivas − críticas, de −100 a 100): ahora y el período anterior, en barras que parten del centro. */
+function ejBalance(h){
+  const W = 240, H = 64, cx = W / 2, sx = v => Math.max(-1, Math.min(1, v / 100)) * (W / 2 - 30);
+  const barra = (v, y, col, vacio) => vacio ? `<text x="${cx + 6}" y="${y + 11}" class="ej-sd">${vacio}</text>`
+    : `${Math.abs(sx(v)) >= 3 ? `<rect x="${Math.min(cx, cx + sx(v))}" y="${y}" width="${Math.abs(sx(v))}" height="14" rx="3" fill="${col}"/>` : ""}<text x="${v >= 0 ? cx + Math.max(0, sx(v)) + 5 : cx + sx(v) - 5}" y="${y + 11}" text-anchor="${v >= 0 ? "start" : "end"}" class="ej-nv">${signo(v)}</text>`;
+  return `<p class="ej-bt">Balance del tono</p><svg class="ej-bal" viewBox="0 0 ${W} ${H}" role="img" aria-label="Balance del tono, de −100 a +100: ahora ${h.M.vol ? signo(h.M.neto) : "sin noticias"}; ${h.ant} ${!h.hayAnt ? "sin datos" : h.Ma.vol ? signo(h.Ma.neto) : "sin noticias"}">
+    <line x1="${cx}" x2="${cx}" y1="0" y2="${H - 16}" stroke="var(--ink)" stroke-width="1.5"/>
+    ${barra(h.M.neto, 4, "var(--ink)", h.M.vol ? "" : "sin noticias")}${barra(h.Ma.neto, 24, "var(--track)", !h.hayAnt ? "sin datos" : h.Ma.vol ? "" : "sin noticias")}
+    <text x="2" y="${H - 2}" class="ej-ax">En contra</text><text x="${W - 2}" y="${H - 2}" text-anchor="end" class="ej-ax">A favor</text></svg>
+    <div class="ej-bal-l"><span><i class="ahora"></i>Ahora</span><span><i class="antes"></i>${esc(h.ant)}</span></div>`;
+}
+const ejDelta = (a, b, hay) => !hay ? `<span class="ej-dl">sin datos para comparar</span>` : `<span class="ej-dl ${a > b ? "up" : a < b ? "down" : ""}">${ri(a > b ? "up" : a < b ? "down" : "flat")}${a === b ? "igual" : signo(a - b)}</span>`;
+function ejHorizonte(h){
+  return `<div class="ej-col">
+    <p class="ej-k">${h.n}</p>
+    <p class="ej-vol"><b>${h.M.vol}</b><span>${h.M.vol === 1 ? "noticia" : "noticias"}</span>${ejDelta(h.M.vol, h.Ma.vol, h.hayAnt)}</p>
+    <p class="ej-ver ${h.v.k}">${h.M.vol ? h.v.n : "Sin noticias"}</p>
+    ${h.M.vol ? segbar([{l: "Positivas", v: h.M.pos, c: "var(--pos)"}, {l: "Neutras", v: h.M.neu, c: "var(--neu)"}, {l: "Críticas", v: h.M.cri, c: "var(--cri)"}]) : `<div class="segbar"></div>`}
+    <p class="ej-cnt">${h.M.vol ? conteo(h.M) : "—"}</p>
+    ${ejBalance(h)}
+    <dl class="ej-dat"><div><dt>Nacional · regional · comunal</dt><dd class="mono">${h.niv[2]} · ${h.niv[1]} · ${h.niv[0]}</dd></div><div><dt>Críticas atendidas</dt><dd class="mono ${h.criTot && h.resp < h.criTot ? "c" : ""}">${h.criTot ? `${h.resp} de ${h.criTot}` : "—"}</dd></div>${h.graves ? `<div><dt>Hechos graves</dt><dd class="mono c">${h.graves}</dd></div>` : ""}</dl>
+  </div>`;
+}
+function ejItem(m, tipo){
+  const e = escalera(m.notas), ac = accion(m);
+  return `<li class="${tipo === "e" ? "cri" : "pos"}"><span class="n">${ri(tipo === "e" ? "cri" : "pos")}</span><div class="bd"><span class="kick">${esc(categoriaDe(m).n)} · ${m.grave ? "Hecho grave" : tonoLbl[m.tono]}</span><b class="t">${esc(m.lead.res)}</b><span class="sub">${enMedios(m)} · ${ago(m.last)}</span><div class="lleg">${escHtml(e)}</div><p class="acc"><b>Qué hacer</b>${ac.a}</p>${PILOTO.activo && !PILOTO.editor ? "" : `<button class="btn sm" style="justify-self:start" data-act="responder" data-g="${m.g}" data-from="reportes">${tipo === "e" ? "Preparar respuesta" : "Preparar comunicado"}</button>`}</div></li>`;
+}
+function ejSeccion(h){
+  const lista = (xs, t, vacio) => xs.length ? `<ol class="asuntos">${xs.map(m => ejItem(m, t)).join("")}</ol>` : `<p class="empty">${vacio}</p>`;
+  const masE = h.emergLib - h.emerg.length, masO = h.oportLib - h.oport.length;
+  return `<section class="ej-h"><header class="ej-hh"><h4>${h.t}</h4><span>${h.M.vol ? `${plural(h.M.vol, "noticia", "noticias")} · ${h.v.n.toLowerCase()}` : "sin noticias"}</span></header>
+    <div class="ej-eo">
+      <div><p class="ej-sub cri">${ri("cri")} Emergencias</p>${lista(h.emerg, "e", h.emergTot ? "Las de este período ya aparecen arriba." : "Nada que atender en este período.")}${masE > 0 && h.emerg.length ? `<p class="hint">y ${plural(masE, "otra", "otras")} en Menciones.</p>` : ""}</div>
+      <div><p class="ej-sub pos">${ri("pos")} Oportunidades</p>${lista(h.oport, "o", h.oportTot ? "Las de este período ya aparecen arriba." : "Sin buenas noticias pendientes de difusión.")}${masO > 0 && h.oport.length ? `<p class="hint">y ${plural(masO, "otra", "otras")} en Menciones.</p>` : ""}</div>
+    </div></section>`;
+}
+function repEjecutivo(){
+  const d = ejecData();
+  if (!d.m30.length) return `<div class="allgood">${ri("ok")} Ningún medio publicó sobre ${esc(inst())} en los últimos 30 días.</div>`;
+  const cambio = (xs, cls, vacio) => xs.length ? `<ul class="ej-cam">${xs.map(x => `<li><span>${esc(x.k)}</span><b class="mono ${cls}">+${x.d}</b><small>${plural(x.n, "nota", "notas")} esta semana</small></li>`).join("")}</ul>` : `<p class="empty">${vacio}</p>`;
+  return `<div class="rhead"><h3>${esc(inst())} · informe ejecutivo</h3><span class="per">${ri("cal")} ${esc(d.fecha)}</span></div>
+  <div class="parte ej">
+    <section class="ej-sint"><span class="kick">En una línea</span><p>${esc(d.sint)}</p>
+      <div class="ej-chips"><span class="ej-chip cri">${ri("cri")}<b>${d.abiertas}</b> ${d.abiertas === 1 ? "emergencia abierta" : "emergencias abiertas"}</span><span class="ej-chip pos">${ri("pos")}<b>${d.buenas}</b> ${d.buenas === 1 ? "oportunidad" : "oportunidades"}</span><span class="ej-chip">${ri("ok")}<b>${d.criTot ? d.resp + "/" + d.criTot : "—"}</b> críticas atendidas en 30 días</span></div></section>
+    <section><h4>Los tres horizontes, comparados con su período anterior</h4><div class="ej-cols">${d.hs.map(ejHorizonte).join("")}</div>
+      <p class="hint" style="margin:10px 0 0">Balance del tono: positivas menos críticas, sobre el total, de −100 (todo en contra) a +100 (todo a favor). La barra negra es el período actual; la gris, el anterior de igual largo.</p></section>
+    <section><h4>Pulso de 30 días</h4>${chartPulso(d.m30, 30)}<p class="ej-ley"><span><i style="background:var(--pos)"></i>Positivas</span><span><i style="background:var(--neu)"></i>Neutras</span><span><i style="background:var(--cri)"></i>Críticas</span></p></section>
+    <section><h4>Qué cambió esta semana frente a la anterior</h4><div class="ej-eo">
+      <div><p class="ej-sub cri">${ri("up")} Temas que suben en críticas</p>${cambio(d.subenCri, "c", "Ningún tema sube en críticas.")}</div>
+      <div><p class="ej-sub pos">${ri("up")} Temas que suben en positivas</p>${cambio(d.subenPos, "p", "Ningún tema sube en positivas.")}</div></div></section>
+    ${d.hs.map(ejSeccion).join("")}
+    <div class="acts"><button class="btn alt b-wa" type="button" data-act="ej-img"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>Enviar por WhatsApp</button><button class="btn" type="button" data-act="ej-bajar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar imágenes</button><button class="btn primary" type="button" data-act="ej-copiar">Copiar texto</button></div>
+    ${shareBar("ejec")}
+  </div>
+  ${muestra(d.hs[2].M.vol)}`;
+}
+
+/* Texto para WhatsApp (negritas con asteriscos) y para el PDF. */
+function ejecTexto(){
+  const d = ejecData(), L = [`*PregonIA · Informe ejecutivo · ${inst()}*`, d.fecha, "", `*En una línea:* ${d.sint}`, ""];
+  const fl = (h, a, b) => !h.hayAnt ? "sin datos para comparar" : (a === b ? "igual" : (a > b ? "▲ " : "▼ ") + signo(a - b)) + " vs. " + h.ant;
+  d.hs.forEach(h => L.push(`*${h.n}:* ${plural(h.M.vol, "noticia", "noticias")} (${fl(h, h.M.vol, h.Ma.vol)}) · ${h.M.vol ? h.v.n.toLowerCase() : "sin noticias"}${h.M.vol ? " · " + conteo(h.M) : ""}${h.criTot ? ` · críticas atendidas ${h.resp} de ${h.criTot}` : ""}`));
+  const items = (t, k) => { const xs = d.hs.flatMap(h => h[k].map(m => ({h, m}))); if (!xs.length) return; L.push("", `*${t}*`); xs.forEach(({h, m}, i) => L.push(`${i + 1}. [${h.tag}] ${m.lead.res} (${llego(escalera(m.notas)).toLowerCase()})`, `   Qué hacer: ${accion(m).a}`)); };
+  items("Emergencias", "emerg"); items("Oportunidades", "oport");
+  if (d.subenCri.length || d.subenPos.length) { L.push("", "*Qué cambió esta semana*"); if (d.subenCri.length) L.push("Suben en críticas: " + d.subenCri.map(x => `${x.k} (+${x.d})`).join(", ")); if (d.subenPos.length) L.push("Suben en positivas: " + d.subenPos.map(x => `${x.k} (+${x.d})`).join(", ")); }
+  L.push("", MODO.tipo !== "demo" || (typeof PILOTO !== "undefined" && PILOTO.activo) ? "Noticias reales de medios digitales · PregonIA" : "Demostración con noticias ficticias · PregonIA");
+  return L.join("\n");
+}
+
+/* Imagen para WhatsApp con el formato Edición de PregonIA, en páginas verticales de teléfono (1080 × 1920 como máximo):
+   WhatsApp achica las imágenes muy largas hasta que no se leen, así que el informe se reparte en varias que se envían juntas.
+   Cada bloque se mide primero en un lienzo de prueba y, si no cabe en la página, pasa entero a la siguiente. */
+const EJ_W = 1080, EJ_HMAX = 1920, EJ_X = 64, EJ_PIE = 110;
+async function ejecImagenes(){
+  await Promise.all(['400 40px Inter', '500 40px Inter', '600 40px Inter', '700 40px Inter', '600 60px "Source Serif 4"', '700 60px "Source Serif 4"'].map(f => document.fonts.load(f).catch(() => {})));
+  vpaleta();
+  const d = ejecData(), C = VC, W = EJ_W, X = EJ_X, AN = W - 2 * X;
+  const col = k => k === "pos" ? C.pos : k === "cri" ? C.cri : C.neu;
+  const T = (ctx, txt, x, y, o) => vtexto(ctx, txt, x, y, {maxW: AN, ...o});
+  const regla = (ctx, y, g = 1.5, a = 1) => { ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = C.rule; ctx.fillRect(X, y, AN, g); ctx.restore(); };
+  const titulo = (ctx, y, txt, c = C.muted) => { T(ctx, txt.toUpperCase(), X, y + 34, {px: 24, w: 700, color: c, ls: 4}); if (c === C.muted) regla(ctx, y + 56); else { ctx.fillStyle = c; ctx.fillRect(X, y + 54, AN, 4); } return y + 70; };
+  const B = [];  // bloques: (ctx, y) => y siguiente
+  // 1. Cabezal de diario, en una línea y fichas
+  B.push((ctx, y) => {
+    y += 60; T(ctx, d.fecha, X, y, {px: 26, color: C.muted}); T(ctx, "Informe ejecutivo de prensa", W - X, y, {px: 26, color: C.muted, align: "right"});
+    regla(ctx, y + 22, 1.5, .25); y += 140; vlogo(ctx, W / 2, y, 108, 1);
+    y += 32; regla(ctx, y); regla(ctx, y + 8, 5); y += 74;
+    T(ctx, "INFORME EJECUTIVO", W / 2, y, {px: 26, w: 700, color: C.blue, align: "center", ls: 5});
+    y = T(ctx, inst(), W / 2, y + 66, {px: 58, w: 700, fam: VF.h, align: "center", max: 2, lh: 66, ls: -1});
+    y = T(ctx, "24 horas · 7 días · 30 días, cada uno frente a su período anterior", W / 2, y + 2, {px: 28, color: C.muted, align: "center"});
+    const y0 = y + 24; y = T(ctx, d.sint, X + 30, y0 + 46, {px: 36, w: 600, fam: VF.h, lh: 48, maxW: AN - 30});
+    ctx.fillStyle = C.rule; ctx.fillRect(X, y0 + 8, 6, y - y0 - 22); y += 18;
+    const chips = [[String(d.abiertas), d.abiertas === 1 ? "emergencia abierta" : "emergencias abiertas", C.cri], [String(d.buenas), d.buenas === 1 ? "oportunidad" : "oportunidades", C.pos], [d.criTot ? d.resp + "/" + d.criTot : "—", "críticas atendidas", C.text]], cw = (AN - 36) / 3;
+    chips.forEach(([n, l, c], i) => { const x = X + i * (cw + 18); ctx.strokeStyle = c === C.text ? C.line : c; ctx.lineWidth = 2.5; vrr(ctx, x, y, cw, 128, 16); ctx.stroke();
+      T(ctx, n, x + 24, y + 66, {px: 52, w: 700, fam: VF.h, color: c}); T(ctx, l, x + 24, y + 106, {px: 24, color: C.muted, maxW: cw - 40, max: 1}); });
+    return y + 128;
+  });
+  // 2. Los tres horizontes
+  d.hs.forEach((h, i) => B.push((ctx, y) => {
+    if (i === 0) y = titulo(ctx, y + 30, "Los tres horizontes");
+    const top = y, cA = X, cB = X + 300, cC = X + 640, bxW = W - X - cC, mid = cC + bxW / 2;
+    T(ctx, h.n.toUpperCase(), cA, top + 46, {px: 24, w: 700, color: C.blue, ls: 3});
+    T(ctx, String(h.M.vol), cA, top + 128, {px: 82, w: 700, fam: VF.h}); vfont(ctx, 700, 82, VF.h); const wn = ctx.measureText(String(h.M.vol)).width;
+    T(ctx, h.M.vol === 1 ? "noticia" : "noticias", cA + wn + 12, top + 124, {px: 26, color: C.muted});
+    const dv = h.M.vol - h.Ma.vol;
+    T(ctx, !h.hayAnt ? "sin datos para comparar" : dv === 0 ? "igual que " + h.ant : `${dv > 0 ? "▲" : "▼"} ${signo(dv)} vs. ${h.ant}`, cA, top + 168, {px: 22, color: C.muted, maxW: 240});
+    T(ctx, h.M.vol ? h.v.n : "Sin noticias", cB, top + 72, {px: 40, w: 700, fam: VF.h, color: h.M.vol ? col(h.v.k) : C.muted, maxW: 320, max: 1});
+    const bw = 300, tot = Math.max(1, h.M.vol); let bx = cB; ctx.fillStyle = C.track; vrr(ctx, cB, top + 96, bw, 18, 9); ctx.fill();
+    [["pos", h.M.pos], ["neu", h.M.neu], ["cri", h.M.cri]].forEach(([k, n]) => { if (!n) return; const w = bw * n / tot; ctx.fillStyle = col(k); vrr(ctx, bx, top + 96, Math.max(6, w - 3), 18, 9); ctx.fill(); bx += w; });
+    T(ctx, h.M.vol ? `${h.M.pos} pos · ${h.M.neu} neu · ${h.M.cri} crít` : "—", cB, top + 152, {px: 22, color: C.muted, maxW: 320});
+    T(ctx, `Nacional ${h.niv[2]} · Regional ${h.niv[1]} · Comunal ${h.niv[0]}`, cB, top + 184, {px: 22, color: C.muted, maxW: 330});
+    const e = v => Math.max(-1, Math.min(1, v / 100)) * (bxW / 2 - 44);
+    T(ctx, "Balance del tono", cC, top + 46, {px: 22, w: 600, color: C.muted}); ctx.fillStyle = C.rule; ctx.fillRect(mid - 1, top + 62, 2, 76);
+    const bar = (v, yy, c, vacio, lbl) => { T(ctx, lbl, cC, yy + 18, {px: 18, color: C.muted});
+      if (vacio) { T(ctx, vacio, mid + 10, yy + 18, {px: 18, color: C.muted}); return; }
+      if (Math.abs(e(v)) >= 4) { ctx.fillStyle = c; vrr(ctx, Math.min(mid, mid + e(v)), yy, Math.abs(e(v)), 22, 6); ctx.fill(); }
+      T(ctx, signo(v), v >= 0 ? mid + Math.max(0, e(v)) + 8 : mid + e(v) - 8, yy + 19, {px: 20, w: 700, color: C.text, align: v >= 0 ? "left" : "right"}); };
+    bar(h.M.neto, top + 70, C.text, h.M.vol ? "" : "sin noticias", "ahora"); bar(h.Ma.neto, top + 106, C.progBg, !h.hayAnt ? "sin datos" : h.Ma.vol ? "" : "sin noticias", "antes");
+    T(ctx, "en contra", cC, top + 168, {px: 18, color: C.muted}); T(ctx, "a favor", W - X, top + 168, {px: 18, color: C.muted, align: "right"});
+    T(ctx, h.criTot ? `Críticas atendidas ${h.resp} de ${h.criTot}` : "Sin críticas que exijan respuesta", cC, top + 198, {px: 20, w: 600, color: h.criTot && h.resp < h.criTot ? C.cri : C.muted, maxW: bxW});
+    regla(ctx, top + 226, 1.5, .2); return top + 236;
+  }));
+  // 3. Pulso de 30 días
+  B.push((ctx, y) => {
+    y = titulo(ctx, y + 30, "Pulso de 30 días") + 24;
+    const dias = Array.from({length: 30}, () => ({pos: 0, neu: 0, cri: 0})), hoy0 = new Date(NOW).setHours(0, 0, 0, 0);
+    d.m30.forEach(m => { const k = Math.round((hoy0 - new Date(m.last).setHours(0, 0, 0, 0)) / DAY); dias[29 - Math.min(29, Math.max(0, k))][m.tono]++; });
+    const mx = Math.max(1, ...dias.map(x => x.pos + x.neu + x.cri)), CH = 180, slot = AN / 30, bW = slot - 8;
+    dias.forEach((x, i) => { let acc = 0; const bx = X + i * slot + 4; [["pos", C.pos], ["neu", C.neu], ["cri", C.cri]].forEach(([k, c]) => { if (!x[k]) return; const hh = CH * x[k] / mx; ctx.fillStyle = c; ctx.fillRect(bx, y + CH - acc - hh, bW, Math.max(2, hh - 2)); acc += hh; });
+      if (!(x.pos + x.neu + x.cri)) { ctx.fillStyle = C.track; ctx.fillRect(bx, y + CH - 3, bW, 3); } });
+    y += CH + 32; const et = k => { const f = new Date(NOW - k * DAY); return `${f.getDate()}/${f.getMonth() + 1}`; };
+    T(ctx, et(29), X, y, {px: 20, color: C.muted}); T(ctx, et(15), W / 2, y, {px: 20, color: C.muted, align: "center"}); T(ctx, "hoy", W - X, y, {px: 20, color: C.muted, align: "right"});
+    y += 36; let lx = X; [["Positivas", C.pos], ["Neutras", C.neu], ["Críticas", C.cri]].forEach(([l, c]) => { ctx.fillStyle = c; vrr(ctx, lx, y - 16, 18, 18, 4); ctx.fill(); T(ctx, l, lx + 28, y, {px: 22, color: C.muted}); vfont(ctx, 400, 22, VF.b); lx += 28 + ctx.measureText(l).width + 34; });
+    return y + 10;
+  });
+  // 4. Qué cambió esta semana
+  if (d.subenCri.length || d.subenPos.length) B.push((ctx, y) => {
+    y = titulo(ctx, y + 30, "Qué cambió esta semana");
+    const fila = (x, c, t, xs) => { let yy = y + 40; T(ctx, t, x, yy, {px: 22, w: 700, color: c, maxW: AN / 2 - 20}); yy += 12;
+      (xs.length ? xs : [null]).forEach(z => { if (!z) { yy = T(ctx, "Ningún tema", x, yy + 36, {px: 26, color: C.muted}); return; } T(ctx, "+" + z.d, x + AN / 2 - 30, yy + 38, {px: 32, w: 700, fam: VF.h, color: c, align: "right"}); yy = T(ctx, z.k, x, yy + 36, {px: 26, w: 600, maxW: AN / 2 - 100, max: 2, lh: 32}); });
+      return yy; };
+    return Math.max(fila(X, C.cri, "SUBEN EN CRÍTICAS", d.subenCri), fila(X + AN / 2 + 10, C.pos, "SUBEN EN POSITIVAS", d.subenPos)) + 6;
+  });
+  // 5. Emergencias y oportunidades: el título va pegado a su primer asunto
+  const asunto = (h, m, c, conTitulo, tt) => (ctx, y) => {
+    if (conTitulo) y = titulo(ctx, y + 40, tt, c);
+    const top = y + 22; vfont(ctx, 700, 20, VF.b); const tw = ctx.measureText(h.tag.toUpperCase()).width + 30;
+    ctx.fillStyle = c; vrr(ctx, X + 22, top, tw, 34, 17); ctx.fill(); T(ctx, h.tag.toUpperCase(), X + 37, top + 24, {px: 20, w: 700, color: "#FFFFFF", ls: 1});
+    T(ctx, categoriaDe(m).n + " · " + (m.grave ? "Hecho grave" : tonoLbl[m.tono]), X + 22 + tw + 14, top + 24, {px: 22, w: 600, color: C.muted, maxW: AN - tw - 40, max: 1});
+    let yy = T(ctx, m.lead.res, X + 22, top + 82, {px: 36, w: 600, fam: VF.h, lh: 46, maxW: AN - 22, max: 3});
+    yy = T(ctx, `${nomMedio(m.lead)}${new Set(m.notas.map(n => n.m)).size > 1 ? " y otros" : ""} · ${llego(escalera(m.notas))} · ${ago(m.last)}`, X + 22, yy + 2, {px: 22, color: C.muted, maxW: AN - 22, max: 2, lh: 30});
+    yy = T(ctx, "Qué hacer: " + accion(m).a, X + 22, yy + 8, {px: 25, w: 500, lh: 34, maxW: AN - 22, max: 3});
+    ctx.fillStyle = c; ctx.fillRect(X, top, 6, yy - top - 20); regla(ctx, yy + 6, 1.5, .15); return yy + 8;
+  };
+  [["emerg", "Emergencias · atender", C.cri, "Ninguna emergencia abierta."], ["oport", "Oportunidades · difundir", C.pos, "Ninguna buena noticia pendiente de difusión."]].forEach(([k, tt, c, vacio]) => {
+    const xs = d.hs.flatMap(h => h[k].map(m => ({h, m}))).slice(0, 5);
+    if (!xs.length) B.push((ctx, y) => T(ctx, vacio, X, titulo(ctx, y + 40, tt, c) + 46, {px: 30, color: C.muted}));
+    xs.forEach(({h, m}, i) => B.push(asunto(h, m, c, i === 0, tt)));
+  });
+  // Armado: cada bloque se mide en un lienzo de prueba; si no cabe, abre página nueva con un cabezal corto.
+  const prueba = document.createElement("canvas"); prueba.width = W; prueba.height = 3000; const pctx = prueba.getContext("2d");
+  const paginas = []; let pag = null;
+  const nueva = () => { const cv = document.createElement("canvas"); cv.width = W; cv.height = EJ_HMAX; const ctx = cv.getContext("2d"); ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, EJ_HMAX);
+    let y = 0; if (paginas.length) { y = 64; vfont(ctx, 700, 34, VF.h); ctx.textAlign = "left"; ctx.fillStyle = C.text; ctx.fillText("Pregon", X, y); ctx.fillStyle = C.blue; ctx.fillText("IA", X + ctx.measureText("Pregon").width, y);
+      T(ctx, "Informe ejecutivo · " + inst(), W - X, y - 2, {px: 22, color: C.muted, align: "right", maxW: AN - 220, max: 1}); regla(ctx, y + 22); y += 24; }
+    pag = {cv, ctx, y}; paginas.push(pag); };
+  nueva();
+  B.forEach(f => { const alto = f(pctx, 0); pctx.clearRect(0, 0, W, 3000); if (pag.y + alto > EJ_HMAX - EJ_PIE && pag.y > 120) nueva(); pag.y = f(pag.ctx, pag.y); });
+  // Pie con número de página; cada página se recorta a su contenido (mínimo 1350 de alto, el formato 4:5).
+  const nota = MODO.tipo !== "demo" || (typeof PILOTO !== "undefined" && PILOTO.activo) ? "Noticias reales de medios digitales · resúmenes propios · uso interno" : "Demostración con noticias ficticias";
+  return Promise.all(paginas.map((p, i) => {
+    const alto = Math.min(EJ_HMAX, Math.max(1350, Math.ceil(p.y + EJ_PIE))), ctx = p.ctx, y = alto - 56;
+    ctx.fillStyle = C.bg; ctx.fillRect(0, p.y + 10, W, EJ_HMAX); regla(ctx, y - 40);
+    T(ctx, nota, X, y, {px: 20, color: C.muted, maxW: AN - 200, max: 1}); T(ctx, `PregonIA · ${i + 1} de ${paginas.length}`, W - X, y, {px: 20, w: 600, color: C.muted, align: "right"});
+    const out = document.createElement("canvas"); out.width = W; out.height = alto; out.getContext("2d").drawImage(p.cv, 0, 0);
+    return new Promise(ok => out.toBlob(ok, "image/png"));
+  }));
+}
+const ejNombre = (i, n) => `PregonIA-Informe-ejecutivo-${slug(S.org)}-${hoyISO()}${n > 1 ? "-" + (i + 1) + "de" + n : ""}.png`;
+async function ejecArchivos(){ const bs = await ejecImagenes(); return bs.map((b, i) => new File([b], ejNombre(i, bs.length), {type: "image/png"})); }
+async function ejecWhatsApp(){
+  let fs; try { fs = await ejecArchivos(); } catch(e) { toast("No se pudo preparar la imagen. Intenta de nuevo."); return; }
+  const d = ejecData(), texto = `*Informe ejecutivo · ${inst()}*\n${d.sint}`;
+  if (navigator.canShare && movil() && navigator.canShare({files: fs})) {
+    try { await navigator.share({files: fs, text: texto, title: "Informe ejecutivo · " + inst()}); return; }
+    catch(err) { if (err && err.name === "AbortError") return; if (err && err.name === "NotAllowedError") { toast("Las imágenes están listas: toca WhatsApp otra vez."); return; } }
+  }
+  // Computador: WhatsApp Web no recibe archivos por enlace. Se abre el chat con el texto y se guardan las imágenes para adjuntarlas.
+  abrirEnlace("https://wa.me/?text=" + encodeURIComponent(ejecTexto()), true);
+  for (const f of fs) await guardarArchivo(f.name, f, true);
+  toast(`Abrimos WhatsApp con el texto y guardamos ${fs.length === 1 ? "la imagen: adjúntala" : "las " + fs.length + " imágenes: adjúntalas"} en el chat con el clip o arrastrándolas.`);
+}
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if (!b) return; const a = b.dataset.act;
+  if (a === "ej-img") ejecWhatsApp();
+  if (a === "ej-bajar") { try { const fs = await ejecArchivos(); for (const f of fs) await guardarArchivo(f.name, f, fs.length > 1); if (fs.length > 1) toast(`Guardamos ${fs.length} imágenes del informe.`); } catch(er) { toast("No se pudo preparar la imagen."); } }
+  if (a === "ej-copiar") { try { await navigator.clipboard.writeText(ejecTexto()); toast("Texto copiado: pégalo en WhatsApp o en un correo."); } catch(er) { toast("No se pudo copiar el texto."); } }
+});
 
 </script>
 </body>

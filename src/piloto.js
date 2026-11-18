@@ -35,7 +35,7 @@ function pintarAcceso(){
   if (typeof pintarAccesoPortada === "function") pintarAccesoPortada();
 }
 function pintarPiloto(){
-  const el = $("#demo"), p = PILOTO, l = p.lectura, n = NOTAS.length;
+  const el = $("#demo"), p = PILOTO, l = p.lectura, n = NOTAS.filter(x => NOW - x.ts < 30 * DAY).length;
   el.className = "demo real";
   el.innerHTML = `<span class="demo-txt"><b>Piloto</b>${esc(p.muni.nombre)}<span class="demo-mas"> · ${MODO.cargando ? "preparando tu edición…" : plural(n, "nota", "notas") + " en 30 días"}${MODO.cargando ? "" : l ? ` · última lectura de medios ${horaCorta(l.fin)} (${l.fuentes_ok} de ${l.fuentes_total} fuentes)` : " · aún sin lecturas de medios"}${p.estado ? " · " + p.estado : ""}</span></span>${p.editor ? "" : `<span class="solo-lect">Solo lectura</span>`}`;
 }
@@ -203,7 +203,7 @@ const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos
   correcciones: c.correcciones || {}, compArea: c.compArea || {}, plazos: c.plazos || {}, fv: c.fv || 0});  // ficha editorial: correcciones, competencias y plazos de la cuenta
 async function cargarDatosPiloto(){
   if (PILOTO.timer) await sincronizarYa();  // un cambio a medio guardar se envía antes de releer la base
-  const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 32 * DAY).toISOString();
+  const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 62 * DAY).toISOString();  // 30 días y los 30 anteriores, para comparar (informe ejecutivo)
   const pide = q => q.then(r => { if (r.error) throw new Error(r.error.message); return r.data; });
   const menQ = cols => sb.from("menciones").select(cols + ", notas!inner(id, medio_id, url, titulo, publicado)").eq("municipio_id", mid).eq("rel", true).gte("notas.publicado", desde).limit(5000);
   const [men, mar, com, cap, lec, mun] = await Promise.all([
