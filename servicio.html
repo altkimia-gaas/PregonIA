@@ -71,6 +71,13 @@
 .pd-acceso:hover{background:var(--surface-2);color:var(--ink)}
 .pd-acceso:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .pd-acceso svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* Botones del cabezal con color: cliente (acento), redacción (tinta), cerrar sesión (rojo suave) */
+.pd-acceso.cliente{background:var(--accent-bg);border-color:var(--accent-bg);color:var(--accent-ink)}
+.pd-acceso.cliente:hover{background:var(--accent-bg-h);border-color:var(--accent-bg-h);color:var(--accent-ink)}
+.pd-acceso.mesa{background:var(--ink);border-color:var(--ink);color:var(--bg,#fff)}
+.pd-acceso.mesa:hover{opacity:.88;background:var(--ink);color:var(--bg,#fff)}
+.pd-acceso.salir{background:var(--cri-soft,#F8E3E1);border-color:var(--cri-soft,#F8E3E1);color:var(--cri-ink,#9A1F18)}
+.pd-acceso.salir:hover{filter:brightness(.97);background:var(--cri-soft,#F8E3E1);color:var(--cri-ink,#9A1F18)}
 .pd-acceso[hidden]{display:none}
 .pd-video{margin:28px 0 0;width:100%;max-width:560px;aspect-ratio:16/9;border:1.5px solid var(--frame);border-radius:14px;overflow:hidden;background:var(--surface-2);display:grid}
 .pd-video iframe,.pd-video video{width:100%;height:100%;border:0;display:block;background:#000}
@@ -114,7 +121,7 @@
 <section class="portada-l" id="portada" aria-labelledby="ptT">
   <div class="pd">
     <header class="pd-cab">
-      <div class="pd-fecha"><span id="ptFecha">Edición digital</span><nav class="pd-der" aria-label="Acceso"><span class="pd-desc">Monitoreo de prensa para instituciones públicas</span><a class="pd-acceso" href="https://pregonia.cl/redaccion"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16v4M13.5 6.5l4 4"/></svg>Mesa de redacción</a><a class="pd-acceso" href="https://pregonia.cl/?ingresar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>Acceso clientes</a></nav></div>
+      <div class="pd-fecha"><span id="ptFecha">Edición digital</span><nav class="pd-der" aria-label="Acceso"><span class="pd-desc">Monitoreo de prensa para instituciones públicas</span><a class="pd-acceso mesa" href="https://pregonia.cl/redaccion"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16v4M13.5 6.5l4 4"/></svg>Mesa de redacción</a><a class="pd-acceso cliente" href="https://pregonia.cl/?ingresar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>Acceso clientes</a></nav></div>
       <p class="pd-nombre" id="ptT">Pregon<b>IA</b></p>
       <p class="pd-lema">La prensa no espera. Tú tampoco.</p>
     </header>
