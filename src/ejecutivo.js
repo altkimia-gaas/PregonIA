@@ -99,8 +99,8 @@ function repEjecutivo(){
       <div><p class="ej-sub cri">${ri("up")} Temas que suben en críticas</p>${cambio(d.subenCri, "c", "Ningún tema sube en críticas.")}</div>
       <div><p class="ej-sub pos">${ri("up")} Temas que suben en positivas</p>${cambio(d.subenPos, "p", "Ningún tema sube en positivas.")}</div></div></section>
     ${d.hs.map(ejSeccion).join("")}
-    <div class="acts ej-acts" role="group" aria-label="Compartir el informe en PDF"><button class="btn b-wa" type="button" data-act="share" data-via="wa" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="share" data-via="pdf" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar PDF</button><button class="btn" type="button" data-act="share" data-via="mail" data-src="ejec" aria-haspopup="menu" aria-expanded="false"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.mail}</svg>Correo</button><button class="btn" type="button" data-act="ej-copiar">Copiar texto</button></div>
-    <p class="hint" style="margin:0">Un PDF de pocas páginas con el formato de PregonIA, del tamaño de la pantalla del celular: se lee en WhatsApp sin hacer zoom.</p>
+    <div class="acts ej-acts"><button class="btn alt" type="button" data-act="vid-open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l4.8-2.8z"/></svg>Video y PDF</button><button class="btn" type="button" data-act="ej-copiar">Copiar texto</button></div>
+    <p class="hint" style="margin:0">El PDF de este informe se comparte o descarga en la misma ventana del video resumen.</p>
   </div>
   ${muestra(d.hs[2].M.vol)}`;
 }
