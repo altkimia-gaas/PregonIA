@@ -33,7 +33,7 @@ function extraer(html){
 async function leer(nota, max){
   try {
     const u = new URL(nota.url); if (!/^https?:$/.test(u.protocol)) return null;
-    const r = await fetch(u, {redirect: "follow", signal: AbortSignal.timeout(9000), headers: {"user-agent": "Mozilla/5.0 (compatible; PregonIA-Redaccion/1.0; +https://pregonia.vercel.app/legal.html)", "accept": "text/html,application/xhtml+xml", "accept-language": "es-CL,es;q=0.9"}});
+    const r = await fetch(u, {redirect: "follow", signal: AbortSignal.timeout(9000), headers: {"user-agent": "Mozilla/5.0 (compatible; PregonIA-Redaccion/1.0; +https://pregonia.cl/legal.html)", "accept": "text/html,application/xhtml+xml", "accept-language": "es-CL,es;q=0.9"}});
     if (!r.ok || !/html/i.test(r.headers.get("content-type") || "")) return {medio: nota.medio, url: nota.url, error: `HTTP ${r.status}`};
     const buf = await r.arrayBuffer(); const html = new TextDecoder("utf-8").decode(buf.slice(0, MAX_BYTES));
     const texto = extraer(html);

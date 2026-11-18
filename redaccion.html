@@ -1358,7 +1358,7 @@ function pintarReel(cv, ctx){
 }
 async function grabarVoz(btn){
   const plan = planReel();
-  if (!(await RD.voz)) return toast(RD.modo === "prueba" ? "La voz se graba en pregonia.vercel.app (aquí no hay servidor de voz). Puedes preparar el video solo con música." : "Falta configurar la voz de ElevenLabs en Vercel.");
+  if (!(await RD.voz)) return toast(RD.modo === "prueba" ? "La voz se graba en pregonia.cl (aquí no hay servidor de voz). Puedes preparar el video solo con música." : "Falta configurar la voz de ElevenLabs en Vercel.");
   btn.disabled = true; btn.innerHTML = `${ico("voz")}Grabando…`;
   try {
     const ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -1637,7 +1637,7 @@ function vistaAjustes(){
           <label class="campo" for="cfUmbral">Avisar desde este puntaje de impacto: <b id="cfUmbralV">${c.umbral}</b><input type="range" id="cfUmbral" min="50" max="95" step="5" value="${c.umbral}" data-cfg="umbral"></label>
           <label class="ckl"><input type="checkbox" data-cfg="silencio" ${c.silencio !== false ? "checked" : ""}> Silencio de 23:00 a 7:00, salvo puntaje 90 o más</label>
           <label class="campo" for="cfHora">Resumen de la mañana<select class="sel" id="cfHora" data-cfg="resumen_hora">${[6, 7, 8, 9, 10].map(h => `<option value="${h}" ${c.resumen_hora === h ? "selected" : ""}>${String(h).padStart(2, "0")}:00</option>`).join("")}</select></label>
-          ${push ? `<button class="btn" type="button" data-act="push">${ico("campana")}Activar avisos en este dispositivo</button><p class="info">En iPhone, primero instala Redacción en la pantalla de inicio (Compartir › Agregar a inicio) y actívalos desde ahí.</p>` : `<p class="info">${RD.modo === "prueba" ? "Los avisos al celular funcionan con la cuenta de editor en pregonia.vercel.app." : "Faltan las llaves de avisos (VAPID) en Vercel para activarlos."}</p>`}
+          ${push ? `<button class="btn" type="button" data-act="push">${ico("campana")}Activar avisos en este dispositivo</button><p class="info">En iPhone, primero instala Redacción en la pantalla de inicio (Compartir › Agregar a inicio) y actívalos desde ahí.</p>` : `<p class="info">${RD.modo === "prueba" ? "Los avisos al celular funcionan con la cuenta de editor en pregonia.cl." : "Faltan las llaves de avisos (VAPID) en Vercel para activarlos."}</p>`}
         </section>
         <section class="panel" aria-labelledby="hMeta"><h3 id="hMeta">Ritmo de publicación</h3>
           <label class="campo" for="cfMeta">Publicaciones por día<select class="sel" id="cfMeta" data-cfg="meta_diaria">${[1, 2, 3, 4, 5, 6].map(n => `<option ${c.meta_diaria === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
@@ -1742,7 +1742,7 @@ iniciar();
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "0afc74730c0f", K = "redaccion";
+  const V = "9ef180c434e2", K = "redaccion";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;

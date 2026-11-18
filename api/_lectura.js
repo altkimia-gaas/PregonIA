@@ -13,7 +13,7 @@ const QUITAR = ["region de valparaiso", "cordillera de los andes", "universidad 
 const CONTEXTO = '(Valparaíso OR comuna OR municipalidad OR alcalde OR Chile OR "litoral central")';
 const EXCLUIR = ["marruecos", "marroqui", "colombia", "cartagena de indias", "texas", "spurs", "ibiza", "murcia"];
 const METODOS = new Set(["rss", "rss_filtrado", "sitemap_noticias", "sitemap_filtrado", "sitemap", "sitemap_mensual", "portada"]);
-const VENTANA_DIAS = 14, MAX_IA = 120, UA = "PregonIA/0.1 (monitoreo de prensa municipal; +https://pregonia.vercel.app)";
+const VENTANA_DIAS = 14, MAX_IA = 120, UA = "PregonIA/0.1 (monitoreo de prensa municipal; +https://pregonia.cl)";
 
 const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const ENT = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };

@@ -2,7 +2,7 @@
 
 Monitoreo de noticias sobre municipios y actores públicos en más de 100 medios digitales chilenos (nacionales, regionales y comunales de la Región de Valparaíso), con lectura de tono, alcance territorial (comunal, regional, nacional), informes por lector y redacción asistida de respuestas.
 
-Demo publicada: https://pregonia.vercel.app
+Demo publicada: https://pregonia.cl
 
 Producto de ALTKimia. Piloto: Casablanca, Algarrobo, El Quisco, El Tabo, Cartagena y San Antonio.
 Versión de demostración: el catálogo de medios es real; las noticias, cifras y fechas son ficticias.
@@ -103,7 +103,7 @@ Piezas:
 Puesta en marcha:
 
 1. Crear el proyecto en Supabase (región São Paulo) y ejecutar en SQL Editor `supabase/esquema.sql` y luego `supabase/semilla.sql`.
-2. En Supabase › Authentication › URL Configuration, dejar `https://pregonia.vercel.app` como Site URL.
+2. En Supabase › Authentication › URL Configuration, dejar `https://pregonia.cl` como Site URL y en Redirect URLs `https://pregonia.cl/**`, `https://www.pregonia.cl/**` y `https://pregonia.vercel.app/**`.
 3. En Vercel, variables `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` y `CRON_SECRET` (una contraseña larga inventada).
 4. En GitHub › Settings › Secrets and variables › Actions, el secreto `CRON_SECRET` con el mismo valor.
 5. Invitar a cada persona en Supabase › Authentication › Users y asignarle municipio y rol con `supabase/alta_usuario.sql`.
@@ -175,7 +175,7 @@ PregonIA avisa de noticias críticas nuevas, de las que escalan a prensa regiona
 - **En el navegador:** notificación mientras PregonIA esté abierta o instalada. No requiere configuración.
 - **Con la aplicación cerrada (piloto):** la lectura programada evalúa las reglas y envía notificaciones (Web Push) y correos. Para activarlo:
   1. Correr de nuevo `supabase/esquema.sql` (agrega las tablas `alertas`, `avisos` y `suscripciones` y la función `destinatarios_avisos`, que solo puede usar el servidor).
-  2. Abrir `https://pregonia.vercel.app/llaves-avisos.html`, generar las llaves y crear en Vercel `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`. Las llaves se generan en el navegador; la privada va solo en Vercel. Hecho el 17 de noviembre de 2026 (producción, como secretas; `VAPID_SUBJECT` = `https://pregonia.vercel.app`). Si se cambian las llaves, cada dispositivo debe volver a activar los avisos.
+  2. Abrir `https://pregonia.cl/llaves-avisos.html`, generar las llaves y crear en Vercel `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`. Las llaves se generan en el navegador; la privada va solo en Vercel. Hecho el 17 de noviembre de 2026 (producción, como secretas; `VAPID_SUBJECT` = `https://pregonia.cl`). Si se cambian las llaves, cada dispositivo debe volver a activar los avisos.
   3. Correo (opcional): cuenta en Resend con el dominio verificado, y en Vercel `RESEND_API_KEY` y `AVISOS_REMITENTE` (por ejemplo `PregonIA <avisos@altkimia.com>`).
   4. Volver a desplegar. Cada persona activa los avisos en la campana de su celular.
 
@@ -184,7 +184,7 @@ PregonIA avisa de noticias críticas nuevas, de las que escalan a prensa regiona
 PregonIA se instala como app (PWA) desde el navegador, sin pasar por App Store ni Google Play:
 
 - **Android (Chrome):** la campana de avisos ofrece «Instalar PregonIA» cuando el navegador lo permite; también desde el menú ⋮ › Instalar app.
-- **iPhone (Safari):** Compartir › «Agregar a inicio». En iPhone los avisos con la app cerrada solo llegan con PregonIA instalada así. Como Apple no permite un botón «Instalar», la app muestra una guía paso a paso: sola al entrar al piloto (si la persona elige «Ahora no», vuelve a los 3 días), desde la campana («Ver cómo instalarla») y con el enlace `https://pregonia.vercel.app/?instalar`, pensado para enviarlo por WhatsApp a una autoridad. Si se abre dentro de Facebook, Instagram u otra app, la guía pide primero abrirla en Safari.
+- **iPhone (Safari):** Compartir › «Agregar a inicio». En iPhone los avisos con la app cerrada solo llegan con PregonIA instalada así. Como Apple no permite un botón «Instalar», la app muestra una guía paso a paso: sola al entrar al piloto (si la persona elige «Ahora no», vuelve a los 3 días), desde la campana («Ver cómo instalarla») y con el enlace `https://pregonia.cl/?instalar`, pensado para enviarlo por WhatsApp a una autoridad. Si se abre dentro de Facebook, Instagram u otra app, la guía pide primero abrirla en Safari.
 - **Atajos:** manteniendo presionado el ícono aparecen «Avisos» (abre la campana) y «Menciones» (en Android).
 - **Sin señal:** `sw.js` muestra `offline.html` en vez del error del navegador. La aplicación no se guarda en caché: con conexión siempre se carga la versión vigente.
 
@@ -236,7 +236,7 @@ En la base del piloto: volver a ejecutar `supabase/esquema.sql` (agrega las colu
 
 ## Redacción: cuentas propias de PregonIA en Facebook e Instagram
 
-Espacio privado del editor, en `https://pregonia.vercel.app/redaccion` (no aparece en la aplicación de los clientes ni en buscadores).
+Espacio privado del editor, en `https://pregonia.cl/redaccion` (no aparece en la aplicación de los clientes ni en buscadores).
 
 - **Propuestas:** la lectura programada (cada 30 minutos) junta las noticias de las últimas 48 horas de las comunas elegidas en Ajustes, más las regionales y nacionales que afectan a la región, las agrupa por hecho y les da un **puntaje de impacto** de 0 a 100: repercusión en medios (35), interacción en redes de las cuentas de medios (20), autoridades de la nómina (15), temas críticos y gravedad (20) y recencia (10). Es por palabras y conteos (`src/impacto.js`, el mismo en el servidor como `api/_impacto.js`). Claude Haiku escribe un titular y un resumen neutrales solo para lo que llega a 30 puntos (máximo 12 hechos por pasada).
 - **Redacción:** desde una propuesta, Claude Sonnet redacta con reglas de neutralidad estricta los textos de Facebook (con enlace) e Instagram (sin enlaces, con hashtags), la pieza gráfica, la historia, el carrusel y el guion del reel. Sin IA disponible, deja una plantilla.

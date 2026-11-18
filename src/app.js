@@ -458,7 +458,7 @@ function vInicio(){
 </div>
     <h2 id="verT" class="ini-tit" tabindex="-1">${titulo}</h2>
     ${balance || pesa ? `<p class="ini-lead">${balance}${pesa}</p>` : ""}
-    ${aut && !M.vol && typeof MODO !== "undefined" && MODO.tipo === "demo" ? `<p class="ini-lead">La demostración no inventa noticias sobre personas reales: lo que la prensa dice de ${esc(quien)} aparece con noticias reales, en pregonia.vercel.app.</p>` : ""}
+    ${aut && !M.vol && typeof MODO !== "undefined" && MODO.tipo === "demo" ? `<p class="ini-lead">La demostración no inventa noticias sobre personas reales: lo que la prensa dice de ${esc(quien)} aparece con noticias reales, en pregonia.cl.</p>` : ""}
     ${aut && msK.length ? `<p class="ini-lead">${M.vol ? "Aparte, en" : "En"} su territorio hubo ${plural(msK.length, "noticia", "noticias")} que no ${c.perfil.g === "F" ? "la" : "lo"} nombran${msK.filter(m => m.grave).length ? `, ${plural(msK.filter(m => m.grave).length, "hecho grave", "hechos graves")}` : ""}${MK.cri ? `${msK.filter(m => m.grave).length ? " y" : ","} ${plural(MK.cri, "reclamo", "reclamos")}` : ""}: no cuentan en su tono, pero pueden ser gestión o presencia. <button class="ini-link" ${kAttr("pers")}>Ver el radar</button></p>` : ""}
     <div class="ini-kpis">
       ${aut && !M.vol ? "" : `<button class="ini-kpi" ${kAttr("vol")}><span class="l">Noticias ${perTx}</span><span class="v"><span class="mono">${M.vol}</span>${delta(M.vol, P.vol, hayPrev)}</span><span class="s">${hayPrev ? `frente a ${P.vol} ${per === 1 ? "en " : ""}${antTx}` : `sin datos de ${antTx} para comparar`} · en ${plural(Object.keys(med).length, "medio", "medios")}</span></button>
@@ -1149,7 +1149,7 @@ async function guardarArchivo(nombre, blob, silencio){
   const dl = await dlCap;
   if (dl) {
     try { await dl.save({filename: nombre, data: blob}); if (!silencio) toast("Guardado: " + nombre); }
-    catch(err) { if (err && err.code === "declined") return; toast(err && err.code === "rate_limited" ? "Ya hay una descarga esperando tu confirmación." : "Esta vista no permite guardar archivos. Ábrela en pregonia.vercel.app."); }
+    catch(err) { if (err && err.code === "declined") return; toast(err && err.code === "rate_limited" ? "Ya hay una descarga esperando tu confirmación." : "Esta vista no permite guardar archivos. Ábrela en pregonia.cl."); }
     return;
   }
   const u = URL.createObjectURL(blob), a = document.createElement("a"); a.href = u; a.download = nombre; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 5000);
@@ -1595,7 +1595,7 @@ const FAQ = [
     ["¿Por qué aparece una noticia que no tiene que ver?", "Suele ser una coincidencia de nombre, como Casablanca la película o San Antonio de Texas. Márcala como \"No corresponde\" y agrega esa palabra a las exclusiones del tema."],
     ["¿PregonIA copia las noticias de los medios?", "No. Muestra el título, el medio, la fecha, un resumen propio de una línea y el enlace a la nota original. No reproduce el texto, respeta las reglas de cada sitio y no salta muros de pago."],
     ["¿Revisa redes sociales?", "No las lee por su cuenta. Las publicaciones de Facebook o de grupos vecinales se suman con «Agregar publicación»: pegas el texto o subes una captura y la IA la analiza. En el celular, con PregonIA instalada, basta con tocar Compartir en Facebook y elegir PregonIA."],
-    ["¿Cómo instalo PregonIA en el celular?", "En Android, abre pregonia.vercel.app en Chrome y toca «Instalar PregonIA» en Agregar publicación, o el menú de Chrome y luego Instalar aplicación. Desde ese momento aparece en la lista de Compartir de Facebook y otras apps. En iPhone se puede agregar a la pantalla de inicio, pero Safari no permite compartir hacia ella: copia el enlace y usa el botón Pegar."]
+    ["¿Cómo instalo PregonIA en el celular?", "En Android, abre pregonia.cl en Chrome y toca «Instalar PregonIA» en Agregar publicación, o el menú de Chrome y luego Instalar aplicación. Desde ese momento aparece en la lista de Compartir de Facebook y otras apps. En iPhone se puede agregar a la pantalla de inicio, pero Safari no permite compartir hacia ella: copia el enlace y usa el botón Pegar."]
   ]],
   ["Lectura de los resultados", [
     ["¿Cómo se decide si una noticia es crítica, neutra o positiva?", "Una IA clasifica el tono de cada noticia respecto del tema vigilado, no del medio en general. Si no estás de acuerdo, puedes marcarlo; esas correcciones sirven para mejorar la clasificación."],
@@ -1708,7 +1708,7 @@ function pintarModo(){
   // Selector siempre visible con las dos opciones; en claude.ai (sin servidor) "Reales" lleva al sitio publicado.
   const sw = MODO.disponible || MODO.cargando
     ? `<span class="modo-sw" role="group" aria-label="Noticias que muestra la aplicación"><button type="button" data-act="modo-demo" aria-pressed="${!real && !MODO.cargando}"><span class="demo-mas">Demostración</span><span class="solo-movil">Demo</span></button><button type="button" data-act="modo-real" aria-pressed="${Boolean(real) || MODO.cargando}" ${MODO.cargando ? "disabled" : ""}>${MODO.cargando ? "Leyendo…" : `<span class="demo-mas">Noticias reales</span><span class="solo-movil">Reales</span>`}</button></span>`
-    : (/^https?:$/.test(location.protocol) ? "" : `<a class="modo-link" href="https://pregonia.vercel.app/" target="_blank" rel="noopener">Noticias reales en pregonia.vercel.app</a>`);
+    : (/^https?:$/.test(location.protocol) ? "" : `<a class="modo-link" href="https://pregonia.cl/" target="_blank" rel="noopener">Noticias reales en pregonia.cl</a>`);
   if (MODO.cargando) { el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Leyendo medios</b>Buscando noticias de ${esc(S.org)}<span class="demo-mas"> en unas 70 fuentes; puede tardar hasta un minuto</span>…</span>${sw}`; return; }
   if (real) { el.className = "demo real"; el.innerHTML = `<span class="demo-txt"><b>Datos reales</b>${plural(i.notas.length, "nota", "notas")}<span class="demo-mas"> de ${esc(i.comuna)} en ${i.ventana_dias} días · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : i.ia_parcial ? " · tono clasificado en parte" : " · tono sin clasificar"}</span></span>${sw}`; return; }
   if (!esAut() && !COMUNAS.includes(S.org)) { el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">La demostración trae noticias ficticias solo del litoral central · con «Noticias reales» se leen las de ${esc(S.org)}</span><span class="solo-movil">Datos ficticios</span></span>${sw}`; return; }

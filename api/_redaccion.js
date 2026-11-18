@@ -13,7 +13,7 @@ import { impAutoridades, impAgrupar, impPuntaje, impNorm, impTiene, IMP_REGION }
 const VENTANA_H = 48;          // noticias de las últimas 48 horas
 const PISO_IA = 30;            // solo lo que llega a este puntaje pasa por la IA (titular y resumen propios)
 const MAX_IA = 12;             // tope de hechos por pasada que pasan por la IA (costo acotado)
-const SITIO = () => process.env.SITIO_URL || "https://pregonia.vercel.app";
+const SITIO = () => process.env.SITIO_URL || "https://pregonia.cl";
 const AUTS = impAutoridades(AUTORIDADES, variantesNombre);
 const lista = xs => "(" + xs.map(x => '"' + String(x).replace(/["\\]/g, "") + '"').join(",") + ")";
 

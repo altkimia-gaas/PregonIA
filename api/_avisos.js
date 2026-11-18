@@ -9,7 +9,7 @@ import { alertasDeHecho, pasaPreferencia } from "./_reglas.js";
 const MEDIO = new Map(CATALOGO.map(m => [m.id, m]));
 const NIVEL = {nacional: 2, regional: 1};
 const ETIQUETA = {urgente: "Urgente", importante: "Importante", info: "Buena noticia"};
-const SITIO = () => process.env.SITIO_URL || "https://pregonia.vercel.app";
+const SITIO = () => process.env.SITIO_URL || "https://pregonia.cl";
 const lista = xs => "(" + xs.map(x => '"' + String(x).replace(/["\\]/g, "") + '"').join(",") + ")";
 const esc = s => String(s || "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]);
 

@@ -74,7 +74,7 @@ document.addEventListener("keydown", e => {
   if (e.key === "Tab") { const f = [...ov.querySelectorAll("button")]; const i = f.indexOf(document.activeElement);
     if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); } }
 });
-/* Enlace para enviar a una autoridad: pregonia.vercel.app/?instalar abre la guía en iPhone (en otros equipos no hace nada). */
+/* Enlace para enviar a una autoridad: pregonia.cl/?instalar abre la guía en iPhone (en otros equipos no hace nada). */
 (() => { const q = new URLSearchParams(location.search); if (!q.has("instalar")) return;
   const resto = location.search.slice(1).split("&").filter(x => x && !/^instalar(=|$)/.test(x)).join("&"); history.replaceState(null, "", location.pathname + (resto ? "?" + resto : "") + location.hash);
   if (esIOS && !PWA.instalada) setTimeout(guiaIOSAbrir, 600); })();

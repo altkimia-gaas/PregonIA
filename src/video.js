@@ -361,7 +361,7 @@ function videoAbrir(){
   VID = {plan, ctx, t: quieto ? 2 : 0, play: !quieto, last: null, raf: 0, blob: null, ctl: null, origen: document.activeElement, ac: null, src: null, a0: 0};
   vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const b = $("#vozAdd"), st = $("#vozEstado");
     if (e === "ok") { b.disabled = false; st.textContent = "Sin voz · voz chilena con ElevenLabs"; }
-    else st.textContent = e === "sin-clave" ? "Falta configurar la clave de ElevenLabs en Vercel" : "Disponible en pregonia.vercel.app"; });
+    else st.textContent = e === "sin-clave" ? "Falta configurar la clave de ElevenLabs en Vercel" : "Disponible en pregonia.cl"; });
   const fuentes = ['400 40px Inter', '500 40px Inter', '600 40px Inter', '700 40px Inter', '500 60px "Source Serif 4"', '600 60px "Source Serif 4"', '700 60px "Source Serif 4"'];
   Promise.all(fuentes.map(f => document.fonts.load(f).catch(() => {})));
   const loop = now => {
