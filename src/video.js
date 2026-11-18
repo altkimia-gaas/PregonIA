@@ -353,7 +353,7 @@ function videoAbrir(){
   const plan = videoPlan();
   const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "vidBack";
   ov.innerHTML = `<section class="vid rep" role="dialog" aria-modal="true" aria-labelledby="vidT">
-    <header class="vid-h"><div><h2 id="vidT">Video resumen</h2><p>${esc(plan.P.rotulo)} · ${esc(plan.org)} · ${esc(plan.per)}</p><span class="vid-hint" aria-hidden="true">Toca para pausar · desliza para compartir</span></div><button class="btn ghost" type="button" data-act="vid-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+    <header class="vid-h"><div><h2 id="vidT">Video resumen y PDF</h2><p>${esc(plan.P.rotulo)} · ${esc(plan.org)} · ${esc(plan.per)}</p><span class="vid-hint" aria-hidden="true">Toca para pausar · desliza para compartir</span></div><button class="btn ghost" type="button" data-act="vid-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
     <div class="vid-b">
       <div class="vid-stage" id="vidStage"><canvas id="vidCv" width="${VOUT[0]}" height="${VOUT[1]}" role="img" aria-label="Vista previa del video: resultado del período, tratamiento de las noticias, temas que restan y suman, asuntos que se pueden complicar con qué hacer, y la buena noticia."></canvas><span class="vid-pausa" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></span></div>
       <div class="vid-side">
@@ -366,6 +366,8 @@ function videoAbrir(){
         <button class="btn alt" type="button" data-act="vid-make" id="vidMake">Preparar video MP4</button>
         <div class="vid-prog" id="vidProg" hidden><span class="bar"><i style="width:0%"></i></span><span class="mono" id="vidPct">0%</span><button class="btn sm" type="button" data-act="vid-stop">Cancelar</button></div>
         <div class="vid-out" id="vidOut" hidden><button class="btn b-wa" type="button" data-act="vid-wa"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="vid-dl"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar</button></div>
+        <div class="vid-voz vid-pdf"><div class="vid-voz-h"><b>Informe en PDF</b><span>Informe ejecutivo · 24 horas, 7 y 30 días</span></div>
+          <div class="vid-out"><button class="btn b-wa" type="button" data-act="share" data-via="wa" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="share" data-via="pdf" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar PDF</button></div></div>
         <p class="note" id="vidNote">Uso interno del alcalde y su equipo. ${MODO.tipo !== "demo" ? "Hecho con noticias reales; los medios se citan por su nombre" : "Es un prototipo con noticias ficticias"}; no usa fotos ni logos de los medios.</p>
       </div>
     </div></section>`;

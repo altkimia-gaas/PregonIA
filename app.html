@@ -4451,7 +4451,7 @@ function repAlcalde(){
     <section class="ver"><span class="kick">Cómo ${esAut() && cuenta().perfil.g === "F" ? "la" : "lo"} trató la prensa ${P.tx}</span><p class="vbig ${d.v.k}">${d.v.n}</p><p class="vtx">${d.v.f.charAt(0).toUpperCase() + d.v.f.slice(1)}: ${conteo(d.M)}. ${d.comp}</p>${escala(d.v.i)}<p class="vtx trato">Hasta dónde llegaron: ${d.niv[2].n} a prensa nacional, ${d.niv[1].n} a regional y ${d.niv[0].n} solo comunal. ${d.criTot ? `Críticas atendidas: ${d.resp} de ${d.criTot}.` : "Sin críticas que exigieran respuesta."}</p></section>
     <section><h4>Lo que se puede complicar</h4>${d.asuntos.length ? `<ol class="asuntos">${d.asuntos.map(item).join("")}</ol>` : `<p class="vtx">Ningún asunto de riesgo ${P.tx}.</p>`}</section>
     ${d.buena ? `<section class="cap"><h4>Para aprovechar</h4><ol class="asuntos">${item(d.buena, -1).replace('<span class="n">0</span>', `<span class="n">${ri("pos")}</span>`)}</ol></section>` : ""}
-    <div class="acts"><button class="btn alt" data-act="vid-open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l4.8-2.8z"/></svg>Video resumen</button><button class="btn primary" data-act="copiar-parte">Copiar texto</button><button class="btn" data-act="goto" data-tono="todos" data-dias="${P.dias}">Ver las noticias ${P.de}</button></div>
+    <div class="acts"><button class="btn alt" data-act="vid-open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l4.8-2.8z"/></svg>Video y PDF</button><button class="btn primary" data-act="copiar-parte">Copiar texto</button><button class="btn" data-act="goto" data-tono="todos" data-dias="${P.dias}">Ver las noticias ${P.de}</button></div>
     ${shareBar("parte")}
   </div>
   ${muestra(d.M.vol)}`;
@@ -5537,7 +5537,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingr
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "79d182d8e1e6", K = "app";
+  const V = "8aa9f31c6737", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
@@ -7136,7 +7136,7 @@ function videoAbrir(){
   const plan = videoPlan();
   const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "vidBack";
   ov.innerHTML = `<section class="vid rep" role="dialog" aria-modal="true" aria-labelledby="vidT">
-    <header class="vid-h"><div><h2 id="vidT">Video resumen</h2><p>${esc(plan.P.rotulo)} · ${esc(plan.org)} · ${esc(plan.per)}</p><span class="vid-hint" aria-hidden="true">Toca para pausar · desliza para compartir</span></div><button class="btn ghost" type="button" data-act="vid-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+    <header class="vid-h"><div><h2 id="vidT">Video resumen y PDF</h2><p>${esc(plan.P.rotulo)} · ${esc(plan.org)} · ${esc(plan.per)}</p><span class="vid-hint" aria-hidden="true">Toca para pausar · desliza para compartir</span></div><button class="btn ghost" type="button" data-act="vid-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
     <div class="vid-b">
       <div class="vid-stage" id="vidStage"><canvas id="vidCv" width="${VOUT[0]}" height="${VOUT[1]}" role="img" aria-label="Vista previa del video: resultado del período, tratamiento de las noticias, temas que restan y suman, asuntos que se pueden complicar con qué hacer, y la buena noticia."></canvas><span class="vid-pausa" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></span></div>
       <div class="vid-side">
@@ -7149,6 +7149,8 @@ function videoAbrir(){
         <button class="btn alt" type="button" data-act="vid-make" id="vidMake">Preparar video MP4</button>
         <div class="vid-prog" id="vidProg" hidden><span class="bar"><i style="width:0%"></i></span><span class="mono" id="vidPct">0%</span><button class="btn sm" type="button" data-act="vid-stop">Cancelar</button></div>
         <div class="vid-out" id="vidOut" hidden><button class="btn b-wa" type="button" data-act="vid-wa"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="vid-dl"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar</button></div>
+        <div class="vid-voz vid-pdf"><div class="vid-voz-h"><b>Informe en PDF</b><span>Informe ejecutivo · 24 horas, 7 y 30 días</span></div>
+          <div class="vid-out"><button class="btn b-wa" type="button" data-act="share" data-via="wa" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="share" data-via="pdf" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar PDF</button></div></div>
         <p class="note" id="vidNote">Uso interno del alcalde y su equipo. ${MODO.tipo !== "demo" ? "Hecho con noticias reales; los medios se citan por su nombre" : "Es un prototipo con noticias ficticias"}; no usa fotos ni logos de los medios.</p>
       </div>
     </div></section>`;
@@ -7408,8 +7410,8 @@ function repEjecutivo(){
       <div><p class="ej-sub cri">${ri("up")} Temas que suben en críticas</p>${cambio(d.subenCri, "c", "Ningún tema sube en críticas.")}</div>
       <div><p class="ej-sub pos">${ri("up")} Temas que suben en positivas</p>${cambio(d.subenPos, "p", "Ningún tema sube en positivas.")}</div></div></section>
     ${d.hs.map(ejSeccion).join("")}
-    <div class="acts ej-acts" role="group" aria-label="Compartir el informe en PDF"><button class="btn b-wa" type="button" data-act="share" data-via="wa" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="share" data-via="pdf" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar PDF</button><button class="btn" type="button" data-act="share" data-via="mail" data-src="ejec" aria-haspopup="menu" aria-expanded="false"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.mail}</svg>Correo</button><button class="btn" type="button" data-act="ej-copiar">Copiar texto</button></div>
-    <p class="hint" style="margin:0">Un PDF de pocas páginas con el formato de PregonIA, del tamaño de la pantalla del celular: se lee en WhatsApp sin hacer zoom.</p>
+    <div class="acts ej-acts"><button class="btn alt" type="button" data-act="vid-open"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l4.8-2.8z"/></svg>Video y PDF</button><button class="btn" type="button" data-act="ej-copiar">Copiar texto</button></div>
+    <p class="hint" style="margin:0">El PDF de este informe se comparte o descarga en la misma ventana del video resumen.</p>
   </div>
   ${muestra(d.hs[2].M.vol)}`;
 }
