@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Arma index.html autónomo desde src/ y data/catalogo_medios.csv.
+"""Arma app.html (la aplicación, servida en «/» de pregonia.cl) autónomo desde src/ y data/catalogo_medios.csv.
 
 Uso: python3 scripts/build.py
 Orden del script embebido: base.js (constantes y catálogo) → corpus.js (noticias ficticias) → calendario.js (fechas de riesgo; antes de app.js porque la portada lo usa al primer dibujo) → autoridades.js + territorios.js (temas por territorio y cargo) + categorias.js (categoría, enfoque y papel de cada noticia) + cuentas.js (municipios y autoridades electas; antes de app.js por la misma razón) → app.js (aplicación) → captura.js → cuentasred.js + redes.js (cuentas de Facebook e Instagram) → vocero.js (kit de vocería) → compartir.js (app instalable y Compartir) → reglas.js + alertas.js (avisos) → piloto.js → video.js.
@@ -44,7 +44,7 @@ def main():
     # Versión publicada: resumen del archivo; la app la compara con /version.json para recargarse sola tras un despliegue.
     v_app = hashlib.sha256(html.encode("utf-8")).hexdigest()[:12]
     html = html.replace("__PREGONIA_VERSION__", v_app)
-    (RAIZ / "index.html").write_text(html, encoding="utf-8")
+    (RAIZ / "app.html").write_text(html, encoding="utf-8")  # sin index.html: así vercel.json decide qué se sirve en «/» según el dominio
     # Catálogo para la función de noticias reales (api/noticias.js); el guion bajo evita que Vercel lo publique como ruta.
     filas = [{"id": int(f["id"]), "nombre": f["nombre"], "ambito": f["ambito"], "comuna": f["comuna"], "metodo": f["metodo"], "url": f["url_lectura"], "estado": f["estado"]}
              for f in csv.DictReader(open(DATA / "catalogo_medios.csv", encoding="utf-8"))]
@@ -74,7 +74,7 @@ def main():
     (RAIZ / "version.json").write_text(json.dumps({"app": v_app, "redaccion": v_rd}) + "\n", encoding="utf-8")
     # Versión para publicar como artifact en claude.ai, que pone su propio esqueleto.
     (RAIZ / "artifact.html").write_text(cuerpo, encoding="utf-8")
-    print(f"index.html listo ({len(html.encode('utf-8')) // 1024} KB) · redaccion.html listo ({(RAIZ / 'redaccion.html').stat().st_size // 1024} KB)")
+    print(f"app.html listo ({len(html.encode('utf-8')) // 1024} KB) · redaccion.html listo ({(RAIZ / 'redaccion.html').stat().st_size // 1024} KB)")
 
 if __name__ == "__main__":
     main()
