@@ -1162,6 +1162,7 @@ details.resp[open] summary{margin-bottom:12px}
 @media (prefers-reduced-motion: reduce){ .dg-ticker-l .dot{animation:none} }
 
 /* Ayuda */
+#salirBtn[hidden]{display:none}
 .helpbtn{display:inline-flex;align-items:center;gap:6px;background:transparent;color:var(--top-ink);border:1px solid var(--top-line);border-radius:8px;padding:6px 11px;font-size:12.5px;font-weight:600;cursor:pointer;min-height:34px}
 .helpbtn:hover{background:var(--top-line)}
 .helpbtn .ico{width:17px;height:17px}
@@ -1921,7 +1922,7 @@ details.corr summary{cursor:pointer;font-size:13px;color:var(--muted)}
 <section class="portada" id="portada" aria-labelledby="ptT" hidden>
   <div class="pd">
     <header class="pd-cab">
-      <div class="pd-fecha"><span id="ptFecha">Edición digital</span><nav class="pd-der" aria-label="Acceso"><span class="pd-desc">Monitoreo de prensa para instituciones públicas</span><button class="pd-acceso" id="ptIn" type="button" data-act="login" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>Acceso clientes</button></nav></div>
+      <div class="pd-fecha"><span id="ptFecha">Edición digital</span><nav class="pd-der" aria-label="Acceso"><span class="pd-desc">Monitoreo de prensa para instituciones públicas</span><button class="pd-acceso" id="ptIn" type="button" data-act="login" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>Acceso clientes</button><button class="pd-acceso" id="ptOut" type="button" data-act="salir" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button></nav></div>
       <p class="pd-nombre" id="ptT">Pregon<b>IA</b></p>
       <p class="pd-lema">La prensa no espera. Tú tampoco.</p>
     </header>
@@ -3389,6 +3390,7 @@ function insContinuar(p){
   else if (p.terr) Object.assign(pre, {comuna: p.terr, zona: zonaDeComuna(p.rol, p.terr)});
   pre.paso = pre.zona ? 3 : 2;
   const portada = INS.enPortada; insCerrar(); entAbrir(portada, pre);
+  if (typeof pintarAcceso === "function") pintarAcceso();
 }
 async function insEnviar(e){
   e.preventDefault(); if (INS.ocupado) return;
@@ -5403,7 +5405,8 @@ function pintarAccesoPortada(){
   const go = $("#ptGo"); if (!go) return;
   const pl = typeof PILOTO !== "undefined" && PILOTO, dentro = !!(pl && pl.activo);
   $("#ptGoTx").textContent = dentro ? "Entrar a mi edición" : pruebaVigente() ? "Continuar mi prueba" : "Prueba gratis";
-  $("#ptIn").hidden = dentro || !(pl && pl.disponible);  // sin Supabase configurado (por ejemplo, el archivo suelto) no hay a qué ingresar
+  $("#ptIn").hidden = dentro || !(pl && pl.disponible);
+  const out = $("#ptOut"); if (out) { const prueba = !dentro && pruebaVigente(); out.hidden = !(dentro || prueba); out.dataset.act = dentro ? "salir" : "salir-prueba"; out.lastChild.textContent = dentro ? "Cerrar sesión" : "Salir de la prueba"; }  // sin Supabase configurado (por ejemplo, el archivo suelto) no hay a qué ingresar
   $("#ptPiloto").hidden = dentro;
   $("#ptDemo").hidden = dentro;
   $("#ptEstado").textContent = dentro ? "Edición de " + pl.muni.nombre : "Demostración con noticias ficticias";
@@ -5472,7 +5475,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingr
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "9669163b0fd4", K = "app";
+  const V = "3797f2ec10fc", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
@@ -6368,6 +6371,14 @@ function pintarAcceso(){
   if (!b) { b = document.createElement("button"); b.id = "cuentaBtn"; b.type = "button"; b.className = "helpbtn"; tools.insertBefore(b, tools.firstChild); }
   if (PILOTO.activo) { const n = PILOTO.perfil.nombre || PILOTO.user.email; b.dataset.act = "cuenta"; b.setAttribute("aria-haspopup", "menu"); b.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO_USR}</svg><span>${esc(n.split(" ")[0])}</span>`; b.title = `${n} · ${rolNombre(PILOTO.perfil.rol)}`; }
   else { b.dataset.act = "login"; b.removeAttribute("aria-haspopup"); b.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO_USR}</svg><span>Ingresar</span>`; b.title = "Ingresar al piloto"; }
+  // Cerrar sesión siempre a la vista: con sesión de cliente cierra la sesión; en la prueba gratis sale de la prueba.
+  let o = $("#salirBtn");
+  if (!o) { o = document.createElement("button"); o.id = "salirBtn"; o.type = "button"; o.className = "helpbtn"; b.insertAdjacentElement("afterend", o); }
+  const enPrueba = !PILOTO.activo && typeof pruebaVigente === "function" && !!pruebaVigente();
+  o.hidden = !(PILOTO.activo || enPrueba);
+  o.dataset.act = PILOTO.activo ? "salir" : "salir-prueba";
+  const tx = PILOTO.activo ? "Cerrar sesión" : "Salir de la prueba";
+  o.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>${tx}</span>`; o.title = tx; o.setAttribute("aria-label", tx);
   if (typeof pintarAccesoPortada === "function") pintarAccesoPortada();
 }
 function pintarPiloto(){
@@ -6434,7 +6445,7 @@ async function olvide(){
 function menuCuenta(b){
   if ($("#shrPop")) { cerrarMenu(); return; }
   const p = PILOTO, m = document.createElement("div"); m.className = "shr-pop"; m.id = "shrPop"; m.setAttribute("role", "menu");
-  m.innerHTML = `<div class="cta-info"><b>${esc(p.perfil.nombre || p.user.email)}</b><span>${esc(p.user.email)}</span><span>${esc(rolNombre(p.perfil.rol))} · ${esc(p.muni.nombre)}</span></div><button type="button" role="menuitem" data-act="recargar-piloto">Actualizar datos</button><button type="button" role="menuitem" data-act="salir">Salir</button>`;
+  m.innerHTML = `<div class="cta-info"><b>${esc(p.perfil.nombre || p.user.email)}</b><span>${esc(p.user.email)}</span><span>${esc(rolNombre(p.perfil.rol))} · ${esc(p.muni.nombre)}</span></div><button type="button" role="menuitem" data-act="recargar-piloto">Actualizar datos</button><button type="button" role="menuitem" data-act="salir">Cerrar sesión</button>`;
   document.body.appendChild(m); m._origen = b; ubicarMenu(); m.querySelector("button").focus({preventScroll: true});
 }
 
@@ -6631,6 +6642,14 @@ async function sincronizar(){
     if (PILOTO.pendiente) { PILOTO.pendiente = false; sincronizar(); }
   }
 }
+/* Salir de la prueba gratis en este navegador: vuelve a la portada; las autoridades configuradas quedan guardadas
+   y la próxima entrada pide de nuevo la inscripción. */
+function salirPrueba(){
+  try { localStorage.removeItem(PRUEBA_KEY); } catch(e) {}
+  if (typeof ptVideo !== "undefined") ptVideo.pausar();
+  mostrarPortada(true); location.hash = "portada"; pintarAcceso();
+  toast("Saliste de la prueba. Para volver, toca «Prueba gratis».");
+}
 async function salir(){
   if (typeof avisosAlSalir === "function") await avisosAlSalir();
   try { await PILOTO.sb.auth.signOut(); } catch(e) {}
@@ -6646,7 +6665,8 @@ document.addEventListener("click", e => {
   if (a === "dlg-close") cerrarDialogo();
   if (a === "olvide") olvide();
   if (a === "cuenta") menuCuenta(b);
-  if (a === "salir") { cerrarMenu(); salir(); }
+  if (a === "salir") { cerrarMenu(); b.disabled = true; salir(); }
+  if (a === "salir-prueba") { salirPrueba(); return; }
   if (a === "recargar-piloto") { cerrarMenu(); cargarDatosPiloto().then(() => toast("Datos actualizados.")).catch(er => toast("No se pudieron actualizar: " + er.message)); }
 });
 document.addEventListener("click", e => { if (e.target.id === "dlgBack") cerrarDialogo(); });

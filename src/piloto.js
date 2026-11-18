@@ -24,6 +24,14 @@ function pintarAcceso(){
   if (!b) { b = document.createElement("button"); b.id = "cuentaBtn"; b.type = "button"; b.className = "helpbtn"; tools.insertBefore(b, tools.firstChild); }
   if (PILOTO.activo) { const n = PILOTO.perfil.nombre || PILOTO.user.email; b.dataset.act = "cuenta"; b.setAttribute("aria-haspopup", "menu"); b.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO_USR}</svg><span>${esc(n.split(" ")[0])}</span>`; b.title = `${n} · ${rolNombre(PILOTO.perfil.rol)}`; }
   else { b.dataset.act = "login"; b.removeAttribute("aria-haspopup"); b.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO_USR}</svg><span>Ingresar</span>`; b.title = "Ingresar al piloto"; }
+  // Cerrar sesión siempre a la vista: con sesión de cliente cierra la sesión; en la prueba gratis sale de la prueba.
+  let o = $("#salirBtn");
+  if (!o) { o = document.createElement("button"); o.id = "salirBtn"; o.type = "button"; o.className = "helpbtn"; b.insertAdjacentElement("afterend", o); }
+  const enPrueba = !PILOTO.activo && typeof pruebaVigente === "function" && !!pruebaVigente();
+  o.hidden = !(PILOTO.activo || enPrueba);
+  o.dataset.act = PILOTO.activo ? "salir" : "salir-prueba";
+  const tx = PILOTO.activo ? "Cerrar sesión" : "Salir de la prueba";
+  o.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>${tx}</span>`; o.title = tx; o.setAttribute("aria-label", tx);
   if (typeof pintarAccesoPortada === "function") pintarAccesoPortada();
 }
 function pintarPiloto(){
@@ -90,7 +98,7 @@ async function olvide(){
 function menuCuenta(b){
   if ($("#shrPop")) { cerrarMenu(); return; }
   const p = PILOTO, m = document.createElement("div"); m.className = "shr-pop"; m.id = "shrPop"; m.setAttribute("role", "menu");
-  m.innerHTML = `<div class="cta-info"><b>${esc(p.perfil.nombre || p.user.email)}</b><span>${esc(p.user.email)}</span><span>${esc(rolNombre(p.perfil.rol))} · ${esc(p.muni.nombre)}</span></div><button type="button" role="menuitem" data-act="recargar-piloto">Actualizar datos</button><button type="button" role="menuitem" data-act="salir">Salir</button>`;
+  m.innerHTML = `<div class="cta-info"><b>${esc(p.perfil.nombre || p.user.email)}</b><span>${esc(p.user.email)}</span><span>${esc(rolNombre(p.perfil.rol))} · ${esc(p.muni.nombre)}</span></div><button type="button" role="menuitem" data-act="recargar-piloto">Actualizar datos</button><button type="button" role="menuitem" data-act="salir">Cerrar sesión</button>`;
   document.body.appendChild(m); m._origen = b; ubicarMenu(); m.querySelector("button").focus({preventScroll: true});
 }
 
@@ -287,6 +295,14 @@ async function sincronizar(){
     if (PILOTO.pendiente) { PILOTO.pendiente = false; sincronizar(); }
   }
 }
+/* Salir de la prueba gratis en este navegador: vuelve a la portada; las autoridades configuradas quedan guardadas
+   y la próxima entrada pide de nuevo la inscripción. */
+function salirPrueba(){
+  try { localStorage.removeItem(PRUEBA_KEY); } catch(e) {}
+  if (typeof ptVideo !== "undefined") ptVideo.pausar();
+  mostrarPortada(true); location.hash = "portada"; pintarAcceso();
+  toast("Saliste de la prueba. Para volver, toca «Prueba gratis».");
+}
 async function salir(){
   if (typeof avisosAlSalir === "function") await avisosAlSalir();
   try { await PILOTO.sb.auth.signOut(); } catch(e) {}
@@ -302,7 +318,8 @@ document.addEventListener("click", e => {
   if (a === "dlg-close") cerrarDialogo();
   if (a === "olvide") olvide();
   if (a === "cuenta") menuCuenta(b);
-  if (a === "salir") { cerrarMenu(); salir(); }
+  if (a === "salir") { cerrarMenu(); b.disabled = true; salir(); }
+  if (a === "salir-prueba") { salirPrueba(); return; }
   if (a === "recargar-piloto") { cerrarMenu(); cargarDatosPiloto().then(() => toast("Datos actualizados.")).catch(er => toast("No se pudieron actualizar: " + er.message)); }
 });
 document.addEventListener("click", e => { if (e.target.id === "dlgBack") cerrarDialogo(); });

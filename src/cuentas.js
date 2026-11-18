@@ -322,6 +322,7 @@ function insContinuar(p){
   else if (p.terr) Object.assign(pre, {comuna: p.terr, zona: zonaDeComuna(p.rol, p.terr)});
   pre.paso = pre.zona ? 3 : 2;
   const portada = INS.enPortada; insCerrar(); entAbrir(portada, pre);
+  if (typeof pintarAcceso === "function") pintarAcceso();
 }
 async function insEnviar(e){
   e.preventDefault(); if (INS.ocupado) return;

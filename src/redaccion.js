@@ -147,10 +147,10 @@ function abrirDesdeEnlace(){
 }
 function pintarHerramientas(){
   const t = $("#rdTools"); if (!t) return;
-  if (!RD.modo || RD.modo === "sin-permiso") { t.innerHTML = RD.user ? `<button class="btn sm" type="button" data-act="salir">${ico("salir")}Salir</button>` : ""; return; }
+  if (!RD.modo || RD.modo === "sin-permiso") { t.innerHTML = RD.user ? `<button class="btn sm" type="button" data-act="salir">${ico("salir")}Cerrar sesión</button>` : ""; return; }
   t.innerHTML = `<span class="modo">${RD.modo === "prueba" ? "<b>Modo prueba</b> · datos ficticios en este navegador" : `<b>Editor</b> · ${esc(RD.user.email)}`}</span>
     <button class="btn sm" type="button" data-act="buscar">${ico("buscar")}Buscar ahora</button>
-    <button class="btn sm" type="button" data-act="salir">${ico("salir")}Salir</button>`;
+    <button class="btn sm" type="button" data-act="salir">${ico("salir")}Cerrar sesión</button>`;
 }
 
 /* ─── Navegación ─── */
