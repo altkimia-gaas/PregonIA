@@ -4742,7 +4742,7 @@ function shareDoc(src, i){
   }
   if (src === "vocero") return vocDoc();
   if (src === "diario") { const t = diarioTexto(), d = diarioData(); return {titulo: "Informe diario de prensa", sub: d.etiqueta, sinFecha: true, tipo: "diario", texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
-  if (src === "ejec") { const t = ejecTexto(); return {titulo: "Informe ejecutivo · " + inst(), sub: fechaLarga(NOW), sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
+  if (src === "ejec") { const t = ejecTexto(); return {titulo: "Informe ejecutivo · " + inst(), sub: fechaLarga(NOW), sinFecha: true, tipo: "ejec", texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "parte") { const t = parteTexto(); return {titulo: esAut() ? partePer().rotulo + " · " + inst() : partePer().rotulo + " del alcalde", sub: "Período: " + parteData().per, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "aprob") { const x = S.comunicados.filter(y => y.org === S.org)[i]; return x && x.texto ? {titulo: x.pieza, sub: "Responde a: " + x.origen + " · aprobado el " + fecha(x.ts), texto: x.texto, cuerpo: x.texto} : null; }
   return null;
@@ -4907,7 +4907,7 @@ async function pdfDiario(){
   for (let p = 1; p <= n; p++) { doc.setPage(p); doc.setDrawColor(C.line); doc.setLineWidth(0.3); doc.line(M, PIE, W - M, PIE); txt("PregonIA · Un producto de ALTKimia", M, PIE + 5, {size: 7, color: C.muted}); txt(`Página ${p} de ${n}`, W - M, PIE + 5, {size: 7, color: C.muted, align: "right"}); if (p === n) lineas(nota, AN, 6.5).slice(0, 2).forEach((l, k) => txt(l, M, PIE - 5.5 + k * 3, {size: 6.5, color: C.muted})); }
   return doc.output("blob");
 }
-async function pdfDe(d){ const k = d.titulo + "\u0001" + d.sub + "\u0001" + d.cuerpo; return pdfCache[k] ||= new File([await (d.tipo === "diario" ? pdfDiario() : pdfBlob(d))], nombreArchivo(d, "pdf"), {type: "application/pdf"}); }
+async function pdfDe(d){ const k = d.titulo + "\u0001" + d.sub + "\u0001" + d.cuerpo; return pdfCache[k] ||= new File([await (d.tipo === "diario" ? pdfDiario() : d.tipo === "ejec" ? ejecPDF() : pdfBlob(d))], nombreArchivo(d, "pdf"), {type: "application/pdf"}); }
 /* En el celular: hoja de compartir del sistema con el PDF adjunto (WhatsApp, Gmail, Outlook…). */
 async function compartirArchivo(d, destino){
   if (!navigator.canShare || !movil()) return false;
@@ -4946,7 +4946,6 @@ async function compartir(b){
   const aviso = d.borrador && /\[completar/i.test(d.texto) ? " Ojo: aún hay partes marcadas [completar]." : "";
   const asunto = d.titulo + " · " + inst(), cuerpo = plano(d.texto);
   if (via === "wa") {
-    if (b.dataset.src === "ejec") return ejecWhatsApp();  // el informe ejecutivo va por WhatsApp como imagen
     if (await compartirArchivo(d, "WhatsApp")) return;
     // Computador: WhatsApp Web no recibe archivos por enlace. Se abre el chat y se guarda el PDF para adjuntarlo.
     abrirEnlace("https://wa.me/?text=" + encodeURIComponent(`*${asunto}*\nTe envío el documento en PDF.`), true);
@@ -5538,7 +5537,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingr
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "dc270b5bcc16", K = "app";
+  const V = "5a76fd996239", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
@@ -7074,6 +7073,8 @@ async function videoMP4(plan, onProg, signal){
   if (plan.audio && window.AudioEncoder && window.AudioData) {
     for (const [codec, mx] of [["mp4a.40.2", "aac"], ["opus", "opus"]]) { try { const c = {codec, sampleRate: 48000, numberOfChannels: 1, bitrate: 128000}; if ((await AudioEncoder.isConfigSupported(c)).supported) { acfg = {c, mx}; break; } } catch(e) {} }
   }
+  // Sin codificador de audio (Safari en iPhone, por ejemplo) el MP4 rápido saldría mudo: se graba en tiempo real, que sí lleva la voz.
+  if (plan.audio && !acfg && window.MediaRecorder) return null;
   const muxer = new Mx.Muxer({target: new Mx.ArrayBufferTarget(), video: {codec: "avc", width: w, height: h, frameRate: VFPS}, ...(acfg ? {audio: {codec: acfg.mx, numberOfChannels: 1, sampleRate: 48000}} : {}), fastStart: "in-memory"});
   plan.audioCodec = acfg ? acfg.mx : null;
   if (acfg) {
@@ -7113,13 +7114,15 @@ async function videoGrabado(plan, onProg, signal){
   if (!mime) return null;
   const [w, h] = VOUT, cv = document.createElement("canvas"); cv.width = w; cv.height = h; const ctx = cv.getContext("2d"); vdibujar(ctx, 0, plan);
   const pista = cv.captureStream(VFPS); let ac2 = null, fuente = null;
-  if (plan.audio) { try { ac2 = new (window.AudioContext || window.webkitAudioContext)(); const dest = ac2.createMediaStreamDestination(); fuente = ac2.createBufferSource(); fuente.buffer = plan.audio; fuente.connect(dest); dest.stream.getAudioTracks().forEach(t => pista.addTrack(t)); } catch(e) { ac2 = null; fuente = null; } }
+  // Se usa el contexto de audio del reproductor, habilitado por el toque que abrió el video: uno nuevo nacería suspendido en el iPhone.
+  const propio = !(VID && VID.ac);
+  if (plan.audio) { try { ac2 = propio ? new (window.AudioContext || window.webkitAudioContext)() : VID.ac; const dest = ac2.createMediaStreamDestination(); fuente = ac2.createBufferSource(); fuente.buffer = plan.audio; fuente.connect(dest); dest.stream.getAudioTracks().forEach(t => pista.addTrack(t)); } catch(e) { ac2 = null; fuente = null; } }
   const rec = new MediaRecorder(pista, {mimeType: mime, videoBitsPerSecond: 3_500_000}), partes = [];
   rec.ondataavailable = e => { if (e.data && e.data.size) partes.push(e.data); };
   const fin = new Promise(r => rec.onstop = r); rec.start(500); if (fuente) { await ac2.resume().catch(() => {}); fuente.start(); }
   const t0 = performance.now();
   await new Promise(ok => { const loop = () => { const t = (performance.now() - t0) / 1000; if ((signal && signal.aborted) || t >= plan.total) return ok(); vdibujar(ctx, t, plan); onProg(t / plan.total); requestAnimationFrame(loop); }; loop(); });
-  rec.stop(); await fin; if (ac2) ac2.close().catch(() => {});
+  rec.stop(); await fin; if (fuente) try { fuente.stop(); } catch(e) {} if (ac2 && propio) ac2.close().catch(() => {});
   if (signal && signal.aborted) throw {code: "cancelled"};
   return new Blob(partes, {type: mime.split(";")[0]});
 }
@@ -7152,6 +7155,10 @@ function videoAbrir(){
   // El audio se habilita aquí, dentro del toque que abrió el video: así la voz puede sonar sola cuando llegue.
   let ac0 = null; try { ac0 = new (window.AudioContext || window.webkitAudioContext)(); ac0.resume().catch(() => {}); } catch(e) {}
   VID = {plan, ctx, t: quieto ? 2 : 0, play: !quieto, last: null, raf: 0, blob: null, ctl: null, origen: document.activeElement, ac: ac0, src: null, a0: 0};
+  // En iPhone, el audio de Web Audio se silencia con el interruptor de silencio; un elemento <audio> no. La voz suena por uno,
+  // que se habilita aquí, en el mismo toque que abrió el video, con un instante de silencio (después puede sonar solo).
+  try { const el = VID.el = new Audio(); el.setAttribute("playsinline", ""); el.preload = "auto";
+    if (ac0) { VID.mudoUrl = URL.createObjectURL(wavDe(ac0.createBuffer(1, 2400, 48000))); el.src = VID.mudoUrl; el.play().then(() => el.pause()).catch(() => {}); } } catch(e) { VID.el = null; }
   // La voz se genera sola al abrir: guion con los datos del período y narración con ElevenLabs. Si falla, el video sigue sin voz.
   vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const st = $("#vozEstado");
     if (e === "ok" && VOZ_CACHE.sinCredito) { st.textContent = `Sin voz · ${VOZ_CACHE.sinCredito}. El video funciona igual, sin narración.`; const b = $("#vozAdd"); b.disabled = false; b.lastChild.textContent = "Intentar la voz de nuevo"; }
@@ -7162,7 +7169,7 @@ function videoAbrir(){
   const loop = now => {
     if (!VID) return; const pl = VID.plan;
     if (VID.play) {
-      if (VID.src) VID.t = VID.ac.currentTime - VID.a0; else if (VID.last != null) VID.t += (now - VID.last) / 1000;
+      if (VID.elOn && VID.el && !VID.el.paused) VID.t = VID.el.currentTime; else if (VID.src) VID.t = VID.ac.currentTime - VID.a0; else if (VID.last != null) VID.t += (now - VID.last) / 1000;
       if (VID.t > pl.total + 1) { VID.t = 0; vozSonar(); }
     }
     VID.last = now; vdibujar(ctx, Math.max(0, Math.min(VID.t, pl.total - 0.001)), pl); VID.raf = requestAnimationFrame(loop);
@@ -7176,7 +7183,8 @@ function videoAbrir(){
 function vidEstado(){ const b = $("#vidPlay"); if (b) b.textContent = VID.play ? "Pausa" : "Reproducir"; $("#vidStage")?.classList.toggle("pausa", !VID.play); }
 function vidAlternar(){ if (!VID) return; VID.play = !VID.play; VID.last = null; vidEstado(); if (VID.play) vozSonar(); else vozCallar(); }
 function videoCerrar(){
-  if (!VID) return; cancelAnimationFrame(VID.raf); VID.ctl?.abort(); VID.vctl?.abort(); vozCallar(); VID.ac?.close().catch(() => {}); const o = VID.origen; VID = null;
+  if (!VID) return; cancelAnimationFrame(VID.raf); VID.ctl?.abort(); VID.vctl?.abort(); vozCallar(); VID.ac?.close().catch(() => {});
+  if (VID.el) { VID.el.pause(); VID.el.removeAttribute("src"); } [VID.audioUrl, VID.mudoUrl].forEach(u => u && URL.revokeObjectURL(u)); const o = VID.origen; VID = null;
   $("#vidBack")?.remove(); document.body.classList.remove("vid-on"); if (o && o.isConnected) o.focus();
 }
 const videoNombre = () => `PregonIA-Video-${slug((VID ? VID.plan.P : partePer()).rotulo)}-${slug(S.org)}-${hoyISO()}.${VID && VID.blob && /webm/.test(VID.blob.type) ? "webm" : "mp4"}`;
@@ -7237,9 +7245,26 @@ document.addEventListener("keydown", e => {
 });
 
 /* Voz en la vista previa, sincronizada con el reloj de audio */
-function vozCallar(){ if (VID && VID.src) { try { VID.src.stop(); } catch(e) {} VID.src = null; } }
+function vozCallar(){ if (!VID) return; if (VID.el && VID.elOn) { VID.el.pause(); VID.elOn = false; } if (VID.src) { try { VID.src.stop(); } catch(e) {} VID.src = null; } }
+/* Audio en WAV (16 bits, mono) para reproducir la voz con un elemento <audio>. */
+function wavDe(buf){
+  const d = buf.getChannelData(0), n = d.length, sr = buf.sampleRate, ab = new ArrayBuffer(44 + n * 2), v = new DataView(ab), w = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); w(8, "WAVE"); w(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) { const x = Math.max(-1, Math.min(1, d[i])); v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7FFF, true); }
+  return new Blob([ab], {type: "audio/wav"});
+}
 function vozSonar(){
-  if (!VID || !VID.plan.audio || !VID.ac) return; vozCallar();
+  if (!VID || !VID.plan.audio) return; vozCallar();
+  if (VID.el && VID.audioUrl) {
+    const el = VID.el, desde = Math.max(0, Math.min(VID.t, VID.plan.total - 0.05));
+    if (el.getAttribute("src") !== VID.audioUrl) el.src = VID.audioUrl;
+    try { el.currentTime = desde; } catch(e) {}
+    VID.elOn = true; el.onended = () => { if (VID) VID.elOn = false; };
+    el.play().catch(() => { if (!VID) return; VID.elOn = false; const st = $("#vozEstado"); if (st && !/Toca el video/.test(st.textContent)) st.textContent += " · Toca el video para escuchar la voz."; });
+    return;
+  }
+  if (!VID.ac) return;
   const src = VID.ac.createBufferSource(); src.buffer = VID.plan.audio; src.connect(VID.ac.destination);
   const desde = Math.max(0, Math.min(VID.t, VID.plan.total - 0.05)); VID.ac.resume().catch(() => {});
   src.start(0, desde); VID.a0 = VID.ac.currentTime - desde; VID.src = src;
@@ -7275,13 +7300,14 @@ async function vozAgregar(regrabar){
   VID.blob = null; $("#vidOut").hidden = true; $("#vidMake").textContent = "Preparar video MP4";
   $(".vid-meta").textContent = `${Math.round(plan.total)} segundos con voz · vertical, para ver en el celular · ${plan.scenes.length} escenas con las noticias ${plan.P.de}: tono, hasta dónde llegaron, respuestas y temas.`;
   st.textContent = `Voz lista · ${Math.round(plan.total)} segundos${VID.vozEstandar ? " · voz estándar (la chilena requiere un plan pagado de ElevenLabs)" : ""}`; btn.disabled = false; btn.lastChild.textContent = "Escribir y grabar de nuevo";
+  if (VID.audioUrl) URL.revokeObjectURL(VID.audioUrl); VID.audioUrl = VID.el ? URL.createObjectURL(wavDe(plan.audio)) : null;
   VID.t = 0; VID.play = true; VID.last = null; $("#vidPlay").textContent = "Pausa"; vozSonar();
 }
 
 /* Informe ejecutivo: tres horizontes separados (24 horas, 7 días y 30 días), cada uno comparado con el período anterior de igual largo,
    con foco en emergencias (lo que hay que atender) y oportunidades (lo que conviene difundir).
-   Se lee en un minuto en el celular y se comparte por WhatsApp como imagen vertical con el formato de PregonIA (Edición),
-   dibujada en canvas en el navegador; también como texto y PDF.
+   Se lee en un minuto en el celular y se comparte como un PDF compacto con el formato de PregonIA (Edición): páginas del tamaño
+   de la pantalla de un teléfono, dibujadas en canvas en el navegador. Se envía por WhatsApp o correo, se descarga, o se copia como texto.
    Cada asunto aparece una sola vez: en el horizonte más corto donde corresponde. Para una autoridad cuenta solo lo que la nombra. */
 const EJ_H = [
   {dias: 1, n: "24 horas", t: "Últimas 24 horas", ant: "24 h anteriores", tag: "Hoy"},
@@ -7379,8 +7405,8 @@ function repEjecutivo(){
       <div><p class="ej-sub cri">${ri("up")} Temas que suben en críticas</p>${cambio(d.subenCri, "c", "Ningún tema sube en críticas.")}</div>
       <div><p class="ej-sub pos">${ri("up")} Temas que suben en positivas</p>${cambio(d.subenPos, "p", "Ningún tema sube en positivas.")}</div></div></section>
     ${d.hs.map(ejSeccion).join("")}
-    <div class="acts"><button class="btn alt b-wa" type="button" data-act="ej-img"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>Enviar por WhatsApp</button><button class="btn" type="button" data-act="ej-bajar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar imágenes</button><button class="btn primary" type="button" data-act="ej-copiar">Copiar texto</button></div>
-    ${shareBar("ejec")}
+    <div class="acts ej-acts" role="group" aria-label="Compartir el informe en PDF"><button class="btn b-wa" type="button" data-act="share" data-via="wa" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="share" data-via="pdf" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar PDF</button><button class="btn" type="button" data-act="share" data-via="mail" data-src="ejec" aria-haspopup="menu" aria-expanded="false"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.mail}</svg>Correo</button><button class="btn" type="button" data-act="ej-copiar">Copiar texto</button></div>
+    <p class="hint" style="margin:0">Un PDF de pocas páginas con el formato de PregonIA, del tamaño de la pantalla del celular: se lee en WhatsApp sin hacer zoom.</p>
   </div>
   ${muestra(d.hs[2].M.vol)}`;
 }
@@ -7401,7 +7427,7 @@ function ejecTexto(){
    WhatsApp achica las imágenes muy largas hasta que no se leen, así que el informe se reparte en varias que se envían juntas.
    Cada bloque se mide primero en un lienzo de prueba y, si no cabe en la página, pasa entero a la siguiente. */
 const EJ_W = 1080, EJ_HMAX = 1920, EJ_X = 64, EJ_PIE = 110;
-async function ejecImagenes(){
+async function ejecPaginas(){
   await Promise.all(['400 40px Inter', '500 40px Inter', '600 40px Inter', '700 40px Inter', '600 60px "Source Serif 4"', '700 60px "Source Serif 4"'].map(f => document.fonts.load(f).catch(() => {})));
   vpaleta();
   const d = ejecData(), C = VC, W = EJ_W, X = EJ_X, AN = W - 2 * X;
@@ -7498,32 +7524,25 @@ async function ejecImagenes(){
   B.forEach(f => { const alto = f(pctx, 0); pctx.clearRect(0, 0, W, 3000); if (pag.y + alto > EJ_HMAX - EJ_PIE && pag.y > 120) nueva(); pag.y = f(pag.ctx, pag.y); });
   // Pie con número de página; cada página se recorta a su contenido (mínimo 1350 de alto, el formato 4:5).
   const nota = MODO.tipo !== "demo" || (typeof PILOTO !== "undefined" && PILOTO.activo) ? "Noticias reales de medios digitales · resúmenes propios · uso interno" : "Demostración con noticias ficticias";
-  return Promise.all(paginas.map((p, i) => {
+  return paginas.map((p, i) => {
     const alto = Math.min(EJ_HMAX, Math.max(1350, Math.ceil(p.y + EJ_PIE))), ctx = p.ctx, y = alto - 56;
     ctx.fillStyle = C.bg; ctx.fillRect(0, p.y + 10, W, EJ_HMAX); regla(ctx, y - 40);
     T(ctx, nota, X, y, {px: 20, color: C.muted, maxW: AN - 200, max: 1}); T(ctx, `PregonIA · ${i + 1} de ${paginas.length}`, W - X, y, {px: 20, w: 600, color: C.muted, align: "right"});
     const out = document.createElement("canvas"); out.width = W; out.height = alto; out.getContext("2d").drawImage(p.cv, 0, 0);
-    return new Promise(ok => out.toBlob(ok, "image/png"));
-  }));
+    return out;
+  });
 }
-const ejNombre = (i, n) => `PregonIA-Informe-ejecutivo-${slug(S.org)}-${hoyISO()}${n > 1 ? "-" + (i + 1) + "de" + n : ""}.png`;
-async function ejecArchivos(){ const bs = await ejecImagenes(); return bs.map((b, i) => new File([b], ejNombre(i, bs.length), {type: "image/png"})); }
-async function ejecWhatsApp(){
-  let fs; try { fs = await ejecArchivos(); } catch(e) { toast("No se pudo preparar la imagen. Intenta de nuevo."); return; }
-  const d = ejecData(), texto = `*Informe ejecutivo · ${inst()}*\n${d.sint}`;
-  if (navigator.canShare && movil() && navigator.canShare({files: fs})) {
-    try { await navigator.share({files: fs, text: texto, title: "Informe ejecutivo · " + inst()}); return; }
-    catch(err) { if (err && err.name === "AbortError") return; if (err && err.name === "NotAllowedError") { toast("Las imágenes están listas: toca WhatsApp otra vez."); return; } }
-  }
-  // Computador: WhatsApp Web no recibe archivos por enlace. Se abre el chat con el texto y se guardan las imágenes para adjuntarlas.
-  abrirEnlace("https://wa.me/?text=" + encodeURIComponent(ejecTexto()), true);
-  for (const f of fs) await guardarArchivo(f.name, f, true);
-  toast(`Abrimos WhatsApp con el texto y guardamos ${fs.length === 1 ? "la imagen: adjúntala" : "las " + fs.length + " imágenes: adjúntalas"} en el chat con el clip o arrastrándolas.`);
+async function ejecImagenes(){ return Promise.all((await ejecPaginas()).map(cv => new Promise(ok => cv.toBlob(ok, "image/png")))); }
+/* PDF compacto: las mismas páginas, en JPEG, una por hoja del tamaño de la pantalla de un teléfono. Es lo que se comparte, como el video. */
+async function ejecPDF(){
+  const [pags, {jsPDF}] = await Promise.all([ejecPaginas(), cargarJsPDF()]), A = 540, alto = cv => cv.height * A / cv.width;
+  const doc = new jsPDF({unit: "pt", format: [A, alto(pags[0])], orientation: "portrait", compress: true});
+  doc.setProperties({title: "Informe ejecutivo · " + inst(), subject: "PregonIA · " + fechaLarga(NOW), creator: "PregonIA"});
+  pags.forEach((cv, i) => { if (i) doc.addPage([A, alto(cv)], "portrait"); doc.addImage(cv.toDataURL("image/jpeg", 0.86), "JPEG", 0, 0, A, alto(cv), undefined, "FAST"); });
+  return doc.output("blob");
 }
 document.addEventListener("click", async e => {
   const b = e.target.closest("[data-act]"); if (!b) return; const a = b.dataset.act;
-  if (a === "ej-img") ejecWhatsApp();
-  if (a === "ej-bajar") { try { const fs = await ejecArchivos(); for (const f of fs) await guardarArchivo(f.name, f, fs.length > 1); if (fs.length > 1) toast(`Guardamos ${fs.length} imágenes del informe.`); } catch(er) { toast("No se pudo preparar la imagen."); } }
   if (a === "ej-copiar") { try { await navigator.clipboard.writeText(ejecTexto()); toast("Texto copiado: pégalo en WhatsApp o en un correo."); } catch(er) { toast("No se pudo copiar el texto."); } }
 });
 

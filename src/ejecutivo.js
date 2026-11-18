@@ -1,7 +1,7 @@
 /* Informe ejecutivo: tres horizontes separados (24 horas, 7 días y 30 días), cada uno comparado con el período anterior de igual largo,
    con foco en emergencias (lo que hay que atender) y oportunidades (lo que conviene difundir).
-   Se lee en un minuto en el celular y se comparte por WhatsApp como imagen vertical con el formato de PregonIA (Edición),
-   dibujada en canvas en el navegador; también como texto y PDF.
+   Se lee en un minuto en el celular y se comparte como un PDF compacto con el formato de PregonIA (Edición): páginas del tamaño
+   de la pantalla de un teléfono, dibujadas en canvas en el navegador. Se envía por WhatsApp o correo, se descarga, o se copia como texto.
    Cada asunto aparece una sola vez: en el horizonte más corto donde corresponde. Para una autoridad cuenta solo lo que la nombra. */
 const EJ_H = [
   {dias: 1, n: "24 horas", t: "Últimas 24 horas", ant: "24 h anteriores", tag: "Hoy"},
@@ -99,8 +99,8 @@ function repEjecutivo(){
       <div><p class="ej-sub cri">${ri("up")} Temas que suben en críticas</p>${cambio(d.subenCri, "c", "Ningún tema sube en críticas.")}</div>
       <div><p class="ej-sub pos">${ri("up")} Temas que suben en positivas</p>${cambio(d.subenPos, "p", "Ningún tema sube en positivas.")}</div></div></section>
     ${d.hs.map(ejSeccion).join("")}
-    <div class="acts"><button class="btn alt b-wa" type="button" data-act="ej-img"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>Enviar por WhatsApp</button><button class="btn" type="button" data-act="ej-bajar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar imágenes</button><button class="btn primary" type="button" data-act="ej-copiar">Copiar texto</button></div>
-    ${shareBar("ejec")}
+    <div class="acts ej-acts" role="group" aria-label="Compartir el informe en PDF"><button class="btn b-wa" type="button" data-act="share" data-via="wa" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="share" data-via="pdf" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar PDF</button><button class="btn" type="button" data-act="share" data-via="mail" data-src="ejec" aria-haspopup="menu" aria-expanded="false"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.mail}</svg>Correo</button><button class="btn" type="button" data-act="ej-copiar">Copiar texto</button></div>
+    <p class="hint" style="margin:0">Un PDF de pocas páginas con el formato de PregonIA, del tamaño de la pantalla del celular: se lee en WhatsApp sin hacer zoom.</p>
   </div>
   ${muestra(d.hs[2].M.vol)}`;
 }
@@ -121,7 +121,7 @@ function ejecTexto(){
    WhatsApp achica las imágenes muy largas hasta que no se leen, así que el informe se reparte en varias que se envían juntas.
    Cada bloque se mide primero en un lienzo de prueba y, si no cabe en la página, pasa entero a la siguiente. */
 const EJ_W = 1080, EJ_HMAX = 1920, EJ_X = 64, EJ_PIE = 110;
-async function ejecImagenes(){
+async function ejecPaginas(){
   await Promise.all(['400 40px Inter', '500 40px Inter', '600 40px Inter', '700 40px Inter', '600 60px "Source Serif 4"', '700 60px "Source Serif 4"'].map(f => document.fonts.load(f).catch(() => {})));
   vpaleta();
   const d = ejecData(), C = VC, W = EJ_W, X = EJ_X, AN = W - 2 * X;
@@ -218,31 +218,24 @@ async function ejecImagenes(){
   B.forEach(f => { const alto = f(pctx, 0); pctx.clearRect(0, 0, W, 3000); if (pag.y + alto > EJ_HMAX - EJ_PIE && pag.y > 120) nueva(); pag.y = f(pag.ctx, pag.y); });
   // Pie con número de página; cada página se recorta a su contenido (mínimo 1350 de alto, el formato 4:5).
   const nota = MODO.tipo !== "demo" || (typeof PILOTO !== "undefined" && PILOTO.activo) ? "Noticias reales de medios digitales · resúmenes propios · uso interno" : "Demostración con noticias ficticias";
-  return Promise.all(paginas.map((p, i) => {
+  return paginas.map((p, i) => {
     const alto = Math.min(EJ_HMAX, Math.max(1350, Math.ceil(p.y + EJ_PIE))), ctx = p.ctx, y = alto - 56;
     ctx.fillStyle = C.bg; ctx.fillRect(0, p.y + 10, W, EJ_HMAX); regla(ctx, y - 40);
     T(ctx, nota, X, y, {px: 20, color: C.muted, maxW: AN - 200, max: 1}); T(ctx, `PregonIA · ${i + 1} de ${paginas.length}`, W - X, y, {px: 20, w: 600, color: C.muted, align: "right"});
     const out = document.createElement("canvas"); out.width = W; out.height = alto; out.getContext("2d").drawImage(p.cv, 0, 0);
-    return new Promise(ok => out.toBlob(ok, "image/png"));
-  }));
+    return out;
+  });
 }
-const ejNombre = (i, n) => `PregonIA-Informe-ejecutivo-${slug(S.org)}-${hoyISO()}${n > 1 ? "-" + (i + 1) + "de" + n : ""}.png`;
-async function ejecArchivos(){ const bs = await ejecImagenes(); return bs.map((b, i) => new File([b], ejNombre(i, bs.length), {type: "image/png"})); }
-async function ejecWhatsApp(){
-  let fs; try { fs = await ejecArchivos(); } catch(e) { toast("No se pudo preparar la imagen. Intenta de nuevo."); return; }
-  const d = ejecData(), texto = `*Informe ejecutivo · ${inst()}*\n${d.sint}`;
-  if (navigator.canShare && movil() && navigator.canShare({files: fs})) {
-    try { await navigator.share({files: fs, text: texto, title: "Informe ejecutivo · " + inst()}); return; }
-    catch(err) { if (err && err.name === "AbortError") return; if (err && err.name === "NotAllowedError") { toast("Las imágenes están listas: toca WhatsApp otra vez."); return; } }
-  }
-  // Computador: WhatsApp Web no recibe archivos por enlace. Se abre el chat con el texto y se guardan las imágenes para adjuntarlas.
-  abrirEnlace("https://wa.me/?text=" + encodeURIComponent(ejecTexto()), true);
-  for (const f of fs) await guardarArchivo(f.name, f, true);
-  toast(`Abrimos WhatsApp con el texto y guardamos ${fs.length === 1 ? "la imagen: adjúntala" : "las " + fs.length + " imágenes: adjúntalas"} en el chat con el clip o arrastrándolas.`);
+async function ejecImagenes(){ return Promise.all((await ejecPaginas()).map(cv => new Promise(ok => cv.toBlob(ok, "image/png")))); }
+/* PDF compacto: las mismas páginas, en JPEG, una por hoja del tamaño de la pantalla de un teléfono. Es lo que se comparte, como el video. */
+async function ejecPDF(){
+  const [pags, {jsPDF}] = await Promise.all([ejecPaginas(), cargarJsPDF()]), A = 540, alto = cv => cv.height * A / cv.width;
+  const doc = new jsPDF({unit: "pt", format: [A, alto(pags[0])], orientation: "portrait", compress: true});
+  doc.setProperties({title: "Informe ejecutivo · " + inst(), subject: "PregonIA · " + fechaLarga(NOW), creator: "PregonIA"});
+  pags.forEach((cv, i) => { if (i) doc.addPage([A, alto(cv)], "portrait"); doc.addImage(cv.toDataURL("image/jpeg", 0.86), "JPEG", 0, 0, A, alto(cv), undefined, "FAST"); });
+  return doc.output("blob");
 }
 document.addEventListener("click", async e => {
   const b = e.target.closest("[data-act]"); if (!b) return; const a = b.dataset.act;
-  if (a === "ej-img") ejecWhatsApp();
-  if (a === "ej-bajar") { try { const fs = await ejecArchivos(); for (const f of fs) await guardarArchivo(f.name, f, fs.length > 1); if (fs.length > 1) toast(`Guardamos ${fs.length} imágenes del informe.`); } catch(er) { toast("No se pudo preparar la imagen."); } }
   if (a === "ej-copiar") { try { await navigator.clipboard.writeText(ejecTexto()); toast("Texto copiado: pégalo en WhatsApp o en un correo."); } catch(er) { toast("No se pudo copiar el texto."); } }
 });
