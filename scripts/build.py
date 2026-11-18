@@ -65,7 +65,7 @@ def main():
     rd_cabeza = ('<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n'
                  '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
                  '<link rel="manifest" href="/manifest-redaccion.json">\n<meta name="theme-color" content="#FFFFFF">\n'
-                 '<link rel="icon" type="image/png" sizes="192x192" href="/icono-192.png">\n<link rel="apple-touch-icon" href="/icono-180.png">\n'
+                 '<link rel="icon" type="image/png" sizes="192x192" href="/icono-redaccion-192.png">\n<link rel="apple-touch-icon" href="/icono-redaccion-180.png">\n'
                  '<meta name="apple-mobile-web-app-title" content="Redacción">\n<meta name="apple-mobile-web-app-capable" content="yes">\n')
     rd_html = (rd_cabeza + leer("redaccion.html").replace("</style>\n", "</style>\n</head>\n<body>\n", 1) +
         "<script>\n" + rd_js + "\n</script>\n</body>\n</html>\n")
