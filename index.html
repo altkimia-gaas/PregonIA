@@ -5407,10 +5407,12 @@ function mostrarPortada(on){
   const p = $("#portada"); if (!p) return;
   if (on) { pintarMini(); pintarAccesoPortada(); }
   p.hidden = !on; document.body.classList.toggle("pt-on", on);
+  if (!on && typeof ptVideo !== "undefined") ptVideo.pausar();  // fuera de la portada no sigue sonando
   if (on) { window.scrollTo(0, 0); setTimeout(() => $("#ptGo").focus({preventScroll:true}), 60); }
 }
 document.addEventListener("click", e => {
   if (!e.target.closest("#ptGo")) return;
+  ptVideo.pausar();  // «Prueba gratis» detiene el video de la portada
   if (typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo) return salirPortada();  // con sesión: directo a su institución
   // Demostración: antes de entrar se muestra el aviso legal; con sesión iniciada lo cubre el registro en la base.
   avisoLegal().then(ok => { if (ok) entAbrir(true); });  // sin prueba vigente pide la inscripción; luego rol, zona y nombre
@@ -5419,17 +5421,34 @@ window.addEventListener("hashchange", () => { if (location.hash === "#portada") 
 /* Edición · Fecha del cabezal de la portada, como la de un diario. */
 (() => { const f = $("#ptFecha"); if (!f) return; const d = new Date().toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long", year: "numeric"}); f.textContent = d.charAt(0).toUpperCase() + d.slice(1); })();
 
-/* Video explicativo de la portada: pega el enlace (YouTube, Vimeo o .mp4) en data-video de #ptVideo; se carga solo al tocarlo. */
-(() => {
-  const f = document.getElementById("ptVideo"); if (!f) return;
+/* Video explicativo de la portada: enlace (YouTube, Vimeo o .mp4) en data-video de #ptVideo.
+   Un .mp4 parte solo, sin sonido, la primera vez que el recuadro queda a la vista al bajar por la página (los navegadores
+   no permiten partir con sonido); con los controles se activa el audio. Tocarlo antes lo reproduce con sonido.
+   «Prueba gratis» lo detiene; «Agendar demostración» no. Con «reducir movimiento» activado no parte solo. */
+var ptVideo = (() => {
+  const f = document.getElementById("ptVideo"); if (!f) return {pausar(){}};
   const src = (f.dataset.video || "").trim(), b = f.querySelector("button");
-  if (!src) { b.disabled = true; return; }
+  if (!src) { b.disabled = true; return {pausar(){}}; }
   const sub = document.getElementById("ptVideoS"); if (sub) sub.textContent = "Video explicativo";
-  b.addEventListener("click", () => {
-    const yt = src.match(/(?:youtu\.be\/|[?&]v=|embed\/|shorts\/)([\w-]{11})/), vm = src.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-    f.innerHTML = /\.(mp4|webm)(\?|$)/i.test(src) ? `<video src="${src}" controls autoplay playsinline preload="auto"${f.dataset.poster ? ` poster="${f.dataset.poster}"` : ""}></video>`
-      : `<iframe src="${yt ? "https://www.youtube-nocookie.com/embed/" + yt[1] + "?autoplay=1&rel=0" : vm ? "https://player.vimeo.com/video/" + vm[1] + "?autoplay=1" : src}" title="Video explicativo de PregonIA" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
-  });
+  const mp4 = /\.(mp4|webm)(\?|$)/i.test(src);
+  let v = null, auto = false;
+  const cargar = solo => {
+    if (v) { if (!solo) { v.muted = false; v.play().catch(() => {}); } return; }
+    if (!mp4) {
+      const yt = src.match(/(?:youtu\.be\/|[?&]v=|embed\/|shorts\/)([\w-]{11})/), vm = src.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+      f.innerHTML = `<iframe src="${yt ? "https://www.youtube-nocookie.com/embed/" + yt[1] + "?autoplay=1&rel=0" : vm ? "https://player.vimeo.com/video/" + vm[1] + "?autoplay=1" : src}" title="Video explicativo de PregonIA" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+      return;
+    }
+    f.innerHTML = `<video src="${src}" controls playsinline preload="auto"${f.dataset.poster ? ` poster="${f.dataset.poster}"` : ""}></video>`;
+    v = f.querySelector("video"); v.muted = !!solo; v.play().catch(() => {});
+  };
+  b.addEventListener("click", () => cargar(false));
+  const quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (mp4 && !quieto && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver(es => { if (!auto && es.some(e => e.isIntersecting && e.intersectionRatio >= .6)) { auto = true; io.disconnect(); cargar(true); } }, {threshold: [.6]});
+    io.observe(f);
+  }
+  return {pausar(){ if (v && !v.paused) v.pause(); }};
 })();
 render();
 mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingresar llega desde /servicio: va directo al acceso de clientes
