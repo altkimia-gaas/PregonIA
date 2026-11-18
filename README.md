@@ -26,7 +26,7 @@ Lenguaje de diario: papel blanco, filete negro, titulares de prensa en serif (So
 - **Pantalla de lectura:** siete diarios en blanco y negro en órbita; el que se lee, con anillo azul.
 
 ## Estructura
-- `index.html` versión autónoma lista para publicar (se abre con doble clic; JS y CSS embebidos).
+- `app.html` (servida en «/» de pregonia.cl; www.pregonia.cl muestra servicio.html) versión autónoma lista para publicar (se abre con doble clic; JS y CSS embebidos).
 - `src/shell.html` estilos (diseño "Edición", en versión clara y oscura) y estructura de la página.
 - `src/base.js` constantes, planes y utilidades; recibe el catálogo de medios al compilar.
 - `src/corpus.js` noticias ficticias de la demo.
@@ -38,11 +38,11 @@ Lenguaje de diario: papel blanco, filete negro, titulares de prensa en serif (So
 - `api/voz.js` función de servidor que graba la voz del video resumen con ElevenLabs.
 - `src/video.js` video resumen del parte del alcalde: escenas en canvas, guion, voz y exportación a MP4 en el navegador.
 - `src/redes.js` cuentas de Facebook e Instagram de medios: inscripción desde Ajustes › Fuentes, estado de lectura y retiro. `api/_redes.js` las lee por la API de Meta; `src/cuentasred.js` (copiado a `api/_cuentasred.js`) reconoce el usuario a partir del enlace.
-- `scripts/build.py` arma `index.html` desde `src/`, `assets/` y `data/`.
+- `scripts/build.py` arma `app.html` desde `src/`, `assets/` y `data/`.
 
 ## Uso
 ```
-python3 scripts/build.py      # regenera index.html
+python3 scripts/build.py      # regenera app.html
 python3 -m http.server 8000   # vista local en http://localhost:8000
 ```
 Para publicar en Vercel o GitHub Pages basta servir `index.html` desde la raíz; no requiere compilación en el servidor.
