@@ -60,8 +60,11 @@ function proponer(perfil){
   const libres = Math.max(0, PLANES[perfil.plan].temas - nucleo.length);
   nucleo.forEach(t => Object.assign(t, puntaje(t)));
   otros.forEach(t => Object.assign(t, puntaje(t)));
-  const orden = otros.filter(t => t.score > 0).sort((a,b) => b.score - a.score);
-  if (perfil.tipo === "Autoridad") orden.push(...otros.filter(t => !(t.score > 0)));  // una autoridad sigue su agenda aunque hoy no haya notas
+  let orden = otros.filter(t => t.score > 0).sort((a,b) => b.score - a.score);
+  if (perfil.tipo === "Autoridad") {
+    orden.push(...otros.filter(t => !(t.score > 0)));  // una autoridad sigue su agenda aunque hoy no haya notas
+    orden = orden.filter(t => t.propio).concat(orden.filter(t => !t.propio));  // primero lo propio de la persona; después los ejes del territorio
+  }
   return {base: nucleo.concat(orden.slice(0, libres)), sugeridos: orden.slice(libres, libres + 5)};
 }
 
@@ -328,15 +331,15 @@ function vInicio(){
   const balance = !M.vol ? "" : v.i === 2 ? `En la prensa sobre ${esc(quien)}, lo positivo y lo crítico se compensan.` : `La prensa habló ${v.f} de ${esc(quien)}.`;
   const pesa = frentes ? ` Lo que pesa: ${[...new Set(resp.map(m => temaCorto(m).toLowerCase()))].slice(0, 2).map(x => `<b class="c">${esc(x)}</b>`).join(" y ")}${frentes > 2 ? ` (${numTx(frentes)} notas en total)` : ""}, sin respuesta${lejos ? `; ${lejos === frentes ? (frentes === 1 ? "ya llegó" : frentes === 2 ? "ambas ya llegaron" : "todas ya llegaron") : `${numTx(lejos)} ya ${lejos === 1 ? "llegó" : "llegaron"}`} más allá de la prensa comunal` : ""}.` : (apro.length ? ` Nada crítico espera respuesta; hay ${plural(ms.filter(m => m.tono === "pos").length, "nota positiva", "notas positivas")} para aprovechar.` : "");
   const medN = PILOTO && PILOTO.activo ? CATALOG.length : CATALOG.filter(m => m.m !== "facebook" && m.m !== "instagram" && m.a !== "institucional" && m.t !== "Otro medio").length;
-  // Qué está cambiando
-  const filasT = c.temas.filter(t => t.activo && t.origen !== "Núcleo").map(t => { const sub = (aut ? todas : ms).filter(m => m.temas.has(t.id)), subP = (aut ? prevT : prev).filter(m => m.temas.has(t.id)); return {t, sub, n: sub.length, np: subP.length, X: metricas(sub)}; })
+  // Qué está cambiando: en una autoridad, solo lo que la nombra (lo del territorio va al radar)
+  const filasT = c.temas.filter(t => t.activo && t.origen !== "Núcleo").map(t => { const sub = ms.filter(m => m.temas.has(t.id)), subP = prev.filter(m => m.temas.has(t.id)); return {t, sub, n: sub.length, np: subP.length, X: metricas(sub)}; })
     .filter(x => x.n || x.np).sort((a, b) => b.n - a.n || (b.n - b.np) - (a.n - a.np));
   const filaT = x => { const nuevo = x.sub.find(m => !usadas.has(m.g)), ya = x.sub.length && !nuevo;
     return `<li><button class="ini-fila" data-act="goto-tema" data-id="${x.t.id}" aria-label="${esc(x.t.nombre)}: ${x.n} noticias ${perTx}, ${x.np} ${antTx}">
       <span class="ini-fn">${esc(x.t.nombre)}</span><span class="ini-fv mono">${x.n}${hayPrev ? ` ${ri(x.n > x.np ? "up" : x.n < x.np ? "down" : "flat", "ini-fa " + (x.n > x.np ? "up" : x.n < x.np ? "down" : ""))}<small>de ${x.np}</small>` : ""}</span>
       <span class="ini-fs">${x.n ? segbar([{l: "Críticas", v: x.X.cri, c: "var(--cri)"}, {l: "Neutras", v: x.X.neu, c: "var(--neu)"}, {l: "Positivas", v: x.X.pos, c: "var(--pos)"}]) : ""}<span>${x.n ? conteoCorto(x.X) : "sin notas " + perTx}${ya ? " · ya está en «Qué hacer hoy»" : ""}</span></span>
       ${nuevo ? `<span class="ini-ft">${esc(nuevo.lead.t)} <small>· ${esc(nomMedio(nuevo.lead))}</small></span>` : ""}</button></li>`; };
-  const grupos = {}; (aut ? todas : ms).filter(sinTema).forEach(m => { const a = areaDe(m); if (a) (grupos[a] = grupos[a] || []).push(m); });
+  const grupos = {}; ms.filter(sinTema).forEach(m => { const a = areaDe(m); if (a) (grupos[a] = grupos[a] || []).push(m); });
   const asuntos = Object.entries(grupos).filter(([, xs]) => xs.length >= 2).sort((a, b) => b[1].length - a[1].length).slice(0, 3);
   const filaA = ([a, xs]) => { const X = metricas(xs), ya = xs.filter(m => usadas.has(m.g)).length;
     return `<li class="ini-asunto"><div class="ini-fila"><span class="ini-fn">${esc(a)} <small class="ini-sin">sin tema asignado</small></span><span class="ini-fv mono">${xs.length}</span>
@@ -482,7 +485,8 @@ function vInicio(){
     <section aria-labelledby="camT">
       ${sec("camT", "Qué está cambiando", `<span class="ini-sub">${{1: "24 h vs. las 24 anteriores", 7: "semana vs. la anterior", 30: "30 días vs. los anteriores"}[per]}</span>`)}
       ${!c.caracterizada && !c.onbOculto ? `<p class="ini-afina">${ri("pin")}<span>Estos temas los propuso PregonIA a partir del territorio. Afinarlos toma cinco preguntas y mejora toda la lectura.</span><a class="btn sm" href="#asistente">Afinar temas</a><button class="ini-link" type="button" data-act="onb-hide">Ocultar</button></p>` : ""}
-      ${filasT.length || asuntos.length ? `<ul class="ini-lista">${filasT.map(filaT).join("")}${asuntos.map(filaA).join("")}</ul>` : `<p class="muted">Sin notas de tus temas ${perTx}.</p>`}
+      ${filasT.length || asuntos.length ? `<ul class="ini-lista">${filasT.map(filaT).join("")}${asuntos.map(filaA).join("")}</ul>` : `<p class="muted">${aut ? `Ninguna nota que nombre a ${esc(quien)} tocó sus temas ${perTx}.` : `Sin notas de tus temas ${perTx}.`}</p>`}
+      ${aut ? `<p class="ini-nota">Solo notas que nombran a ${esc(quien)}. Lo que pasa en su territorio sin nombrarlo está en «Radar del territorio».</p>` : ""}
     </section>
     <div class="ini-der">
       ${vieneHtml ? `<section aria-labelledby="vieT">${sec("vieT", "Qué viene")}<ul class="ini-lista ini-viene">${vieneHtml}</ul></section>` : ""}
