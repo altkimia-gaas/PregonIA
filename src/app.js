@@ -1859,7 +1859,8 @@ function pintarAccesoPortada(){
   const go = $("#ptGo"); if (!go) return;
   const pl = typeof PILOTO !== "undefined" && PILOTO, dentro = !!(pl && pl.activo);
   $("#ptGoTx").textContent = dentro ? "Entrar a mi edición" : pruebaVigente() ? "Continuar mi prueba" : "Prueba gratis";
-  $("#ptIn").hidden = dentro || !(pl && pl.disponible);  // sin Supabase configurado (por ejemplo, el archivo suelto) no hay a qué ingresar
+  $("#ptIn").hidden = dentro || !(pl && pl.disponible);
+  const out = $("#ptOut"); if (out) { const prueba = !dentro && pruebaVigente(); out.hidden = !(dentro || prueba); out.dataset.act = dentro ? "salir" : "salir-prueba"; out.lastChild.textContent = dentro ? "Cerrar sesión" : "Salir de la prueba"; }  // sin Supabase configurado (por ejemplo, el archivo suelto) no hay a qué ingresar
   $("#ptPiloto").hidden = dentro;
   $("#ptDemo").hidden = dentro;
   $("#ptEstado").textContent = dentro ? "Edición de " + pl.muni.nombre : "Demostración con noticias ficticias";

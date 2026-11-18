@@ -971,10 +971,10 @@ function abrirDesdeEnlace(){
 }
 function pintarHerramientas(){
   const t = $("#rdTools"); if (!t) return;
-  if (!RD.modo || RD.modo === "sin-permiso") { t.innerHTML = RD.user ? `<button class="btn sm" type="button" data-act="salir">${ico("salir")}Salir</button>` : ""; return; }
+  if (!RD.modo || RD.modo === "sin-permiso") { t.innerHTML = RD.user ? `<button class="btn sm" type="button" data-act="salir">${ico("salir")}Cerrar sesión</button>` : ""; return; }
   t.innerHTML = `<span class="modo">${RD.modo === "prueba" ? "<b>Modo prueba</b> · datos ficticios en este navegador" : `<b>Editor</b> · ${esc(RD.user.email)}`}</span>
     <button class="btn sm" type="button" data-act="buscar">${ico("buscar")}Buscar ahora</button>
-    <button class="btn sm" type="button" data-act="salir">${ico("salir")}Salir</button>`;
+    <button class="btn sm" type="button" data-act="salir">${ico("salir")}Cerrar sesión</button>`;
 }
 
 /* ─── Navegación ─── */
@@ -1742,7 +1742,7 @@ iniciar();
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "76f5ab74fa3f", K = "redaccion";
+  const V = "45939b32be58", K = "redaccion";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;

@@ -1149,6 +1149,7 @@ details.resp[open] summary{margin-bottom:12px}
 @media (prefers-reduced-motion: reduce){ .dg-ticker-l .dot{animation:none} }
 
 /* Ayuda */
+#salirBtn[hidden]{display:none}
 .helpbtn{display:inline-flex;align-items:center;gap:6px;background:transparent;color:var(--top-ink);border:1px solid var(--top-line);border-radius:8px;padding:6px 11px;font-size:12.5px;font-weight:600;cursor:pointer;min-height:34px}
 .helpbtn:hover{background:var(--top-line)}
 .helpbtn .ico{width:17px;height:17px}
@@ -1908,7 +1909,7 @@ details.corr summary{cursor:pointer;font-size:13px;color:var(--muted)}
 <section class="portada" id="portada" aria-labelledby="ptT" hidden>
   <div class="pd">
     <header class="pd-cab">
-      <div class="pd-fecha"><span id="ptFecha">Edición digital</span><nav class="pd-der" aria-label="Acceso"><span class="pd-desc">Monitoreo de prensa para instituciones públicas</span><button class="pd-acceso" id="ptIn" type="button" data-act="login" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>Acceso clientes</button></nav></div>
+      <div class="pd-fecha"><span id="ptFecha">Edición digital</span><nav class="pd-der" aria-label="Acceso"><span class="pd-desc">Monitoreo de prensa para instituciones públicas</span><button class="pd-acceso" id="ptIn" type="button" data-act="login" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>Acceso clientes</button><button class="pd-acceso" id="ptOut" type="button" data-act="salir" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button></nav></div>
       <p class="pd-nombre" id="ptT">Pregon<b>IA</b></p>
       <p class="pd-lema">La prensa no espera. Tú tampoco.</p>
     </header>
