@@ -5537,7 +5537,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingr
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "5a76fd996239", K = "app";
+  const V = "79d182d8e1e6", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
@@ -6829,6 +6829,8 @@ function videoPlan(){
   return retimar(plan);
 }
 
+/* Voz del video: apagada por decisión del cliente (nov 2026). Con true vuelve el recuadro «Voz» y la narración automática con ElevenLabs. */
+const VOZ_ACTIVA = false;
 /* Con voz, cada escena dura lo que su narración (más un respiro); sin voz, su duración base. */
 const VOZ_INI = 0.35, VOZ_COLA = 0.75;
 function retimar(plan){
@@ -7160,7 +7162,8 @@ function videoAbrir(){
   try { const el = VID.el = new Audio(); el.setAttribute("playsinline", ""); el.preload = "auto";
     if (ac0) { VID.mudoUrl = URL.createObjectURL(wavDe(ac0.createBuffer(1, 2400, 48000))); el.src = VID.mudoUrl; el.play().then(() => el.pause()).catch(() => {}); } } catch(e) { VID.el = null; }
   // La voz se genera sola al abrir: guion con los datos del período y narración con ElevenLabs. Si falla, el video sigue sin voz.
-  vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const st = $("#vozEstado");
+  if (!VOZ_ACTIVA) $("#vozBox").hidden = true;
+  if (VOZ_ACTIVA) vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const st = $("#vozEstado");
     if (e === "ok" && VOZ_CACHE.sinCredito) { st.textContent = `Sin voz · ${VOZ_CACHE.sinCredito}. El video funciona igual, sin narración.`; const b = $("#vozAdd"); b.disabled = false; b.lastChild.textContent = "Intentar la voz de nuevo"; }
     else if (e === "ok") VID.vozPromesa = vozAgregar(false).finally(() => { if (VID) VID.vozPromesa = null; });
     else st.textContent = e === "sin-clave" ? "Sin voz: falta configurar la clave de ElevenLabs en Vercel" : "Sin voz: la voz se genera en pregonia.cl"; });
