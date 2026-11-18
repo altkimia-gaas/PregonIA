@@ -1935,9 +1935,9 @@ details.corr summary{cursor:pointer;font-size:13px;color:var(--muted)}
       </figure>
       <div class="pd-acts">
         <button class="pd-go" id="ptGo" type="button"><span id="ptGoTx">Prueba gratis</span> <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-        <a class="pd-go pd-alt" id="ptDemo" href="/servicio#contacto">Agendar demostración</a>
+        <a class="pd-go pd-alt" id="ptDemo" href="https://www.pregonia.cl/#contacto">Agendar demostración</a>
       </div>
-      <p class="pd-piloto" id="ptPiloto">¿Quieres PregonIA en tu institución? <a href="/servicio">Conoce el servicio y sus planes</a></p>
+      <p class="pd-piloto" id="ptPiloto">¿Quieres PregonIA en tu institución? <a href="https://www.pregonia.cl/">Conoce el servicio y sus planes</a></p>
       <div class="pd-cols">
         <section><h2>Lee</h2><p>Más de 100 medios digitales y sus cuentas en redes, con el tono de cada nota.</p></section>
         <section><h2>Mide</h2><p>Hasta dónde llegó cada tema: prensa comunal, regional o nacional.</p></section>
@@ -3347,7 +3347,7 @@ function insCuerpo(){
   } else if (vencida) {
     cuerpo = `<div class="ent-tit"><span class="ent-pasoT">Prueba gratis</span><h2 id="insT" tabindex="-1">Tu prueba terminó</h2>
         <p>Gracias por probar PregonIA. Para seguir recibiendo tu prensa, agenda una demostración y te mostramos los planes.</p></div>
-      <a class="btn alt ent-cta" href="/servicio#contacto">Agendar demostración</a>`;
+      <a class="btn alt ent-cta" href="https://www.pregonia.cl/#contacto">Agendar demostración</a>`;
     pie = "";
   } else {
     const t = insTerritorios(INS.rol);
@@ -5475,7 +5475,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingr
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "7136bdc11f9d", K = "app";
+  const V = "da2503dadcb8", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;

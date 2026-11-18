@@ -279,7 +279,7 @@ function insCuerpo(){
   } else if (vencida) {
     cuerpo = `<div class="ent-tit"><span class="ent-pasoT">Prueba gratis</span><h2 id="insT" tabindex="-1">Tu prueba terminó</h2>
         <p>Gracias por probar PregonIA. Para seguir recibiendo tu prensa, agenda una demostración y te mostramos los planes.</p></div>
-      <a class="btn alt ent-cta" href="/servicio#contacto">Agendar demostración</a>`;
+      <a class="btn alt ent-cta" href="https://www.pregonia.cl/#contacto">Agendar demostración</a>`;
     pie = "";
   } else {
     const t = insTerritorios(INS.rol);

@@ -68,7 +68,7 @@ async function solicitar(d){
   sb(`pruebas?creado_en=lt.${atras(365)}${fueraLimpieza}`, {method: "DELETE"}).catch(() => {});
   const demo = sinLimite(p.correo);
   const inicio = demo ? 0 : await primeraVerificacion(p.correo);
-  if (inicio && inicio + horas() * 36e5 < Date.now()) return json({error: "La prueba gratis de este correo ya terminó. Agenda una demostración en pregonia.cl/servicio y te mostramos los planes."}, 403);
+  if (inicio && inicio + horas() * 36e5 < Date.now()) return json({error: "La prueba gratis de este correo ya terminó. Agenda una demostración en www.pregonia.cl y te mostramos los planes."}, 403);
   const desde = new Date(Date.now() - VENTANA_MS).toISOString();
   const recientes = await sb(`pruebas?correo=eq.${encodeURIComponent(p.correo)}&creado_en=gte.${desde}&select=id`);
   if (!demo && (recientes || []).length >= POR_CORREO) return json({error: "Ya enviamos varios códigos a ese correo. Revisa tu bandeja (y la de spam) o intenta en 10 minutos."}, 429);

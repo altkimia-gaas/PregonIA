@@ -30,6 +30,16 @@
   },
   "rewrites": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.pregonia.cl"
+        }
+      ],
+      "destination": "/servicio.html"
+    },
+    {
       "source": "/compartir",
       "destination": "/api/compartir"
     },
@@ -91,6 +101,19 @@
           "value": "no-store"
         }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/servicio",
+      "has": [
+        {
+          "type": "host",
+          "value": "pregonia.cl"
+        }
+      ],
+      "destination": "https://www.pregonia.cl/",
+      "permanent": true
     }
   ]
 }
