@@ -914,3 +914,21 @@ window.addEventListener("pagehide", () => { if (RD.timer) guardarAhora(true); })
 /* Casillas de provincia con selección parcial. */
 new MutationObserver(() => document.querySelectorAll("[data-mixto]").forEach(x => { x.indeterminate = true; })).observe(document.getElementById("rdMain"), {childList: true});
 iniciar();
+/* Actualización automática de la app instalada: al volver a la app (o cada 5 minutos con la app a la vista) revisa
+   /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
+   escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
+(() => {
+  const V = "__PREGONIA_VERSION__", K = "redaccion";
+  if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
+  let nueva = false;
+  const ocupado = () => { const a = document.activeElement;
+    return !!((a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) || document.querySelector("#entBack, #insBack, #dlgBack, .vid-back")); };
+  const recargar = () => { if (nueva && !ocupado()) location.reload(); };
+  async function revisar(){
+    try { const j = await (await fetch("/version.json", {cache: "no-store"})).json(); if (j && j[K] && j[K] !== V) nueva = true; } catch(e) {}
+    return nueva;
+  }
+  document.addEventListener("visibilitychange", async () => { if (document.visibilityState === "visible" && await revisar()) recargar(); });
+  setInterval(() => { if (document.visibilityState === "visible") revisar().then(n => { if (n && !document.hasFocus()) recargar(); }); }, 5 * 60e3);
+  addEventListener("focusout", () => { if (nueva) setTimeout(recargar, 1500); });
+})();
