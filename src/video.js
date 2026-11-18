@@ -46,6 +46,8 @@ function videoPlan(){
   return retimar(plan);
 }
 
+/* Voz del video: apagada por decisión del cliente (nov 2026). Con true vuelve el recuadro «Voz» y la narración automática con ElevenLabs. */
+const VOZ_ACTIVA = false;
 /* Con voz, cada escena dura lo que su narración (más un respiro); sin voz, su duración base. */
 const VOZ_INI = 0.35, VOZ_COLA = 0.75;
 function retimar(plan){
@@ -290,6 +292,8 @@ async function videoMP4(plan, onProg, signal){
   if (plan.audio && window.AudioEncoder && window.AudioData) {
     for (const [codec, mx] of [["mp4a.40.2", "aac"], ["opus", "opus"]]) { try { const c = {codec, sampleRate: 48000, numberOfChannels: 1, bitrate: 128000}; if ((await AudioEncoder.isConfigSupported(c)).supported) { acfg = {c, mx}; break; } } catch(e) {} }
   }
+  // Sin codificador de audio (Safari en iPhone, por ejemplo) el MP4 rápido saldría mudo: se graba en tiempo real, que sí lleva la voz.
+  if (plan.audio && !acfg && window.MediaRecorder) return null;
   const muxer = new Mx.Muxer({target: new Mx.ArrayBufferTarget(), video: {codec: "avc", width: w, height: h, frameRate: VFPS}, ...(acfg ? {audio: {codec: acfg.mx, numberOfChannels: 1, sampleRate: 48000}} : {}), fastStart: "in-memory"});
   plan.audioCodec = acfg ? acfg.mx : null;
   if (acfg) {
@@ -329,13 +333,15 @@ async function videoGrabado(plan, onProg, signal){
   if (!mime) return null;
   const [w, h] = VOUT, cv = document.createElement("canvas"); cv.width = w; cv.height = h; const ctx = cv.getContext("2d"); vdibujar(ctx, 0, plan);
   const pista = cv.captureStream(VFPS); let ac2 = null, fuente = null;
-  if (plan.audio) { try { ac2 = new (window.AudioContext || window.webkitAudioContext)(); const dest = ac2.createMediaStreamDestination(); fuente = ac2.createBufferSource(); fuente.buffer = plan.audio; fuente.connect(dest); dest.stream.getAudioTracks().forEach(t => pista.addTrack(t)); } catch(e) { ac2 = null; fuente = null; } }
+  // Se usa el contexto de audio del reproductor, habilitado por el toque que abrió el video: uno nuevo nacería suspendido en el iPhone.
+  const propio = !(VID && VID.ac);
+  if (plan.audio) { try { ac2 = propio ? new (window.AudioContext || window.webkitAudioContext)() : VID.ac; const dest = ac2.createMediaStreamDestination(); fuente = ac2.createBufferSource(); fuente.buffer = plan.audio; fuente.connect(dest); dest.stream.getAudioTracks().forEach(t => pista.addTrack(t)); } catch(e) { ac2 = null; fuente = null; } }
   const rec = new MediaRecorder(pista, {mimeType: mime, videoBitsPerSecond: 3_500_000}), partes = [];
   rec.ondataavailable = e => { if (e.data && e.data.size) partes.push(e.data); };
   const fin = new Promise(r => rec.onstop = r); rec.start(500); if (fuente) { await ac2.resume().catch(() => {}); fuente.start(); }
   const t0 = performance.now();
   await new Promise(ok => { const loop = () => { const t = (performance.now() - t0) / 1000; if ((signal && signal.aborted) || t >= plan.total) return ok(); vdibujar(ctx, t, plan); onProg(t / plan.total); requestAnimationFrame(loop); }; loop(); });
-  rec.stop(); await fin; if (ac2) ac2.close().catch(() => {});
+  rec.stop(); await fin; if (fuente) try { fuente.stop(); } catch(e) {} if (ac2 && propio) ac2.close().catch(() => {});
   if (signal && signal.aborted) throw {code: "cancelled"};
   return new Blob(partes, {type: mime.split(";")[0]});
 }
@@ -368,8 +374,13 @@ function videoAbrir(){
   // El audio se habilita aquí, dentro del toque que abrió el video: así la voz puede sonar sola cuando llegue.
   let ac0 = null; try { ac0 = new (window.AudioContext || window.webkitAudioContext)(); ac0.resume().catch(() => {}); } catch(e) {}
   VID = {plan, ctx, t: quieto ? 2 : 0, play: !quieto, last: null, raf: 0, blob: null, ctl: null, origen: document.activeElement, ac: ac0, src: null, a0: 0};
+  // En iPhone, el audio de Web Audio se silencia con el interruptor de silencio; un elemento <audio> no. La voz suena por uno,
+  // que se habilita aquí, en el mismo toque que abrió el video, con un instante de silencio (después puede sonar solo).
+  try { const el = VID.el = new Audio(); el.setAttribute("playsinline", ""); el.preload = "auto";
+    if (ac0) { VID.mudoUrl = URL.createObjectURL(wavDe(ac0.createBuffer(1, 2400, 48000))); el.src = VID.mudoUrl; el.play().then(() => el.pause()).catch(() => {}); } } catch(e) { VID.el = null; }
   // La voz se genera sola al abrir: guion con los datos del período y narración con ElevenLabs. Si falla, el video sigue sin voz.
-  vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const st = $("#vozEstado");
+  if (!VOZ_ACTIVA) $("#vozBox").hidden = true;
+  if (VOZ_ACTIVA) vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const st = $("#vozEstado");
     if (e === "ok" && VOZ_CACHE.sinCredito) { st.textContent = `Sin voz · ${VOZ_CACHE.sinCredito}. El video funciona igual, sin narración.`; const b = $("#vozAdd"); b.disabled = false; b.lastChild.textContent = "Intentar la voz de nuevo"; }
     else if (e === "ok") VID.vozPromesa = vozAgregar(false).finally(() => { if (VID) VID.vozPromesa = null; });
     else st.textContent = e === "sin-clave" ? "Sin voz: falta configurar la clave de ElevenLabs en Vercel" : "Sin voz: la voz se genera en pregonia.cl"; });
@@ -378,7 +389,7 @@ function videoAbrir(){
   const loop = now => {
     if (!VID) return; const pl = VID.plan;
     if (VID.play) {
-      if (VID.src) VID.t = VID.ac.currentTime - VID.a0; else if (VID.last != null) VID.t += (now - VID.last) / 1000;
+      if (VID.elOn && VID.el && !VID.el.paused) VID.t = VID.el.currentTime; else if (VID.src) VID.t = VID.ac.currentTime - VID.a0; else if (VID.last != null) VID.t += (now - VID.last) / 1000;
       if (VID.t > pl.total + 1) { VID.t = 0; vozSonar(); }
     }
     VID.last = now; vdibujar(ctx, Math.max(0, Math.min(VID.t, pl.total - 0.001)), pl); VID.raf = requestAnimationFrame(loop);
@@ -392,7 +403,8 @@ function videoAbrir(){
 function vidEstado(){ const b = $("#vidPlay"); if (b) b.textContent = VID.play ? "Pausa" : "Reproducir"; $("#vidStage")?.classList.toggle("pausa", !VID.play); }
 function vidAlternar(){ if (!VID) return; VID.play = !VID.play; VID.last = null; vidEstado(); if (VID.play) vozSonar(); else vozCallar(); }
 function videoCerrar(){
-  if (!VID) return; cancelAnimationFrame(VID.raf); VID.ctl?.abort(); VID.vctl?.abort(); vozCallar(); VID.ac?.close().catch(() => {}); const o = VID.origen; VID = null;
+  if (!VID) return; cancelAnimationFrame(VID.raf); VID.ctl?.abort(); VID.vctl?.abort(); vozCallar(); VID.ac?.close().catch(() => {});
+  if (VID.el) { VID.el.pause(); VID.el.removeAttribute("src"); } [VID.audioUrl, VID.mudoUrl].forEach(u => u && URL.revokeObjectURL(u)); const o = VID.origen; VID = null;
   $("#vidBack")?.remove(); document.body.classList.remove("vid-on"); if (o && o.isConnected) o.focus();
 }
 const videoNombre = () => `PregonIA-Video-${slug((VID ? VID.plan.P : partePer()).rotulo)}-${slug(S.org)}-${hoyISO()}.${VID && VID.blob && /webm/.test(VID.blob.type) ? "webm" : "mp4"}`;
@@ -453,9 +465,26 @@ document.addEventListener("keydown", e => {
 });
 
 /* Voz en la vista previa, sincronizada con el reloj de audio */
-function vozCallar(){ if (VID && VID.src) { try { VID.src.stop(); } catch(e) {} VID.src = null; } }
+function vozCallar(){ if (!VID) return; if (VID.el && VID.elOn) { VID.el.pause(); VID.elOn = false; } if (VID.src) { try { VID.src.stop(); } catch(e) {} VID.src = null; } }
+/* Audio en WAV (16 bits, mono) para reproducir la voz con un elemento <audio>. */
+function wavDe(buf){
+  const d = buf.getChannelData(0), n = d.length, sr = buf.sampleRate, ab = new ArrayBuffer(44 + n * 2), v = new DataView(ab), w = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); w(8, "WAVE"); w(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) { const x = Math.max(-1, Math.min(1, d[i])); v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7FFF, true); }
+  return new Blob([ab], {type: "audio/wav"});
+}
 function vozSonar(){
-  if (!VID || !VID.plan.audio || !VID.ac) return; vozCallar();
+  if (!VID || !VID.plan.audio) return; vozCallar();
+  if (VID.el && VID.audioUrl) {
+    const el = VID.el, desde = Math.max(0, Math.min(VID.t, VID.plan.total - 0.05));
+    if (el.getAttribute("src") !== VID.audioUrl) el.src = VID.audioUrl;
+    try { el.currentTime = desde; } catch(e) {}
+    VID.elOn = true; el.onended = () => { if (VID) VID.elOn = false; };
+    el.play().catch(() => { if (!VID) return; VID.elOn = false; const st = $("#vozEstado"); if (st && !/Toca el video/.test(st.textContent)) st.textContent += " · Toca el video para escuchar la voz."; });
+    return;
+  }
+  if (!VID.ac) return;
   const src = VID.ac.createBufferSource(); src.buffer = VID.plan.audio; src.connect(VID.ac.destination);
   const desde = Math.max(0, Math.min(VID.t, VID.plan.total - 0.05)); VID.ac.resume().catch(() => {});
   src.start(0, desde); VID.a0 = VID.ac.currentTime - desde; VID.src = src;
@@ -491,5 +520,6 @@ async function vozAgregar(regrabar){
   VID.blob = null; $("#vidOut").hidden = true; $("#vidMake").textContent = "Preparar video MP4";
   $(".vid-meta").textContent = `${Math.round(plan.total)} segundos con voz · vertical, para ver en el celular · ${plan.scenes.length} escenas con las noticias ${plan.P.de}: tono, hasta dónde llegaron, respuestas y temas.`;
   st.textContent = `Voz lista · ${Math.round(plan.total)} segundos${VID.vozEstandar ? " · voz estándar (la chilena requiere un plan pagado de ElevenLabs)" : ""}`; btn.disabled = false; btn.lastChild.textContent = "Escribir y grabar de nuevo";
+  if (VID.audioUrl) URL.revokeObjectURL(VID.audioUrl); VID.audioUrl = VID.el ? URL.createObjectURL(wavDe(plan.audio)) : null;
   VID.t = 0; VID.play = true; VID.last = null; $("#vidPlay").textContent = "Pausa"; vozSonar();
 }

@@ -1137,7 +1137,7 @@ function shareDoc(src, i){
   }
   if (src === "vocero") return vocDoc();
   if (src === "diario") { const t = diarioTexto(), d = diarioData(); return {titulo: "Informe diario de prensa", sub: d.etiqueta, sinFecha: true, tipo: "diario", texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
-  if (src === "ejec") { const t = ejecTexto(); return {titulo: "Informe ejecutivo · " + inst(), sub: fechaLarga(NOW), sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
+  if (src === "ejec") { const t = ejecTexto(); return {titulo: "Informe ejecutivo · " + inst(), sub: fechaLarga(NOW), sinFecha: true, tipo: "ejec", texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "parte") { const t = parteTexto(); return {titulo: esAut() ? partePer().rotulo + " · " + inst() : partePer().rotulo + " del alcalde", sub: "Período: " + parteData().per, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "aprob") { const x = S.comunicados.filter(y => y.org === S.org)[i]; return x && x.texto ? {titulo: x.pieza, sub: "Responde a: " + x.origen + " · aprobado el " + fecha(x.ts), texto: x.texto, cuerpo: x.texto} : null; }
   return null;
@@ -1302,7 +1302,7 @@ async function pdfDiario(){
   for (let p = 1; p <= n; p++) { doc.setPage(p); doc.setDrawColor(C.line); doc.setLineWidth(0.3); doc.line(M, PIE, W - M, PIE); txt("PregonIA · Un producto de ALTKimia", M, PIE + 5, {size: 7, color: C.muted}); txt(`Página ${p} de ${n}`, W - M, PIE + 5, {size: 7, color: C.muted, align: "right"}); if (p === n) lineas(nota, AN, 6.5).slice(0, 2).forEach((l, k) => txt(l, M, PIE - 5.5 + k * 3, {size: 6.5, color: C.muted})); }
   return doc.output("blob");
 }
-async function pdfDe(d){ const k = d.titulo + "\u0001" + d.sub + "\u0001" + d.cuerpo; return pdfCache[k] ||= new File([await (d.tipo === "diario" ? pdfDiario() : pdfBlob(d))], nombreArchivo(d, "pdf"), {type: "application/pdf"}); }
+async function pdfDe(d){ const k = d.titulo + "\u0001" + d.sub + "\u0001" + d.cuerpo; return pdfCache[k] ||= new File([await (d.tipo === "diario" ? pdfDiario() : d.tipo === "ejec" ? ejecPDF() : pdfBlob(d))], nombreArchivo(d, "pdf"), {type: "application/pdf"}); }
 /* En el celular: hoja de compartir del sistema con el PDF adjunto (WhatsApp, Gmail, Outlook…). */
 async function compartirArchivo(d, destino){
   if (!navigator.canShare || !movil()) return false;
@@ -1341,7 +1341,6 @@ async function compartir(b){
   const aviso = d.borrador && /\[completar/i.test(d.texto) ? " Ojo: aún hay partes marcadas [completar]." : "";
   const asunto = d.titulo + " · " + inst(), cuerpo = plano(d.texto);
   if (via === "wa") {
-    if (b.dataset.src === "ejec") return ejecWhatsApp();  // el informe ejecutivo va por WhatsApp como imagen
     if (await compartirArchivo(d, "WhatsApp")) return;
     // Computador: WhatsApp Web no recibe archivos por enlace. Se abre el chat y se guarda el PDF para adjuntarlo.
     abrirEnlace("https://wa.me/?text=" + encodeURIComponent(`*${asunto}*\nTe envío el documento en PDF.`), true);
