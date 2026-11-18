@@ -12,13 +12,34 @@ const datosLbl = () => esAut() ? "DATOS DE LA OFICINA" : "DATOS DEL MUNICIPIO";
 const baseAutoridad = p => `[Completar] Comisiones o espacios que integra ${p.nombre}.\n[Completar] Proyectos, mociones o iniciativas que impulsa, con su estado.\n[Completar] Gestiones recientes en ${p.zonaNombre}, con fecha y resultado.\n[Completar] Vocería autorizada y contacto de prensa.`;
 
 /* Temas base de una autoridad: la persona (por todas las formas en que la nombra la prensa) y su territorio. */
+/* Temas propios de la persona: su nombre junto a palabras de su función (proyectos y votaciones, consejo, gestión) y a su partido.
+   Exigen que la nota la nombre, así dos senadores de la misma circunscripción no quedan con los mismos temas. */
+const PARTIDO_N = {PC: ["partido comunista", "comunista"], RN: ["renovacion nacional"], UDI: ["udi", "union democrata independiente"], PS: ["partido socialista", "socialista"],
+  PPD: ["ppd", "partido por la democracia"], FA: ["frente amplio"], DC: ["democracia cristiana", "falange"], PDC: ["democracia cristiana", "falange"],
+  REP: ["republicano", "republicanos", "partido republicano"], PREP: ["republicano", "republicanos", "partido republicano"], EVO: ["evopoli"], EVOP: ["evopoli"],
+  PDG: ["partido de la gente", "pdg"], PL: ["partido liberal"], PNL: ["nacional libertario", "libertario"], PSC: ["social cristiano"], PR: ["partido radical"], FRVS: ["frvs", "regionalista verde"]};
+function temasPropios(p){
+  const v = (p.variantes || [p.nombre]).slice(), out = [], nom = p.nombre;
+  const funcion = {
+    diputado: [`Labor legislativa de ${nom}`, ["proyecto de ley", "mocion", "comision", "votacion", "voto", "sala", "tramitacion", "indicacion", "fiscalizacion", "oficio", "interpelacion", "acusacion constitucional"]],
+    senador: [`Labor legislativa de ${nom}`, ["proyecto de ley", "mocion", "comision", "votacion", "voto", "sala", "tramitacion", "indicacion", "fiscalizacion", "oficio", "acusacion constitucional"]],
+    core: [`${nom} en el consejo regional`, ["consejo regional", "core", "votacion", "voto", "sesion", "pleno", "comision", "fndr", "proyecto"]],
+    gobernador: [`Gestión de ${nom}`, ["gobierno regional", "anuncio", "inversion", "fndr", "proyecto", "convenio", "licitacion", "programa"]],
+    delegado: [`Gestión de ${nom}`, ["delegacion", "seguridad", "carabineros", "pdi", "emergencia", "gobierno", "ministro", "ministra"]],
+    concejal: [`${nom} en el concejo`, ["concejo", "sesion", "votacion", "voto", "denuncia", "fiscalizacion", "alcalde", "alcaldesa"]]
+  }[p.rol];
+  if (funcion) out.push(T(funcion[0], "Candidato", v, funcion[1], [], {propio: true}));
+  const part = PARTIDO_N[String(p.partido || "").toUpperCase().replace(/[^A-Z]/g, "")];
+  if (part) out.push(T(`${nom} y su partido`, "Candidato", v, part.concat(["bancada", "directiva", "militancia", "militante"]), [], {propio: true}));
+  return out;
+}
 function candidatosAut(p){
   const cargo = cargoDe(p.rol, p.g), ctxTerr = ["comuna", "vecinos", "region de valparaiso", "municipio", "municipalidad", "alcalde", "alcaldesa", "gobierno regional", "core", "diputado", "diputada", "senador", "senadora"];
   const nucleo = [
     T(p.nombre, "Núcleo", p.variantes.slice(), [], [], {persona: true}),
     T(`${p.zonaNombre} (territorio)`, "Núcleo", p.comunas.slice(0, 40), p.comunas.length > 6 ? ctxTerr : [], ["marruecos", "colombia", "texas", "cartagena de indias"])
   ];
-  const otros = [T(CARGOS[p.rol].organo, "Candidato", [norm(CARGOS[p.rol].organo), cargo.toLowerCase()], p.comunas.length > 6 ? ["valparaiso"] : p.comunas.slice())];
+  const otros = temasPropios(p).concat([T(CARGOS[p.rol].organo, "Candidato", [norm(CARGOS[p.rol].organo), cargo.toLowerCase()], p.comunas.length > 6 ? ["valparaiso"] : p.comunas.slice())]);
   (p.agenda || []).forEach(a => { if (a.trim()) otros.push(T(a.trim(), "Agenda", [a.trim()])); });
   // Las ocho temáticas con la lente de su cargo y los dolores de su territorio; el contexto incluye su nombre, porque sus notas reales ya la nombran.
   Object.entries(ejesDe(p)).forEach(([key, s]) => otros.push(T(s.n, (p.sens || []).includes(key) ? "Sensibilidad" : "Descubrimiento", s.t.slice(), s.ctx.slice(), [], {sens: key})));
@@ -31,6 +52,11 @@ function crearCuentaAutoridad({rol, zona, a, nombre, g}){
     nombre: persona.n, completo: persona.c, partido: persona.p, variantes: variantesNombre(persona), plan: "regional", agenda: [], sens: sensDe(z.comunas), comuna: null};
   let key = persona.n; if (COMUNAS_V.includes(key) || (S.cuentas[key] && !esAut(S.cuentas[key]))) key += " (" + cargoDe(rol, persona.g) + ")";
   if (!S.cuentas[key]) { const pr = proponer(perfil); S.cuentas[key] = {perfil, temas: pr.base, sugeridos: pr.sugeridos, borradores: 0, caracterizada: true, visto: false, onbOculto: false, base: baseAutoridad(perfil), tv: TV}; }
+  else {  // cuenta creada antes de los temas propios: se suman al comienzo de sus temas, sin tocar los que ya tiene
+    const cu = S.cuentas[key], tiene = new Set(cu.temas.map(t => t.nombre));
+    const faltan = temasPropios(cu.perfil).filter(t => !tiene.has(t.nombre)).map(t => ({...t, ...puntaje(t)}));
+    if (faltan.length) { const i = cu.temas.findIndex(t => t.origen !== "Núcleo"); cu.temas.splice(i < 0 ? cu.temas.length : i, 0, ...faltan); }
+  }
   return key;
 }
 /* Municipio de cualquiera de las 38 comunas, con su alcalde o alcaldesa: la persona se sigue por nombre como tema base. */
