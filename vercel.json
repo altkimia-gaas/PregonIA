@@ -82,6 +82,15 @@
           "value": "noindex, nofollow"
         }
       ]
+    },
+    {
+      "source": "/version.json",
+      "headers": [
+        {
+          "key": "cache-control",
+          "value": "no-store"
+        }
+      ]
     }
   ]
 }

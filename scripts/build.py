@@ -4,7 +4,7 @@
 Uso: python3 scripts/build.py
 Orden del script embebido: base.js (constantes y catálogo) → corpus.js (noticias ficticias) → calendario.js (fechas de riesgo; antes de app.js porque la portada lo usa al primer dibujo) → autoridades.js + territorios.js (temas por territorio y cargo) + categorias.js (categoría, enfoque y papel de cada noticia) + cuentas.js (municipios y autoridades electas; antes de app.js por la misma razón) → app.js (aplicación) → captura.js → cuentasred.js + redes.js (cuentas de Facebook e Instagram) → vocero.js (kit de vocería) → compartir.js (app instalable y Compartir) → reglas.js + alertas.js (avisos) → piloto.js → video.js.
 """
-import csv, json, pathlib
+import csv, hashlib, json, pathlib
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 SRC, DATA = RAIZ / "src", RAIZ / "data"
@@ -41,6 +41,9 @@ def main():
               '<meta name="apple-mobile-web-app-title" content="PregonIA">\n'
               '</head>\n<body>\n')
     html = cabeza + cuerpo + "</body>\n</html>\n"
+    # Versión publicada: resumen del archivo; la app la compara con /version.json para recargarse sola tras un despliegue.
+    v_app = hashlib.sha256(html.encode("utf-8")).hexdigest()[:12]
+    html = html.replace("__PREGONIA_VERSION__", v_app)
     (RAIZ / "index.html").write_text(html, encoding="utf-8")
     # Catálogo para la función de noticias reales (api/noticias.js); el guion bajo evita que Vercel lo publique como ruta.
     filas = [{"id": int(f["id"]), "nombre": f["nombre"], "ambito": f["ambito"], "comuna": f["comuna"], "metodo": f["metodo"], "url": f["url_lectura"], "estado": f["estado"]}
@@ -64,8 +67,11 @@ def main():
                  '<link rel="manifest" href="/manifest-redaccion.json">\n<meta name="theme-color" content="#FFFFFF">\n'
                  '<link rel="icon" type="image/png" sizes="192x192" href="/icono-192.png">\n<link rel="apple-touch-icon" href="/icono-180.png">\n'
                  '<meta name="apple-mobile-web-app-title" content="Redacción">\n<meta name="apple-mobile-web-app-capable" content="yes">\n')
-    (RAIZ / "redaccion.html").write_text(rd_cabeza + leer("redaccion.html").replace("</style>\n", "</style>\n</head>\n<body>\n", 1) +
-        "<script>\n" + rd_js + "\n</script>\n</body>\n</html>\n", encoding="utf-8")
+    rd_html = (rd_cabeza + leer("redaccion.html").replace("</style>\n", "</style>\n</head>\n<body>\n", 1) +
+        "<script>\n" + rd_js + "\n</script>\n</body>\n</html>\n")
+    v_rd = hashlib.sha256(rd_html.encode("utf-8")).hexdigest()[:12]
+    (RAIZ / "redaccion.html").write_text(rd_html.replace("__PREGONIA_VERSION__", v_rd), encoding="utf-8")
+    (RAIZ / "version.json").write_text(json.dumps({"app": v_app, "redaccion": v_rd}) + "\n", encoding="utf-8")
     # Versión para publicar como artifact en claude.ai, que pone su propio esqueleto.
     (RAIZ / "artifact.html").write_text(cuerpo, encoding="utf-8")
     print(f"index.html listo ({len(html.encode('utf-8')) // 1024} KB) · redaccion.html listo ({(RAIZ / 'redaccion.html').stat().st_size // 1024} KB)")
