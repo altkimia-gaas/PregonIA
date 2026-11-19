@@ -54,6 +54,10 @@
     {
       "source": "/redaccion",
       "destination": "/redaccion.html"
+    },
+    {
+      "source": "/el-pregonero",
+      "destination": "/el-pregonero.html"
     }
   ],
   "headers": [
