@@ -366,6 +366,20 @@ create table if not exists avisos (
   correo       boolean not null default true,
   actualizado  timestamptz not null default now()
 );
+-- Parte diario por WhatsApp (nov 2026): celular de la persona y su aceptación expresa (Meta exige consentimiento previo).
+alter table avisos add column if not exists whatsapp    text;
+alter table avisos add column if not exists whatsapp_ok boolean not null default false;
+-- Un parte por cuenta y día: la lectura de las 8:07 toma la fila antes de enviar; la de las 8:37 la encuentra y no repite.
+create table if not exists partes_whatsapp (
+  municipio_id uuid not null references municipios (id) on delete cascade,
+  fecha        date not null,
+  enviados     int,
+  noticias     int,
+  criticas     int,
+  creado       timestamptz not null default now(),
+  primary key (municipio_id, fecha)
+);
+alter table partes_whatsapp enable row level security;  -- sin políticas: solo el servidor (clave secreta) la usa
 -- Celulares y computadores suscritos a notificaciones (Web Push). Las llaves son del navegador, no secretos del municipio.
 create table if not exists suscripciones (
   endpoint     text primary key,

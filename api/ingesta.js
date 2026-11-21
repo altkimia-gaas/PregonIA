@@ -12,6 +12,7 @@ import { COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, fichaNota, json, leerCat
 import { variantesNombre } from "./_autoridades.js";
 import { sujetoDeCuenta, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
 import { avisar } from "./_avisos.js";
+import { parteWhatsapp, whatsappListo, horaChileWa } from "./_whatsapp.js";
 import { leerRedes, usuarioDe } from "./_redes.js";
 import { detectarRedaccion } from "./_redaccion.js";
 
@@ -125,6 +126,9 @@ async function manejar(req){
     // Avisos: un error aquí no debe perder la lectura ya guardada.
     await Promise.all(res.map(async (r, k) => { const grupos = r.grupos || []; delete r.grupos; if (!grupos.length) return;
       try { r.avisos = await avisar(sb, munis[k], grupos, Date.now()); } catch(e) { r.avisos = {error: String(e.message || e).slice(0, 160)}; } }));
+    // Parte diario por WhatsApp: lo envía la primera lectura de las 8 (8:07); la tabla partes_whatsapp evita repetirlo en la de 8:37.
+    if (whatsappListo() && horaChileWa(Date.now()) === 8) await Promise.all(res.map(async (r, k) => {
+      try { r.whatsapp = await parteWhatsapp(sb, munis[k], Date.now()); } catch(e) { r.whatsapp = {error: String(e.message || e).slice(0, 160)}; } }));
     const suma = k => res.reduce((s, r) => s + (r[k] || 0), 0);
     const resumen = {fin: new Date().toISOString(), fuentes_ok: cat.total + 1 - errores.length, fuentes_total: cat.total + 1, errores: errores.slice(0, 60),
       candidatas: suma("candidatas"), nuevas: suma("nuevas"), clasificadas: suma("clasificadas"), detalle: {comunas: res, ia: DIAG.slice(0, 8), google_news: statsGoogleNews(), redaccion}};
