@@ -5537,7 +5537,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingr
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "f4275086a0ad", K = "app";
+  const V = "f8e5c9f85173", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
@@ -6334,6 +6334,11 @@ function avPintar(){
       <label class="av-chk"><input type="checkbox" id="avSilencio" ${pref.silencio !== false ? "checked" : ""}> Silencio de 23:00 a 7:00, salvo lo urgente</label>
       ${piloto ? `<label class="av-chk"><input type="checkbox" id="avCorreo" ${pref.correo !== false ? "checked" : ""} ${AV.cfg && AV.cfg.correo ? "" : "disabled"}> También por correo${AV.cfg && AV.cfg.correo ? "" : ' <span class="muted">(el correo aún no está configurado en el servidor)</span>'}</label>` : ""}
     </section>
+    ${piloto ? `<section class="av-sec"><h3 class="hp-h">Parte diario por WhatsApp</h3>
+      <p class="muted" style="margin:0 0 8px">Cada mañana a las 8:00: cuántas noticias hubo en 24 horas, cuántas críticas y las dos principales, con el enlace a PregonIA.${AV.cfg && AV.cfg.whatsapp ? "" : " El envío se activa cuando el número de PregonIA quede habilitado; puedes dejar el tuyo desde ya."}</p>
+      <div class="field" style="margin:0 0 8px"><label for="avWa">Tu celular</label><input id="avWa" type="tel" inputmode="tel" autocomplete="tel" placeholder="9 1234 5678" value="${esc(pref.whatsapp || "")}"></div>
+      <label class="av-chk"><input type="checkbox" id="avWaOk" ${pref.whatsapp_ok ? "checked" : ""}> Acepto recibir el parte de prensa en este número por WhatsApp. Puedo darlo de baja aquí cuando quiera.</label>
+      <button class="btn sm" type="button" data-act="avisos-wa">Guardar</button></section>` : ""}
     <section class="av-sec"><div class="av-h"><h3 class="hp-h" style="margin:0">Avisos de ${esc(S.org)}</h3>${avNoLeidas() ? `<button class="btn ghost sm" type="button" data-act="avisos-leidos">Marcar todo como leído</button>` : ""}</div>
       ${grupos.length ? grupos.map(([t, l]) => `<h4 class="av-g">${t}</h4><ul class="av-l">${l.map(item).join("")}</ul>`).join("") : `<p class="muted">Sin avisos todavía. Aquí aparecerán las noticias críticas, las que escalan a prensa regional o nacional y los temas que crecen rápido.</p>`}
     </section>`;
@@ -6351,7 +6356,7 @@ function avCerrar(){
 }
 function avGuardarPref(p){
   S.avisos.pref = {...avPref(), ...p}; save();
-  if (typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo && PILOTO.sb) PILOTO.sb.from("avisos").upsert({usuario: PILOTO.user.id, municipio_id: PILOTO.muni.id, nivel: S.avisos.pref.nivel, silencio: S.avisos.pref.silencio !== false, correo: S.avisos.pref.correo !== false, actualizado: new Date().toISOString()}).then(r => { if (r.error) toast("No se pudo guardar la preferencia en el piloto."); });
+  if (typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo && PILOTO.sb) PILOTO.sb.from("avisos").upsert({usuario: PILOTO.user.id, municipio_id: PILOTO.muni.id, nivel: S.avisos.pref.nivel, silencio: S.avisos.pref.silencio !== false, correo: S.avisos.pref.correo !== false, ...("whatsapp" in S.avisos.pref ? {whatsapp: S.avisos.pref.whatsapp || null, whatsapp_ok: !!S.avisos.pref.whatsapp_ok} : {}), actualizado: new Date().toISOString()}).then(r => { if (r.error) toast("No se pudo guardar la preferencia en el piloto."); });
 }
 const b64u = s => { const p = (s + "===".slice((s.length + 3) % 4)).replace(/-/g, "+").replace(/_/g, "/"), b = atob(p); return Uint8Array.from(b, c => c.charCodeAt(0)); };
 async function avActivar(){
@@ -6376,7 +6381,7 @@ async function avisosAlSalir(){
 }
 /* Al entrar al piloto: preferencias guardadas de la persona. */
 async function avisosAlEntrar(){
-  try { const r = await PILOTO.sb.from("avisos").select("nivel, silencio, correo").eq("usuario", PILOTO.user.id).maybeSingle(); if (r.data) { S.avisos.pref = r.data; save(); } } catch(e) {}
+  try { const r = await PILOTO.sb.from("avisos").select("*").eq("usuario", PILOTO.user.id).maybeSingle(); if (r.data) { S.avisos.pref = r.data; save(); } } catch(e) {}
 }
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-act]"); if (!b) return; const a = b.dataset.act;
@@ -6384,6 +6389,13 @@ document.addEventListener("click", e => {
   if (a === "avisos-cerrar") avCerrar();
   if (a === "avisos-activar") avActivar();
   if (a === "avisos-probar") { const x = avEstado().lista[0]; notificar(x ? {...x, titulo: "Prueba · " + x.titulo} : {nivel: "info", titulo: "Aviso de prueba", titular: "Así se verán los avisos de PregonIA.", medio: "PregonIA"}, true).then(ok => toast(ok ? "Aviso de prueba enviado." : "No se pudo mostrar el aviso.")); }
+  if (a === "avisos-wa") {
+    const d = ($("#avWa").value || "").replace(/\D/g, ""), tel = /^569\d{8}$/.test(d) ? d : /^9\d{8}$/.test(d) ? "56" + d : d ? null : "";
+    if (tel === null) return toast("Escribe un celular chileno: 9 y ocho dígitos.");
+    const ok = $("#avWaOk").checked;
+    if (tel && !ok) return toast("Marca la casilla de aceptación para recibir el parte por WhatsApp.");
+    avGuardarPref({whatsapp: tel || null, whatsapp_ok: !!tel && ok}); toast(tel ? "Listo: recibirás el parte de las 8:00 en +" + tel + "." : "Quitamos tu número: ya no recibirás el parte por WhatsApp.");
+  }
   if (a === "avisos-leidos") { avEstado().lista.forEach(x => x.leida = true); save(); avBadge(); avPintar(); }
   if (AV.abierto && (a === "vocero" || a === "responder") && b.closest("#avisosPanel")) avCerrar();
 });

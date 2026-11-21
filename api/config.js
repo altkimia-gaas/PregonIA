@@ -4,6 +4,6 @@ export function GET(){
   const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_PUBLISHABLE_KEY;
   const cuerpo = url && key ? {supabase: {url, key}} : {};
   // Avisos: la llave pública de notificaciones (pública por diseño) y si el correo está configurado. Nunca la llave privada.
-  cuerpo.avisos = {push: process.env.VAPID_PUBLIC_KEY || null, correo: Boolean(process.env.RESEND_API_KEY)};
+  cuerpo.avisos = {push: process.env.VAPID_PUBLIC_KEY || null, correo: Boolean(process.env.RESEND_API_KEY), whatsapp: Boolean(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_ID)};
   return new Response(JSON.stringify(cuerpo), {headers: {"content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=120"}});
 }
