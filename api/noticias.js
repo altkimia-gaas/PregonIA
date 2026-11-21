@@ -73,6 +73,26 @@ function armar(lote, porI, deAutoridad = false){
   return notas;
 }
 
+/* Pulso del territorio (para autoridades de distrito, circunscripción o región): cuántas notas nombran a cada comuna de su zona en
+   los últimos días y sus titulares más recientes. Solo los medios del catálogo, sin Google News ni IA: es barato y sirve para ver
+   dónde se mueve la prensa del territorio, no para medir a la autoridad. ?pulso=1&rol=diputado&zona=D7 */
+const PULSO_DIAS = 3;
+async function pulso(u){
+  const z = zonaDe(u.searchParams.get("rol"), u.searchParams.get("zona"));
+  if (!z || z.comunas.length < 2) return json({error: "Zona no disponible"}, 400);
+  const ahora = Date.now(), desde = ahora - PULSO_DIAS * 864e5, mitad = ahora - 864e5, cat = await leerCatalogo();
+  // Solo lo que nombra a la comuna en el titular o la bajada: un medio local que cubre varias comunas no suma todas sus notas a cada una.
+  const RUTINA = /pronostico del tiempo|el tiempo en|horoscopo|resultados del loto|farmacias de turno|cortes programados de/;
+  const comunas = z.comunas.filter(c => COMUNAS[c]).map(c => {
+    const re = new RegExp(`(^|[^a-z])(${COMUNAS[c].join("|")})([^a-z]|$)`);
+    const xs = candidatasDe(c, cat.items, desde, ahora).filter(x => { const t = norm(x.titulo + " " + x.desc); return re.test(t) && !RUTINA.test(t); });
+    return {c, n: xs.length, h24: xs.filter(x => x.ts >= mitad).length, medios: new Set(xs.map(x => x.m)).size,
+      t: xs.slice(0, 3).map(x => ({t: x.titulo, u: x.url, m: x.medio, ts: x.ts}))};
+  }).sort((a, b) => b.n - a.n);
+  return json({zona: z.n, dias: PULSO_DIAS, generado: new Date(ahora).toISOString(), fuentes: {leidas: cat.total - cat.errores.length, total: cat.total}, comunas},
+    200, {"cache-control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=3600"});
+}
+
 export async function GET(req){
   const u = new URL(req.url); DIAG.length = 0; plazoGoogleNews(32000);  // deja tiempo a la clasificación dentro de los 60 s de la función
   if (u.searchParams.has("ping")) return json({ ok: true, ia: Boolean(process.env.ANTHROPIC_API_KEY) }, 200, { "cache-control": "no-store" });
@@ -82,6 +102,7 @@ export async function GET(req){
     const ids = (u.searchParams.get("ids") || "").split(",").map(Number).filter(Boolean);
     return json(await saludFuentes(ids.length ? [] : qs, ids.length ? new Set(ids) : null), 200, { "cache-control": "public, max-age=0, s-maxage=" + (ids.length ? 60 : 1800) });
   }
+  if (u.searchParams.has("pulso")) return pulso(u);
   if (u.searchParams.has("autoridad") || u.searchParams.has("rol")) return deAutoridad(u);
   const comuna = u.searchParams.get("comuna") || "Casablanca";
   if (!COMUNAS[comuna]) return json({ error: "Comuna no disponible" }, 400);

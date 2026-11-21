@@ -3638,6 +3638,33 @@ function paresLista(titulo, quien, grupo, pares){
     <ul class="hbars">${filas.map(r => `<li><span class="t"><i style="background:${r.yo ? "var(--accent)" : "var(--amb-l)"}"></i><span>${r.yo ? "<b>" + esc(r.n_) + "</b>" : esc(r.n_)}${r.p ? ` <small class="muted">${esc(r.p)}</small>` : ""}</span></span><span class="b" ${tipAttr(r.n + " notas")}><i style="width:${(r.n / max * 100).toFixed(1)}%;background:${r.yo ? "var(--accent)" : "var(--amb-l)"}"></i></span><span class="v mono">${r.n}</span></li>`).join("")}</ul>
     <p class="hint" style="margin:10px 0 0">Cuenta notas con el nombre en el titular o el resumen, en medios chilenos, según Google News. No mide tono. Uso interno.</p></div>`;
 }
+/* Pulso del territorio: para autoridades de distrito, circunscripción o región, cuántas notas nombran a cada comuna de su zona en los
+   últimos 3 días (medios del catálogo, sin IA) y sus titulares. Se pide a /api/noticias?pulso y queda 30 minutos en memoria. */
+const PULSO = {};
+function pulsoCard(){
+  const p = cuenta().perfil;
+  if (!esAut() || !p.comunas || p.comunas.length < 2 || !/^https?:$/.test(location.protocol)) return "";
+  const k = p.rol + ":" + p.zona, e = PULSO[k];
+  if (!e || (!e.cargando && Date.now() - e.ts > 30 * 6e4)) pedirPulso(k, p.rol, p.zona);
+  return `<div class="card" id="pulsoCard" style="margin-top:14px">${pulsoHtml(PULSO[k], p)}</div>`;
+}
+async function pedirPulso(k, rol, zona){
+  PULSO[k] = {...(PULSO[k] || {}), cargando: true, ts: Date.now()};
+  try { const r = await fetch(`/api/noticias?pulso=1&rol=${encodeURIComponent(rol)}&zona=${encodeURIComponent(zona)}`); if (!r.ok) throw new Error(r.status); PULSO[k] = {d: await r.json(), ts: Date.now()}; }
+  catch(e) { PULSO[k] = {error: true, ts: Date.now()}; }
+  const el = $("#pulsoCard"), p = cuenta().perfil; if (el && p.rol + ":" + p.zona === k) el.innerHTML = pulsoHtml(PULSO[k], p);
+}
+function pulsoHtml(e, p){
+  const tit = `<h3>Pulso de ${esc(p.zonaNombre)}</h3>`;
+  if (!e || e.cargando) return tit + `<p class="muted" style="margin:0">Leyendo los medios de las ${p.comunas.length} comunas…</p>`;
+  if (e.error || !e.d) return tit + `<p class="muted" style="margin:0">No se pudo leer el territorio ahora. Vuelve a abrir Reportes en unos minutos.</p>`;
+  const cs = e.d.comunas, max = Math.max(1, ...cs.map(c => c.n)), con = cs.filter(c => c.n), sin = cs.filter(c => !c.n);
+  return tit + `<p class="vtx" style="margin:0 0 10px">Dónde se movió la prensa del territorio en los últimos ${e.d.dias} días: ${plural(con.length, "comuna", "comunas")} con noticias${con.length ? `, encabeza ${esc(con[0].c)} con ${plural(con[0].n, "nota", "notas")}` : ""}.</p>
+    <ul class="hbars">${con.map(c => `<li><span class="t"><i style="background:var(--amb-l)"></i><span>${esc(c.c)}${c.h24 ? ` <small class="muted">${c.h24} en 24 h</small>` : ""}</span></span><span class="b" ${tipAttr(plural(c.n, "nota", "notas") + " en " + plural(c.medios, "medio", "medios"))}><i style="width:${(c.n / max * 100).toFixed(1)}%;background:var(--amb-l)"></i></span><span class="v mono">${c.n}</span></li>`).join("")}</ul>
+    ${con.length ? `<details class="corr" style="margin-top:10px"><summary>Titulares por comuna</summary><ul class="cors">${con.map(c => `<li><b>${esc(c.c)}</b>${c.t.map(x => `<span>${x.u ? `<a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)}</a>` : esc(x.t)} · ${esc(x.m)}</span>`).join("")}</li>`).join("")}</ul></details>` : ""}
+    ${sin.length ? `<p class="hint" style="margin:10px 0 0">Sin noticias en estos días: ${esc(sin.map(c => c.c).join(", "))}. Puede ser una oportunidad para generar agenda propia.</p>` : ""}
+    <p class="hint" style="margin:6px 0 0">Medios del catálogo de PregonIA (${e.d.fuentes.leidas} de ${e.d.fuentes.total} leídos), sin Google News. Mide dónde hay prensa, no el tono hacia ${esc(p.nombre)}.</p>`;
+}
 /* Frente a sus pares: presencia en prensa de las autoridades del mismo cargo y zona (solo con noticias reales). */
 function paresAutCard(){
   const p = cuenta().perfil, pares = MODO && MODO.tipo === "real" && MODO.info && MODO.info.pares;
@@ -4667,6 +4694,7 @@ function repGestion(){
     <div class="card"><h3>Noticias por día</h3>${chartDias(ms)}</div>
     ${esAut() ? paresAutCard() : paresCard()}
   </div>
+  ${typeof pulsoCard === "function" ? pulsoCard() : ""}
   <div class="card" style="margin-top:14px;display:grid;gap:10px"><h3 style="margin:0">Lectura del analista</h3><p class="hint" style="margin:0">Redactada por IA con las cifras y los resúmenes ${P.del}. Revísala antes de usarla.</p>
     <div id="lectura" class="draft" style="min-height:90px">${esc(lecturaTxt.gestion || lecturaBase(M, porTema))}</div>
     <div><button class="btn primary" data-act="lectura">Redactar con IA</button></div></div>
@@ -5624,7 +5652,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingr
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "0ad18a2b900f", K = "app";
+  const V = "8e75d93fc0b7", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
