@@ -5107,7 +5107,7 @@ function prompt(m, pieza, enfoque, base){
   return `Eres el asistente de comunicaciones de PregonIA para ${esAut() ? "el equipo de " + inst() + " (" + cuenta().perfil.zonaNombre + ", Región de Valparaíso)" : inst()}, en Chile. Redacta en español de Chile: ${PIEZAS[pieza][2]}. Enfoque: ${ENFOQUES[enfoque]}.
 
 Reglas obligatorias:
-1. Usa solo datos que estén en los ${datosLbl()} o en la NOTICIA. Si falta un dato necesario, escribe [completar: qué dato falta]. No inventes cifras, fechas, nombres ni compromisos.
+1. Usa solo datos que estén en los ${datosLbl()} o en la NOTICIA. Si falta un dato necesario, escribe [completar: qué dato falta]. No inventes cifras, fechas, nombres ni compromisos. Los datos marcados [Ejemplo] o [Completar] son ficticios o pendientes: si usas uno, deja la marca pegada al dato en el texto (por ejemplo, «[Ejemplo] 800 000 000»); nunca lo presentes como dato real.
 2. Toda cita textual va marcada así: [cita propuesta, validar con el vocero].
 3. No copies frases del medio; describe la noticia con palabras propias y nombra el medio.
 4. ${esAut() ? "Tono propio del cargo: sobrio, cercano y respetuoso. Sin ataques personales ni descalificaciones a otras autoridades o partidos. Si falta la posición de la autoridad sobre el tema, escribe [completar: posición]." : "Tono institucional, sobrio y respetuoso. Sin promoción personal ni partidaria de ninguna autoridad."}
@@ -5122,6 +5122,21 @@ ${base}`;
 function plantilla(m, pieza){
   return `${PIEZAS[pieza][0]} · ${inst()}\n\n[Plantilla: la IA no está disponible en esta vista]\n\nEn relación con ${m ? "lo informado por " + nomMedio(m.lead) + " (" + m.lead.res.replace(/\.$/,"") + ")" : "[completar: anuncio]"}, la Municipalidad de ${S.org} informa:\n\n1. [completar: hechos verificados]\n2. [completar: medidas adoptadas y plazos]\n3. [completar: canal de contacto para vecinos]\n\n[cita propuesta, validar con el vocero]: «[completar]»\n\nContacto de prensa: [completar]`;
 }
+/* Red de seguridad: si el borrador usa un dato de una línea [Ejemplo] o [Completar] de la base sin su marca, se la devuelve.
+   Se buscan las cifras de 3 o más dígitos (teléfonos, montos) de esas líneas; las palabras sueltas no, para no marcar texto común. */
+function marcarEjemplos(texto, base){
+  let out = texto || "";
+  (base || "").split("\n").forEach(l => {
+    const mm = l.match(/^\s*\[(Ejemplo|Completar)\]/i); if (!mm) return;
+    const marca = "[" + mm[1][0].toUpperCase() + mm[1].slice(1).toLowerCase() + "]";
+    (l.match(/\d[\d .]{1,}\d/g) || []).map(x => x.trim()).filter(x => x.replace(/\D/g, "").length >= 3).forEach(dato => {
+      const re = new RegExp(dato.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "[\\s.]?"), "g");
+      /* Ya marcado si hay una marca antes en la misma línea, a 60 caracteres o menos. */
+      out = out.replace(re, (todo, pos, s) => { const antes = s.slice(Math.max(0, pos - 60), pos); return /\[(Ejemplo|Completar)\][^\n]*$/i.test(antes) ? todo : marca + " " + todo; });
+    });
+  });
+  return out;
+}
 function setDraft(txt){ const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = txt; const has = !!txt.trim(); const a = $("#btnAprob"), k = $("#btnCopy"); if (a) a.disabled = !has; if (k) k.disabled = !has; document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
 async function generar(){
   const c = cuenta(), pl = PLANES[c.perfil.plan];
@@ -5133,7 +5148,8 @@ async function generar(){
   if (!sample) { out.value = plantilla(m, pieza); setDraft(out.value); c.borradores = (c.borradores||0) + 1; save(); renderChrome(); note.textContent = "La IA no está disponible en esta vista, así que usamos una plantilla. Abre la página en Claude para redactar con IA."; return; }
   ctl = new AbortController(); btn.disabled = true; stop.hidden = false; out.value = "Redactando…";
   try {
-    const {text} = await sample(prompt(m, pieza, enfoque, base), {signal: ctl.signal, cache: false, onText: ({text}) => { out.value = text; }});
+    const {text: crudo} = await sample(prompt(m, pieza, enfoque, base), {signal: ctl.signal, cache: false, onText: ({text}) => { out.value = text; }});
+    const text = marcarEjemplos(crudo, base);
     out.value = text; setDraft(text); c.borradores = (c.borradores||0) + 1; save(); renderChrome();
     note.textContent = (c.borradores > pl.borradores ? "Superaste los borradores de tu plan; en producción se suma un paquete. " : "") + "Borrador generado con IA (Claude): revisa lo marcado [completar], las cifras y las citas propuestas antes de aprobar.";
   } catch(err) {
@@ -5537,7 +5553,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingr
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "f4275086a0ad", K = "app";
+  const V = "fe990010ef3d", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
