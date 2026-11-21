@@ -77,8 +77,11 @@ async function pulso(u){
   const z = zonaDe(u.searchParams.get("rol"), u.searchParams.get("zona"));
   if (!z || z.comunas.length < 2) return json({error: "Zona no disponible"}, 400);
   const ahora = Date.now(), desde = ahora - PULSO_DIAS * 864e5, mitad = ahora - 864e5, cat = await leerCatalogo();
+  // Solo lo que nombra a la comuna en el titular o la bajada: un medio local que cubre varias comunas no suma todas sus notas a cada una.
+  const RUTINA = /pronostico del tiempo|el tiempo en|horoscopo|resultados del loto|farmacias de turno|cortes programados de/;
   const comunas = z.comunas.filter(c => COMUNAS[c]).map(c => {
-    const xs = candidatasDe(c, cat.items, desde, ahora).filter(x => x.sobre === "p");
+    const re = new RegExp(`(^|[^a-z])(${COMUNAS[c].join("|")})([^a-z]|$)`);
+    const xs = candidatasDe(c, cat.items, desde, ahora).filter(x => { const t = norm(x.titulo + " " + x.desc); return re.test(t) && !RUTINA.test(t); });
     return {c, n: xs.length, h24: xs.filter(x => x.ts >= mitad).length, medios: new Set(xs.map(x => x.m)).size,
       t: xs.slice(0, 3).map(x => ({t: x.titulo, u: x.url, m: x.medio, ts: x.ts}))};
   }).sort((a, b) => b.n - a.n);
