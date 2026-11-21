@@ -24,6 +24,10 @@ const sujetoDe = u => u.searchParams.get("autoridad")
   : sujeto({rol: u.searchParams.get("rol"), zona: u.searchParams.get("zona"), nombre: u.searchParams.get("nombre"), g: u.searchParams.get("g")});
 /* Presencia en prensa de los pares: cuántas notas los nombran en la ventana, en cualquier medio que indexe Google News.
    Pares de una autoridad: mismo cargo y zona en la nómina. Pares de un alcalde: los alcaldes de su provincia. */
+/* Días de la lectura al vuelo: 14 por defecto; hasta 30 con ?dias=30 (la prueba gratis y «Noticias reales» piden 30).
+   La clasificación sigue con el mismo tope (MAX_IA, lo que nombra a la comuna o a la persona primero), así que leer más días
+   no sube el costo de IA. La comparación con pares se mantiene en 14 días para no gastar la cuota de Google News. */
+const diasDe = u => Math.max(7, Math.min(30, parseInt(u.searchParams.get("dias"), 10) || VENTANA_DIAS));
 async function paresDe(a, desde){
   // Delegados: el regional y los siete provinciales se comparan entre sí (cada zona tiene una sola persona).
   const mismo = a.rol === "alcalde" ? x => x.rol === "alcalde" && provinciaDe(x.zona) === provinciaDe(a.zona) : a.rol === "delegado" ? x => x.rol === "delegado" : x => x.rol === a.rol && x.zona === a.zona;
@@ -40,16 +44,16 @@ async function paresDe(a, desde){
 }
 async function deAutoridad(u){
   const a = sujetoDe(u); if (!a) return json({ error: "Autoridad no disponible" }, 400);
-  const z = zonaDe(a.rol, a.zona), cargo = cargoDe(a.rol, a.g), ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
+  const dias = diasDe(u), z = zonaDe(a.rol, a.zona), cargo = cargoDe(a.rol, a.g), ahora = Date.now(), desde = ahora - dias * 864e5, desdePares = ahora - VENTANA_DIAS * 864e5;
   // Primero lo que trae notas; la comparación con pares va después en la cola de Google News, mientras la IA clasifica.
-  const [cat, gn, rs] = await Promise.all([leerCatalogo(), leerSujeto(a).catch(() => null), leerRedes(redesDe(u))]);
-  const paresP = a.nomina ? paresDe(a, desde).catch(() => []) : Promise.resolve([]);
+  const [cat, gn, rs] = await Promise.all([leerCatalogo(), leerSujeto(a, dias).catch(() => null), leerRedes(redesDe(u))]);
+  const paresP = a.nomina ? paresDe(a, desdePares).catch(() => []) : Promise.resolve([]);
   const errores = cat.errores.concat(gn ? [] : ["Google News"], rs.errores);
   const candidatas = candidatasPorNombre(variantesNombre(a), cat.items.concat(gn || [], rs.items), desde, ahora, institucion(a)), lote = candidatas.slice(0, MAX_IA);
   let clas = {porI: new Map(), ok: false}; try { clas = await clasificar(fichaIA(a), lote); } catch(e) { console.error("clasificar", e); }
   const notas = armar(lote, clas.porI, true), pares = await paresP;
   return json({
-    autoridad: {id: a.id, nombre: a.n, cargo, zona: z.n}, generado: new Date(ahora).toISOString(), ventana_dias: VENTANA_DIAS, ia: clas.ok, ia_parcial: !clas.ok && clas.porI.size > 0,
+    autoridad: {id: a.id, nombre: a.n, cargo, zona: z.n}, generado: new Date(ahora).toISOString(), ventana_dias: dias, pares_dias: VENTANA_DIAS, ia: clas.ok, ia_parcial: !clas.ok && clas.porI.size > 0,
     fuentes: { leidas: cat.total + 1 + rs.total - errores.length, total: cat.total + 1 + rs.total, con_error: errores.slice(0, 40) }, redes: rs.estado,
     candidatas: candidatas.length, google_news: statsGoogleNews(), pares, ...(DIAG.length ? {ia_diagnostico: DIAG.slice(0, 6)} : {}), notas
   }, 200, { "cache-control": clas.ok ? "public, max-age=0, s-maxage=900, stale-while-revalidate=3600" : "public, max-age=0, s-maxage=60" });
@@ -81,10 +85,10 @@ export async function GET(req){
   if (u.searchParams.has("autoridad") || u.searchParams.has("rol")) return deAutoridad(u);
   const comuna = u.searchParams.get("comuna") || "Casablanca";
   if (!COMUNAS[comuna]) return json({ error: "Comuna no disponible" }, 400);
-  const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
+  const dias = diasDe(u), ahora = Date.now(), desde = ahora - dias * 864e5;
   const alcalde = AUTORIDADES.find(x => x.rol === "alcalde" && x.zona === comuna);
-  const [cat, gn, rs] = await Promise.all([leerCatalogo(), leerGoogleNews(comuna).catch(() => null), leerRedes(redesDe(u))]);
-  const paresP = alcalde ? paresDe(alcalde, desde).catch(() => []) : Promise.resolve([]);
+  const [cat, gn, rs] = await Promise.all([leerCatalogo(), leerGoogleNews(comuna, dias).catch(() => null), leerRedes(redesDe(u))]);
+  const paresP = alcalde ? paresDe(alcalde, ahora - VENTANA_DIAS * 864e5).catch(() => []) : Promise.resolve([]);
   const errores = cat.errores.concat(gn ? [] : ["Google News"], rs.errores);
   const candidatas = candidatasDe(comuna, cat.items.concat(gn || [], rs.items), desde, ahora), lote = candidatas.slice(0, MAX_IA);
 
@@ -92,7 +96,7 @@ export async function GET(req){
   const notas = armar(lote, clas.porI), pares = await paresP;
 
   return json({
-    comuna, generado: new Date(ahora).toISOString(), ventana_dias: VENTANA_DIAS, ia: clas.ok, ia_parcial: !clas.ok && clas.porI.size > 0,
+    comuna, generado: new Date(ahora).toISOString(), ventana_dias: dias, pares_dias: VENTANA_DIAS, ia: clas.ok, ia_parcial: !clas.ok && clas.porI.size > 0,
     fuentes: { leidas: cat.total + 1 + rs.total - errores.length, total: cat.total + 1 + rs.total, con_error: errores.slice(0, 40) }, redes: rs.estado,
     candidatas: candidatas.length, google_news: statsGoogleNews(), alcalde: alcalde ? {nombre: alcalde.n, cargo: cargoDe("alcalde", alcalde.g)} : null, pares, ...(DIAG.length ? {ia_diagnostico: DIAG.slice(0, 6)} : {}), notas
   }, 200, { "cache-control": clas.ok ? "public, max-age=0, s-maxage=900, stale-while-revalidate=3600" : "public, max-age=0, s-maxage=60" });

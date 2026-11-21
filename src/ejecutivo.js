@@ -14,7 +14,7 @@ const ejEmergencia = m => (m.grave || m.tono === "cri") && !atendida(m.g);
 const ejOportunidad = m => m.tono === "pos" && !respondida(m.g);
 const ejPrioOport = (a, b) => escalera(b.notas).max - escalera(a.notas).max || b.notas.length - a.notas.length || b.last - a.last;
 
-/* Días que cubren los datos cargados: el piloto trae 62; «Noticias reales» lo que lee al vuelo (14); la demostración, su corpus.
+/* Días que cubren los datos cargados: el piloto trae 62; «Noticias reales» lo que lee al vuelo (30, ver DIAS_REALES); la demostración, su corpus.
    Un período anterior sin noticias es un dato (cero); uno que los datos no alcanzan a cubrir, no se compara. */
 function ejCobertura(){
   if (typeof PILOTO !== "undefined" && PILOTO.activo) return 62;

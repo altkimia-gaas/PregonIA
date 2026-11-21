@@ -284,7 +284,7 @@ function insCuerpo(){
   } else {
     const t = insTerritorios(INS.rol);
     cuerpo = `<div class="ent-tit"><span class="ent-pasoT">Paso 1 de 2</span><h2 id="insT" tabindex="-1">Activa tu prueba gratis</h2>
-        <p>48 horas sin costo ni tarjeta. Te enviaremos un código para validar tu correo.</p></div>
+        <p>48 horas sin costo ni tarjeta. Tu edición parte con el último mes de noticias reales de tu territorio. Te enviaremos un código para validar tu correo.</p></div>
       <div class="ent-bloque"><label class="ent-campo" for="insNom">Nombre y apellido</label><input id="insNom" class="ent-in" value="${esc(INS.nombre)}" autocomplete="name" maxlength="120"></div>
       <div class="ent-bloque"><label class="ent-campo" for="insCor">Correo</label><input id="insCor" class="ent-in" type="email" value="${esc(INS.correo)}" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="160"></div>
       <div class="ent-bloque"><label class="ent-campo" for="insRol">Tipo de autoridad</label><select id="insRol" class="ent-in"><option value="">Elige una opción</option>${ENT_ROLES.map(r => `<option value="${r.k}" ${INS.rol === r.k ? "selected" : ""}>${esc(r.n)}</option>`).join("")}</select></div>
@@ -413,6 +413,7 @@ function entEntrar(e){
   const portada = ENT.enPortada; entCerrar();
   if (portada) { mostrarPortada(false); if (!location.hash || location.hash === "#portada") location.hash = "inicio"; }
   if (key !== S.org) cambiarCuenta(key); else render(true);
+  if (typeof enPruebaReal === "function" && enPruebaReal() && typeof MODO !== "undefined" && MODO.disponible && MODO.tipo !== "real") cargarReales(true);  // la prueba parte con el último mes real
   if (esAut() || !COMUNAS.includes(S.org)) toast(`Entraste como ${esAut() ? inst() : inst() + (cuenta().perfil.autoridad ? " · " + cuenta().perfil.autoridad : "")}. ${typeof MODO !== "undefined" && MODO.disponible ? "Buscando sus menciones en medios reales…" : "Sus menciones se leen de medios reales en pregonia.cl."}`);
 }
 document.addEventListener("change", e => {
