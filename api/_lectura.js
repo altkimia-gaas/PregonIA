@@ -11,7 +11,13 @@ const COMUNAS = Object.fromEntries(COMUNAS_V.map(c => [c, [c.toLowerCase().norma
 const QUITAR = ["region de valparaiso", "cordillera de los andes", "universidad de los andes", "federico santa maria", "universidad santa maria", "cruz roja"];
 // Palabras que en Google News acotan la búsqueda a la comuna chilena (Casablanca de Marruecos, Cartagena de Colombia, San Antonio de Texas).
 const CONTEXTO = '(Valparaíso OR comuna OR municipalidad OR alcalde OR Chile OR "litoral central")';
-const EXCLUIR = ["marruecos", "marroqui", "colombia", "cartagena de indias", "texas", "spurs", "ibiza", "murcia"];
+const EXCLUIR = ["marruecos", "marroqui", "rabat", "wydad", "raja casablanca", "colombia", "cartagena de indias", "texas", "spurs", "ibiza", "murcia", "san antonio de padua", "san antonio abad", "tachira"];
+/* Deporte: fuera antes de la IA (ahorra clasificación y ruido), salvo que la nota trate de la gestión local: el municipio,
+   el alcalde, el concejo, un recinto municipal o un club con apoyo municipal. Solo para lo que se halló por la comuna; lo que
+   nombra a una autoridad siempre pasa. */
+const DEPORTE = /(^|[^a-z])(goles?|golea\w*|futbol\w*|partido de (ida|vuelta)|playoffs?|campeonato|torneo|liga de primera|primera b|segunda division|ascenso|copa chile|fixture|hinchas?|barra brava|tenistas?|basquetbol|clasificatori\w+|mundial sub|wanderers|everton|colo[ -]colo|universidad de chile|la calera vive|union la calera)([^a-z]|$)/;
+const GESTION_LOCAL = /municipi|alcald|concej|corporacion municipal|estadio municipal|recinto municipal|polideportivo|subvencion|fondeve|dideco|oficina de deportes/;
+const esDeporte = t => DEPORTE.test(t) && !GESTION_LOCAL.test(t);
 const METODOS = new Set(["rss", "rss_filtrado", "sitemap_noticias", "sitemap_filtrado", "sitemap", "sitemap_mensual", "portada"]);
 const VENTANA_DIAS = 14, MAX_IA = 120, UA = "PregonIA/0.1 (monitoreo de prensa municipal; +https://pregonia.cl)";
 
@@ -247,11 +253,20 @@ async function clasificar(comuna, notas, existentes = [], ejemplos = []){
   const [grupos, ...partes] = await Promise.all([llamar(promptGrupos(comuna, notas, existentes), 8000), ...lotes.map(lote)]);
   const porI = new Map();
   partes.forEach(p => (p || []).forEach(c => { if (Number.isInteger(Number(c.i))) porI.set(Number(c.i), {...c}); }));
+  // Tono garantizado: las notas que quedaron sin clasificar (lote fallido o respuesta cortada) van a una segunda pasada, solo ellas,
+  // con la numeración original para no confundir los índices. Así ninguna crítica queda como «neutra» por un error de la IA.
+  const faltan = notas.map((n, i) => i).filter(i => !(porI.get(i) || {}).tono);
+  if (faltan.length && faltan.length < notas.length) {
+    const sub = faltan.map(i => notas[i]), sueltas = [];
+    for (let k = 0; k < sub.length; k += LOTE) sueltas.push(llamar(pl(comuna, sub.slice(k, k + LOTE), k, ejemplos), 8000));
+    (await Promise.all(sueltas)).forEach(p => (p || []).forEach(c => { const j = faltan[Number(c.i)]; if (j !== undefined && c.tono) porI.set(j, {...(porI.get(j) || {}), ...c, i: j}); }));
+    DIAG.push(`segunda pasada: ${faltan.filter(i => (porI.get(i) || {}).tono).length} de ${faltan.length}`);
+  }
   (grupos || []).forEach(c => {
     if (!c.g) return; const m = /^E(\d+)$/i.exec(String(c.g).trim()), e = m && existentes[Number(m[1])];
     const x = porI.get(Number(c.i)) || {}; if (e) x.grupoExistente = e.grupo; else x.g = c.g; porI.set(Number(c.i), x);
   });
-  return {porI, ok: partes.every(Boolean) && Boolean(grupos)};
+  return {porI, ok: notas.every((n, i) => (porI.get(i) || {}).tono) && Boolean(grupos)};
 }
 
 /* Lectura de fuentes: los feeds del catálogo se leen una vez y sirven para todas las comunas; Google News se consulta por comuna. */
@@ -404,6 +419,7 @@ export function candidatasDe(comuna, items, desde, ahora = Date.now()){
     // Lo que Google News halló buscando la comuna la nombra en el cuerpo aunque el titular no lo haga (un 30% en Viña del Mar).
     const porConsulta = x.q === "comuna" && !EXCLUIR.some(w => t.includes(w));
     if (!menciona(t) && !(local && !EXCLUIR.some(w => t.includes(w))) && !porConsulta) continue;
+    if (esDeporte(t)) continue;
     const k1 = x.url, k2 = x.m.id + "|" + norm(x.titulo);
     if (vistos.has(k1) || vistos.has(k2)) continue; vistos.add(k1); vistos.add(k2);
     out.push({ id: "r" + hash(x.url), m: x.m.id, medio: x.m.nombre, ambito: x.m.ambito, titulo: x.titulo, desc: x.desc, url: x.url, ts: Math.min(x.fecha, ahora), via: x.via || "lectura", sobre: menciona(t) || local ? "p" : "pc", ...(x.fuente ? {fuente: x.fuente} : {}) });

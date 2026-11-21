@@ -659,11 +659,29 @@ function vFuentes(){
   return `<div class="head"><div><h2 tabindex="-1">Fuentes</h2><p>Los ${web.length} medios web que PregonIA lee y cómo se lee cada uno (verificado el 3 de noviembre de 2026), más ${plural(redes.length, "cuenta", "cuentas")} de medios en redes sociales (${nIg} de Instagram y ${nFb} de Facebook). Los restringidos se consultan solo vía Google News. Las cuentas de redes se leen solas cuando hay un lector conectado; si no, sus publicaciones se agregan con Agregar publicación.</p></div>
     ${puedeInscribir() ? `<button class="btn alt" type="button" data-act="red-abrir">Inscribir cuenta de red social</button>` : ""}</div>
   ${subtabs()}
+  ${calidadHtml()}
   <div class="filters">
     <div class="seg" role="group" aria-label="Estado">${[["todos","Todos",todas.length],["listo","Listos",cnt("listo")],["requiere_ajuste","Requieren ajuste",cnt("requiere_ajuste")],["restringido","Restringidos",cnt("restringido")],["redes","Redes sociales",redes.length]].map(([v,l,n]) => `<button data-act="f-est" data-k="${v}" aria-pressed="${f.e===v}">${l}<span class="c">${n}</span></button>`).join("")}</div>
     <div class="seg" role="group" aria-label="Ámbito">${[["todos","Todos"],["nacional","Nacional"],["regional","Regional"],["local","Local"],["institucional","Institucional"]].map(([v,l]) => `<button data-act="f-amb" data-k="${v}" aria-pressed="${f.a===v}">${l}</button>`).join("")}</div>
   </div>
   <div class="card scroll" style="padding:0"><table class="ftab"><thead><tr><th>Medio</th><th>Ámbito</th><th>Comuna</th><th>Lectura</th><th>Estado</th></tr></thead><tbody>${rows.map(m => { const e = est(m); return `<tr><td class="fm"><b>${esc(m.n)}</b>${e.o?`<div class="muted" style="font-size:12px">${esc(e.o)}</div>`:""}${esRed(m) && redRetirable(m) ? `<div><button class="btn ghost sm" type="button" data-act="red-retirar" data-id="${m.id}">Retirar</button></div>` : ""}</td><td data-l="Ámbito">${m.a}</td><td data-l="Comuna">${esc((m.c||"").replace(/;/g, ", ")) || '<span class="muted">—</span>'}</td><td data-l="Lectura">${met[m.m]||m.m}${esRed(m) && m.usr ? `<div><a class="muted" style="font-size:12px" href="${esc(m.u)}" target="_blank" rel="noopener">${/^\d+$/.test(m.usr) ? "perfil " + esc(m.usr) : "@" + esc(m.usr)}</a></div>` : ""}</td><td data-l="Estado"><span class="pill e-${e.k}">${esc(e.l || lbl[e.k] || e.k)}</span></td></tr>`; }).join("")}</tbody></table></div>`;
+}
+
+/* Calidad de la lectura: precisión medible. Cada semana, una muestra de 10 noticias de los últimos 7 días que el equipo marca como
+   «Corresponde» o «No corresponde». Precisión = correctas / revisadas (las marcadas «No corresponde» desde Menciones también cuentan).
+   La muestra es estable durante la semana (se ordena por una huella de la semana y el hecho) para que dos personas vean la misma. */
+function semanaIso(t = Date.now()){ const d = new Date(t); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7)); const y = new Date(Date.UTC(d.getUTCFullYear(), 0, 1)); return d.getUTCFullYear() + "-" + Math.ceil(((d - y) / 864e5 + 1) / 7); }
+const huella = s => { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+function calidadDatos(){
+  const qa = S.qa ||= {}, pre = S.org + ":", ok = Object.keys(qa).filter(k => k.startsWith(pre)).length, malas = Object.keys(S.fp).filter(k => k.startsWith(pre)).length;
+  const sem = semanaIso(), muestra = menciones(cuenta(), 7).filter(m => !qa[pre + m.g]).sort((a, b) => huella(sem + a.g) - huella(sem + b.g)).slice(0, 10);
+  return {ok, malas, total: ok + malas, precision: ok + malas ? Math.round(ok / (ok + malas) * 100) : null, muestra};
+}
+function calidadHtml(){
+  const q = calidadDatos();
+  return `<section class="card" style="margin:0 0 14px"><h3>Calidad de la lectura${q.precision !== null ? `<span class="c">${q.precision}%</span>` : ""}</h3>
+    <p class="hint" style="margin:0 0 10px">${q.total ? `De ${plural(q.total, "noticia revisada", "noticias revisadas")} por el equipo, ${q.precision}% correspondían a ${esc(inst())}.` : "Aún no hay noticias revisadas."} Revisen esta muestra una vez por semana: cada «No corresponde» afina la lectura${q.precision !== null && q.precision < 90 ? " · bajo 90%, conviene revisar las exclusiones de los temas" : ""}.</p>
+    ${q.muestra.length ? `<details class="corr"><summary>Revisar la muestra de esta semana (${q.muestra.length})</summary><ul class="cors">${q.muestra.map(m => `<li><b>${m.lead.url ? `<a href="${esc(m.lead.url)}" target="_blank" rel="noopener">${esc(m.lead.t)}</a>` : esc(m.lead.t)}</b><span>${esc(nomMedio(m.lead))} · ${fecha(m.last)}</span><span style="display:flex;gap:6px"><button class="btn sm" type="button" data-act="qa-ok" data-g="${esc(m.g)}">Corresponde</button><button class="btn ghost sm" type="button" data-act="fp" data-g="${esc(m.g)}">No corresponde</button></span></li>`).join("")}</ul></details>` : `<p class="empty">No quedan noticias por revisar esta semana.</p>`}</section>`;
 }
 
 /* Reportes: cada resultado se lee como gráfico y como cifra */
@@ -1451,6 +1469,7 @@ document.addEventListener("click", async e => {
   if (act === "fic-borrar") { const c = cuenta(); if (c.correcciones) delete c.correcciones[b.dataset.g]; c.fv = (c.fv || 0) + 1; save(); render(); toast("La ficha volvió a la clasificación automática."); }
   if (act === "prio-reset") { const c = cuenta(); delete c.plazos; delete c.compArea; c.fv = (c.fv || 0) + 1; save(); render(); toast("Plazos y competencias vuelven a los valores base del cargo."); }
   if (act === "cor-del") { const c = cuenta(); if (c.correcciones) delete c.correcciones[b.dataset.g]; c.fv = (c.fv || 0) + 1; save(); render(); }
+  if (act === "qa-ok") { (S.qa ||= {})[S.org + ":" + b.dataset.g] = Date.now(); save(); render(); }
   if (act === "fp") { const key = S.org + ":" + b.dataset.g; S.fp[key] = true; save(); render(); toast("Marcada como “no corresponde”. Servirá para afinar las exclusiones.", () => { delete S.fp[key]; save(); render(); }); }
   if (act === "fp-reset") { Object.keys(S.fp).filter(k => k.startsWith(S.org+":")).forEach(k => delete S.fp[k]); save(); render(); }
   if (act === "onb-hide") { c.onbOculto = true; save(); render(); toast("Aviso oculto. Puedes afinar tus temas cuando quieras en Ajustes.", () => { c.onbOculto = false; save(); render(); }); }
@@ -1728,7 +1747,7 @@ async function cargarReales(force, silencioso){
     const q = !pa ? "comuna=" + encodeURIComponent(org) : pa.autoridadId ? "autoridad=" + encodeURIComponent(pa.autoridadId) : "rol=" + encodeURIComponent(pa.rol) + "&zona=" + encodeURIComponent(pa.zona) + "&nombre=" + encodeURIComponent(pa.nombre) + "&g=" + pa.g;
     const r = await fetch("/api/noticias?" + q + redesParam()); if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json(); if (PILOTO && PILOTO.activo) { MODO.cargando = false; render(); return; } if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
-    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via ? {via: n.via} : {}), ...(n.f ? {f: n.f} : {}), hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? (n.sobre === "institucion" ? norm(CARGOS[pa.rol].organo) : pa.variantes[0]) : org + " comuna")), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna (o de la autoridad o su institución)
+    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via ? {via: n.via} : {}), ...(n.f ? {f: n.f} : {}), hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? (n.sobre === "institucion" ? norm(CARGOS[pa.rol].organo) : pa.variantes[0]) : org + " comuna")), ht: norm(n.t), real: true, ...(n.clasificada === false ? {sinTono: true} : {})}));  // la IA ya confirmó que la nota es de esta comuna (o de la autoridad o su institución)
     actualizarEstadoRedes(j.redes);  // estado de cada cuenta de Facebook e Instagram para la vista Fuentes
     MODO = {...MODO, tipo: "real", info: {...j, comuna: org, notas: nuevas}, cargando: false}; refrescarNotas(nuevas);  // el modo primero: los avisos se guardan por modo
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}

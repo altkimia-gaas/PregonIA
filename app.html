@@ -1902,6 +1902,7 @@ a.pd-go{text-decoration:none}
 .pill.prio::before{display:none}
 .clasif .venc,.kick .venc{color:var(--cri-ink);font-weight:600;border-color:var(--cri)}
 .clasif .rev{border-color:var(--neu);color:var(--neu-ink)}
+.clasif .alza{border-color:var(--cri);color:var(--cri-ink);font-weight:600}
 .rev.ok{border:1px solid var(--pos);color:var(--pos-ink);border-radius:999px;padding:0 7px;font-size:12px}
 .acc.accion-noamp{background:var(--neu-soft);border-left:3px solid var(--neu)}
 .acc.accion-escalar,.acc.accion-responder{border-left:3px solid var(--cri)}
@@ -3079,8 +3080,10 @@ function fichaDe(m, c = cuenta()){
   // Plazo: corre desde la última publicación (cada nota nueva es un desarrollo del hecho).
   const h = plazosDe(c)[prio], vence = h ? m.last + h * 36e5 : null;
   const decidido = respondida(m.g) || !!noResp(m.g);
-  const f = {ia, area, encuadre, impulsor, papel, tono, tono2, gravedad, confianza, medios, alcance, v6, comp, prio, acc, vence, decidido, corregida: !!correccionDe(m.g, c),
-    revisar: confianza === "b" && !correccionDe(m.g, c)};
+  const ri = typeof rafagaInfo === "function" ? rafagaInfo(m.notas.map(n => ({ts: n.ts, medio: n.m})).sort((a, b) => a.ts - b.ts)) : {k: 0},
+    alza = ri.k >= 3 && Date.now() - m.last < 48 * 36e5 ? `${ri.k} medios en ${lapsoTxt(ri.ms)}` : "";
+  const f = {ia, area, encuadre, alza, impulsor, papel, tono, tono2, gravedad, confianza, medios, alcance, v6, comp, prio, acc, vence, decidido, corregida: !!correccionDe(m.g, c),
+    revisar: confianza === "b" && !correccionDe(m.g, c), sinTono: m.notas.length > 0 && m.notas.every(n => n.sinTono)};
   return (m._fic[clave] = f);
 }
 
@@ -3094,7 +3097,7 @@ function venceTxt(f){
 }
 function fichaHtml(m){
   const f = fichaDe(m), [an, ad] = ACCIONES[f.acc];
-  return `<p class="clasif ficha"><span class="pill ${PRIO_CLS[f.prio]} prio" title="Prioridad">${PRIORIDADES[f.prio]}</span>${venceTxt(f) ? `<span class="${f.vence < Date.now() ? "venc" : ""}">${venceTxt(f)}</span>` : ""}<span class="cl-cat">${esc(AREAS[f.area])}</span><span>${esc(COMPETENCIAS[f.comp])}</span><span>${esc(ENCUADRES[f.encuadre])}</span><span>${esc(PAPELES_F[f.papel] || "")}</span>${f.impulsor ? `<span>${esc(IMPULSORES[f.impulsor])}</span>` : ""}${f.revisar ? `<span class="rev" title="La IA no está segura de esta ficha">Revisar</span>` : ""}${f.corregida ? `<span class="rev ok" title="Corregida por el equipo">Corregida</span>` : ""}</p>
+  return `<p class="clasif ficha"><span class="pill ${PRIO_CLS[f.prio]} prio" title="Prioridad">${PRIORIDADES[f.prio]}</span>${venceTxt(f) ? `<span class="${f.vence < Date.now() ? "venc" : ""}">${venceTxt(f)}</span>` : ""}${f.alza ? `<span class="alza" title="Tema en alza: varios medios lo publicaron en poco tiempo">En alza · ${esc(f.alza)}</span>` : ""}<span class="cl-cat">${esc(AREAS[f.area])}</span><span>${esc(COMPETENCIAS[f.comp])}</span><span>${esc(ENCUADRES[f.encuadre])}</span><span>${esc(PAPELES_F[f.papel] || "")}</span>${f.impulsor ? `<span>${esc(IMPULSORES[f.impulsor])}</span>` : ""}${f.sinTono ? `<span class="rev" title="La IA no alcanzó a leer el tono; se completa en la próxima lectura. Revísalo antes de descartar.">Tono por confirmar</span>` : f.revisar ? `<span class="rev" title="La IA no está segura de esta ficha">Revisar</span>` : ""}${f.corregida ? `<span class="rev ok" title="Corregida por el equipo">Corregida</span>` : ""}</p>
     ${f.decidido ? "" : `<p class="acc sm accion-${f.acc}"><b>${esc(an)}</b>${esc(ad)}</p>`}`;
 }
 /* Corrección de la ficha: los mismos campos que calcula el sistema; lo que no se toca queda automático. */
@@ -4264,11 +4267,29 @@ function vFuentes(){
   return `<div class="head"><div><h2 tabindex="-1">Fuentes</h2><p>Los ${web.length} medios web que PregonIA lee y cómo se lee cada uno (verificado el 3 de noviembre de 2026), más ${plural(redes.length, "cuenta", "cuentas")} de medios en redes sociales (${nIg} de Instagram y ${nFb} de Facebook). Los restringidos se consultan solo vía Google News. Las cuentas de redes se leen solas cuando hay un lector conectado; si no, sus publicaciones se agregan con Agregar publicación.</p></div>
     ${puedeInscribir() ? `<button class="btn alt" type="button" data-act="red-abrir">Inscribir cuenta de red social</button>` : ""}</div>
   ${subtabs()}
+  ${calidadHtml()}
   <div class="filters">
     <div class="seg" role="group" aria-label="Estado">${[["todos","Todos",todas.length],["listo","Listos",cnt("listo")],["requiere_ajuste","Requieren ajuste",cnt("requiere_ajuste")],["restringido","Restringidos",cnt("restringido")],["redes","Redes sociales",redes.length]].map(([v,l,n]) => `<button data-act="f-est" data-k="${v}" aria-pressed="${f.e===v}">${l}<span class="c">${n}</span></button>`).join("")}</div>
     <div class="seg" role="group" aria-label="Ámbito">${[["todos","Todos"],["nacional","Nacional"],["regional","Regional"],["local","Local"],["institucional","Institucional"]].map(([v,l]) => `<button data-act="f-amb" data-k="${v}" aria-pressed="${f.a===v}">${l}</button>`).join("")}</div>
   </div>
   <div class="card scroll" style="padding:0"><table class="ftab"><thead><tr><th>Medio</th><th>Ámbito</th><th>Comuna</th><th>Lectura</th><th>Estado</th></tr></thead><tbody>${rows.map(m => { const e = est(m); return `<tr><td class="fm"><b>${esc(m.n)}</b>${e.o?`<div class="muted" style="font-size:12px">${esc(e.o)}</div>`:""}${esRed(m) && redRetirable(m) ? `<div><button class="btn ghost sm" type="button" data-act="red-retirar" data-id="${m.id}">Retirar</button></div>` : ""}</td><td data-l="Ámbito">${m.a}</td><td data-l="Comuna">${esc((m.c||"").replace(/;/g, ", ")) || '<span class="muted">—</span>'}</td><td data-l="Lectura">${met[m.m]||m.m}${esRed(m) && m.usr ? `<div><a class="muted" style="font-size:12px" href="${esc(m.u)}" target="_blank" rel="noopener">${/^\d+$/.test(m.usr) ? "perfil " + esc(m.usr) : "@" + esc(m.usr)}</a></div>` : ""}</td><td data-l="Estado"><span class="pill e-${e.k}">${esc(e.l || lbl[e.k] || e.k)}</span></td></tr>`; }).join("")}</tbody></table></div>`;
+}
+
+/* Calidad de la lectura: precisión medible. Cada semana, una muestra de 10 noticias de los últimos 7 días que el equipo marca como
+   «Corresponde» o «No corresponde». Precisión = correctas / revisadas (las marcadas «No corresponde» desde Menciones también cuentan).
+   La muestra es estable durante la semana (se ordena por una huella de la semana y el hecho) para que dos personas vean la misma. */
+function semanaIso(t = Date.now()){ const d = new Date(t); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7)); const y = new Date(Date.UTC(d.getUTCFullYear(), 0, 1)); return d.getUTCFullYear() + "-" + Math.ceil(((d - y) / 864e5 + 1) / 7); }
+const huella = s => { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+function calidadDatos(){
+  const qa = S.qa ||= {}, pre = S.org + ":", ok = Object.keys(qa).filter(k => k.startsWith(pre)).length, malas = Object.keys(S.fp).filter(k => k.startsWith(pre)).length;
+  const sem = semanaIso(), muestra = menciones(cuenta(), 7).filter(m => !qa[pre + m.g]).sort((a, b) => huella(sem + a.g) - huella(sem + b.g)).slice(0, 10);
+  return {ok, malas, total: ok + malas, precision: ok + malas ? Math.round(ok / (ok + malas) * 100) : null, muestra};
+}
+function calidadHtml(){
+  const q = calidadDatos();
+  return `<section class="card" style="margin:0 0 14px"><h3>Calidad de la lectura${q.precision !== null ? `<span class="c">${q.precision}%</span>` : ""}</h3>
+    <p class="hint" style="margin:0 0 10px">${q.total ? `De ${plural(q.total, "noticia revisada", "noticias revisadas")} por el equipo, ${q.precision}% correspondían a ${esc(inst())}.` : "Aún no hay noticias revisadas."} Revisen esta muestra una vez por semana: cada «No corresponde» afina la lectura${q.precision !== null && q.precision < 90 ? " · bajo 90%, conviene revisar las exclusiones de los temas" : ""}.</p>
+    ${q.muestra.length ? `<details class="corr"><summary>Revisar la muestra de esta semana (${q.muestra.length})</summary><ul class="cors">${q.muestra.map(m => `<li><b>${m.lead.url ? `<a href="${esc(m.lead.url)}" target="_blank" rel="noopener">${esc(m.lead.t)}</a>` : esc(m.lead.t)}</b><span>${esc(nomMedio(m.lead))} · ${fecha(m.last)}</span><span style="display:flex;gap:6px"><button class="btn sm" type="button" data-act="qa-ok" data-g="${esc(m.g)}">Corresponde</button><button class="btn ghost sm" type="button" data-act="fp" data-g="${esc(m.g)}">No corresponde</button></span></li>`).join("")}</ul></details>` : `<p class="empty">No quedan noticias por revisar esta semana.</p>`}</section>`;
 }
 
 /* Reportes: cada resultado se lee como gráfico y como cifra */
@@ -5056,6 +5077,7 @@ document.addEventListener("click", async e => {
   if (act === "fic-borrar") { const c = cuenta(); if (c.correcciones) delete c.correcciones[b.dataset.g]; c.fv = (c.fv || 0) + 1; save(); render(); toast("La ficha volvió a la clasificación automática."); }
   if (act === "prio-reset") { const c = cuenta(); delete c.plazos; delete c.compArea; c.fv = (c.fv || 0) + 1; save(); render(); toast("Plazos y competencias vuelven a los valores base del cargo."); }
   if (act === "cor-del") { const c = cuenta(); if (c.correcciones) delete c.correcciones[b.dataset.g]; c.fv = (c.fv || 0) + 1; save(); render(); }
+  if (act === "qa-ok") { (S.qa ||= {})[S.org + ":" + b.dataset.g] = Date.now(); save(); render(); }
   if (act === "fp") { const key = S.org + ":" + b.dataset.g; S.fp[key] = true; save(); render(); toast("Marcada como “no corresponde”. Servirá para afinar las exclusiones.", () => { delete S.fp[key]; save(); render(); }); }
   if (act === "fp-reset") { Object.keys(S.fp).filter(k => k.startsWith(S.org+":")).forEach(k => delete S.fp[k]); save(); render(); }
   if (act === "onb-hide") { c.onbOculto = true; save(); render(); toast("Aviso oculto. Puedes afinar tus temas cuando quieras en Ajustes.", () => { c.onbOculto = false; save(); render(); }); }
@@ -5333,7 +5355,7 @@ async function cargarReales(force, silencioso){
     const q = !pa ? "comuna=" + encodeURIComponent(org) : pa.autoridadId ? "autoridad=" + encodeURIComponent(pa.autoridadId) : "rol=" + encodeURIComponent(pa.rol) + "&zona=" + encodeURIComponent(pa.zona) + "&nombre=" + encodeURIComponent(pa.nombre) + "&g=" + pa.g;
     const r = await fetch("/api/noticias?" + q + redesParam()); if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json(); if (PILOTO && PILOTO.activo) { MODO.cargando = false; render(); return; } if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
-    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via ? {via: n.via} : {}), ...(n.f ? {f: n.f} : {}), hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? (n.sobre === "institucion" ? norm(CARGOS[pa.rol].organo) : pa.variantes[0]) : org + " comuna")), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna (o de la autoridad o su institución)
+    const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via ? {via: n.via} : {}), ...(n.f ? {f: n.f} : {}), hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? (n.sobre === "institucion" ? norm(CARGOS[pa.rol].organo) : pa.variantes[0]) : org + " comuna")), ht: norm(n.t), real: true, ...(n.clasificada === false ? {sinTono: true} : {})}));  // la IA ya confirmó que la nota es de esta comuna (o de la autoridad o su institución)
     actualizarEstadoRedes(j.redes);  // estado de cada cuenta de Facebook e Instagram para la vista Fuentes
     MODO = {...MODO, tipo: "real", info: {...j, comuna: org, notas: nuevas}, cargando: false}; refrescarNotas(nuevas);  // el modo primero: los avisos se guardan por modo
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
@@ -5537,7 +5559,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingr
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "f4275086a0ad", K = "app";
+  const V = "df022be73cb5", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
@@ -6194,10 +6216,26 @@ const PRENSA_TXT = ["prensa comunal", "prensa regional", "prensa nacional"];
 const VENTANA_AVISO = 48 * 36e5;   // solo se avisa de hechos con notas de las últimas 48 horas
 const RAFAGA = {medios: 3, horas: 6}; // tema en alza: 3 medios distintos en 6 horas
 const tonoHecho = tonos => tonos.includes("cri") ? "cri" : tonos.includes("pos") ? "pos" : "neu";
-function rafagaDe(notas){
-  let mejor = 0;
-  notas.forEach((a, i) => { const k = new Set(notas.slice(i).filter(b => b.ts - a.ts <= RAFAGA.horas * 36e5).map(b => b.medio)).size; if (k > mejor) mejor = k; });
+/* Ráfaga: cuántos medios distintos publicaron dentro de 6 horas y en cuánto tiempo lo hicieron (el lapso más corto en que se juntó
+   ese número de medios), para avisar con una frase concreta: «3 medios en 1 h 40 min». */
+function rafagaDe(notas){ return rafagaInfo(notas).k; }
+function rafagaInfo(notas){
+  let mejor = {k: 0, ms: 0};
+  notas.forEach((a, i) => {
+    const vistos = new Set();
+    for (const b of notas.slice(i)) {
+      if (b.ts - a.ts > RAFAGA.horas * 36e5) break;
+      vistos.add(b.medio);
+      if (vistos.size > mejor.k || (vistos.size === mejor.k && b.ts - a.ts < mejor.ms)) mejor = {k: vistos.size, ms: b.ts - a.ts};
+    }
+  });
   return mejor;
+}
+function lapsoTxt(ms){
+  const min = Math.max(1, Math.round(ms / 60000));
+  if (min < 60) return min + " min";
+  const h = Math.floor(min / 60), r = min % 60;
+  return r && h < 3 ? `${h} h ${r} min` : `${Math.round(min / 60)} ${Math.round(min / 60) === 1 ? "hora" : "horas"}`;
 }
 function alertasDeHecho(h, ahora, visto = {}){
   const notas = h.notas.slice().sort((a, b) => a.ts - b.ts), nuevo = {...visto}, out = [];
@@ -6211,11 +6249,14 @@ function alertasDeHecho(h, ahora, visto = {}){
       titulo: escala ? `Escaló a ${PRENSA_TXT[max]}` : max ? `Noticia crítica en ${PRENSA_TXT[max]}` : "Nueva noticia crítica"});
     nuevo.cri = max;
   }
-  const raf = rafagaDe(notas);
+  const ri = rafagaInfo(notas), raf = ri.k;
   if (tono !== "pos" && raf >= RAFAGA.medios && !visto.raf) {
     nuevo.raf = true;
-    if (out.length) out[0].titulo += ` · ${raf} medios en ${RAFAGA.horas} horas`;
-    else out.push({...base, clave: h.g + ":raf", tipo: "rafaga", nivel: tono === "cri" ? "urgente" : "importante", titulo: `Tema en alza: ${raf} medios en ${RAFAGA.horas} horas`});
+    const frase = `${raf} medios en ${lapsoTxt(ri.ms)}`;
+    if (out.length) out[0].titulo += ` · ${frase}`;
+    // Un tema neutro que crece es información, no una urgencia: va como «info» y, con la preferencia por defecto, no suena.
+    // Solo lo crítico que crece llega como urgente.
+    else out.push({...base, clave: h.g + ":raf", tipo: "rafaga", nivel: tono === "cri" ? "urgente" : "info", titulo: tono === "cri" ? `Crítica en alza: ${frase}` : `Tema en alza: ${frase}`});
   }
   if (tono === "pos" && max >= 1 && max > (visto.pos ?? 0)) {
     out.push({...base, clave: h.g + ":pos:" + max, tipo: "positiva", nivel: "info", titulo: `Buena noticia en ${PRENSA_TXT[max]}`});
