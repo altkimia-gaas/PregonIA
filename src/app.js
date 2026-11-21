@@ -1702,6 +1702,11 @@ window.addEventListener("hashchange", () => { if (helpOpen) renderHelp(); });
 var PILOTO; // estado del modo piloto (src/piloto.js); var para que exista antes de que ese módulo se cargue
 /* Noticias reales (etapa 1): /api/noticias lee los medios del catálogo y la demostración queda a un clic. */
 const NOTAS_DEMO = NOTAS.slice(), MODO_KEY = "pregonia-modo";
+/* «Noticias reales» y la prueba gratis leen 30 días: la cuenta parte con un mes de historia ya clasificada (el tope de notas que
+   clasifica la IA no cambia, así que el costo tampoco). La comparación con pares sigue en 14 días (pares_dias). */
+const DIAS_REALES = 30;
+/* En la prueba gratis (no en la demostración comercial ni en el piloto) la cuenta abre siempre con noticias reales. */
+const enPruebaReal = () => { const p = typeof pruebaVigente === "function" && pruebaVigente(); return !!p && !p.ilimitada && !(PILOTO && PILOTO.activo); };
 let MODO = {tipo: "demo", info: null, cargando: false, disponible: false};
 const horaCorta = iso => new Date(iso).toLocaleTimeString("es-CL", {hour: "2-digit", minute: "2-digit", hourCycle: "h23"});
 function pintarModo(){
@@ -1726,14 +1731,15 @@ async function cargarReales(force, silencioso){
   try {
     const pa = esAut() ? cuenta().perfil : null;
     const q = !pa ? "comuna=" + encodeURIComponent(org) : pa.autoridadId ? "autoridad=" + encodeURIComponent(pa.autoridadId) : "rol=" + encodeURIComponent(pa.rol) + "&zona=" + encodeURIComponent(pa.zona) + "&nombre=" + encodeURIComponent(pa.nombre) + "&g=" + pa.g;
-    const r = await fetch("/api/noticias?" + q + redesParam()); if (!r.ok) throw new Error("HTTP " + r.status);
+    const r = await fetch("/api/noticias?" + q + "&dias=" + DIAS_REALES + redesParam()); if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json(); if (PILOTO && PILOTO.activo) { MODO.cargando = false; render(); return; } if (org !== S.org) { MODO.cargando = false; return cargarReales(); }
     const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via ? {via: n.via} : {}), ...(n.f ? {f: n.f} : {}), hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? (n.sobre === "institucion" ? norm(CARGOS[pa.rol].organo) : pa.variantes[0]) : org + " comuna")), ht: norm(n.t), real: true}));  // la IA ya confirmó que la nota es de esta comuna (o de la autoridad o su institución)
     actualizarEstadoRedes(j.redes);  // estado de cada cuenta de Facebook e Instagram para la vista Fuentes
     MODO = {...MODO, tipo: "real", info: {...j, comuna: org, notas: nuevas}, cargando: false}; refrescarNotas(nuevas);  // el modo primero: los avisos se guardan por modo
     try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
     pintarModo(); render();
-    if (!silencioso) toast(nuevas.length ? `Listo: ${plural(nuevas.length, "nota real", "notas reales")} de ${org}. Ábrelas en Menciones.` : `Los medios leídos no publicaron sobre ${org} en los últimos ${j.ventana_dias} días.`);
+    const quien = pa ? pa.nombre : org, criticas = new Set(nuevas.filter(n => n.tono === "cri").map(n => n.g)).size, hechos = new Set(nuevas.map(n => n.g)).size;
+    if (!silencioso) toast(nuevas.length ? `Listo: ${plural(hechos, "noticia", "noticias")} sobre ${quien} en ${j.ventana_dias} días${criticas ? `, ${plural(criticas, "crítica", "críticas")} por revisar` : ""}. Empieza por Inicio.` : `Los medios leídos no publicaron sobre ${quien} en los últimos ${j.ventana_dias} días.`);
   } catch(e) { MODO.cargando = false; pintarModo(); render(); if (!silencioso) toast("No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
 }
 /* Ícono animado de carga: un periódico abierto que da vuelta sus páginas (el mismo de assets/periodico-animado.svg).
@@ -1786,14 +1792,14 @@ function procesandoPaso(){
 }
 function usarDemo(){ if (MODO.tipo === "demo") return; MODO = {...MODO, tipo: "demo", info: null}; refrescarNotas(NOTAS_DEMO); try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
 document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; if (b.dataset.act === "modo-real") cargarReales(); if (b.dataset.act === "modo-demo") usarDemo(); });
-$("#org").addEventListener("change", () => { if ($("#entBack")) return; pintarModo(); if (MODO.tipo === "real" || ((esAut() || !COMUNAS.includes(S.org)) && MODO.disponible)) cargarReales(true); });  // sin noticias ficticias propias, se leen las reales  // con el selector de cuentas abierto no hay cambio todavía
+$("#org").addEventListener("change", () => { if ($("#entBack")) return; pintarModo(); if (MODO.tipo === "real" || ((esAut() || !COMUNAS.includes(S.org) || enPruebaReal()) && MODO.disponible)) cargarReales(true); });  // sin noticias ficticias propias, se leen las reales  // con el selector de cuentas abierto no hay cambio todavía
 (async () => {
   pintarModo();
   if (!/^https?:$/.test(location.protocol)) return;
   try { const r = await fetch("/api/noticias?ping=1", {cache: "no-store"}); if (!r.ok || !(await r.json()).ok) return; } catch(e) { return; }
   MODO.disponible = true; pintarModo();
   let pref = null; try { pref = localStorage.getItem(MODO_KEY); } catch(e) {}
-  if (pref === "real") cargarReales();
+  if (pref === "real" || enPruebaReal()) cargarReales();
 })();
 
 /* Edición: un solo diseño (Edición) en versión clara y oscura. Sin preferencia guardada sigue al teléfono; el botón la fija. */
