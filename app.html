@@ -3014,6 +3014,34 @@ const tipoCliente = (c = cuenta()) => { const r = rolDe(c); return r === "delega
 const plazosDe = (c = cuenta()) => ({...PLAZOS[tipoCliente(c)], ...((c && c.plazos) || {})});
 const competenciaDe = (area, c = cuenta()) => ((c && c.compArea) || {})[area] || (MATRIZ[rolDe(c)] || MATRIZ.municipio)[area] || "A";
 
+/* Excepciones por institución a cargo (borrador para validar, igual que la matriz). Dentro de un área, la noticia puede tratar
+   de algo que no administra la cuenta: un hospital no es salud municipal (lo administra el Servicio de Salud), una ruta del MOP
+   no es una vía comunal y un liceo traspasado al SLEP ya no es educación municipal. Si el texto del hecho nombra a esa institución
+   y no nombra a la parte propia, la competencia baja al valor de la excepción (que pasa a «ajena, pero la exponen» si la nombran).
+   Se puede desactivar cada una en Configuración › Prioridades. */
+const EXCEPCIONES = [
+  {id: "hospital", area: "salud", roles: ["municipio", "alcalde", "concejal"], comp: "A",
+    n: "Hospitales, SAMU y Servicio de Salud", d: "La salud municipal es la atención primaria (Cesfam, Cecosf, postas y SAPU). Los hospitales los administra el Servicio de Salud.",
+    si: /hospital|samu|servicio de salud|seremi de salud|minsal|ministerio de salud|clinica/, no: /cesfam|cecosf|posta|sapu|sar\b|atencion primaria|salud municipal|departamento de salud/},
+  {id: "slep", area: "educacion", roles: ["municipio", "alcalde", "concejal"], comp: "A",
+    n: "Establecimientos del SLEP", d: "Con el traspaso a un Servicio Local de Educación Pública, los colegios y liceos dejan de ser municipales.",
+    si: /\bslep\b|servicio local de educacion/, no: /daem|dem\b|corporacion municipal|educacion municipal/},
+  {id: "rutas", area: "obras", roles: ["municipio", "alcalde", "concejal"], comp: "C",
+    n: "Rutas y obras del MOP o del Serviu", d: "Las rutas nacionales y las obras del MOP o del Serviu no son vías comunales: el municipio coordina, no resuelve.",
+    si: /\bmop\b|vialidad|ruta \d|ruta 68|autopista|concesionaria|serviu|ministerio de obras publicas|efe\b|tren/, no: /direccion de obras|dom\b|calle|pasaje|vereda|bacheo municipal/},
+  {id: "sanitaria", area: "agua", roles: ["municipio", "alcalde", "concejal"], comp: "C",
+    n: "Empresa sanitaria y DGA", d: "Los cortes y la calidad del agua potable urbana son de la sanitaria (Esval y otras), fiscalizada por la SISS; el municipio coordina y apoya con aljibes.",
+    si: /esval|sanitaria|siss|superintendencia de servicios sanitarios|aguas andinas|\bdga\b|direccion general de aguas/, no: /aljibe|camion aljibe|municipalidad repart|municipio repart/},
+  {id: "policias", area: "seguridad", roles: ["municipio", "alcalde", "concejal"], comp: "A",
+    n: "Hechos policiales y causas penales", d: "Un delito y su investigación son de Carabineros, la PDI y la Fiscalía. La seguridad municipal es prevención, patrullaje preventivo y apoyo a víctimas.",
+    si: /carabineros|\bpdi\b|fiscalia|fiscal |detenid|formaliza|imputad|juzgado de garantia/, no: /seguridad municipal|seguridad publica municipal|plan comunal de seguridad|camaras municipales|patrullaje municipal|concejo comunal de seguridad|alcald/}
+];
+const excepcionesActivas = (c = cuenta()) => { const off = (c && c.excOff) || {}, r = rolDe(c); return EXCEPCIONES.filter(x => !off[x.id] && x.roles.includes(r)); };
+function excepcionDe(m, area, c = cuenta()){
+  const txt = norm(m.notas.map(n => (n.t || "") + " " + (n.res || "")).join(" "));
+  return excepcionesActivas(c).find(x => x.area === area && x.si.test(txt) && !x.no.test(txt)) || null;
+}
+
 /* Sin ficha de la IA: la categoría por palabras clave da el área. */
 const CAT_AREA = {
   agua: "agua", emergencias: "emergencias", seguridad: "seguridad", salud: "salud", educacion: "educacion", obras: "obras", ambiente: "ambiente",
@@ -3050,7 +3078,8 @@ function fichaDe(m, c = cuenta()){
   const confianza = fs.some(f => f.cf === "b") ? "b" : fs.some(f => f.cf === "m") ? "m" : ia ? "a" : null;
   const medios = new Set(m.notas.map(n => n.m)).size, alcance = escalera(m.notas).max;
   const v6 = new Set(m.notas.filter(n => n.ts - m.first <= 6 * 36e5).map(n => n.m)).size;
-  let comp = cor.comp || competenciaDe(area, c);
+  const exc = !cor.comp && !((c && c.compArea) || {})[area] ? excepcionDe(m, area, c) : null;
+  let comp = cor.comp || (exc ? exc.comp : competenciaDe(area, c));
   const expuesta = ["prot", "fuente", "menc", "alud"].includes(papel);
   if (comp === "A" && expuesta) comp = "AE";
   // Vacío de vocería: tema crítico o grave de su competencia propia, en dos o más medios, sin su versión.
@@ -3082,7 +3111,7 @@ function fichaDe(m, c = cuenta()){
   const decidido = respondida(m.g) || !!noResp(m.g);
   const ri = typeof rafagaInfo === "function" ? rafagaInfo(m.notas.map(n => ({ts: n.ts, medio: n.m})).sort((a, b) => a.ts - b.ts)) : {k: 0},
     alza = ri.k >= 3 && Date.now() - m.last < 48 * 36e5 ? `${ri.k} medios en ${lapsoTxt(ri.ms)}` : "";
-  const f = {ia, area, encuadre, alza, impulsor, papel, tono, tono2, gravedad, confianza, medios, alcance, v6, comp, prio, acc, vence, decidido, corregida: !!correccionDe(m.g, c),
+  const f = {ia, area, encuadre, alza, impulsor, papel, tono, tono2, gravedad, confianza, medios, alcance, v6, comp, exc: exc ? exc.id : null, prio, acc, vence, decidido, corregida: !!correccionDe(m.g, c),
     revisar: confianza === "b" && !correccionDe(m.g, c), sinTono: m.notas.length > 0 && m.notas.every(n => n.sinTono)};
   return (m._fic[clave] = f);
 }
@@ -3097,7 +3126,7 @@ function venceTxt(f){
 }
 function fichaHtml(m){
   const f = fichaDe(m), [an, ad] = ACCIONES[f.acc];
-  return `<p class="clasif ficha"><span class="pill ${PRIO_CLS[f.prio]} prio" title="Prioridad">${PRIORIDADES[f.prio]}</span>${venceTxt(f) ? `<span class="${f.vence < Date.now() ? "venc" : ""}">${venceTxt(f)}</span>` : ""}${f.alza ? `<span class="alza" title="Tema en alza: varios medios lo publicaron en poco tiempo">En alza · ${esc(f.alza)}</span>` : ""}<span class="cl-cat">${esc(AREAS[f.area])}</span><span>${esc(COMPETENCIAS[f.comp])}</span><span>${esc(ENCUADRES[f.encuadre])}</span><span>${esc(PAPELES_F[f.papel] || "")}</span>${f.impulsor ? `<span>${esc(IMPULSORES[f.impulsor])}</span>` : ""}${f.sinTono ? `<span class="rev" title="La IA no alcanzó a leer el tono; se completa en la próxima lectura. Revísalo antes de descartar.">Tono por confirmar</span>` : f.revisar ? `<span class="rev" title="La IA no está segura de esta ficha">Revisar</span>` : ""}${f.corregida ? `<span class="rev ok" title="Corregida por el equipo">Corregida</span>` : ""}</p>
+  return `<p class="clasif ficha"><span class="pill ${PRIO_CLS[f.prio]} prio" title="Prioridad">${PRIORIDADES[f.prio]}</span>${venceTxt(f) ? `<span class="${f.vence < Date.now() ? "venc" : ""}">${venceTxt(f)}</span>` : ""}${f.alza ? `<span class="alza" title="Tema en alza: varios medios lo publicaron en poco tiempo">En alza · ${esc(f.alza)}</span>` : ""}<span class="cl-cat">${esc(AREAS[f.area])}</span><span${f.exc ? ` title="${esc((EXCEPCIONES.find(x => x.id === f.exc) || {}).d || "")}"` : ""}>${esc(COMPETENCIAS[f.comp])}${f.exc ? " · " + esc((EXCEPCIONES.find(x => x.id === f.exc) || {}).n || "") : ""}</span><span>${esc(ENCUADRES[f.encuadre])}</span><span>${esc(PAPELES_F[f.papel] || "")}</span>${f.impulsor ? `<span>${esc(IMPULSORES[f.impulsor])}</span>` : ""}${f.sinTono ? `<span class="rev" title="La IA no alcanzó a leer el tono; se completa en la próxima lectura. Revísalo antes de descartar.">Tono por confirmar</span>` : f.revisar ? `<span class="rev" title="La IA no está segura de esta ficha">Revisar</span>` : ""}${f.corregida ? `<span class="rev ok" title="Corregida por el equipo">Corregida</span>` : ""}</p>
     ${f.decidido ? "" : `<p class="acc sm accion-${f.acc}"><b>${esc(an)}</b>${esc(ad)}</p>`}`;
 }
 /* Corrección de la ficha: los mismos campos que calcula el sistema; lo que no se toca queda automático. */
@@ -4180,6 +4209,9 @@ function vPrioridades(){
   <section class="card" style="margin-top:14px"><h3>Competencias del cargo</h3><p class="hint" style="margin:0 0 10px">Borrador por validar. Define qué le corresponde resolver a la cuenta en cada área; de esto dependen la prioridad y la acción sugerida. Un cambio rige para todas las noticias del área.</p>
     <table class="mtab comp"><thead><tr><th>Área</th><th>Competencia</th></tr></thead><tbody>${Object.entries(AREAS).map(([k, n]) => { const v = competenciaDe(k, c); return `<tr><td>${esc(n)}${v !== mat[k] ? ' <span class="rev ok">Ajustada</span>' : ""}</td><td><select data-comp="${k}" aria-label="Competencia en ${esc(n)}">${["P", "C", "I", "A"].map(x => `<option value="${x}" ${v === x ? "selected" : ""}>${esc(COMPETENCIAS[x])}</option>`).join("")}</select></td></tr>`; }).join("")}</tbody></table>
     <button class="btn ghost sm" type="button" data-act="prio-reset" style="margin-top:10px">Volver a los valores base del cargo</button></section>
+  ${(() => { const xs = EXCEPCIONES.filter(x => x.roles.includes(rolDe(c))); if (!xs.length) return ""; const off = c.excOff || {};
+    return `<section class="card" style="margin-top:14px"><h3>Excepciones por institución a cargo</h3><p class="hint" style="margin:0 0 10px">Borrador por validar. Dentro de un área, hay temas que administra otra institución. Si la noticia la nombra, la competencia baja y la noticia no se trata como propia. Si ajustaste el área arriba, manda tu ajuste.</p>
+    <ul class="cors">${xs.map(x => `<li><b>${esc(x.n)} · ${esc(AREAS[x.area])} → ${esc(COMPETENCIAS[x.comp])}</b><span>${esc(x.d)}</span><label class="sm"><input type="checkbox" data-exc="${x.id}" ${off[x.id] ? "" : "checked"}> Activa</label></li>`).join("")}</ul></section>`; })()}
   <section class="card" style="margin-top:14px"><h3>Correcciones del equipo<span class="c">${cors.length}</span></h3><p class="hint" style="margin:0 0 10px">${PILOTO && PILOTO.activo ? "Las 12 más recientes entran como criterio para la IA en cada lectura." : "En el piloto, las 12 más recientes entran como criterio para la IA en cada lectura."}</p>
     ${cors.length ? `<ul class="cors">${cors.slice(0, 30).map(([g, x]) => `<li><b>${esc(x.t || "Noticia")}</b><span>${Object.keys(etq).filter(k => x[k]).map(k => `${etq[k]}: ${esc(nom[k][x[k]] || x[k])}`).join(" · ")} · ${fecha(x.ts)}</span><button class="btn ghost sm" type="button" data-act="cor-del" data-g="${esc(g)}">Quitar</button></li>`).join("")}</ul>` : `<p class="empty">Aún no hay correcciones. Se hacen desde «Corregir ficha», en cada noticia de Menciones.</p>`}</section>`;
 }
@@ -5019,6 +5051,7 @@ document.addEventListener("change", e => {
   if (id === "fCat" || id === "fEnf" || id === "fPap" || id === "fPrio" || id === "fComp") { tState[{fCat: "fcat", fEnf: "fenf", fPap: "fpap", fPrio: "fprio", fComp: "fcomp"}[id]] = e.target.value || null; render(); }
   // Configuración › Prioridades: plazos y competencias de la cuenta
   if (e.target.dataset && e.target.dataset.plazo) { const c = cuenta(), v = Number(e.target.value); c.plazos = c.plazos || {}; if (v > 0) c.plazos[e.target.dataset.plazo] = v; else delete c.plazos[e.target.dataset.plazo]; c.fv = (c.fv || 0) + 1; save(); toast("Plazo actualizado."); }
+  if (e.target.dataset && e.target.dataset.exc) { const c = cuenta(), k = e.target.dataset.exc; c.excOff = c.excOff || {}; if (e.target.checked) delete c.excOff[k]; else c.excOff[k] = true; c.fv = (c.fv || 0) + 1; save(); render(); toast("Excepción " + (e.target.checked ? "activada." : "desactivada.")); }
   if (e.target.dataset && e.target.dataset.comp) { const c = cuenta(), area = e.target.dataset.comp, base = (MATRIZ[rolDe(c)] || MATRIZ.municipio)[area]; c.compArea = c.compArea || {}; if (e.target.value === base) delete c.compArea[area]; else c.compArea[area] = e.target.value; c.fv = (c.fv || 0) + 1; save(); render(); toast("Competencia actualizada para " + AREAS[area] + "."); }
   if (id === "kBase") { cuenta().base = e.target.value; save(); }
   if (id === "kMen") { tState.draft = e.target.value || null; tState.pieza = null; tState.enf = null; render(); }
@@ -5075,7 +5108,7 @@ document.addEventListener("click", async e => {
   if (act === "f-amb") { tState.fuente.a = b.dataset.k; render(); }
   if (act === "fic-guardar") { const g = b.dataset.g, box = b.closest(".corr-g"), campos = {}; box.querySelectorAll("[data-fic]").forEach(x => { campos[x.dataset.fic] = x.value; }); const m = menciones(cuenta(), 30).find(x => x.g === g); guardarCorreccion(g, campos, m); render(); toast(PILOTO && PILOTO.activo ? "Corrección guardada. La lectura siguiente la usa como criterio." : "Corrección guardada en esta cuenta."); }
   if (act === "fic-borrar") { const c = cuenta(); if (c.correcciones) delete c.correcciones[b.dataset.g]; c.fv = (c.fv || 0) + 1; save(); render(); toast("La ficha volvió a la clasificación automática."); }
-  if (act === "prio-reset") { const c = cuenta(); delete c.plazos; delete c.compArea; c.fv = (c.fv || 0) + 1; save(); render(); toast("Plazos y competencias vuelven a los valores base del cargo."); }
+  if (act === "prio-reset") { const c = cuenta(); delete c.plazos; delete c.compArea; delete c.excOff; c.fv = (c.fv || 0) + 1; save(); render(); toast("Plazos y competencias vuelven a los valores base del cargo."); }
   if (act === "cor-del") { const c = cuenta(); if (c.correcciones) delete c.correcciones[b.dataset.g]; c.fv = (c.fv || 0) + 1; save(); render(); }
   if (act === "qa-ok") { (S.qa ||= {})[S.org + ":" + b.dataset.g] = Date.now(); save(); render(); }
   if (act === "fp") { const key = S.org + ":" + b.dataset.g; S.fp[key] = true; save(); render(); toast("Marcada como “no corresponde”. Servirá para afinar las exclusiones.", () => { delete S.fp[key]; save(); render(); }); }
@@ -5559,7 +5592,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingr
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "df022be73cb5", K = "app";
+  const V = "10c683b43382", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
@@ -6665,7 +6698,7 @@ function paginaFB(nombre, ambito){
   return p.id;
 }
 const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null, hitos: c.hitos || [], prep: c.prep || {}, tv: c.tv || 0,
-  correcciones: c.correcciones || {}, compArea: c.compArea || {}, plazos: c.plazos || {}, fv: c.fv || 0});  // ficha editorial: correcciones, competencias y plazos de la cuenta
+  correcciones: c.correcciones || {}, compArea: c.compArea || {}, excOff: c.excOff || {}, plazos: c.plazos || {}, fv: c.fv || 0});  // ficha editorial: correcciones, competencias y plazos de la cuenta
 async function cargarDatosPiloto(){
   if (PILOTO.timer) await sincronizarYa();  // un cambio a medio guardar se envía antes de releer la base
   const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 62 * DAY).toISOString();  // 30 días y los 30 anteriores, para comparar (informe ejecutivo)
