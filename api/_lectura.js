@@ -8,7 +8,7 @@ import { COMUNAS_V } from "./_autoridades.js";
 const ALIAS = { "Llaillay": ["llay-llay", "llay llay"], "Isla de Pascua": ["rapa nui"] };
 const COMUNAS = Object.fromEntries(COMUNAS_V.map(c => [c, [c.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].concat(ALIAS[c] || [])]));
 /* Frases que contienen el nombre de una comuna sin hablar de ella. */
-const QUITAR = ["region de valparaiso", "cordillera de los andes", "universidad de los andes", "federico santa maria", "universidad santa maria", "cruz roja"];
+const QUITAR = ["ascensor santo domingo", "calle santo domingo", "region de valparaiso", "cordillera de los andes", "universidad de los andes", "federico santa maria", "universidad santa maria", "cruz roja"];
 // Palabras que en Google News acotan la búsqueda a la comuna chilena (Casablanca de Marruecos, Cartagena de Colombia, San Antonio de Texas).
 const CONTEXTO = '(Valparaíso OR comuna OR municipalidad OR alcalde OR Chile OR "litoral central")';
 const EXCLUIR = ["marruecos", "marroqui", "rabat", "wydad", "raja casablanca", "colombia", "cartagena de indias", "texas", "spurs", "ibiza", "murcia", "san antonio de padua", "san antonio abad", "tachira"];

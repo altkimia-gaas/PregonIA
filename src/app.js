@@ -1020,6 +1020,7 @@ function repGestion(){
     <div class="card"><h3>Noticias por día</h3>${chartDias(ms)}</div>
     ${esAut() ? paresAutCard() : paresCard()}
   </div>
+  ${typeof pulsoCard === "function" ? pulsoCard() : ""}
   <div class="card" style="margin-top:14px;display:grid;gap:10px"><h3 style="margin:0">Lectura del analista</h3><p class="hint" style="margin:0">Redactada por IA con las cifras y los resúmenes ${P.del}. Revísala antes de usarla.</p>
     <div id="lectura" class="draft" style="min-height:90px">${esc(lecturaTxt.gestion || lecturaBase(M, porTema))}</div>
     <div><button class="btn primary" data-act="lectura">Redactar con IA</button></div></div>
