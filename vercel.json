@@ -54,6 +54,10 @@
     {
       "source": "/redaccion",
       "destination": "/redaccion.html"
+    },
+    {
+      "source": "/cobertura",
+      "destination": "/cobertura.html"
     }
   ],
   "headers": [

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cobertura · Qué medios lee PregonIA</title>
+<meta name="description" content="Los medios nacionales, regionales y comunales que lee PregonIA, comuna por comuna en la Región de Valparaíso, y el estado de la última lectura.">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" type="image/png" sizes="192x192" href="/icono-192.png">
+<link rel="apple-touch-icon" href="/icono-180.png">
+<link rel="canonical" href="https://www.pregonia.cl/cobertura">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
+<style>
+:root{--bg:#FFFFFF;--surface-2:#F5F5F2;--ink:#141414;--muted:#555555;--line:#DADADA;--rule:#141414;--accent:#2B4BE0;--pos:#1E6B3F;--cri:#B3261E;--neu:#858A93;--f-news:"Source Serif 4",Georgia,serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+.w{max-width:960px;margin:0 auto;padding:20px max(20px,env(safe-area-inset-right,0px)) 48px max(20px,env(safe-area-inset-left,0px))}
+.cab{border-bottom:1px solid var(--rule);padding-bottom:3px;margin-bottom:22px}
+.cab::after{content:"";display:block;border-bottom:3px solid var(--rule)}
+.cab-f{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 16px;padding-bottom:10px;border-bottom:1px solid var(--line);font-size:.8125rem;color:var(--muted)}
+.cab-f a{color:var(--accent);font-weight:600;text-decoration:none}
+.nombre{margin:16px 0 12px;text-align:center;font-family:var(--f-news);font-weight:700;font-size:clamp(2.5rem,6vw,3.5rem);line-height:1;letter-spacing:-.02em}
+.nombre a{color:inherit;text-decoration:none}.nombre b{color:var(--accent)}
+h1{margin:0 0 10px;font-family:var(--f-news);font-weight:700;font-size:clamp(1.75rem,3.6vw,2.5rem);line-height:1.1;letter-spacing:-.01em;text-wrap:balance}
+.lead{margin:0 0 20px;max-width:62ch;font-family:var(--f-news);font-size:1.125rem;color:#2A2A2A}
+.cifras{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--rule);border-bottom:1px solid var(--line);margin:0 0 20px}
+.cifras div{padding:12px 14px;border-left:1px solid var(--line);display:grid;gap:2px}
+.cifras div:first-child{border-left:0;padding-left:0}
+.cifras b{font-family:var(--f-news);font-size:1.75rem;line-height:1}
+.cifras small{font-size:.8125rem;color:var(--muted)}
+.estado{margin:0 0 22px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;font-size:.9375rem;display:flex;gap:10px;align-items:center}
+.punto{width:10px;height:10px;border-radius:50%;flex:none;background:var(--neu)}
+.punto.ok{background:var(--pos)}.punto.mal{background:var(--cri)}
+.filtro{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 6px}
+.filtro label{font-weight:600}
+select{font:inherit;font-size:1rem;min-height:44px;padding:0 12px;border:1.5px solid var(--rule);border-radius:10px;background:#fff;color:var(--ink)}
+.resumen{margin:6px 0 24px;color:var(--muted)}
+.resumen b{color:var(--ink)}
+h2{margin:30px 0 4px;font-family:var(--f-news);font-weight:700;font-size:1.375rem;border-top:1px solid var(--rule);padding-top:12px}
+h2 + p{margin:0 0 10px;color:var(--muted);font-size:.9375rem}
+h3{margin:18px 0 6px;font-size:.8125rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+ul.medios{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px}
+ul.medios li{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line);min-width:0}
+ul.medios li .punto{position:relative;top:1px}
+.mn{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.mt{color:var(--muted);font-size:.875rem}
+.via{margin-left:auto;flex:none;font-family:"DM Mono",ui-monospace,monospace;font-size:.6875rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+.via.google{color:#9A5B00;border-color:#EAD3A8}.via.redes{color:var(--accent);border-color:#C7D0F6}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.875rem;color:var(--muted);margin:8px 0 0}
+.leyenda span{display:inline-flex;gap:6px;align-items:center}
+.nota{margin-top:30px;padding-top:12px;border-top:1px solid var(--line);font-size:.875rem;color:var(--muted)}
+.cta{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 26px;border-radius:999px;background:var(--accent);color:#fff;font-weight:600;text-decoration:none;margin-top:14px}
+.cta:focus-visible,select:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+@media (max-width:640px){.cifras{grid-template-columns:repeat(2,minmax(0,1fr))}.cifras div:nth-child(3){border-left:0;padding-left:0}ul.medios{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="w">
+  <header class="cab">
+    <div class="cab-f"><span>Cobertura de medios</span><span><a href="https://www.pregonia.cl/">Conoce el servicio</a></span></div>
+    <p class="nombre"><a href="https://www.pregonia.cl/">Pregon<b>IA</b></a></p>
+  </header>
+  <main>
+    <h1>Qué medios leemos, comuna por comuna</h1>
+    <p class="lead">PregonIA lee medios nacionales, regionales y comunales de la Región de Valparaíso, y las cuentas de redes de los medios locales. Esta es la lista completa y cómo salió la última lectura.</p>
+    <div class="cifras" id="cifras" aria-live="polite"><div><b>…</b><small>medios y cuentas</small></div><div><b>…</b><small>comunales</small></div><div><b>…</b><small>regionales</small></div><div><b>…</b><small>nacionales</small></div></div>
+    <p class="estado" id="estado"><span class="punto"></span><span>Revisando la última lectura…</span></p>
+    <div class="filtro"><label for="comuna">Tu comuna</label><select id="comuna"><option value="">Todas las comunas</option></select></div>
+    <p class="resumen" id="resumen"></p>
+    <div id="lista"></div>
+    <div class="leyenda" aria-label="Simbología">
+      <span><i class="punto ok"></i>Leído en la última lectura</span><span><i class="punto mal"></i>Falló en la última lectura (se reintenta en la siguiente)</span><span><i class="punto"></i>Sin dato de lectura</span>
+    </div>
+    <div class="leyenda" aria-label="Formas de lectura">
+      <span><b class="via">Directa</b> Feed, mapa del sitio o portada del medio</span><span><b class="via google">Google News</b> El medio no permite la lectura directa</span><span><b class="via redes">Redes</b> Cuenta de Facebook o Instagram del medio</span>
+    </div>
+    <p class="nota">La lectura corre cada 30 minutos. Respetamos el archivo robots.txt de cada sitio: si un medio cierra su lectura, lo seguimos por Google News. Guardamos el titular, el enlace y la fecha; el resumen de cada nota es propio y nunca reproducimos el texto del medio. ¿Falta un medio de tu comuna? Escríbenos a <a href="mailto:soporte@altkimia.cl">soporte@altkimia.cl</a> y lo sumamos.</p>
+    <a class="cta" href="https://pregonia.cl/?prueba">Prueba gratis con el último mes de tu comuna</a>
+  </main>
+</div>
+<script>
+/* Las 38 comunas de la región, por provincia. Los medios comunales traen las suyas en «c». */
+const PROV = {"Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández"],
+  "Marga Marga": ["Quilpué", "Villa Alemana", "Limache", "Olmué"], "Quillota": ["Quillota", "La Calera", "Hijuelas", "La Cruz", "Nogales"],
+  "San Antonio": ["San Antonio", "Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Santo Domingo"],
+  "San Felipe de Aconcagua": ["San Felipe", "Catemu", "Llaillay", "Panquehue", "Putaendo", "Santa María"],
+  "Los Andes": ["Los Andes", "Calle Larga", "Rinconada", "San Esteban"], "Petorca": ["La Ligua", "Cabildo", "Papudo", "Petorca", "Zapallar"], "Isla de Pascua": ["Isla de Pascua"]};
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const plural = (n, a, b) => `${n.toLocaleString("es-CL")} ${n === 1 ? a : b}`;
+const VIA = {directa: ["Directa", ""], google: ["Google News", "google"], redes: ["Redes", "redes"], asistida: ["Asistida", ""]};
+let D = null;
+const sel = $("#comuna");
+Object.entries(PROV).forEach(([p, cs]) => { const g = document.createElement("optgroup"); g.label = "Provincia de " + p; cs.forEach(c => g.append(new Option(c, c))); sel.append(g); });
+try { const q = new URLSearchParams(location.search).get("comuna"); if (q && [...sel.options].some(o => o.value === q)) sel.value = q; } catch(e) {}
+
+function fila(m){
+  const [vt, vc] = VIA[m.v] || VIA.directa, est = m.ok === true ? "ok" : m.ok === false ? "mal" : "";
+  const tit = m.ok === true ? "Leído en la última lectura" : m.ok === false ? "Falló en la última lectura" : "Sin dato de lectura";
+  return `<li><span class="punto ${est}" role="img" aria-label="${tit}" title="${tit}"></span><span class="mn">${esc(m.n)}${m.t ? ` <span class="mt">· ${esc(m.t)}</span>` : ""}</span><span class="via ${vc}">${m.r || vt}</span></li>`;
+}
+const bloque = (titulo, sub, ms) => ms.length ? `<h2>${titulo}</h2>${sub ? `<p>${sub}</p>` : ""}<ul class="medios">${ms.sort((a, b) => a.n.localeCompare(b.n, "es")).map(fila).join("")}</ul>` : "";
+
+function pintar(){
+  if (!D) return;
+  const comuna = sel.value, ms = D.medios;
+  const loc = ms.filter(m => m.a === "local"), reg = ms.filter(m => m.a === "regional"), nac = ms.filter(m => m.a === "nacional"), inst = ms.filter(m => m.a === "institucional");
+  const deComuna = m => m.c.includes(comuna);
+  let html = "";
+  if (comuna) {
+    const l = loc.filter(deComuna), i = inst.filter(m => !m.c.length || deComuna(m));
+    $("#resumen").innerHTML = `Para <b>${esc(comuna)}</b> leemos <b>${plural(l.length, "medio o cuenta comunal", "medios y cuentas comunales")}</b>, ${plural(reg.length, "medio regional", "medios regionales")} y ${plural(nac.length, "medio nacional", "medios nacionales")}${i.length ? `, más ${plural(i.length, "fuente institucional", "fuentes institucionales")}` : ""}. Los nacionales y regionales cuentan solo cuando nombran a la comuna o a sus autoridades.`;
+    html += bloque(`Medios de ${esc(comuna)}`, l.length ? "Medios y cuentas de redes que cubren la comuna." : "Aún no tenemos medios propios de esta comuna: la cubrimos con los regionales y nacionales. Si conoces uno, escríbenos.", l);
+    html += bloque("Fuentes institucionales", "", i);
+  } else {
+    $("#resumen").innerHTML = "Elige tu comuna para ver qué medios la cubren.";
+    Object.entries(PROV).forEach(([p, cs]) => {
+      const l = loc.filter(m => m.c.some(c => cs.includes(c)));  // un medio que cubre varias provincias aparece en cada una
+      html += bloque(`Provincia de ${esc(p)}`, `Medios comunales y cuentas de redes de ${cs.join(", ")}.`, l);
+    });
+    html += bloque("Fuentes institucionales", "Sitios oficiales que publican noticias.", inst);
+  }
+  html += bloque("Medios regionales", "Cubren toda la región.", reg);
+  html += bloque("Medios nacionales", "Cuentan cuando nombran a la comuna o a sus autoridades.", nac);
+  $("#lista").innerHTML = html;
+  try { const u = new URL(location.href); comuna ? u.searchParams.set("comuna", comuna) : u.searchParams.delete("comuna"); history.replaceState(null, "", u); } catch(e) {}
+}
+sel.addEventListener("change", pintar);
+
+(async () => {
+  try {
+    const r = await fetch("/api/config?cobertura"); if (!r.ok) throw new Error(r.status);
+    D = await r.json(); if (!D.medios) throw new Error("sin datos");
+    const n = a => D.medios.filter(m => m.a === a).length;
+    $("#cifras").innerHTML = [[D.medios.length, "medios y cuentas"], [n("local"), "comunales"], [n("regional"), "regionales"], [n("nacional"), "nacionales"]].map(([v, t]) => `<div><b>${v}</b><small>${t}</small></div>`).join("");
+    const l = D.lectura;
+    if (l) {
+      const min = Math.max(0, Math.round((Date.now() - Date.parse(l.fin)) / 60000)), hace = min < 60 ? `hace ${min} min` : new Date(l.fin).toLocaleString("es-CL", {weekday: "long", hour: "2-digit", minute: "2-digit", hourCycle: "h23"});
+      const bien = l.total ? l.ok / l.total >= 0.9 : false;
+      $("#estado").innerHTML = `<span class="punto ${bien ? "ok" : "mal"}"></span><span>Última lectura ${esc(hace)}: <b>${l.ok} de ${l.total} fuentes</b> respondieron.</span>`;
+    } else $("#estado").innerHTML = `<span class="punto"></span><span>Aún no hay una lectura registrada para mostrar.</span>`;
+    pintar();
+  } catch(e) {
+    $("#estado").innerHTML = `<span class="punto mal"></span><span>No pudimos cargar la cobertura en este momento. Intenta de nuevo en unos minutos.</span>`;
+  }
+})();
+</script>
+</body>
+</html>
