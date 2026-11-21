@@ -2,7 +2,7 @@
 // y devuelve titular, enlace, medio, fecha y resumen propio. La respuesta queda 15 minutos en la caché de Vercel.
 // La lectura y la clasificación viven en _lectura.js, compartido con la lectura programada (/api/ingesta).
 import { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, fichaNota, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre, saludFuentes, plazoGoogleNews, statsGoogleNews, ahorroGoogleNews } from "./_lectura.js";
-import { AUTORIDADES, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
+import { AUTORIDADES, PROVINCIAS, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
 import { limpio, consulta, sujeto, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
 import { CATALOGO } from "./_catalogo.js";
 import { leerRedes, usuarioDe, cuentasCatalogo } from "./_redes.js";
@@ -78,7 +78,9 @@ function armar(lote, porI, deAutoridad = false){
    dónde se mueve la prensa del territorio, no para medir a la autoridad. ?pulso=1&rol=diputado&zona=D7 */
 const PULSO_DIAS = 3;
 async function pulso(u){
-  const z = zonaDe(u.searchParams.get("rol"), u.searchParams.get("zona"));
+  // ?prov=San Antonio: las comunas de una provincia (comparación de un municipio con sus vecinas). ?todos=1: todos los titulares.
+  const prov = u.searchParams.get("prov"), todos = u.searchParams.has("todos");
+  const z = prov ? (PROVINCIAS[prov] ? {n: "Provincia de " + prov, comunas: PROVINCIAS[prov]} : null) : zonaDe(u.searchParams.get("rol"), u.searchParams.get("zona"));
   if (!z || z.comunas.length < 2) return json({error: "Zona no disponible"}, 400);
   const ahora = Date.now(), desde = ahora - PULSO_DIAS * 864e5, mitad = ahora - 864e5, cat = await leerCatalogo();
   // Solo lo que nombra a la comuna en el titular o la bajada: un medio local que cubre varias comunas no suma todas sus notas a cada una.
@@ -87,7 +89,7 @@ async function pulso(u){
     const re = new RegExp(`(^|[^a-z])(${COMUNAS[c].join("|")})([^a-z]|$)`);
     const xs = candidatasDe(c, cat.items, desde, ahora).filter(x => { const t = norm(x.titulo + " " + x.desc); return re.test(t) && !RUTINA.test(t); });
     return {c, n: xs.length, h24: xs.filter(x => x.ts >= mitad).length, medios: new Set(xs.map(x => x.m)).size,
-      t: xs.slice(0, 3).map(x => ({t: x.titulo, u: x.url, m: x.medio, ts: x.ts}))};
+      t: xs.slice(0, todos ? 80 : 3).map(x => todos ? {t: x.titulo} : {t: x.titulo, u: x.url, m: x.medio, ts: x.ts})};
   }).sort((a, b) => b.n - a.n);
   return json({zona: z.n, dias: PULSO_DIAS, generado: new Date(ahora).toISOString(), fuentes: {leidas: cat.total - cat.errores.length, total: cat.total}, comunas},
     200, {"cache-control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=3600"});

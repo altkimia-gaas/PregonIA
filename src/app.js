@@ -1021,6 +1021,8 @@ function repGestion(){
     ${esAut() ? paresAutCard() : paresCard()}
   </div>
   ${typeof pulsoCard === "function" ? pulsoCard() : ""}
+  ${gestionCard(ms, c)}
+  ${vecinasCard()}
   <div class="card" style="margin-top:14px;display:grid;gap:10px"><h3 style="margin:0">Lectura del analista</h3><p class="hint" style="margin:0">Redactada por IA con las cifras y los resúmenes ${P.del}. Revísala antes de usarla.</p>
     <div id="lectura" class="draft" style="min-height:90px">${esc(lecturaTxt.gestion || lecturaBase(M, porTema))}</div>
     <div><button class="btn primary" data-act="lectura">Redactar con IA</button></div></div>
@@ -1028,6 +1030,86 @@ function repGestion(){
     <div class="scroll"><table><thead><tr><th>Fecha</th><th>Medio</th><th>Nivel</th><th>Tono</th><th>Titular</th></tr></thead><tbody>${notas.map(({n}) => `<tr><td class="mono">${hora(n.ts)}</td><td>${esc(nomMedio(n))}</td><td>${NIVS[nivIdx(MED[n.m].a)][1]}</td><td>${tonoLbl[n.tono]}</td><td>${esc(n.t)}</td></tr>`).join("")}</tbody></table></div>
     <p class="hint" style="margin:10px 0 0">En producción cada fila enlaza a la nota original en el sitio del medio.</p></details>
   ${muestra(M.vol)}`;
+}
+/* Logo de la institución para el informe: se reduce a 360 px de ancho en PNG y queda en la cuenta (en el piloto, en su configuración). */
+document.addEventListener("change", e => {
+  if (e.target.id !== "logoInst" || !e.target.files || !e.target.files[0]) return;
+  const f = e.target.files[0]; if (f.size > 4e6) return toast("La imagen es muy pesada: usa una de menos de 4 MB.");
+  const img = new Image(); img.onload = () => { const k = Math.min(1, 360 / img.width), cv = document.createElement("canvas"); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+    cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height); const c = cuenta(); c.logo = cv.toDataURL("image/png"); URL.revokeObjectURL(img.src); save(); render(); toast("Logo listo: aparecerá en el PDF del informe de gestión."); };
+  img.onerror = () => toast("No se pudo leer esa imagen."); img.src = URL.createObjectURL(f);
+});
+/* Indicadores de gestión del mes (ficha editorial): agenda propia o impuesta, tiempo de primera respuesta en P1 y P2,
+   cobertura de vocería, vacíos de vocería, tono neto por área de competencia propia y áreas propias en silencio. */
+function gestionIndicadores(ms, c = cuenta()){
+  const fs = ms.map(m => ({m, f: fichaDe(m, c)})), conImp = fs.filter(x => x.f.impulsor), propias = conImp.filter(x => x.f.impulsor === "propia").length;
+  const urg = fs.filter(x => x.f.prio === "P1" || x.f.prio === "P2"), tResp = m => { const t = S.resp[S.org + ":" + m.g]; return typeof t === "number" ? Math.max(0, (t - m.first) / 36e5) : null; };
+  const hs = urg.map(x => tResp(x.m)).filter(x => x != null).sort((a, b) => a - b), pl = plazosDe(c);
+  const aTiempo = urg.filter(x => { const h = tResp(x.m); return h != null && h <= (pl[x.f.prio] || 24); }).length;
+  const prop = fs.filter(x => x.f.comp === "P"), voz = prop.filter(x => ["prot", "fuente"].includes(x.f.papel)).length, vacios = fs.filter(x => x.f.papel === "aus").length;
+  const areas = Object.keys(AREAS).filter(a => competenciaDe(a, c) === "P").map(a => { const xs = fs.filter(x => x.f.area === a), cri = xs.filter(x => x.m.tono === "cri").length, pos = xs.filter(x => x.m.tono === "pos").length;
+    return {a, n: AREAS[a], vol: xs.length, cri, pos, neto: xs.length ? Math.round((pos - cri) / xs.length * 100) : 0}; });
+  return {hechos: fs.length, agenda: conImp.length ? pct(propias, conImp.length) : null, conImp: conImp.length, urg: urg.length, resp: hs.length, medH: hs.length ? hs[Math.floor((hs.length - 1) / 2)] : null, aTiempo,
+    voz: prop.length ? pct(voz, prop.length) : null, prop: prop.length, vacios, areas: areas.filter(x => x.vol).sort((a, b) => b.vol - a.vol), silencio: areas.filter(x => !x.vol).map(x => x.n)};
+}
+const horasTxt = h => h == null ? "—" : h < 1 ? "menos de 1 h" : h < 48 ? Math.round(h) + " h" : Math.round(h / 24) + " días";
+function gestionCard(ms, c){
+  const g = gestionIndicadores(ms, c);
+  const kp = (v, l, s) => `<div class="tile"><div class="top"><span class="lb">${l}</span></div><div class="big">${v}</div>${s ? `<div class="sub">${s}</div>` : ""}</div>`;
+  return `<div class="card" style="margin-top:14px"><h3>Indicadores de gestión del mes</h3>
+    <div class="rgrid r4" style="margin-top:8px">
+      ${kp(g.agenda == null ? "—" : g.agenda + "%", "Agenda propia", g.conImp ? `de ${plural(g.conImp, "noticia", "noticias")} con origen identificado, la puso la institución; el resto la impusieron otros` : "sin origen identificado todavía")}
+      ${kp(horasTxt(g.medH), "Primera respuesta (P1 y P2)", g.urg ? `${g.resp} de ${g.urg} respondidas · ${g.aTiempo} dentro de plazo` : "sin crisis ni temas por atender")}
+      ${kp(g.voz == null ? "—" : g.voz + "%", "Cobertura de vocería", g.prop ? `de las noticias de competencia propia, con la institución como protagonista o fuente` : "sin noticias de competencia propia")}
+      ${kp(String(g.vacios), "Vacíos de vocería", "temas propios, críticos y en varios medios, sin la versión de la institución")}
+    </div>
+    ${g.areas.length ? `<h4 style="margin:16px 0 6px">Tono neto por área de competencia propia</h4><ul class="hbars">${g.areas.map(x => `<li><span class="t"><i style="background:${x.neto > 0 ? "var(--pos)" : x.neto < 0 ? "var(--cri)" : "var(--neu)"}"></i><span>${esc(x.n)} <small class="muted">${plural(x.vol, "noticia", "noticias")}</small></span></span><span class="b" ${tipAttr(x.pos + " positivas, " + x.cri + " críticas")}><i style="width:${Math.max(4, Math.abs(x.neto))}%;background:${x.neto > 0 ? "var(--pos)" : x.neto < 0 ? "var(--cri)" : "var(--neu)"}"></i></span><span class="v mono">${signo(x.neto)}</span></li>`).join("")}</ul>` : ""}
+    ${g.silencio.length ? `<p class="hint" style="margin:10px 0 0"><b>Temas en silencio:</b> ${esc(g.silencio.join(", "))}. Son de competencia propia y la prensa no los recogió este mes: espacio para agenda propia.</p>` : ""}
+    <div class="acts" style="margin-top:12px">${shareBar("gestion")}</div>
+    <p class="hint" style="margin:6px 0 0">El PDF lleva el nombre${c.logo ? " y el logo" : ""} de ${esc(inst())}. <label style="cursor:pointer;color:var(--accent);text-decoration:underline;text-underline-offset:2px"><input type="file" accept="image/png,image/jpeg" id="logoInst" hidden>${c.logo ? "Cambiar el logo" : "Agregar el logo de la institución"}</label>${c.logo ? ` · <button class="btn ghost sm" type="button" data-act="logo-quitar">Quitar</button>` : ""}</p></div>`;
+}
+/* Frente a las comunas vecinas (solo municipios): notas de los últimos 3 días que nombran a cada comuna de la provincia, por área,
+   con los medios del catálogo (sin IA). Privado para la cuenta: no se publica ni se compara a las autoridades. */
+const VECINAS = {};
+function vecinasCard(){
+  if (esAut() || !/^https?:$/.test(location.protocol)) return "";
+  const prov = provinciaDe(S.org); if (!prov || (PROVINCIAS[prov] || []).length < 2) return "";
+  const e = VECINAS[prov];
+  if (!e || (!e.cargando && Date.now() - e.ts > 30 * 6e4)) pedirVecinas(prov);
+  return `<div class="card" id="vecinasCard" style="margin-top:14px">${vecinasHtml(VECINAS[prov], prov)}</div>`;
+}
+async function pedirVecinas(prov){
+  VECINAS[prov] = {cargando: true, ts: Date.now()};
+  try { const r = await fetch(`/api/noticias?pulso=1&todos=1&prov=${encodeURIComponent(prov)}`); if (!r.ok) throw new Error(r.status); VECINAS[prov] = {d: await r.json(), ts: Date.now()}; }
+  catch(e) { VECINAS[prov] = {error: true, ts: Date.now()}; }
+  const el = $("#vecinasCard"); if (el && provinciaDe(S.org) === prov) el.innerHTML = vecinasHtml(VECINAS[prov], prov);
+}
+function areaDeTitular(t){ const n = norm(t), cat = categoriaDe({notas: [{t, ht: n, hay: n}]}, {perfil: {tipo: "Municipio"}}); return CAT_AREA[cat.k] || "local"; }
+function vecinasHtml(e, prov){
+  const tit = `<h3>Frente a las comunas de la provincia de ${esc(prov)}</h3>`;
+  if (!e || e.cargando) return tit + `<p class="muted" style="margin:0">Leyendo los medios de la provincia…</p>`;
+  if (e.error || !e.d) return tit + `<p class="muted" style="margin:0">No se pudo leer la provincia ahora. Vuelve a abrir el informe en unos minutos.</p>`;
+  const cs = e.d.comunas.map(c => { const por = {}; c.t.forEach(x => { const a = areaDeTitular(x.t); por[a] = (por[a] || 0) + 1; }); return {...c, por}; });
+  const tops = Object.entries(cs.reduce((s, c) => { Object.entries(c.por).forEach(([a, n]) => s[a] = (s[a] || 0) + n); return s; }, {})).sort((a, b) => b[1] - a[1]).slice(0, 5).map(x => x[0]);
+  if (!cs.some(c => c.n)) return tit + `<p class="muted" style="margin:0">Los medios del catálogo no nombraron a las comunas de la provincia en los últimos ${e.d.dias} días.</p>`;
+  const yo = cs.find(c => c.c === S.org), rank = cs.slice().sort((a, b) => b.n - a.n).findIndex(c => c.c === S.org) + 1;
+  return tit + `<p class="vtx" style="margin:0 0 10px">${yo ? `${esc(S.org)} es ${rank}.ª de ${cs.length} en notas de los últimos ${e.d.dias} días, con ${plural(yo.n, "nota", "notas")}.` : ""}</p>
+    <div class="scroll"><table class="mtab"><thead><tr><th>Comuna</th><th class="num">Notas</th>${tops.map(a => `<th class="num">${esc(AREAS[a])}</th>`).join("")}</tr></thead>
+    <tbody>${cs.sort((a, b) => b.n - a.n).map(c => `<tr${c.c === S.org ? ' style="font-weight:700"' : ""}><td>${esc(c.c)}</td><td class="num mono">${c.n}</td>${tops.map(a => `<td class="num mono">${c.por[a] || ""}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <p class="hint" style="margin:8px 0 0">Medios del catálogo, sin Google News; el área sale de palabras clave del titular. Mide presencia en prensa por tema, no el tono ni a las autoridades. Uso interno.</p>`;
+}
+function gestionTexto(){
+  const P = GP(), c = cuenta(), ms = menciones(c, P.d), M = metricas(ms), g = gestionIndicadores(ms, c);
+  const L = [`*Informe de gestión de prensa · ${inst()}*`, rango(NOW - 29 * DAY, NOW), "",
+    `*Cobertura:* ${M.vol} noticias, tono ${veredicto(M).n.toLowerCase()} (${conteo(M)}).`,
+    `*Agenda propia:* ${g.agenda == null ? "sin datos" : g.agenda + "% de las noticias con origen identificado"}.`,
+    `*Primera respuesta en crisis y temas por atender:* ${horasTxt(g.medH)} (mediana), ${g.resp} de ${g.urg} respondidas, ${g.aTiempo} dentro de plazo.`,
+    `*Cobertura de vocería:* ${g.voz == null ? "sin datos" : g.voz + "% de las noticias de competencia propia con la institución como protagonista o fuente"}.`,
+    `*Vacíos de vocería:* ${g.vacios}.`];
+  if (g.areas.length) { L.push("", "*Tono neto por área de competencia propia*"); g.areas.forEach(x => L.push(`${x.n}: ${signo(x.neto)} (${plural(x.vol, "noticia", "noticias")}, ${plural(x.pos, "positiva", "positivas")} y ${plural(x.cri, "crítica", "críticas")})`)); }
+  if (g.silencio.length) L.push("", `*Temas en silencio:* ${g.silencio.join(", ")}.`);
+  const lec = (lecturaTxt.gestion || "").trim(); if (lec) L.push("", "*Lectura del analista*", lec);
+  return L.join("\n");
 }
 function lecturaBase(M, porTema){
   const esp = porTema.filter(x => !/\(comuna\)$/.test(x.t.nombre)), top = esp.slice().sort((a,b) => b.vol - a.vol)[0], crit = esp.slice().sort((a,b) => b.cri - a.cri)[0];
@@ -1159,6 +1241,7 @@ function shareDoc(src, i){
   }
   if (src === "vocero") return vocDoc();
   if (src === "diario") { const t = diarioTexto(), d = diarioData(); return {titulo: "Informe diario de prensa", sub: d.etiqueta, sinFecha: true, tipo: "diario", texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
+  if (src === "gestion") { const t = gestionTexto(); return {titulo: "Informe de gestión de prensa", sub: rango(NOW - 29 * DAY, NOW), sinFecha: true, marca: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "ejec") { const t = ejecTexto(); return {titulo: "Informe ejecutivo · " + inst(), sub: fechaLarga(NOW), sinFecha: true, tipo: "ejec", texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "parte") { const t = parteTexto(); return {titulo: esAut() ? partePer().rotulo + " · " + inst() : partePer().rotulo + " del alcalde", sub: "Período: " + parteData().per, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "aprob") { const x = S.comunicados.filter(y => y.org === S.org)[i]; return x && x.texto ? {titulo: x.pieza, sub: "Responde a: " + x.origen + " · aprobado el " + fecha(x.ts), texto: x.texto, cuerpo: x.texto} : null; }
@@ -1197,7 +1280,12 @@ async function pdfBlob(d){
   doc.setProperties({title: pdfTxt(d.titulo + " · " + S.org), author: "PregonIA", creator: "PregonIA"});
   let y = M;
   const salto = h => { if (y + h > PIE - 6) { doc.addPage(); y = M; } };
-  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(30, 77, 140); doc.text(pdfTxt("PregonIA · " + inst()), M, y); y += 8;
+  if (d.marca) {  // informe con la marca de la institución: su nombre (y su logo, si lo cargó) arriba; PregonIA solo en el pie
+    const logo = cuenta().logo; let lw = 0;
+    if (logo) { try { const p = doc.getImageProperties(logo), h = 16, w = Math.min(40, h * p.width / p.height); doc.addImage(logo, M + AN - w, y - 6, w, h); lw = w + 4; } catch(e) {} }
+    doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(21, 27, 36);
+    doc.splitTextToSize(pdfTxt(inst()), AN - lw).forEach(l => { doc.text(l, M, y); y += 6; }); y += logo ? 6 : 2;
+  } else { doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(30, 77, 140); doc.text(pdfTxt("PregonIA · " + inst()), M, y); y += 8; }
   doc.setFont("helvetica", "bold"); doc.setFontSize(17); doc.setTextColor(21, 27, 36);
   doc.splitTextToSize(pdfTxt(d.titulo), AN).forEach(l => { doc.text(l, M, y); y += 7; });
   doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(91, 101, 115);
@@ -1475,6 +1563,7 @@ document.addEventListener("click", async e => {
   if (act === "prio-reset") { const c = cuenta(); delete c.plazos; delete c.compArea; delete c.excOff; c.fv = (c.fv || 0) + 1; save(); render(); toast("Plazos y competencias vuelven a los valores base del cargo."); }
   if (act === "cor-del") { const c = cuenta(); if (c.correcciones) delete c.correcciones[b.dataset.g]; c.fv = (c.fv || 0) + 1; save(); render(); }
   if (act === "qa-ok") { (S.qa ||= {})[S.org + ":" + b.dataset.g] = Date.now(); save(); render(); }
+  if (act === "logo-quitar") { const c = cuenta(); delete c.logo; save(); render(); toast("Quitamos el logo del informe."); }
   if (act === "fp") { const key = S.org + ":" + b.dataset.g; S.fp[key] = true; save(); render(); toast("Marcada como “no corresponde”. Servirá para afinar las exclusiones.", () => { delete S.fp[key]; save(); render(); }); }
   if (act === "fp-reset") { Object.keys(S.fp).filter(k => k.startsWith(S.org+":")).forEach(k => delete S.fp[k]); save(); render(); }
   if (act === "onb-hide") { c.onbOculto = true; save(); render(); toast("Aviso oculto. Puedes afinar tus temas cuando quieras en Ajustes.", () => { c.onbOculto = false; save(); render(); }); }
