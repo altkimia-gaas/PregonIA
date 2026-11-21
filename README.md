@@ -180,6 +180,20 @@ PregonIA avisa de noticias críticas nuevas, de las que escalan a prensa regiona
   3. Correo (opcional): cuenta en Resend con el dominio verificado, y en Vercel `RESEND_API_KEY` y `AVISOS_REMITENTE` (por ejemplo `PregonIA <avisos@altkimia.com>`).
   4. Volver a desplegar. Cada persona activa los avisos en la campana de su celular.
 
+### Parte diario por WhatsApp (8:00)
+
+Cada persona del piloto puede dejar su celular en la campana de avisos («Parte diario por WhatsApp») y aceptar recibirlo. La lectura programada de las 8:07 (hora de Chile) envía a cada cuenta, una vez al día, un mensaje con las noticias de las últimas 24 horas, cuántas son críticas y las dos principales, con el botón «Abrir PregonIA» (`api/_whatsapp.js`). La tabla `partes_whatsapp` evita que la lectura de las 8:37 lo repita.
+
+Puesta en marcha:
+1. Correr de nuevo `supabase/esquema.sql` (agrega `avisos.whatsapp`, `avisos.whatsapp_ok` y la tabla `partes_whatsapp`).
+2. En Meta Business Suite, en el portafolio de ALTKIMIA, crear la cuenta de WhatsApp Business y registrar un número que no esté en uso en la app de WhatsApp.
+3. En WhatsApp Manager, crear la plantilla `parte_diario` (categoría Utilidad, español) con este texto y un botón de enlace «Abrir PregonIA» → `https://pregonia.cl/?sin-portada#inicio`:
+   `Parte de prensa de {{1}}, últimas 24 horas: {{2}}. Lo principal: {{3}}. Detalle, plazos y respuestas en PregonIA.`
+4. Darle al usuario del sistema el permiso `whatsapp_business_messaging` y generar su token.
+5. En Vercel (Production): `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID` y, si cambian, `WHATSAPP_PLANTILLA` (por defecto `parte_diario`) y `WHATSAPP_IDIOMA` (por defecto `es`). Luego Redeploy.
+
+Costo: Meta cobra por mensaje de plantilla de utilidad enviado; con un mensaje diario por persona, una cuenta con 3 personas son unos 90 mensajes al mes. Verificar la tarifa vigente para Chile en la página de precios de WhatsApp Business. Sin las variables no se envía nada y la campana avisa que el envío aún no está habilitado.
+
 ### App en el celular
 
 PregonIA se instala como app (PWA) desde el navegador, sin pasar por App Store ni Google Play:
