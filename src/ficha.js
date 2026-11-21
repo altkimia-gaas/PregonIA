@@ -152,13 +152,22 @@ function fichaDe(m, c = cuenta()){
   // Plazo: corre desde la última publicación (cada nota nueva es un desarrollo del hecho).
   const h = plazosDe(c)[prio], vence = h ? m.last + h * 36e5 : null;
   const decidido = respondida(m.g) || !!noResp(m.g);
-  const ri = typeof rafagaInfo === "function" ? rafagaInfo(m.notas.map(n => ({ts: n.ts, medio: n.m})).sort((a, b) => a.ts - b.ts)) : {k: 0},
+  const ri = alzaDe(m.notas),
     alza = ri.k >= 3 && Date.now() - m.last < 48 * 36e5 ? `${ri.k} medios en ${lapsoTxt(ri.ms)}` : "";
   const f = {ia, area, encuadre, alza, impulsor, papel, tono, tono2, gravedad, confianza, medios, alcance, v6, comp, exc: exc ? exc.id : null, prio, acc, vence, decidido, corregida: !!correccionDe(m.g, c),
     revisar: confianza === "b" && !correccionDe(m.g, c), sinTono: m.notas.length > 0 && m.notas.every(n => n.sinTono)};
   return (m._fic[clave] = f);
 }
 
+/* Tema en alza: medios distintos dentro de 6 horas y el lapso más corto en que se juntaron (misma regla que los avisos de reglas.js).
+   Va aquí y no llama a rafagaInfo porque reglas.js se carga después de la primera pintura de la aplicación. */
+function alzaDe(notas){
+  const xs = notas.map(n => ({ts: n.ts, medio: n.m})).sort((a, b) => a.ts - b.ts); let mejor = {k: 0, ms: 0};
+  xs.forEach((a, i) => { const vistos = new Set();
+    for (const b of xs.slice(i)) { if (b.ts - a.ts > 6 * 36e5) break; vistos.add(b.medio);
+      if (vistos.size > mejor.k || (vistos.size === mejor.k && b.ts - a.ts < mejor.ms)) mejor = {k: vistos.size, ms: b.ts - a.ts}; } });
+  return mejor;
+}
 /* Presentación */
 const PRIO_CLS = {P1: "t-cri", P2: "t-neu", P3: "t-pos", P4: "", R: ""};
 function venceTxt(f){
