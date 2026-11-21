@@ -4721,16 +4721,16 @@ function gestionIndicadores(ms, c = cuenta()){
   const hs = urg.map(x => tResp(x.m)).filter(x => x != null).sort((a, b) => a - b), pl = plazosDe(c);
   const aTiempo = urg.filter(x => { const h = tResp(x.m); return h != null && h <= (pl[x.f.prio] || 24); }).length;
   const prop = fs.filter(x => x.f.comp === "P"), voz = prop.filter(x => ["prot", "fuente"].includes(x.f.papel)).length, vacios = fs.filter(x => x.f.papel === "aus").length;
-  const areas = Object.keys(AREAS).filter(a => competenciaDe(a, c) === "P").map(a => { const xs = fs.filter(x => x.f.area === a), cri = xs.filter(x => x.m.tono === "cri").length, pos = xs.filter(x => x.m.tono === "pos").length;
+  const areas = Object.keys(AREAS).filter(a => competenciaDe(a, c) === "P").map(a => { const xs = fs.filter(x => x.f.area === a && x.f.comp === "P") /* sin lo que una excepción dejó como ajeno, como el hospital */, cri = xs.filter(x => x.m.tono === "cri").length, pos = xs.filter(x => x.m.tono === "pos").length;
     return {a, n: AREAS[a], vol: xs.length, cri, pos, neto: xs.length ? Math.round((pos - cri) / xs.length * 100) : 0}; });
   return {hechos: fs.length, agenda: conImp.length ? pct(propias, conImp.length) : null, conImp: conImp.length, urg: urg.length, resp: hs.length, medH: hs.length ? hs[Math.floor((hs.length - 1) / 2)] : null, aTiempo,
     voz: prop.length ? pct(voz, prop.length) : null, prop: prop.length, vacios, areas: areas.filter(x => x.vol).sort((a, b) => b.vol - a.vol), silencio: areas.filter(x => !x.vol).map(x => x.n)};
 }
 const horasTxt = h => h == null ? "—" : h < 1 ? "menos de 1 h" : h < 48 ? Math.round(h) + " h" : Math.round(h / 24) + " días";
 function gestionCard(ms, c){
-  const g = gestionIndicadores(ms, c);
+  const g = gestionIndicadores(ms, c), P = GP();
   const kp = (v, l, s) => `<div class="tile"><div class="top"><span class="lb">${l}</span></div><div class="big">${v}</div>${s ? `<div class="sub">${s}</div>` : ""}</div>`;
-  return `<div class="card" style="margin-top:14px"><h3>Indicadores de gestión del mes</h3>
+  return `<div class="card" style="margin-top:14px"><h3>Indicadores de gestión ${P.del}</h3>
     <div class="rgrid r4" style="margin-top:8px">
       ${kp(g.agenda == null ? "—" : g.agenda + "%", "Agenda propia", g.conImp ? `de ${plural(g.conImp, "noticia", "noticias")} con origen identificado, la puso la institución; el resto la impusieron otros` : "sin origen identificado todavía")}
       ${kp(horasTxt(g.medH), "Primera respuesta (P1 y P2)", g.urg ? `${g.resp} de ${g.urg} respondidas · ${g.aTiempo} dentro de plazo` : "sin crisis ni temas por atender")}
@@ -4738,7 +4738,7 @@ function gestionCard(ms, c){
       ${kp(String(g.vacios), "Vacíos de vocería", "temas propios, críticos y en varios medios, sin la versión de la institución")}
     </div>
     ${g.areas.length ? `<h4 style="margin:16px 0 6px">Tono neto por área de competencia propia</h4><ul class="hbars">${g.areas.map(x => `<li><span class="t"><i style="background:${x.neto > 0 ? "var(--pos)" : x.neto < 0 ? "var(--cri)" : "var(--neu)"}"></i><span>${esc(x.n)} <small class="muted">${plural(x.vol, "noticia", "noticias")}</small></span></span><span class="b" ${tipAttr(x.pos + " positivas, " + x.cri + " críticas")}><i style="width:${Math.max(4, Math.abs(x.neto))}%;background:${x.neto > 0 ? "var(--pos)" : x.neto < 0 ? "var(--cri)" : "var(--neu)"}"></i></span><span class="v mono">${signo(x.neto)}</span></li>`).join("")}</ul>` : ""}
-    ${g.silencio.length ? `<p class="hint" style="margin:10px 0 0"><b>Temas en silencio:</b> ${esc(g.silencio.join(", "))}. Son de competencia propia y la prensa no los recogió este mes: espacio para agenda propia.</p>` : ""}
+    ${g.silencio.length ? `<p class="hint" style="margin:10px 0 0"><b>Temas en silencio:</b> ${esc(g.silencio.join(", "))}. Son de competencia propia y la prensa no los recogió ${P.este}: espacio para agenda propia.</p>` : ""}
     <div class="acts" style="margin-top:12px">${shareBar("gestion")}</div>
     <p class="hint" style="margin:6px 0 0">El PDF lleva el nombre${c.logo ? " y el logo" : ""} de ${esc(inst())}. <label style="cursor:pointer;color:var(--accent);text-decoration:underline;text-underline-offset:2px"><input type="file" accept="image/png,image/jpeg" id="logoInst" hidden>${c.logo ? "Cambiar el logo" : "Agregar el logo de la institución"}</label>${c.logo ? ` · <button class="btn ghost sm" type="button" data-act="logo-quitar">Quitar</button>` : ""}</p></div>`;
 }
@@ -4774,7 +4774,7 @@ function vecinasHtml(e, prov){
 }
 function gestionTexto(){
   const P = GP(), c = cuenta(), ms = menciones(c, P.d), M = metricas(ms), g = gestionIndicadores(ms, c);
-  const L = [`*Informe de gestión de prensa · ${inst()}*`, rango(NOW - 29 * DAY, NOW), "",
+  const L = [`*Informe de gestión de prensa · ${inst()}*`, rango(NOW - (P.d - 1) * DAY, NOW), "",
     `*Cobertura:* ${M.vol} noticias, tono ${veredicto(M).n.toLowerCase()} (${conteo(M)}).`,
     `*Agenda propia:* ${g.agenda == null ? "sin datos" : g.agenda + "% de las noticias con origen identificado"}.`,
     `*Primera respuesta en crisis y temas por atender:* ${horasTxt(g.medH)} (mediana), ${g.resp} de ${g.urg} respondidas, ${g.aTiempo} dentro de plazo.`,
@@ -4915,7 +4915,7 @@ function shareDoc(src, i){
   }
   if (src === "vocero") return vocDoc();
   if (src === "diario") { const t = diarioTexto(), d = diarioData(); return {titulo: "Informe diario de prensa", sub: d.etiqueta, sinFecha: true, tipo: "diario", texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
-  if (src === "gestion") { const t = gestionTexto(); return {titulo: "Informe de gestión de prensa", sub: rango(NOW - 29 * DAY, NOW), sinFecha: true, marca: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
+  if (src === "gestion") { const t = gestionTexto(); return {titulo: "Informe de gestión de prensa", sub: rango(NOW - (GP().d - 1) * DAY, NOW), sinFecha: true, marca: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "ejec") { const t = ejecTexto(); return {titulo: "Informe ejecutivo · " + inst(), sub: fechaLarga(NOW), sinFecha: true, tipo: "ejec", texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "parte") { const t = parteTexto(); return {titulo: esAut() ? partePer().rotulo + " · " + inst() : partePer().rotulo + " del alcalde", sub: "Período: " + parteData().per, sinFecha: true, texto: t, cuerpo: t.split("\n").slice(3).join("\n")}; }
   if (src === "aprob") { const x = S.comunicados.filter(y => y.org === S.org)[i]; return x && x.texto ? {titulo: x.pieza, sub: "Responde a: " + x.origen + " · aprobado el " + fecha(x.ts), texto: x.texto, cuerpo: x.texto} : null; }
@@ -5741,7 +5741,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingr
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "9479ebcef4e6", K = "app";
+  const V = "03049fe7d3cc", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
