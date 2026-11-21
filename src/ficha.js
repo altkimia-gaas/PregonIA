@@ -57,6 +57,34 @@ const tipoCliente = (c = cuenta()) => { const r = rolDe(c); return r === "delega
 const plazosDe = (c = cuenta()) => ({...PLAZOS[tipoCliente(c)], ...((c && c.plazos) || {})});
 const competenciaDe = (area, c = cuenta()) => ((c && c.compArea) || {})[area] || (MATRIZ[rolDe(c)] || MATRIZ.municipio)[area] || "A";
 
+/* Excepciones por institución a cargo (borrador para validar, igual que la matriz). Dentro de un área, la noticia puede tratar
+   de algo que no administra la cuenta: un hospital no es salud municipal (lo administra el Servicio de Salud), una ruta del MOP
+   no es una vía comunal y un liceo traspasado al SLEP ya no es educación municipal. Si el texto del hecho nombra a esa institución
+   y no nombra a la parte propia, la competencia baja al valor de la excepción (que pasa a «ajena, pero la exponen» si la nombran).
+   Se puede desactivar cada una en Configuración › Prioridades. */
+const EXCEPCIONES = [
+  {id: "hospital", area: "salud", roles: ["municipio", "alcalde", "concejal"], comp: "A",
+    n: "Hospitales, SAMU y Servicio de Salud", d: "La salud municipal es la atención primaria (Cesfam, Cecosf, postas y SAPU). Los hospitales los administra el Servicio de Salud.",
+    si: /hospital|samu|servicio de salud|seremi de salud|minsal|ministerio de salud|clinica/, no: /cesfam|cecosf|posta|sapu|sar\b|atencion primaria|salud municipal|departamento de salud/},
+  {id: "slep", area: "educacion", roles: ["municipio", "alcalde", "concejal"], comp: "A",
+    n: "Establecimientos del SLEP", d: "Con el traspaso a un Servicio Local de Educación Pública, los colegios y liceos dejan de ser municipales.",
+    si: /\bslep\b|servicio local de educacion/, no: /daem|dem\b|corporacion municipal|educacion municipal/},
+  {id: "rutas", area: "obras", roles: ["municipio", "alcalde", "concejal"], comp: "C",
+    n: "Rutas y obras del MOP o del Serviu", d: "Las rutas nacionales y las obras del MOP o del Serviu no son vías comunales: el municipio coordina, no resuelve.",
+    si: /\bmop\b|vialidad|ruta \d|ruta 68|autopista|concesionaria|serviu|ministerio de obras publicas|efe\b|tren/, no: /direccion de obras|dom\b|calle|pasaje|vereda|bacheo municipal/},
+  {id: "sanitaria", area: "agua", roles: ["municipio", "alcalde", "concejal"], comp: "C",
+    n: "Empresa sanitaria y DGA", d: "Los cortes y la calidad del agua potable urbana son de la sanitaria (Esval y otras), fiscalizada por la SISS; el municipio coordina y apoya con aljibes.",
+    si: /esval|sanitaria|siss|superintendencia de servicios sanitarios|aguas andinas|\bdga\b|direccion general de aguas/, no: /aljibe|camion aljibe|municipalidad repart|municipio repart/},
+  {id: "policias", area: "seguridad", roles: ["municipio", "alcalde", "concejal"], comp: "A",
+    n: "Hechos policiales y causas penales", d: "Un delito y su investigación son de Carabineros, la PDI y la Fiscalía. La seguridad municipal es prevención, patrullaje preventivo y apoyo a víctimas.",
+    si: /carabineros|\bpdi\b|fiscalia|fiscal |detenid|formaliza|imputad|juzgado de garantia/, no: /seguridad municipal|seguridad publica municipal|plan comunal de seguridad|camaras municipales|patrullaje municipal|concejo comunal de seguridad|alcald/}
+];
+const excepcionesActivas = (c = cuenta()) => { const off = (c && c.excOff) || {}, r = rolDe(c); return EXCEPCIONES.filter(x => !off[x.id] && x.roles.includes(r)); };
+function excepcionDe(m, area, c = cuenta()){
+  const txt = norm(m.notas.map(n => (n.t || "") + " " + (n.res || "")).join(" "));
+  return excepcionesActivas(c).find(x => x.area === area && x.si.test(txt) && !x.no.test(txt)) || null;
+}
+
 /* Sin ficha de la IA: la categoría por palabras clave da el área. */
 const CAT_AREA = {
   agua: "agua", emergencias: "emergencias", seguridad: "seguridad", salud: "salud", educacion: "educacion", obras: "obras", ambiente: "ambiente",
@@ -93,7 +121,8 @@ function fichaDe(m, c = cuenta()){
   const confianza = fs.some(f => f.cf === "b") ? "b" : fs.some(f => f.cf === "m") ? "m" : ia ? "a" : null;
   const medios = new Set(m.notas.map(n => n.m)).size, alcance = escalera(m.notas).max;
   const v6 = new Set(m.notas.filter(n => n.ts - m.first <= 6 * 36e5).map(n => n.m)).size;
-  let comp = cor.comp || competenciaDe(area, c);
+  const exc = !cor.comp && !((c && c.compArea) || {})[area] ? excepcionDe(m, area, c) : null;
+  let comp = cor.comp || (exc ? exc.comp : competenciaDe(area, c));
   const expuesta = ["prot", "fuente", "menc", "alud"].includes(papel);
   if (comp === "A" && expuesta) comp = "AE";
   // Vacío de vocería: tema crítico o grave de su competencia propia, en dos o más medios, sin su versión.
@@ -123,7 +152,7 @@ function fichaDe(m, c = cuenta()){
   // Plazo: corre desde la última publicación (cada nota nueva es un desarrollo del hecho).
   const h = plazosDe(c)[prio], vence = h ? m.last + h * 36e5 : null;
   const decidido = respondida(m.g) || !!noResp(m.g);
-  const f = {ia, area, encuadre, impulsor, papel, tono, tono2, gravedad, confianza, medios, alcance, v6, comp, prio, acc, vence, decidido, corregida: !!correccionDe(m.g, c),
+  const f = {ia, area, encuadre, impulsor, papel, tono, tono2, gravedad, confianza, medios, alcance, v6, comp, exc: exc ? exc.id : null, prio, acc, vence, decidido, corregida: !!correccionDe(m.g, c),
     revisar: confianza === "b" && !correccionDe(m.g, c)};
   return (m._fic[clave] = f);
 }
@@ -138,7 +167,7 @@ function venceTxt(f){
 }
 function fichaHtml(m){
   const f = fichaDe(m), [an, ad] = ACCIONES[f.acc];
-  return `<p class="clasif ficha"><span class="pill ${PRIO_CLS[f.prio]} prio" title="Prioridad">${PRIORIDADES[f.prio]}</span>${venceTxt(f) ? `<span class="${f.vence < Date.now() ? "venc" : ""}">${venceTxt(f)}</span>` : ""}<span class="cl-cat">${esc(AREAS[f.area])}</span><span>${esc(COMPETENCIAS[f.comp])}</span><span>${esc(ENCUADRES[f.encuadre])}</span><span>${esc(PAPELES_F[f.papel] || "")}</span>${f.impulsor ? `<span>${esc(IMPULSORES[f.impulsor])}</span>` : ""}${f.revisar ? `<span class="rev" title="La IA no está segura de esta ficha">Revisar</span>` : ""}${f.corregida ? `<span class="rev ok" title="Corregida por el equipo">Corregida</span>` : ""}</p>
+  return `<p class="clasif ficha"><span class="pill ${PRIO_CLS[f.prio]} prio" title="Prioridad">${PRIORIDADES[f.prio]}</span>${venceTxt(f) ? `<span class="${f.vence < Date.now() ? "venc" : ""}">${venceTxt(f)}</span>` : ""}<span class="cl-cat">${esc(AREAS[f.area])}</span><span${f.exc ? ` title="${esc((EXCEPCIONES.find(x => x.id === f.exc) || {}).d || "")}"` : ""}>${esc(COMPETENCIAS[f.comp])}${f.exc ? " · " + esc((EXCEPCIONES.find(x => x.id === f.exc) || {}).n || "") : ""}</span><span>${esc(ENCUADRES[f.encuadre])}</span><span>${esc(PAPELES_F[f.papel] || "")}</span>${f.impulsor ? `<span>${esc(IMPULSORES[f.impulsor])}</span>` : ""}${f.revisar ? `<span class="rev" title="La IA no está segura de esta ficha">Revisar</span>` : ""}${f.corregida ? `<span class="rev ok" title="Corregida por el equipo">Corregida</span>` : ""}</p>
     ${f.decidido ? "" : `<p class="acc sm accion-${f.acc}"><b>${esc(an)}</b>${esc(ad)}</p>`}`;
 }
 /* Corrección de la ficha: los mismos campos que calcula el sistema; lo que no se toca queda automático. */
