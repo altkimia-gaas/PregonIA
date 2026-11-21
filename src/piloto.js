@@ -215,7 +215,7 @@ function paginaFB(nombre, ambito){
   return p.id;
 }
 const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null, hitos: c.hitos || [], prep: c.prep || {}, tv: c.tv || 0,
-  correcciones: c.correcciones || {}, compArea: c.compArea || {}, plazos: c.plazos || {}, fv: c.fv || 0});  // ficha editorial: correcciones, competencias y plazos de la cuenta
+  correcciones: c.correcciones || {}, compArea: c.compArea || {}, logo: c.logo || null, plazos: c.plazos || {}, fv: c.fv || 0});  // ficha editorial: correcciones, competencias y plazos de la cuenta
 async function cargarDatosPiloto(){
   if (PILOTO.timer) await sincronizarYa();  // un cambio a medio guardar se envía antes de releer la base
   const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 62 * DAY).toISOString();  // 30 días y los 30 anteriores, para comparar (informe ejecutivo)
