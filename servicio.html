@@ -2,6 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<script>
+/* El inicio de pregonia.cl es esta página. Lo que es de la aplicación sigue a /app: rutas de la edición (#inicio, #menciones…),
+   enlaces de acceso de Supabase (#access_token, type=recovery) y la aplicación instalada en el teléfono. */
+(function(){var h=location.hash,s=location.search,app=/^#(inicio|menciones|reportes|comunicados|temas|asistente|prioridades|fuentes)\b/.test(h)||/access_token=|[#&]type=|error_description=/.test(h),
+  pwa=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true;
+  if((app||pwa)&&(location.pathname==="/"||location.pathname==="/servicio"))location.replace((/(^|\.)pregonia\.cl$/.test(location.hostname)?"https://pregonia.cl/app":"/app")+s+h);})();
+</script>
+
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PregonIA · Monitoreo de prensa para instituciones y autoridades públicas</title>
 <meta name="description" content="PregonIA lee más de 100 medios nacionales, regionales y comunales, te avisa a tiempo, te dice qué hacer y te deja la respuesta lista. Para municipios, parlamentarios y autoridades.">
@@ -28,6 +36,9 @@
 .pd-fecha{margin:0;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 16px;padding-bottom:10px;border-bottom:1px solid var(--line);font-size:.8125rem;color:var(--muted)}
 .pd-nombre{margin:22px 0 4px;text-align:center;font-family:var(--f-news);font-weight:700;font-size:clamp(3.25rem,8vw,5.25rem);line-height:1;letter-spacing:-.025em}
 .pd-nombre b{font-weight:700;color:var(--accent)}
+.pd-mk{display:inline-flex;align-items:flex-end;gap:.07em;height:.66em;margin-right:.16em}
+.pd-mk i{display:block;width:.16em;border-radius:.045em;background:var(--accent)}
+.pd-mk i:nth-child(1){height:40%;opacity:.55}.pd-mk i:nth-child(2){height:70%;opacity:.8}.pd-mk i:nth-child(3){height:100%}
 .pd-lema{margin:0 0 16px;text-align:center;font-family:var(--f-news);font-style:italic;font-size:1.0625rem;color:var(--muted)}
 .pd-cuerpo{display:grid;justify-items:center;text-align:center}
 .pd-ante{margin:26px 0 12px;font-size:.8125rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
@@ -122,7 +133,7 @@
   <div class="pd">
     <header class="pd-cab">
       <div class="pd-fecha"><span id="ptFecha">Edición digital</span><nav class="pd-der" aria-label="Acceso"><span class="pd-desc">Monitoreo de prensa para instituciones públicas</span><a class="pd-acceso mesa" href="https://pregonia.cl/redaccion"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16v4M13.5 6.5l4 4"/></svg>Mesa de redacción</a><a class="pd-acceso cliente" href="https://pregonia.cl/?ingresar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>Acceso clientes</a></nav></div>
-      <p class="pd-nombre" id="ptT">Pregon<b>IA</b></p>
+      <p class="pd-nombre" id="ptT"><span class="pd-mk" aria-hidden="true"><i></i><i></i><i></i></span>Pregon<b>IA</b></p>
       <p class="pd-lema">La prensa no espera. Tú tampoco.</p>
     </header>
     <div class="pd-cuerpo">

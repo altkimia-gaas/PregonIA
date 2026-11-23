@@ -106,7 +106,7 @@ async function guardarClave(e){
 async function olvide(){
   const correo = ($("#lgCorreo") && $("#lgCorreo").value.trim()) || "";
   if (!/^\S+@\S+\.\S+$/.test(correo)) return errorEn("#lgErr", "Escribe tu correo y vuelve a tocar «Olvidé mi contraseña».", "#lgCorreo");
-  const {error} = await PILOTO.sb.auth.resetPasswordForEmail(correo, {redirectTo: location.origin + "/"});
+  const {error} = await PILOTO.sb.auth.resetPasswordForEmail(correo, {redirectTo: location.origin + "/app"});
   if (error) return errorEn("#lgErr", "No se pudo enviar el correo: " + error.message);
   cerrarDialogo(); toast("Te enviamos un correo para crear una nueva contraseña.");
 }
@@ -384,5 +384,5 @@ async function salirAPrueba(){
   if (typeof avisosAlSalir === "function") await avisosAlSalir();
   try { await PILOTO.sb.auth.signOut(); } catch(e) {}
   try { localStorage.removeItem(KEY); localStorage.setItem(MODO_KEY, "demo"); } catch(e) {}
-  location.href = "/?prueba";
+  location.href = "/app?prueba";
 }

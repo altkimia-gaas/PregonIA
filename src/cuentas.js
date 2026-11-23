@@ -278,7 +278,8 @@ function insCuerpo(){
   } else if (vencida) {
     cuerpo = `<div class="ent-tit"><span class="ent-pasoT">Prueba gratis</span><h2 id="insT" tabindex="-1">Tu prueba terminó</h2>
         <p>Gracias por probar PregonIA. Para seguir recibiendo tu prensa, agenda una demostración y te mostramos los planes.</p></div>
-      <a class="btn alt ent-cta" href="https://www.pregonia.cl/#contacto">Agendar demostración</a>`;
+      <a class="btn alt ent-cta" href="https://www.pregonia.cl/#contacto">Agendar demostración</a>
+      <p class="ent-nota">¿Otra persona o institución quiere probar en este equipo? <button type="button" class="ent-link ins-link" data-act="ins-nueva">Activar la prueba con otro correo</button>.</p>`;
     pie = "";
   } else {
     const t = insTerritorios(INS.rol);
@@ -372,6 +373,9 @@ document.addEventListener("click", e => {
   const b = e.target.closest("[data-act]"); if (!b || !b.closest("#insBack")) return;
   if (b.dataset.act === "ins-cerrar") return insCerrar();
   if (b.dataset.act === "ins-otro") { INS.etapa = "datos"; insPintar(); }
+  // Una prueba vencida guardada en el navegador ya no deja la inscripción sin salida: se borra y vuelve el formulario.
+  // El servidor sigue sin reabrir una prueba terminada para el mismo correo.
+  if (b.dataset.act === "ins-nueva") { try { localStorage.removeItem(PRUEBA_KEY); } catch(err) {} Object.assign(INS, {etapa: "datos", correo: ""}); insPintar(); }
 });
 document.addEventListener("keydown", e => {
   if (!$("#insBack")) return;
