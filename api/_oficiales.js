@@ -155,6 +155,6 @@ export async function leerMercadoPublico(comunas, ahora = Date.now(), plazoMs = 
 /* Contraloría y Esval: dos o tres consultas por pasada, en paralelo con la lectura de medios. */
 export async function leerOficiales(ahora = Date.now()){
   const fuentes = [["Contraloría", leerContraloria], ["Esval", leerEsval]], errores = [], detalle = {};
-  const items = (await Promise.all(fuentes.map(([n, f]) => f(ahora).catch(e => { errores.push(n); detalle[n] = String(e.message || e).slice(0, 160); return []; })))).flat();
+  const items = (await Promise.all(fuentes.map(([n, f]) => f(ahora).catch(e => { errores.push(n); detalle[n] = [e.message, e.cause && (e.cause.code || e.cause.message)].filter(Boolean).join(" · ").slice(0, 160); return []; })))).flat();
   return {items, total: fuentes.length, errores, detalle};
 }
