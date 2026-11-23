@@ -4,7 +4,7 @@
    las de autoridad traen tipo (el cargo) y autoridad (zona, nombre y, si está, el id de la nómina).
    Las noticias vienen de la base (lectura programada cada 30 minutos); temas, marcas, respuestas aprobadas y publicaciones
    agregadas se guardan en la base y las ve todo el equipo. La base registra sola quién hizo qué (tabla actividad).
-   Sin sesión, la aplicación sigue siendo la demostración de siempre. */
+   Sin sesión, la aplicación es la prueba gratis con noticias reales; sin prueba vigente, solo la portada. */
 PILOTO = {activo: false, disponible: false, sb: null, user: null, perfil: null, muni: null, editor: false, snap: null, timer: null, sinc: false, pendiente: false, estado: "", lectura: null};
 const ROLES = {admin: "Administración", comunicaciones: "Comunicaciones", alcalde: "Alcalde", autoridad: "Autoridad", directivo: "Equipo directivo", lector: "Solo lectura"};
 /* En una cuenta de autoridad, la persona titular se muestra con su cargo y el equipo directivo como su equipo. */
@@ -136,7 +136,7 @@ async function aceptacion(user){
     aceptacion.pend = res;
   });
 }
-/* Aviso legal al entrar sin sesión (demostración): se acepta una vez por versión y queda guardado solo en este navegador.
+/* Aviso legal al entrar sin sesión (prueba gratis): se acepta una vez por versión y queda guardado solo en este navegador.
    Con sesión iniciada no se muestra: la aceptación del servicio se registra en la base (aceptacion()). */
 const AVISO_KEY = "pregonia-aviso-legal";
 function avisoLegal(){
@@ -146,7 +146,7 @@ function avisoLegal(){
     dialogo("aviso", "Antes de empezar", "PregonIA es un servicio de ALTKIMIA Consultoría y Tecnología SpA para instituciones y autoridades públicas.", `
       <form class="cap-f" id="avisoForm" novalidate>
         <ul class="hint" style="margin:0;padding-left:18px;display:grid;gap:4px">
-          <li>Estás entrando a la <b>prueba gratis</b>: las noticias, cifras y fechas son ficticias; el catálogo de medios es real.</li>
+          <li>Estás entrando a la <b>prueba gratis</b>: verás noticias reales de tu territorio del último mes, leídas de los medios del catálogo y resumidas con inteligencia artificial.</li>
           <li>Para la prueba gratis te pediremos nombre, correo, tipo de autoridad y territorio, y validaremos tu correo con un código. Lo demás que configures queda solo en este navegador.</li>
           <li>Los textos generados con inteligencia artificial pueden contener errores: revísalos antes de usarlos.</li>
         </ul>
@@ -201,7 +201,7 @@ async function entrarPiloto(user, entrar){
   $("#org").disabled = true; $("#org").title = esPilotoAut() ? "En el piloto ves solo la cuenta de tu autoridad" : "En el piloto ves solo tu municipio";
   MODO = {...MODO, cargando: true, inicio: Date.now()};  // pantalla de lectura, no la demostración, mientras llegan sus datos
   pintarAcceso();
-  if (entrar && !$("#portada").hidden) salirPortada();
+  if ((entrar || /[?&]sin-portada\b/.test(location.search)) && !$("#portada").hidden) salirPortada();  // ?sin-portada llega desde un aviso
   render();
   if (typeof avisosAlEntrar === "function") await avisosAlEntrar();
   try { await cargarDatosPiloto(); toast(`Hola, ${(perfil.nombre || "").split(" ")[0] || "bienvenido"}. Estás en el piloto de ${PILOTO.muni.nombre}.`); if (typeof guiaIOSAuto === "function") guiaIOSAuto(); }

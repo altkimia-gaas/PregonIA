@@ -205,7 +205,6 @@ function entPaso(){
   const fila = (k, v, n) => `<div class="ent-fila"><div><dt>${k}</dt><dd>${esc(v)}</dd></div>${n ? `<button type="button" class="ent-link" data-act="ent-ir" data-v="${n}">Cambiar</button>` : ""}</div>`;
   return `<section class="ent-resumen"><div class="ent-quien"><span class="ent-av xl">${esc(iniciales(nom))}</span><div><b>${esc(nom)}</b><small>${esc(cuentaTx)}</small></div></div>
       <dl>${fila("Cargo", ENT_ROLES.find(r => r.k === ENT.rol).n, 1)}${fila("Territorio", entTerritorio(false), 2)}${fila(ENT.rol === "municipio" ? "Alcalde o alcaldesa" : "Persona", nom, 3)}${fila("Prensa que seguiremos", prensa, 0)}</dl></section>
-    ${ENT.rol === "municipio" && !COMUNAS.includes(z.n) ? `<p class="ent-nota">Esta comuna se sigue con noticias reales; la demostración trae noticias ficticias solo del litoral central.</p>` : ""}
     <button type="button" class="ent-link ent-otra-aut" data-act="ent-reset">Elegir otra autoridad</button>`;
 }
 function entPuede(){
@@ -335,7 +334,7 @@ async function insEnviar(e){
     try {
       const {prueba} = await insLlamar({accion: "verificar", id: INS.id, codigo});
       try { localStorage.setItem(PRUEBA_KEY, JSON.stringify({...prueba, terr: INS.terr})); } catch(err) {}
-      fin(); toast(prueba.ilimitada ? "Correo validado. Modo demostración comercial: sin límite de tiempo en este navegador." : `Correo validado. Tu prueba gratis de 48 horas está activa hasta el ${new Date(prueba.hasta).toLocaleString("es-CL", {weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"})}.`);
+      fin(); toast(prueba.ilimitada ? "Correo validado. Prueba comercial: sin límite de tiempo en este navegador." : `Correo validado. Tu prueba gratis de 48 horas está activa hasta el ${new Date(prueba.hasta).toLocaleString("es-CL", {weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"})}.`);
       insContinuar({rol: INS.rol || prueba.rol, terr: INS.terr});
     } catch (err) { fin(); insError(err.message, c); c.select?.(); }
     return;
@@ -354,7 +353,7 @@ async function insEnviar(e){
     fin();
     if (j.prueba) {  // correo de demostración comercial: entra sin código
       try { localStorage.setItem(PRUEBA_KEY, JSON.stringify({...j.prueba, terr: INS.terr})); } catch(err) {}
-      toast("Modo demostración comercial: sin código y sin límite de tiempo en este navegador.");
+      toast("Prueba comercial: sin código y sin límite de tiempo en este navegador.");
       return insContinuar({rol: INS.rol, terr: INS.terr});
     }
     Object.assign(INS, {etapa: "codigo", id: j.id, minutos: j.minutos || 15}); insPintar();
@@ -404,7 +403,7 @@ function entEntrar(e){
   const a = entPersona(), libre = entLibre();
   if (!a && !entLibreOk()) return entIr(3);
   const pv = pruebaVigente();
-  if (pv && pv.ilimitada) {  // demostración comercial: deja registro del ingreso (fecha, cargo, territorio y autoridad)
+  if (pv && pv.ilimitada) {  // prueba comercial: deja registro del ingreso (fecha, cargo, territorio y autoridad)
     const r = ENT_ROLES.find(x => x.k === ENT.rol);
     fetch("/api/contacto?prueba", {method: "POST", keepalive: true, headers: {"content-type": "application/json"}, body: JSON.stringify({accion: "ingreso",
       correo: pv.correo, rol: ENT.rol, territorio: [(entZona() || {}).n, ENT.comuna !== (entZona() || {}).n ? ENT.comuna : ""].filter(Boolean).join(" · "), autoridad: a ? a.c : libre, cuenta: r ? r.n : ""})}).catch(() => {});
@@ -413,8 +412,8 @@ function entEntrar(e){
   const portada = ENT.enPortada; entCerrar();
   if (portada) { mostrarPortada(false); if (!location.hash || location.hash === "#portada") location.hash = "inicio"; }
   if (key !== S.org) cambiarCuenta(key); else render(true);
-  if (typeof enPruebaReal === "function" && enPruebaReal() && typeof MODO !== "undefined" && MODO.disponible && MODO.tipo !== "real") cargarReales(true);  // la prueba parte con el último mes real
-  if (esAut() || !COMUNAS.includes(S.org)) toast(`Entraste como ${esAut() ? inst() : inst() + (cuenta().perfil.autoridad ? " · " + cuenta().perfil.autoridad : "")}. ${typeof MODO !== "undefined" && MODO.disponible ? "Buscando sus menciones en medios reales…" : "Sus menciones se leen de medios reales en pregonia.cl."}`);
+  if (pruebaVigente() && typeof MODO !== "undefined" && MODO.disponible && !(MODO.tipo === "real" && MODO.info && MODO.info.comuna === S.org)) cargarReales(true);  // la prueba parte con el último mes real
+  toast(`Entraste como ${esAut() ? inst() : inst() + (cuenta().perfil.autoridad ? " · " + cuenta().perfil.autoridad : "")}. ${typeof MODO !== "undefined" && MODO.disponible ? "Buscando sus menciones en medios reales…" : "Sus menciones se leen de medios reales en pregonia.cl."}`);
 }
 document.addEventListener("change", e => {
   const t = e.target; if (!t.closest || !t.closest("#entBack")) return;

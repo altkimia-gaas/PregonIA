@@ -474,7 +474,6 @@ function vInicio(){
         <h3 class="ini-mov-h">Lo que tienes que decidir hoy · ${colaDecisiones(ms).length}</h3>
         ${cola.length ? cola.map(card).join("") : `<p class="allgood">${ri("ok")} Nada por decidir: ninguna noticia pide acción ${perTx}.</p>`}
         <a class="ini-mov-mas" href="#iniKpis" data-act="ini-ir">Ver todos los indicadores ↓</a></div>`; })()}
-    ${aut && !M.vol && typeof MODO !== "undefined" && MODO.tipo === "demo" ? `<p class="ini-lead">La demostración no inventa noticias sobre personas reales: lo que la prensa dice de ${esc(quien)} aparece con noticias reales, en pregonia.cl.</p>` : ""}
     ${aut && msK.length ? `<p class="ini-lead">${M.vol ? "Aparte, en" : "En"} su territorio hubo ${plural(msK.length, "noticia", "noticias")} que no ${c.perfil.g === "F" ? "la" : "lo"} nombran${msK.filter(m => m.grave).length ? `, ${plural(msK.filter(m => m.grave).length, "hecho grave", "hechos graves")}` : ""}${MK.cri ? `${msK.filter(m => m.grave).length ? " y" : ","} ${plural(MK.cri, "reclamo", "reclamos")}` : ""}: no cuentan en su tono, pero pueden ser gestión o presencia. <button class="ini-link" ${kAttr("pers")}>Ver el radar</button></p>` : ""}
     <div class="ini-kpis" id="iniKpis">
       ${aut && !M.vol ? "" : `<button class="ini-kpi" ${kAttr("vol")}><span class="l">Noticias ${perTx}</span><span class="v"><span class="mono">${M.vol}</span>${delta(M.vol, P.vol, hayPrev)}</span><span class="s">${hayPrev ? `frente a ${P.vol} ${per === 1 ? "en " : ""}${antTx}` : `sin datos de ${antTx} para comparar`} · en ${plural(Object.keys(med).length, "medio", "medios")}</span></button>
@@ -1004,7 +1003,7 @@ function repDiario(){
   if (!d.pubs.length) return head + `<div class="allgood">${ri("ok")} Ningún medio publicó sobre ${esc(S.org)} en este período. ${d.prev ? `En el período anterior hubo ${plural(d.prev, "publicación", "publicaciones")}.` : ""}</div>`;
   const nMed = d.medios.length, maxT = Math.max(...d.temas.map(([, x]) => x.n)), maxN = Math.max(1, ...Object.values(d.niv));
   const barra = (n, max, cls = "") => `<span class="bar ${cls}" aria-hidden="true"><i style="width:${Math.round(n / max * 100)}%"></i></span>`;
-  const pub = n => `<li><span class="mono hh">${horaHM(n.ts)}</span><span class="niv">${NIVLBL[MED[n.m].a] || ""}</span><span class="md">${esc(medioN(n))}</span><span class="tt">${n.url ? `<a class="ext" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.t)}<span class="sr"> (abre la fuente)</span></a>` : `${esc(n.t)}<span class="nolink"> · nota de demostración, sin enlace</span>`}</span></li>`;
+  const pub = n => `<li><span class="mono hh">${horaHM(n.ts)}</span><span class="niv">${NIVLBL[MED[n.m].a] || ""}</span><span class="md">${esc(medioN(n))}</span><span class="tt">${n.url ? `<a class="ext" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.t)}<span class="sr"> (abre la fuente)</span></a>` : `${esc(n.t)}<span class="nolink"> · sin enlace</span>`}</span></li>`;
   const item = x => { const m = x.m, resp = respondida(m.g); return `<li class="clip-i ${m.tono}" id="clip-${esc(x.ref)}">
       <div class="clip-h"><span class="ref mono">${x.ref}</span>${pillTono(m.tono)}<span class="kick">${esc(temaDe(m))}</span>${resp ? '<span class="pill done">Respondida</span>' : ""}</div>
       <b class="clip-t">${esc(m.lead.res)}</b>
@@ -1028,7 +1027,7 @@ function repDiario(){
     <p class="hint" style="margin:0 0 10px">Cada mención agrupa las publicaciones del mismo hecho. El código sirve para citarla; el titular lleva a la nota original. Primero lo crítico.</p>
     <ol class="clip-l">${d.grupos.map(item).join("")}</ol>
   </section>
-  <p class="note" style="margin-top:12px">${MODO.tipo !== "demo" ? "Hecho con noticias reales leídas de los medios del catálogo." : "En la demostración las notas no tienen enlace; con Noticias reales cada titular lleva a su fuente."} En el piloto, este informe llega solo cada mañana a las 8:00 por correo o WhatsApp.</p>`;
+  <p class="note" style="margin-top:12px">Hecho con noticias reales leídas de los medios del catálogo. En el piloto, este informe llega solo cada mañana a las 8:00 por correo o WhatsApp.</p>`;
 }
 function diarioTexto(){
   const d = diarioData(), L = [`*PregonIA · Informe diario · ${S.org}*`, d.etiqueta, ""];
@@ -1464,7 +1463,7 @@ async function pdfDiario(){
       y += h + 4;
     }
   }
-  const nota = MODO.tipo !== "demo" ? "Noticias reales leídas de los medios del catálogo de PregonIA. Los resúmenes son propios; el texto de los medios no se reproduce." : "Demostración con noticias ficticias: las notas no tienen enlace. Con Noticias reales cada publicación lleva a su fuente.";
+  const nota = "Noticias reales leídas de los medios del catálogo de PregonIA. Los resúmenes son propios; el texto de los medios no se reproduce.";
   const n = doc.getNumberOfPages();
   for (let p = 1; p <= n; p++) { doc.setPage(p); doc.setDrawColor(C.line); doc.setLineWidth(0.3); doc.line(M, PIE, W - M, PIE); txt("PregonIA · Un producto de ALTKimia", M, PIE + 5, {size: 7, color: C.muted}); txt(`Página ${p} de ${n}`, W - M, PIE + 5, {size: 7, color: C.muted, align: "right"}); if (p === n) lineas(nota, AN, 6.5).slice(0, 2).forEach((l, k) => txt(l, M, PIE - 5.5 + k * 3, {size: 6.5, color: C.muted})); }
   return doc.output("blob");
@@ -1544,6 +1543,9 @@ const VIEWFN = {inicio:vInicio, menciones:vMenciones, reportes:vReportes, comuni
 function render(focus){
   // Mientras se leen los medios no se muestra una portada a medias: va la pantalla de lectura (Ajustes sigue disponible).
   if (MODO.cargando && !isConfig(route())) { renderChrome(); $("#view").innerHTML = procesandoHtml(); cerrarMenu(); procesandoPaso(); return; }
+  // Sin demostración: la aplicación es la prueba gratis (noticias reales) o la cuenta del cliente. Sin ninguna de las dos, va la portada.
+  if (!accesoApp()) { if ($("#portada")?.hidden) mostrarPortada(true); return; }
+  if (!(PILOTO && PILOTO.activo) && MODO.tipo !== "real") { renderChrome(); $("#view").innerHTML = MODO.fallo ? falloHtml() : procesandoHtml(); cerrarMenu(); return; }
   renderChrome(); $("#view").innerHTML = (perAplica() ? `<div class="perbar">${perCtl()}</div>` : "") + (VIEWFN[route()] || vInicio)();
   cerrarMenu(); if ($("#view .shr")) cargarJsPDF().catch(() => {});
   { const pt = $("#portada"); if (pt && !pt.hidden) pintarMini(); }
@@ -1789,7 +1791,7 @@ const FAQ = [
   ]],
   ["Monitoreo", [
     ["¿Qué medios revisa PregonIA?", N_MEDIOS + " medios digitales: nacionales, regionales de Valparaíso y comunales de las ocho provincias de la región, más páginas de Facebook de medios locales que se ingresan con captura asistida. La lista completa, con el estado de cada uno, está en Ajustes › Fuentes."],
-    ["¿Cada cuánto se actualiza?", "Cada 15 minutos. La barra superior muestra la hora de la última actualización. En este prototipo las noticias son ficticias."],
+    ["¿Cada cuánto se actualiza?", "En el piloto, cada 30 minutos; la barra superior muestra la hora de la última lectura. En la prueba gratis, al entrar: la edición se actualiza sola en segundo plano."],
     ["¿Por qué no aparece una noticia que vi?", "Puede que el medio no esté en el catálogo, que sea un medio restringido (se lee vía Google News y llega con retraso) o que la nota no calce con los términos del tema. Revisa términos, variantes y exclusiones en Ajustes › Mis temas."],
     ["¿Por qué aparece una noticia que no tiene que ver?", "Suele ser una coincidencia de nombre, como Casablanca la película o San Antonio de Texas. Márcala como \"No corresponde\" y agrega esa palabra a las exclusiones del tema."],
     ["¿PregonIA copia las noticias de los medios?", "No. Muestra el título, el medio, la fecha, un resumen propio de una línea y el enlace a la nota original. No reproduce el texto, respeta las reglas de cada sitio y no salta muros de pago."],
@@ -1824,9 +1826,9 @@ const FAQ = [
   ]],
   ["Autoridades", [
     ["¿Para quién es la versión de autoridades?", "Para alcaldesas y alcaldes, diputadas y diputados, senadoras y senadores, consejeras y consejeros regionales, concejales, el gobernador regional y las delegaciones presidenciales de la Región de Valparaíso, y sus equipos de prensa. Se entra eligiendo el cargo, la zona (distrito, circunscripción o comuna) y el nombre."],
-    ["¿Puedo seguir cualquier municipio de la región?", "Sí. En «Municipio / alcaldía» están las 38 comunas de la Región de Valparaíso, por provincia, con su alcalde o alcaldesa del período 2024-2028. La cuenta sigue a la municipalidad, a la comuna y a la persona por su nombre, y con noticias reales la compara con los alcaldes de su provincia. La demostración trae noticias ficticias solo del litoral central."],
+    ["¿Puedo seguir cualquier municipio de la región?", "Sí. Al activar la prueba eliges entre las 38 comunas de la Región de Valparaíso, por provincia, con su alcalde o alcaldesa del período 2024-2028. La cuenta sigue a la municipalidad, a la comuna y a la persona por su nombre, y la compara con los alcaldes de su provincia."],
     ["¿De dónde sale la lista de nombres?", "Parlamentarios, consejeros regionales y alcaldes vienen precargados según la nómina vigente al " + NOMINA_CORTE + ". Si falta alguien o cambió, elige «Otra persona» y escribe el nombre. Los concejales escriben el suyo."],
-    ["¿Qué noticias ve una autoridad?", "Con «Noticias reales», las que la nombran en los medios leídos y en Google News de los últimos 14 días; la IA descarta homónimos y mide el tono respecto de su imagen y su trabajo. En la demostración solo hay noticias ficticias del territorio."],
+    ["¿Qué noticias ve una autoridad?", "Las que la nombran en los medios leídos y en Google News del último mes; la IA descarta homónimos y mide el tono respecto de su imagen y su trabajo."],
     ["¿Qué es «Frente a sus pares»?", "Cuántas notas nombraron a cada autoridad del mismo cargo y zona en los últimos 14 días. Mide presencia, no aprobación: una polémica también suma."],
     ["¿Las piezas cambian para una autoridad?", "Sí. Además de declaración, comunicado y aclaración, hay publicación para redes, columna de opinión y minuta de intervención para sala, comisión o pleno. Los textos usan el tono del cargo y nunca inventan cifras ni posiciones: lo que falta queda marcado para completar."],
     ["¿Funciona el piloto con usuarios para autoridades?", "Todavía no: el piloto con usuarios y lectura programada está habilitado para municipios. Las cuentas de autoridad funcionan en este navegador, con noticias reales al vuelo."]
@@ -1904,22 +1906,24 @@ const DIAS_REALES = 30;
 /* En la prueba gratis (no en la demostración comercial ni en el piloto) la cuenta abre siempre con noticias reales. */
 const esCliente = () => !!(PILOTO && PILOTO.activo) || (typeof pruebaVigente === "function" && !!pruebaVigente());
 const enPruebaReal = () => { const p = typeof pruebaVigente === "function" && pruebaVigente(); return !!p && !p.ilimitada && !(PILOTO && PILOTO.activo); };
-let MODO = {tipo: "demo", info: null, cargando: false, disponible: false};
+let MODO = {tipo: "demo", info: null, cargando: false, disponible: false};  // «demo» = aún sin datos reales; nunca se muestra
+const accesoApp = () => !!(PILOTO && PILOTO.activo) || !!pruebaVigente();
+function falloHtml(){
+  return `<section class="pr" role="alert" aria-labelledby="prT"><span class="ini-ekick">Lectura de prensa</span>
+    <h2 id="prT" class="pr-t" tabindex="-1">No pudimos leer los medios ahora</h2>
+    <p class="pr-s">Puede ser la conexión o una demora de los medios. Tus datos y tu prueba siguen activos.</p>
+    <p><button class="btn primary" type="button" data-act="modo-real">Volver a intentar</button></p></section>`;
+}
 const horaCorta = iso => new Date(iso).toLocaleTimeString("es-CL", {hour: "2-digit", minute: "2-digit", hourCycle: "h23"});
 function pintarModo(){
   const el = $("#demo"); if (!el) return;
   if (PILOTO && PILOTO.activo) return pintarPiloto();
-  const real = MODO.tipo === "real" && MODO.info, i = MODO.info;
-  // Selector siempre visible con las dos opciones; en claude.ai (sin servidor) "Reales" lleva al sitio publicado.
-  const sw = MODO.disponible || MODO.cargando
-    ? `<span class="modo-sw" role="group" aria-label="Noticias que muestra la aplicación"><button type="button" data-act="modo-demo" aria-pressed="${!real && !MODO.cargando}"><span class="demo-mas">Demostración</span><span class="solo-movil">Demo</span></button><button type="button" data-act="modo-real" aria-pressed="${Boolean(real) || MODO.cargando}" ${MODO.cargando ? "disabled" : ""}>${MODO.cargando ? "Leyendo…" : `<span class="demo-mas">Noticias reales</span><span class="solo-movil">Reales</span>`}</button></span>`
-    : (/^https?:$/.test(location.protocol) ? "" : `<a class="modo-link" href="https://pregonia.cl/" target="_blank" rel="noopener">Noticias reales en pregonia.cl</a>`);
-  if (MODO.cargando) { el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Leyendo medios</b>Buscando noticias de ${esc(S.org)}<span class="demo-mas"> en ${N_MEDIOS} medios; puede tardar hasta un minuto</span>…</span>${sw}`; return; }
-  if (real) { el.className = "demo real"; el.innerHTML = `<span class="demo-txt"><b>${MODO.actualizando ? "Actualizando…" : "Datos reales"}</b>${plural(i.notas.length, "nota", "notas")}<span class="demo-mas"> de ${esc(i.comuna)} en ${i.ventana_dias} días · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : i.ia_parcial ? " · tono clasificado en parte" : " · tono sin clasificar"}</span></span>${sw}`; return; }
-  if (!esAut() && !COMUNAS.includes(S.org)) { el.className = "demo"; el.innerHTML = `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">La demostración trae noticias ficticias solo del litoral central · con «Noticias reales» se leen las de ${esc(S.org)}</span><span class="solo-movil">Datos ficticios</span></span>${sw}`; return; }
-  el.className = "demo"; el.innerHTML = esAut()
-    ? `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">Noticias ficticias del territorio, ninguna nombra a ${esc(cuenta().perfil.nombre)} · con «Noticias reales» se leen las que sí</span><span class="solo-movil">Datos ficticios</span></span>${sw}`
-    : `<span class="demo-txt"><b>Prototipo</b><span class="demo-mas">Noticias y cifras ficticias · catálogo real de ${N_MEDIOS} medios</span><span class="solo-movil">Datos ficticios</span></span>${sw}`;
+  const pv = pruebaVigente(), i = MODO.info, real = MODO.tipo === "real" && i;
+  if (!pv) { el.hidden = true; return; }
+  el.hidden = false; el.className = "demo real";
+  const etiqueta = pv.ilimitada ? "Prueba comercial" : "Prueba gratis", hasta = pv.ilimitada ? "" : ` hasta el ${new Date(pv.hasta).toLocaleString("es-CL", {weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23"})}`;
+  if (MODO.cargando) { el.innerHTML = `<span class="demo-txt"><b>${etiqueta}</b>Leyendo ${N_MEDIOS} medios para ${esc(S.org)}<span class="demo-mas">; puede tardar hasta un minuto</span>…</span>`; return; }
+  el.innerHTML = `<span class="demo-txt"><b>${MODO.actualizando ? "Actualizando…" : etiqueta}</b>${real ? `${plural(i.notas.length, "nota", "notas")} en ${i.ventana_dias} días<span class="demo-mas"> · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : i.ia_parcial ? " · tono clasificado en parte" : " · tono sin clasificar"}${hasta}</span>` : `<span class="demo-mas">${hasta.trim()}</span>`}</span>`;
 }
 /* Última lectura guardada en el navegador: al recargar, la edición aparece al instante con lo último leído
    y se actualiza en segundo plano («actualizando…»), en vez de esperar de nuevo 40 a 60 s. Se usa si tiene menos de 24 horas. */
@@ -1931,13 +1935,14 @@ function guardarLectura(q, j){
 function aplicarReales(j, org, pa){
   const nuevas = (j.notas || []).filter(n => MED[n.m]).map(n => ({id: n.id, m: n.m, ts: n.ts, t: n.t, b: "", x: n.x || "", tono: n.tono, res: n.res, g: String(n.g), url: n.url, ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via ? {via: n.via} : {}), ...(n.f ? {f: n.f} : {}), hay: norm(n.t + " " + n.res + " " + (n.x || "") + " " + (pa ? (n.sobre === "institucion" ? norm(CARGOS[pa.rol].organo) : pa.variantes[0]) : org + " comuna")), ht: norm(n.t), real: true, ...(n.clasificada === false ? {sinTono: true} : {})}));  // la IA ya confirmó que la nota es de esta comuna (o de la autoridad o su institución)
   actualizarEstadoRedes(j.redes);  // estado de cada cuenta de Facebook e Instagram para la vista Fuentes
-  MODO = {...MODO, tipo: "real", info: {...j, comuna: org, notas: nuevas}, cargando: false, actualizando: false}; refrescarNotas(nuevas);  // el modo primero: los avisos se guardan por modo
+  MODO = {...MODO, tipo: "real", info: {...j, comuna: org, notas: nuevas}, cargando: false, actualizando: false, fallo: false}; refrescarNotas(nuevas);  // el modo primero: los avisos se guardan por modo
   try { localStorage.setItem(MODO_KEY, "real"); } catch(e) {}
   return nuevas;
 }
 async function cargarReales(force, silencioso){
   if (PILOTO && PILOTO.activo) return;
   if (MODO.cargando || MODO.actualizando || (MODO.tipo === "real" && MODO.info && MODO.info.comuna === S.org && !force)) return;
+  MODO.fallo = false;
   const org = S.org, pa = esAut() ? cuenta().perfil : null;
   const q = !pa ? "comuna=" + encodeURIComponent(org) : pa.autoridadId ? "autoridad=" + encodeURIComponent(pa.autoridadId) : "rol=" + encodeURIComponent(pa.rol) + "&zona=" + encodeURIComponent(pa.zona) + "&nombre=" + encodeURIComponent(pa.nombre) + "&g=" + pa.g;
   const guardada = ultimaLectura(q);
@@ -1952,7 +1957,7 @@ async function cargarReales(force, silencioso){
     const quien = pa ? pa.nombre : org, criticas = new Set(nuevas.filter(n => n.tono === "cri").map(n => n.g)).size, hechos = new Set(nuevas.map(n => n.g)).size;
     if (guardada) toast("Edición actualizada con la lectura de las " + horaCorta(j.generado) + ".");
     else if (!silencioso) toast(nuevas.length ? `Listo: ${plural(hechos, "noticia", "noticias")} sobre ${quien} en ${j.ventana_dias} días${criticas ? `, ${plural(criticas, "crítica", "críticas")} por revisar` : ""}. Empieza por Inicio.` : `Los medios leídos no publicaron sobre ${quien} en los últimos ${j.ventana_dias} días.`);
-  } catch(e) { const habia = guardada && MODO.tipo === "real"; MODO.cargando = MODO.actualizando = false; pintarModo(); render(); if (!silencioso) toast(habia ? "No se pudo actualizar ahora: ves la última lectura guardada." : "No se pudieron leer los medios ahora. Sigues viendo la demostración."); }
+  } catch(e) { const habia = guardada && MODO.tipo === "real"; MODO.cargando = MODO.actualizando = false; MODO.fallo = !habia; pintarModo(); render(); if (!silencioso && habia) toast("No se pudo actualizar ahora: ves la última lectura guardada."); }
 }
 /* Ícono animado de carga: un periódico abierto que da vuelta sus páginas (el mismo de assets/periodico-animado.svg).
    La página izquierda es el reflejo exacto de la derecha, así la hoja que pasa calza sin salto. */
@@ -2002,16 +2007,15 @@ function procesandoPaso(){
     os[i].classList.add("leyendo"); c.innerHTML = prLibro(DIARIOS[i]); };
   tick(); procesandoPaso.t = setInterval(tick, 1000); procesandoPaso.l = setInterval(leer, PR_MS);
 }
-function usarDemo(){ if (MODO.tipo === "demo") return; MODO = {...MODO, tipo: "demo", info: null}; refrescarNotas(NOTAS_DEMO); try { localStorage.setItem(MODO_KEY, "demo"); } catch(e) {} pintarModo(); render(); toast("Volviste a la demostración con noticias ficticias."); }
-document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; if (b.dataset.act === "modo-real") cargarReales(); if (b.dataset.act === "modo-demo") usarDemo(); });
-$("#org").addEventListener("change", () => { if ($("#entBack")) return; pintarModo(); if (MODO.tipo === "real" || ((esAut() || !COMUNAS.includes(S.org) || enPruebaReal()) && MODO.disponible)) cargarReales(true); });  // sin noticias ficticias propias, se leen las reales  // con el selector de cuentas abierto no hay cambio todavía
+document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (b && b.dataset.act === "modo-real") cargarReales(true); });
+$("#org").addEventListener("change", () => { if ($("#entBack")) return; pintarModo(); if (pruebaVigente() && MODO.disponible) cargarReales(true); });  // con el selector de cuentas abierto no hay cambio todavía
 (async () => {
   pintarModo();
   if (!/^https?:$/.test(location.protocol)) return;
-  try { const r = await fetch("/api/noticias?ping=1", {cache: "no-store"}); if (!r.ok || !(await r.json()).ok) return; } catch(e) { return; }
+  const fallo = () => { if (pruebaVigente() && !(PILOTO && PILOTO.activo)) { MODO.fallo = true; render(); } };
+  try { const r = await fetch("/api/noticias?ping=1", {cache: "no-store"}); if (!r.ok || !(await r.json()).ok) return fallo(); } catch(e) { return fallo(); }
   MODO.disponible = true; pintarModo();
-  let pref = null; try { pref = localStorage.getItem(MODO_KEY); } catch(e) {}
-  if (pref === "real" || enPruebaReal()) cargarReales();
+  if (pruebaVigente()) cargarReales();
 })();
 
 /* Edición: un solo diseño (Edición) en versión clara y oscura. Sin preferencia guardada sigue al teléfono; el botón la fija. */
@@ -2084,7 +2088,7 @@ function pintarAccesoPortada(){
   const out = $("#ptOut"); if (out) { const prueba = !dentro && pruebaVigente(); out.hidden = !(dentro || prueba); out.dataset.act = dentro ? "salir" : "salir-prueba"; out.lastChild.textContent = dentro ? "Cerrar sesión" : "Salir de la prueba"; }  // sin Supabase configurado (por ejemplo, el archivo suelto) no hay a qué ingresar
   $("#ptPiloto").hidden = dentro;
   $("#ptDemo").hidden = dentro;
-  $("#ptEstado").textContent = dentro ? "Edición de " + pl.muni.nombre : "Demostración con noticias ficticias";
+  $("#ptEstado").textContent = dentro ? "Edición de " + pl.muni.nombre : "Prueba gratis de 48 horas con noticias reales";
 }
 function salirPortada(){ mostrarPortada(false); if (!location.hash || location.hash === "#portada") location.hash = "inicio"; }
 function mostrarPortada(on){
@@ -2098,7 +2102,8 @@ document.addEventListener("click", e => {
   if (!e.target.closest("#ptGo")) return;
   ptVideo.pausar();  // «Prueba gratis» detiene el video de la portada
   if (typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo) return salirPortada();  // con sesión: directo a su institución
-  // Demostración: antes de entrar se muestra el aviso legal; con sesión iniciada lo cubre el registro en la base.
+  if (pruebaVigente()) return salirPortada();  // prueba en curso: directo a la edición
+  // Prueba gratis: antes de entrar se muestra el aviso legal; con sesión iniciada lo cubre el registro en la base.
   avisoLegal().then(ok => { if (ok) entAbrir(true); });  // sin prueba vigente pide la inscripción; luego rol, zona y nombre
 });
 window.addEventListener("hashchange", () => { if (location.hash === "#portada") mostrarPortada(true); });
@@ -2145,7 +2150,7 @@ var ptVideo = (() => {
   return {pausar(){ if (v && !v.paused) v.pause(); }};
 })();
 render();
-mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingresar llega desde /servicio: va directo al acceso de clientes
+mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search) || !pruebaVigente());  // sin prueba vigente, la portada (el piloto entra al restaurar la sesión)  // ?ingresar llega desde /servicio: va directo al acceso de clientes
 /* Actualización automática de la app instalada: al volver a la app (o cada 5 minutos con la app a la vista) revisa
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */

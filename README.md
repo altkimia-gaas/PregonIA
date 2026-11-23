@@ -5,10 +5,10 @@ Monitoreo de noticias sobre municipios y actores públicos en más de 100 medios
 Demo publicada: https://pregonia.cl
 
 Producto de ALTKimia. Piloto: Casablanca, Algarrobo, El Quisco, El Tabo, Cartagena y San Antonio.
-Versión de demostración: el catálogo de medios es real; las noticias, cifras y fechas son ficticias.
+Sin demostración con noticias ficticias (retirada el 22-nov-2026): la aplicación se abre con la prueba gratis de 48 horas (noticias reales del último mes de la comuna o la autoridad elegida) o con la cuenta del cliente (piloto). Sin prueba vigente ni sesión, solo se ve la portada.
 
 ## Qué incluye el prototipo
-- **Portada:** como la de un diario: cabezal con la fecha, nombre y lema, doble filete, titular con la propuesta de valor, botones «Ver demostración» e «Ingresar» (con sesión, «Entrar a mi edición»), la miniatura de la edición del día y tres columnas (Lee, Mide, Responde). Sin sesión la miniatura es siempre de "Comuna de Ejemplo", con datos de ejemplo; con sesión del piloto es la de la institución de esa persona, nunca la de otra. Aparece cada vez que se abre o recarga la aplicación, con `#portada` y al tocar el logo; la entrada lleva a la sección de la dirección o a Inicio. Para abrir sin portada: `?sin-portada`.
+- **Portada:** como la de un diario: cabezal con la fecha, nombre y lema, doble filete, titular con la propuesta de valor, botones «Prueba gratis» y «Agendar demostración» (reunión comercial), más «Acceso clientes» (con sesión, «Entrar a mi edición»), la miniatura de la edición del día y tres columnas (Lee, Mide, Responde). Sin sesión la miniatura es siempre de "Comuna de Ejemplo", con datos de ejemplo; con sesión del piloto es la de la institución de esa persona, nunca la de otra. Aparece cada vez que se abre o recarga la aplicación, con `#portada` y al tocar el logo; la entrada lleva a la sección de la dirección o a Inicio. Para abrir sin portada: `?sin-portada`.
 - **Entrada (¿Para quién es PregonIA?):** en pasos: cargo, comuna, persona y revisión. Siempre se pide la comuna y de ella se deducen el distrito, la circunscripción o la circunscripción provincial del consejo regional. También se puede buscar directo por nombre en toda la nómina. En el teléfono es una decisión por pantalla, a pantalla completa; desde 760 px suma un riel con los pasos. La contraseña de la demo se pide en la revisión.
 - **Inicio:** portada que responde cuatro preguntas, con período a elegir (24 horas, Semana o 30 días) comparado con el período anterior: cómo estamos (veredicto en una frase y cuatro cifras: noticias, tono, hasta dónde llegó y el alcalde o el territorio en la prensa), qué hacer hoy (críticas por responder, con un «dato para la respuesta» cuando hay una nota positiva del mismo asunto, y notas positivas para aprovechar), qué está cambiando (temas con tendencia y asuntos sin tema que se pueden seguir con un toque), qué viene en el calendario y quién marca la agenda. Cada noticia aparece una sola vez; el gráfico por día está en Reportes.
 - **Menciones:** cada noticia una vez aunque la publiquen varios medios; filtros por tono, período, tema y palabra; "¿Por qué aparece?" y "No corresponde".
@@ -84,9 +84,9 @@ La función solo acepta pedidos desde el propio sitio, limita el largo del texto
 
 Con sesión iniciada, la aplicación trabaja con datos compartidos por institución cliente, sea un municipio o una autoridad
 (diputado, senador, consejero regional, concejal, gobernador o delegado): noticias leídas cada 30 minutos, temas, marcas,
-respuestas aprobadas y publicaciones agregadas a mano. Sin sesión sigue siendo la demostración.
+respuestas aprobadas y publicaciones agregadas a mano. Sin sesión, la aplicación es la prueba gratis; sin prueba vigente, la portada.
 
-La portada ofrece dos puertas: «Ver demostración» (aviso legal y elección de autoridad o municipio) e «Ingresar» (equipos con invitación),
+La portada ofrece dos puertas: «Prueba gratis» (aviso legal, inscripción con código por correo y elección de autoridad o municipio) e «Ingresar» (equipos con invitación),
 más el enlace «Solicita un piloto» a soporte@altkimia.cl. Con sesión iniciada queda una sola: «Entrar a mi edición», directo a su institución.
 
 Piezas:
@@ -119,7 +119,7 @@ reglas que un municipio, que sigue lo que trata de su comuna y de su municipalid
 bajada o, vía Google News, en el cuerpo de la nota) y lo que trata de la institución que integra en su territorio (Consejo Regional,
 Gobierno Regional, Delegación Presidencial, diputados del distrito, senadores por la región, concejo municipal). La IA juzga relevancia
 y tono respecto de la persona, y cada mención queda marcada como `persona` o `institucion` (columna `sobre` de `menciones`), igual que
-«Noticias reales» en la demostración. Los avisos llegan con el nombre de la autoridad.
+la prueba gratis. Los avisos llegan con el nombre de la autoridad.
 
 Para activarlo en una base existente:
 
