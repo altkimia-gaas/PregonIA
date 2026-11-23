@@ -181,7 +181,9 @@ const medioN = n => { const nm = nomMedio(n), red = n.via === "instagram" || MED
 const signo = n => (n > 0 ? "+" : "") + n;
 const plural = (n, s, p) => n + " " + (n === 1 ? s : p);
 /* Una sola cifra de medios en toda la aplicación, calculada del catálogo: medios de prensa (sin redes sociales ni fuentes institucionales). */
-const N_MEDIOS = CATALOG.filter(m => m.m !== "facebook" && m.m !== "instagram" && m.a !== "institucional" && m.t !== "Otro medio" && m.e !== "retirado").length;
+/* Medios de las regiones abiertas (src/regiones.js): los de una región en preparación no se cuentan ni se listan. */
+const deRegionAbierta = m => !m.r || !!(REGIONES[m.r] && REGIONES[m.r].activa);
+const N_MEDIOS = CATALOG.filter(m => deRegionAbierta(m) && m.m !== "facebook" && m.m !== "instagram" && m.a !== "institucional" && m.t !== "Otro medio" && m.e !== "retirado").length;
 /* Balance del tono: veredicto en cinco niveles. El índice (positivas − críticas) / total solo decide el nivel; el usuario ve palabras y conteos. */
 const VER = [[40,"Muy favorable","claramente más a favor que en contra","Muy a favor"],[10,"Favorable","más a favor que en contra","A favor"],[-9,"Equilibrada","lo positivo y lo crítico se compensan","Equilibrado"],[-39,"Desfavorable","más en contra que a favor","En contra"],[-101,"Muy desfavorable","claramente más en contra que a favor","Muy en contra"]];
 function veredicto(M){ if (!M.vol) return {n:"Sin noticias", f:"no hubo noticias en el período", c:"Sin datos", k:"neu", i:-1}; const i = VER.findIndex(x => M.neto >= x[0]), v = VER[i]; return {n:v[1], f:v[2], c:v[3], k: i <= 1 ? "pos" : i >= 3 ? "cri" : "neu", i}; }
@@ -697,7 +699,7 @@ function propHtml(){
 function vFuentes(){
   // Las cuentas de Facebook e Instagram tienen un estado vivo (lectura automática, pendiente de Meta, captura asistida o error): src/redes.js.
   const f = tState.fuente, est = m => esRed(m) ? estadoRed(m) : {k: m.e, l: null, o: m.o};
-  const todas = CATALOG.filter(m => m.e !== "retirado"), redes = todas.filter(esRed), web = todas.filter(m => !esRed(m) && m.a !== "institucional" && m.t !== "Otro medio");
+  const todas = CATALOG.filter(m => m.e !== "retirado" && deRegionAbierta(m)), redes = todas.filter(esRed), web = todas.filter(m => !esRed(m) && m.a !== "institucional" && m.t !== "Otro medio");
   const rows = todas.filter(m => (f.a==="todos"||m.a===f.a) && (f.e==="todos" || (f.e==="redes" ? esRed(m) : !esRed(m) && m.e===f.e)));
   const cnt = k => todas.filter(m => !esRed(m) && m.e===k).length;
   const lbl = {listo:"Listo", requiere_ajuste:"Requiere ajuste", restringido:"Restringido", captura_asistida:"Captura asistida"};

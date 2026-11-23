@@ -127,7 +127,7 @@ function parsearPortada(html, base, excluir = null){
   return [...porUrl.values()].filter(x => x.titulo.split(" ").length >= 4);
 }
 /* Rutas que una portada no debe tomar porque son de otra ficha del catálogo (ediciones locales de SoyChile). */
-const EXCLUIR_RUTA = { 23: /^\/(valparaiso|san-antonio|quillota)\// };
+const EXCLUIR_RUTA = { 23: /^\/(valparaiso|san-antonio|quillota|antofagasta|calama|tocopilla)\// };  // ediciones regionales de SoyChile: se leen aparte
 /* Cómo se lee cada método. */
 async function leerFuente(url, m){
   if (m.metodo === "portada") return parsearPortada(await leer(url, 10000, 2500000), url, EXCLUIR_RUTA[m.id]);
@@ -295,7 +295,10 @@ async function clasificar(comuna, notas, existentes = [], ejemplos = []){
    57 Meganoticias Región de Valparaíso (no tiene sección: las notas cuya dirección nombra una comuna o la región). */
 const RE_URL_REGION = /valparaiso|vina-del-mar|con-?con|quintero|puchuncavi|casablanca|quilpue|villa-alemana|limache|olmue|quillota|la-calera|hijuelas|nogales|san-antonio|cartagena|el-quisco|el-tabo|algarrobo|santo-domingo|san-felipe|los-andes|la-ligua|cabildo|papudo|zapallar|petorca|llay-?llay|putaendo|catemu|panquehue|rinconada|calle-larga|san-esteban|rapa-nui|isla-de-pascua|juan-fernandez/;
 const FILTROS = { 54: u => /\/region-de-valparaiso\//.test(u), 40: u => /\/latinoamerica\/chile\//.test(u),
-  58: u => /\/regiones\/zona-centro\/valparaiso\//.test(u), 57: u => RE_URL_REGION.test(u.split("/").pop() || "") };
+  58: u => /\/regiones\/zona-centro\/valparaiso\//.test(u), 57: u => RE_URL_REGION.test(u.split("/").pop() || ""),
+  // Región de Antofagasta: 414 BioBío (su sección), 415 24 Horas (Red Antofagasta), 416 Meganoticias (dirección que nombra una comuna de la región).
+  414: u => /\/region-de-antofagasta\//.test(u), 415: u => /\/regiones\/zona-norte\/antofagasta\//.test(u),
+  416: u => /antofagasta|calama|tocopilla|mejillones|taltal|sierra-gorda|ollague|san-pedro-de-atacama|maria-elena/.test(u.split("/").pop() || "") };
 const seLee = m => METODOS.has(m.metodo) && m.url && m.estado !== "restringido" && m.estado !== "en_prueba" && !(m.metodo.endsWith("_filtrado") && !FILTROS[m.id]);
 /* Con region, solo los medios nacionales y los de esa región (turnos de lectura por región); sin region, todo el catálogo. */
 export async function leerCatalogo(region = null){

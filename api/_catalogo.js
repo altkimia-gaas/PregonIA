@@ -1509,5 +1509,235 @@ export const CATALOGO = [
 "url": "",
 "estado": "listo",
 "region": ""
+},
+{
+"id": 400,
+"nombre": "El Diario de Antofagasta",
+"ambito": "regional",
+"comuna": "",
+"metodo": "rss",
+"url": "https://www.diarioantofagasta.cl/feed/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 401,
+"nombre": "Timeline.cl",
+"ambito": "regional",
+"comuna": "",
+"metodo": "rss",
+"url": "https://www.timeline.cl/feed/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 402,
+"nombre": "Antofagasta TV",
+"ambito": "regional",
+"comuna": "",
+"metodo": "sitemap",
+"url": "https://www.antofagasta.tv/sitemap/news/sitemap.xml",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 403,
+"nombre": "SoyAntofagasta",
+"ambito": "regional",
+"comuna": "",
+"metodo": "portada",
+"url": "https://www.soychile.cl/antofagasta/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 404,
+"nombre": "SoyCalama",
+"ambito": "local",
+"comuna": "Calama",
+"metodo": "portada",
+"url": "https://www.soychile.cl/calama/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 405,
+"nombre": "SoyTocopilla",
+"ambito": "local",
+"comuna": "Tocopilla",
+"metodo": "portada",
+"url": "https://www.soychile.cl/tocopilla/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 406,
+"nombre": "Calama en Línea",
+"ambito": "local",
+"comuna": "Calama",
+"metodo": "rss",
+"url": "https://noticias.calamaenlinea.cl/feed/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 407,
+"nombre": "Radio Sol",
+"ambito": "regional",
+"comuna": "",
+"metodo": "rss",
+"url": "https://radiosol.cl/feed/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 408,
+"nombre": "Madero",
+"ambito": "regional",
+"comuna": "",
+"metodo": "rss",
+"url": "https://madero.cl/feed/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 409,
+"nombre": "El Mercurio de Antofagasta",
+"ambito": "regional",
+"comuna": "",
+"metodo": "google_news",
+"url": "",
+"estado": "restringido",
+"region": "II"
+},
+{
+"id": 410,
+"nombre": "La Estrella de Antofagasta",
+"ambito": "regional",
+"comuna": "",
+"metodo": "google_news",
+"url": "",
+"estado": "restringido",
+"region": "II"
+},
+{
+"id": 411,
+"nombre": "El Mercurio de Calama",
+"ambito": "local",
+"comuna": "Calama",
+"metodo": "google_news",
+"url": "",
+"estado": "restringido",
+"region": "II"
+},
+{
+"id": 412,
+"nombre": "La Estrella del Loa",
+"ambito": "local",
+"comuna": "Calama",
+"metodo": "google_news",
+"url": "",
+"estado": "restringido",
+"region": "II"
+},
+{
+"id": 413,
+"nombre": "La Prensa de Tocopilla",
+"ambito": "local",
+"comuna": "Tocopilla",
+"metodo": "google_news",
+"url": "",
+"estado": "restringido",
+"region": "II"
+},
+{
+"id": 414,
+"nombre": "BioBioChile, Región de Antofagasta",
+"ambito": "regional",
+"comuna": "",
+"metodo": "rss_filtrado",
+"url": "https://www.biobiochile.cl/static/feed-google",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 415,
+"nombre": "24 Horas, Antofagasta",
+"ambito": "regional",
+"comuna": "",
+"metodo": "sitemap_filtrado",
+"url": "https://www.24horas.cl/24horas/site/sitemap_pags.xml",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 416,
+"nombre": "Meganoticias, Región de Antofagasta",
+"ambito": "regional",
+"comuna": "",
+"metodo": "sitemap_filtrado",
+"url": "https://www.meganoticias.cl/sitemaps/sitemap-news.xml",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 420,
+"nombre": "Gobierno Regional de Antofagasta",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.goreantofagasta.cl/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 421,
+"nombre": "Delegación Presidencial Regional de Antofagasta",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 422,
+"nombre": "Empresa Portuaria Antofagasta",
+"ambito": "institucional",
+"comuna": "Antofagasta",
+"metodo": "google_news",
+"url": "https://www.puertoantofagasta.cl/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 423,
+"nombre": "Universidad de Antofagasta",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.uantof.cl/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 424,
+"nombre": "Universidad Católica del Norte",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.ucn.cl/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 425,
+"nombre": "Aguas Antofagasta",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.aguasantofagasta.cl/",
+"estado": "listo",
+"region": "II"
 }
 ];

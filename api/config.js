@@ -33,6 +33,9 @@ async function cobertura(region = REGION_DEFECTO){
   if (!medios) medios = CATALOGO.filter(m => m.estado !== "retirado").map(m => ({id: m.id, nombre: m.nombre, ambito: m.ambito, comunas: m.comuna, metodo: m.metodo, estado: m.estado}));
   // Fichas comunes (medios fuera del catálogo que llegan por Google News): no son un medio y no van en la lista pública.
   medios = medios.filter(m => !/^Otr[oa] (medio|fuente)/i.test(m.nombre || ""));
+  // Solo los nacionales y los de la región consultada (columna region del catálogo; las cuentas de redes inscritas no la traen y quedan).
+  const regionDe = new Map(CATALOGO.map(m => [m.id, m.region || ""]));
+  medios = medios.filter(m => { const r = regionDe.get(m.id); return !r || r === region; });
   const errores = new Set((lectura && lectura.errores) || []), gnCaido = errores.has("Google News");
   const lista = medios.map(m => {
     const v = via(m.metodo, m.estado);
