@@ -2013,13 +2013,13 @@ function procesandoPaso(){
   const tick = () => { const el = $("#prPaso"); if (!el || !MODO.cargando) { clearInterval(procesandoPaso.t); return; }
     const seg = Math.round((Date.now() - (MODO.inicio || Date.now())) / 1000), p = PR_PASOS.filter(x => seg >= x[0]).pop()[1];
     if (el.textContent !== p) el.textContent = p; const n = $("#prNota"); if (n) n.textContent = seg < 5 ? "Suele tardar menos de un minuto." : `Llevamos ${seg} s · suele tardar menos de un minuto.`; };
-  // Un medio a la vez: el diario de la órbita que lo representa se agranda con su color, el anterior queda con visto,
+  // Un medio a la vez: el diario de la órbita que lo representa se agranda con su color, los tres anteriores quedan con visto,
   // el anillo suma un tramo de su color y la línea de abajo muestra los tres últimos. Completa la cuenta y sigue girando.
   const ms = procesandoHtml.ms || prMedios(), total = ms.length, rec = [];
   let n = 0; const leer = () => { const c = $("#prCentro"), arco = $("#prArco"); if (!c || !arco || !MODO.cargando) { clearInterval(procesandoPaso.l); return; }
     const os = [...document.querySelectorAll(".pr-o")], i = n % PR_ORB, m = ms[n % total], ant = os[(i + PR_ORB - 1) % PR_ORB];
-    if (!i) os.forEach(o => o.classList.remove("leido"));
     ant.classList.remove("leyendo"); if (n) ant.classList.add("leido");
+    const viejo = os[(i + PR_ORB - 4) % PR_ORB]; if (n >= 4) viejo.classList.remove("leido");
     os[i].style.setProperty("--tc", PR_TIPOS[m.k][0]); os[i].classList.remove("leido"); os[i].classList.add("leyendo");
     const leidos = Math.min(n + 1, total); c.innerHTML = prCentro(m, leidos, total);
     if (n < total) { const largo = +arco.dataset.largo, tramo = largo / total;
