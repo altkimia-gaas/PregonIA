@@ -107,7 +107,7 @@ export async function GET(req){
   }
   if (u.searchParams.has("oficiales")) {  // diagnóstico de documentos oficiales (Contraloría, Esval): solo datos públicos, sin IA
     const r = await leerOficiales();
-    return json({errores: r.errores, total: r.items.length, porFuente: r.items.reduce((o, x) => (o[x.m.nombre] = (o[x.m.nombre] || 0) + 1, o), {}),
+    return json({errores: r.errores, detalle: r.detalle, total: r.items.length, porFuente: r.items.reduce((o, x) => (o[x.m.nombre] = (o[x.m.nombre] || 0) + 1, o), {}),
       items: r.items.slice(0, 60).map(x => ({fuente: x.m.nombre, fecha: new Date(x.fecha).toISOString(), titulo: x.titulo}))}, 200, {"cache-control": "public, max-age=0, s-maxage=600"});
   }
   if (u.searchParams.has("pulso")) return pulso(u);
