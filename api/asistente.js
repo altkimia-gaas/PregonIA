@@ -26,7 +26,7 @@ PRECIOS (netos mensuales en pesos chilenos, más IVA)
 
 CÓMO SE CONTRATA
 - Municipios: demo con su comuna, cotización formal con ficha técnica y dossier de cumplimiento, y Compra Ágil (bajo 100 UTM, sin licitación), con orden de compra anual y pago mensual.
-- Parlamentarios: demo con su distrito, prueba de 30 días y licencia mensual de software para la oficina parlamentaria; nunca se factura como asesoría de imagen. La imputación del gasto la decide su oficina.
+- Parlamentarios: demo con su distrito, prueba gratis de 7 días y licencia mensual de software para la oficina parlamentaria; nunca se factura como asesoría de imagen. La imputación del gasto la decide su oficina.
 - Prueba gratis de 7 días, sin costo ni tarjeta: botón "Prueba gratis" en la portada; pide nombre, correo, tipo de autoridad y territorio y valida el correo con un código de 6 dígitos. Clientes con cuenta: botón "Ingresar".
 
 CONFIANZA
