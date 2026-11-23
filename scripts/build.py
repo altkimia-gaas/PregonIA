@@ -60,7 +60,7 @@ def main():
     # Redacción (cuenta privada del editor de PregonIA): página aparte, /redaccion. Comparte con la aplicación la nómina y las zonas
     # (autoridades.js) y con el servidor el puntaje de impacto (impacto.js → api/_impacto.js), para que ambos puntúen igual.
     (RAIZ / "api" / "_impacto.js").write_text("// Generado por scripts/build.py desde src/impacto.js. No editar a mano.\n" + leer("impacto.js") +
-        "export { IMP_PESOS, IMP_TEMAS, IMP_REGION, impNorm, impTiene, impAutoridades, impPalabras, impParecido, impAgrupar, impAlcance, impInteraccion, impPuntaje, IMP_UMBRAL_GRUPO };\n", encoding="utf-8")
+        "export { IMP_PESOS, IMP_TEMAS, IMP_REGION, impNorm, impTiene, impAutoridades, impPalabras, impParecido, impAgrupar, impAlcance, impInteraccion, impPuntaje, IMP_UMBRAL_GRUPO, IMP_AMBITOS, impAmbito, impSeleccion };\n", encoding="utf-8")
     rd_js = "\n".join(leer(n) for n in ["regiones.js", "autoridades.js", "impacto.js", "piezas.js", "redaccion-prueba.js", "redaccion.js"])
     rd_cabeza = ('<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n'
                  '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'

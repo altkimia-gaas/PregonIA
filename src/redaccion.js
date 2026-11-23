@@ -7,6 +7,8 @@
 const RD = {modo: null, sb: null, user: null, cfgPub: null, cfg: null, props: [], posts: [], post: null, fmt: "feed", lam: 0, ia: null, voz: null, reel: {}, guardando: null, timer: null, anim: 0, fb: null};
 const RD_LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 const RD_KEY = "pregonia-redaccion-prueba-v1";
+const RD_CTA = "Sigue a El Pregonero: las noticias de Casablanca y la región, siempre con su fuente y enlace.";
+const RD_AMBITOS = IMP_AMBITOS.map(a => a[0]).concat(["Comunidad"]);
 const RD_ETIQUETA_IA = "Resumen elaborado con apoyo de IA y revisado por el equipo de El Pregonero.";
 const RD_PILOTO = ["Casablanca", "Algarrobo", "El Quisco", "El Tabo", "Cartagena", "San Antonio"];
 const RD_CFG0 = {comunas: RD_PILOTO, nacional: true, umbral: 80, silencio: true, resumen_hora: 8, cercanos: ["Casablanca", "Rodrigo Martínez", "Partido Republicano"], meta_diaria: 4};
@@ -182,17 +184,17 @@ window.addEventListener("hashchange", () => { render(true); window.scrollTo(0, 0
 
 /* ─── Propuestas ─── */
 const SENAL = [["repercusion", "Repercusión", 35], ["redes", "Redes", 20], ["autoridades", "Autoridades", 15], ["temas", "Temas críticos", 20], ["recencia", "Recencia", 10]];
-let filtroProp = {ver: "activas", com: "todas"};
+let filtroProp = {ver: "seleccion", com: "todas"};
 function vistaPropuestas(){
   const c = RD.cfg, todas = propuestasVisibles(), com = [...new Set(todas.flatMap(p => p.comunas))].sort();
-  let ps = todas.filter(p => filtroProp.ver === "descartadas" ? p.estado === "descartada" : filtroProp.ver === "sobre" ? p.estado === "nueva" && p.puntaje >= c.umbral : p.estado !== "descartada");
+  let ps = filtroProp.ver === "seleccion" ? impSeleccion(todas.filter(p => p.estado === "nueva"), {max: 8, porAmbito: 2}).map(x => x.p) : todas.filter(p => filtroProp.ver === "descartadas" ? p.estado === "descartada" : filtroProp.ver === "sobre" ? p.estado === "nueva" && p.puntaje >= c.umbral : p.estado !== "descartada");
   if (filtroProp.com !== "todas") ps = ps.filter(p => p.comunas.includes(filtroProp.com));
   ps.sort((a, b) => (a.estado === "tomada") - (b.estado === "tomada") || b.puntaje - a.puntaje);
   const terr = c.comunas.length ? c.comunas.slice(0, 6).join(", ") + (c.comunas.length > 6 ? ` y ${c.comunas.length - 6} más` : "") : "ninguna comuna";
   return `<h2>Propuestas</h2>
-    <p class="lead">Noticias de las últimas 48 horas en ${esc(terr)}${c.nacional ? ", más las regionales y nacionales que afectan a la región" : ""}. Se ordenan por impacto; desde ${c.umbral} puntos te llega un aviso. <a href="#ajustes">Cambiar territorios</a></p>
+    <p class="lead">${filtroProp.ver === "seleccion" ? "<b>Selección del día:</b> los hechos de mayor impacto, con un máximo de 2 por ámbito para cubrir áreas distintas. Elige sobre cuáles trabajar y toca «Redactar publicación». " : ""}Noticias de las últimas 48 horas en ${esc(terr)}${c.nacional ? ", más las regionales y nacionales que afectan a la región" : ""}. Se ordenan por impacto; desde ${c.umbral} puntos te llega un aviso. <a href="#ajustes">Cambiar territorios</a></p>
     <div class="barra">
-      <label class="info" for="fVer">Mostrar</label><select class="sel" id="fVer" data-filtro="ver"><option value="activas" ${filtroProp.ver === "activas" ? "selected" : ""}>Activas</option><option value="sobre" ${filtroProp.ver === "sobre" ? "selected" : ""}>Sobre el umbral (${c.umbral}+)</option><option value="descartadas" ${filtroProp.ver === "descartadas" ? "selected" : ""}>Descartadas</option></select>
+      <label class="info" for="fVer">Mostrar</label><select class="sel" id="fVer" data-filtro="ver"><option value="seleccion" ${filtroProp.ver === "seleccion" ? "selected" : ""}>Selección del día</option><option value="activas" ${filtroProp.ver === "activas" ? "selected" : ""}>Activas</option><option value="sobre" ${filtroProp.ver === "sobre" ? "selected" : ""}>Sobre el umbral (${c.umbral}+)</option><option value="descartadas" ${filtroProp.ver === "descartadas" ? "selected" : ""}>Descartadas</option></select>
       <label class="info" for="fCom">Territorio</label><select class="sel" id="fCom" data-filtro="com"><option value="todas">Todos</option>${com.map(x => `<option ${filtroProp.com === x ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>
       <span class="sp"></span><span class="info">${ps.length} ${ps.length === 1 ? "hecho" : "hechos"}</span>
     </div>
@@ -207,7 +209,7 @@ function propHtml(p){
     <div>
       <h4 id="t-${esc(p.id)}">${esc(p.titulo)}</h4>
       ${p.resumen ? `<p class="res">${esc(p.resumen)}</p>` : ""}
-      <p class="meta"><span>${esc(p.comunas.join(", "))}</span>·<span>alcance ${esc(p.alcance || "comunal")}</span>·<span>${d.medios || 1} ${d.medios === 1 ? "medio" : "medios"}</span>${d.interaccion ? `·<span>${d.interaccion.toLocaleString("es-CL")} interacciones en redes</span>` : ""}·<span>${p.ultima ? hace(Date.parse(p.ultima)) : ""}</span>${p.ia ? `· <span class="chip">Titular y resumen con IA</span>` : ""}${p.estado === "tomada" ? ` <span class="chip ok">En redacción</span>` : ""}</p>
+      <p class="meta"><span class="chip az">${esc(impAmbito(p))}</span><span>${esc(p.comunas.join(", "))}</span>·<span>alcance ${esc(p.alcance || "comunal")}</span>·<span>${d.medios || 1} ${d.medios === 1 ? "medio" : "medios"}</span>${d.interaccion ? `·<span>${d.interaccion.toLocaleString("es-CL")} interacciones en redes</span>` : ""}·<span>${p.ultima ? hace(Date.parse(p.ultima)) : ""}</span>${p.ia ? `· <span class="chip">Titular y resumen con IA</span>` : ""}${p.estado === "tomada" ? ` <span class="chip ok">En redacción</span>` : ""}</p>
       ${p.sensible ? `<p class="alerta-rev"><b>Revisión reforzada.</b> Toca ${esc((p.cercanos || []).join(", "))}, con quien declaraste relación. Redacta con especial cuidado y aprueba solo si el tratamiento es el mismo que darías a cualquier otro actor.</p>` : ""}
       <div class="senales" role="list" aria-label="Por qué tiene este puntaje">${SENAL.map(([k, n, max]) => { const v = (p.senales || {})[k] || 0; return `<div class="sen" role="listitem">${n}<b>${v} de ${max}</b><span class="t"><i style="width:${Math.round(v / max * 100)}%"></i></span></div>`; }).join("")}</div>
       ${tags ? `<div class="meta">${tags}</div>` : ""}
@@ -243,8 +245,9 @@ function promptRedaccion(p, textos = []){
 TAREA: escribe una NUEVA VERSIÓN de la noticia para El Pregonero a partir de la nota original. Respeta el FONDO y cambia la FORMA:
 - Fondo: conserva todos los hechos relevantes de la nota (qué pasó, dónde, cuándo, a quién afecta, cifras, nombres, cargos, plazos, causas y consecuencias que la nota informa, y lo que dijeron las personas o instituciones), atribuidos a su fuente.
 - Forma: redacción y estructura propias, en pirámide invertida (lo más importante primero). No copies frases de la nota: reformula todo con palabras propias; como máximo una cita textual breve (menos de 15 palabras), entre comillas y atribuida a quien la dijo.
-- No agregues nada que no esté en la nota: ni datos, ni contexto, ni opinión, ni conclusiones. Si la nota no trae un dato imprescindible, no lo supongas.
-- Tu versión debe ser más breve que la original.
+- Más datos y detalles: usa la búsqueda web (hasta 4 búsquedas) para completar la noticia con detalles verificables de OTRAS fuentes: la institución o servicio involucrado, documentos oficiales y otros medios chilenos. Prefiere fuentes oficiales y medios establecidos; descarta redes sociales, foros, blogs sin autoría y páginas de opinión. Cada dato que agregues debe estar en una fuente que cites en "fuentes", con su enlace real. Si no encuentras nada confiable, no agregues nada: no supongas ni completes con conocimiento propio.
+- Fuera de lo que traen la nota y las fuentes citadas, no agregues datos, contexto, opinión ni conclusiones.
+- Tu versión debe ser más breve que la original, aunque incorpore esos detalles.
 
 ${original}
 
@@ -254,7 +257,9 @@ ${notas.map(n => `- ${n.medio} · ${new Date(n.ts).toLocaleString("es-CL")} · $
 REGLAS OBLIGATORIAS
 1. Tono informativo y neutral: sin adjetivos valorativos (polémico, escandaloso, exitoso, histórico, grave…), sin signos de exclamación, sin mayúsculas sostenidas, sin opinión, sin llamados a apoyar o rechazar a nadie. Mismo trato para todos los sectores políticos. No menciones partidos políticos salvo que sean el centro del hecho.
 2. Atribución: los hechos van atribuidos («según [medio]», «informó [institución]», «señaló [cargo y nombre]»).
-3. "nota": tu nueva versión de la noticia, 3 a 6 párrafos cortos, entre 500 y 1.300 caracteres. Sin titular, sin enlaces, sin la línea «Fuente:» y sin mención de IA: el sistema los agrega.
+3. "nota": el CUERPO de la noticia, tu nueva versión, 3 a 6 párrafos cortos, entre 600 y 1.500 caracteres, en tono periodístico: lo más importante primero y después detalles, contexto verificable y qué viene. Sin titular, sin bajada, sin ámbito, sin enlaces, sin la línea de fuentes, sin llamado a seguir la página y sin mención de IA: el sistema los agrega.
+3b. "ambito": el área de interés de la noticia, exactamente una de: ${RD_AMBITOS.join(" | ")}.
+3c. "fuentes": {"primarias": [...], "secundarias": [...]}, con objetos {"nombre": "...", "url": "..."}. Primarias: donde se originan los hechos (la institución, el documento o el medio que informó primero; sus enlaces vienen en las notas de arriba o en tu búsqueda). Secundarias: otras fuentes que usaste para completar detalles. Usa solo direcciones que aparezcan arriba o que hayas encontrado en la búsqueda; nunca inventes un enlace.
 4. "ig": versión condensada de "nota" para Instagram, máximo 800 caracteres, mismas reglas (sin titular, enlaces, «Fuente:» ni mención de IA). Los hashtags van aparte.
 5. "hashtags": 3 a 5, de lugar y tema (por ejemplo #Casablanca #RegiónDeValparaíso). Nunca hashtags políticos ni de campaña.
 6. Pieza gráfica, sacada de tu versión: "kicker" (antetítulo de 2 a 4 palabras: comuna · tema), "titular" (máximo 14 palabras, informativo, con el hecho principal), "bajada" (máximo 30 palabras, con el segundo dato más importante) y "datos" (3 datos clave del hecho, máximo 14 palabras cada uno: cifras, lugar, plazos, quién lo informó o qué viene). La pieza debe leerse como la noticia: nunca uses como dato que el medio publicó un artículo ni la fecha de publicación.
@@ -268,7 +273,7 @@ REGLAS OBLIGATORIAS
    - "reel": hechos de interés comunitario que se entienden mejor narrados y en secuencia, o que necesitan contexto breve; nunca para tragedias con víctimas ni para hechos en desarrollo que pueden cambiar en minutos.
    - "historia": true cuando la información tiene vigencia corta o pide una acción (alertas, cortes, desvíos, plazos que vencen, eventos del día).
 
-Escribe en español de Chile. Responde SOLO con un objeto JSON con las claves kicker, titular, bajada, datos, nota, ig, hashtags, alt, historia, slides, guion, formato. Sin bloque de código ni texto adicional.`;
+Escribe en español de Chile. Responde SOLO con un objeto JSON con las claves ambito, kicker, titular, bajada, datos, nota, fuentes, ig, hashtags, alt, historia, slides, guion, formato. Sin bloque de código ni texto adicional.`;
 }
 /* Lee en el servidor el texto completo de las notas de la propuesta (solo las direcciones guardadas en ella). */
 async function leerNotas(p){
@@ -282,33 +287,40 @@ async function leerNotas(p){
 const textoLeido = textos => (textos || []).filter(t => t && t.texto && t.texto.length > 200).map(t => ({medio: t.medio, url: t.url, texto: t.texto}));
 /* Texto de la publicación: el cuerpo lo redacta la IA (o el editor) y el sistema arma alrededor
    el titular, la fuente con su fecha, el enlace a la nota original (solo Facebook) y la mención de IA. */
-const RD_LINEA_SISTEMA = /^(fuentes?:|nota original|resumen elaborado con apoyo de ia)/i;
+const RD_LINEA_SISTEMA = /^(fuentes?( primarias?| secundarias?)?:|nota original|m[aá]s informaci[oó]n en|[aá]mbito:|resumen elaborado con apoyo de ia)/i;
 function fuentesPost(c){ return ((c.fuentes && c.fuentes.length ? c.fuentes : [c.fuente || {}]) || []).filter(f => f && f.medio); }
+const fuentesSec = c => (c.fuentesSec || []).filter(f => f && f.medio);
 function bloqueFuente(c, red){
-  const fs = fuentesPost(c); if (!fs.length) return "Fuente: [completar fuente]";
-  const conFecha = f => f.fecha ? `${f.medio}, ${pzFecha(f.fecha)}` : f.medio;
-  const lineas = [fs.length === 1 ? "Fuente: " + conFecha(fs[0]) : "Fuentes: " + fs.map(f => f.fecha ? `${f.medio} (${pzFecha(f.fecha)})` : f.medio).join("; ")];
-  if (red === "fb") { const conUrl = fs.filter(f => f.url).slice(0, 3); conUrl.forEach(f => lineas.push(conUrl.length === 1 ? "Nota original: " + f.url : `Nota original en ${f.medio}: ${f.url}`)); }
+  const fs = fuentesPost(c), ss = fuentesSec(c); if (!fs.length && !ss.length) return "Fuentes primarias: [completar fuente]";
+  const nom = f => f.fecha ? `${f.medio} (${pzFecha(f.fecha)})` : f.medio;
+  const lineas = [];
+  if (fs.length) lineas.push((fs.length === 1 ? "Fuente primaria: " : "Fuentes primarias: ") + fs.map(nom).join("; "));
+  if (red === "fb") fs.filter(f => f.url).slice(0, 3).forEach((f, _, a) => lineas.push(a.length === 1 ? "Nota original: " + f.url : `Nota original en ${f.medio}: ${f.url}`));
+  if (ss.length) lineas.push((ss.length === 1 ? "Fuente secundaria: " : "Fuentes secundarias: ") + ss.map(f => f.medio).join("; "));
+  if (red === "fb") ss.filter(f => f.url).slice(0, 3).forEach(f => lineas.push(`Más información en ${f.medio}: ${f.url}`));
   return lineas.join("\n");
 }
-/* Quita del texto lo que arma el sistema (titular al inicio, fuente, enlaces, mención de IA, hashtags al final) para quedarse con el cuerpo. */
+/* Quita del texto lo que arma el sistema (ámbito, titular, bajada, fuentes, enlaces, llamado, mención de IA, hashtags) para quedarse con el cuerpo. */
 function cuerpoDe(txt, c){
+  const cta = rdNorm(c.cta || RD_CTA);
   let ls = String(txt || "").replace(/\r/g, "").split("\n");
-  ls = ls.filter(l => !RD_LINEA_SISTEMA.test(l.trim()) && !/^\s*https?:\/\/\S+\s*$/.test(l));
+  ls = ls.filter(l => !RD_LINEA_SISTEMA.test(l.trim()) && !/^\s*https?:\/\/\S+\s*$/.test(l) && rdNorm(l) !== cta);
   while (ls.length && /^(\s*#[\wÁÉÍÓÚÑáéíóúñ]+\s*)+$/.test(ls[ls.length - 1])) ls.pop();
   let t = ls.join("\n").replace(/https?:\/\/\S+/g, "").replace(/\n{3,}/g, "\n\n").trim();
-  const tit = rdNorm(c.titular || "").replace(/[.\s]+$/, "");
-  if (tit) { const pri = t.split("\n")[0]; if (rdNorm(pri).replace(/[.\s]+$/, "") === tit) t = t.slice(pri.length).trim(); }
+  const previos = [c.titular, c.bajada].map(x => rdNorm(x || "").replace(/[.\s]+$/, "")).filter(Boolean);
+  for (let k = 0; k < 2; k++) { const pri = t.split("\n")[0]; if (pri && previos.includes(rdNorm(pri).replace(/[.\s]+$/, ""))) t = t.slice(pri.length).trim(); }
   return t;
 }
+/* Estructura de la publicación: ámbito, título, bajada, cuerpo, fuentes primarias y secundarias, llamado a seguir la página, mención de IA y hashtags. */
 function componerTexto(c, red, cuerpo){
-  const tit = String(c.titular || "").trim(), partes = [tit, String(cuerpo ?? cuerpoDe(c[red], c)).trim(), bloqueFuente(c, red)];
+  const amb = c.ambito ? "Ámbito: " + c.ambito : "", tit = String(c.titular || "").trim(), baj = String(c.bajada || "").trim();
+  const partes = [amb, tit, baj, String(cuerpo ?? cuerpoDe(c[red], c)).trim(), bloqueFuente(c, red), String(c.cta ?? RD_CTA).trim()];
   const cierre = RD_ETIQUETA_IA + (red === "fb" && (c.hashtags || []).length ? "\n" + c.hashtags.join(" ") : "");
   return partes.filter(Boolean).join("\n\n") + "\n\n" + cierre;
 }
 function componerAmbos(c){ c.fb = componerTexto(c, "fb"); c.ig = componerTexto(c, "ig"); return c; }
 async function pedirIA(prompt, signal){
-  const r = await fetch("/api/ia", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({prompt, tier: "default"}), signal});
+  const r = await fetch("/api/ia", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({prompt, tier: "default", research: true}), signal});
   if (r.status === 429) throw new Error("La IA recibió demasiadas solicitudes. Intenta en unos minutos.");
   if (!r.ok) throw new Error("La IA no respondió.");
   const txt = await r.text(), j = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1));
@@ -318,7 +330,8 @@ async function pedirIA(prompt, signal){
 function plantilla(p){
   const fs = fuentesDe(p), medios = fs.map(f => f.medio).join(", ") || "[completar fuente]", lugar = p.comunas.filter(c => c !== "Región").join(", ") || "Región de Valparaíso";
   const res = p.resumen || (p.notas && p.notas[0] && p.notas[0].desc) || "[completar: resumen del hecho]";
-  return {kicker: [lugar.split(",")[0], temaPrincipal(p)].filter(Boolean).join(" · "), titular: p.titulo, bajada: res, datos: [`Lugar: ${lugar}`, `Informan: ${fs.slice(0, 2).map(f => f.medio).join(" y ")}`],
+  const ambito = impAmbito(p);
+  return {ambito, cta: RD_CTA, kicker: [lugar.split(",")[0], ambito].filter(Boolean).join(" · "), titular: p.titulo, bajada: res, datos: [`Lugar: ${lugar}`, `Informan: ${fs.slice(0, 2).map(f => f.medio).join(" y ")}`],
     fb: res, ig: res,
     hashtags: ["#" + lugar.split(",")[0].replace(/\s+/g, ""), "#RegiónDeValparaíso"], alt: `Pieza informativa de El Pregonero con el titular: ${p.titulo}`,
     historia: {t: p.titulo, x: res}, slides: [{t: "Qué pasó", x: res}], guion: {intro: p.titulo, datos: [], cierre: `Fuente: ${medios}. Esto fue El Pregonero.`},
@@ -344,12 +357,25 @@ function aplicarFormato(post){
 function limpiarIA(j, p){
   const s = (x, n = 2000) => String(x ?? "").replace(/[*#_]{2,}/g, "").trim().slice(0, n);
   const datos = (Array.isArray(j.datos) ? j.datos : []).map(x => s(x, 160)).filter(Boolean).slice(0, 3);
-  return {kicker: s(j.kicker, 60), titular: s(j.titular, 160), bajada: s(j.bajada, 260), datos, fb: s(j.nota || j.fb, 2000), ig: s(j.ig, 2200),
+  const ambito = RD_AMBITOS.includes(j.ambito) ? j.ambito : (p ? impAmbito(p) : "Comunidad"), lugar = p ? p.comunas.filter(c => c !== "Región").join(", ") || "Región de Valparaíso" : "";
+  const url = u => /^https?:\/\/[^\s]+$/i.test(String(u || "").trim()) ? String(u).trim() : "";
+  const lista = a => (Array.isArray(a) ? a : []).map(x => ({medio: s(x && (x.nombre || x.medio), 80), url: url(x && x.url)})).filter(x => x.medio).slice(0, 6);
+  return {ambito, cta: RD_CTA, fuentesIA: {primarias: lista(j.fuentes && j.fuentes.primarias), secundarias: lista(j.fuentes && j.fuentes.secundarias)},
+    kicker: [lugar.split(",")[0], ambito].filter(Boolean).join(" · ") || s(j.kicker, 60), titular: s(j.titular, 160), bajada: s(j.bajada, 260), datos, fb: s(j.nota || j.fb, 2000), ig: s(j.ig, 2200),
     hashtags: (Array.isArray(j.hashtags) ? j.hashtags : String(j.hashtags || "").split(/\s+/)).map(h => s(h, 40).replace(/^#?/, "#")).filter(h => h.length > 1).slice(0, 8),
     alt: s(j.alt, 260), historia: {t: s(j.historia && j.historia.t, 120), x: s(j.historia && j.historia.x, 220)},
     slides: (Array.isArray(j.slides) ? j.slides : []).map(x => ({t: s(x && x.t, 80), x: s(x && x.x, 320)})).filter(x => x.t || x.x).slice(0, 4),
     guion: {intro: s(j.guion && j.guion.intro, 220), datos: ((j.guion && j.guion.datos) || []).map(x => s(x, 200)).slice(0, 3), cierre: s(j.guion && j.guion.cierre, 160)},
     formato: formatoIA(j.formato, j)};
+}
+/* Fuentes primarias: los medios del hecho más lo que la IA marcó como origen con enlace; secundarias: las que sumó la búsqueda. Sin repetir direcciones. */
+function aplicarFuentes(c, p){
+  const prim = fuentesDe(p).slice(), vistas = new Set(prim.map(f => f.url).filter(Boolean)), ia = c.fuentesIA || {primarias: [], secundarias: []};
+  ia.primarias.filter(f => f.url && !vistas.has(f.url)).forEach(f => { vistas.add(f.url); prim.push({medio: f.medio, url: f.url, fecha: null, ambito: "institucional"}); });
+  c.fuentes = prim.slice(0, 5); c.fuente = c.fuentes[0] || null;
+  c.fuentesSec = ia.secundarias.filter(f => !f.url || !vistas.has(f.url)).slice(0, 4);
+  c.complemento = c.fuentesSec.map(f => f.medio + " " + f.url).join(" ");
+  delete c.fuentesIA; return c;
 }
 async function redactar(id, btn){
   const p = RD.props.find(x => x.id === id); if (!p) return;
@@ -361,8 +387,8 @@ async function redactar(id, btn){
   if (await RD.ia) { try { c = limpiarIA(await pedirIA(promptRedaccion(p, textos)), p); ia = Boolean(c.titular && c.fb && c.ig); } catch(e) { toast(String(e.message || e) + " Se usó una plantilla."); } }
   if (!ia) c = plantilla(p);
   const fs = fuentesDe(p);
-  Object.assign(c, {fuente: fs[0] || null, fuentes: fs, etiquetaIA: RD_ETIQUETA_IA.replace(/\.$/, ""), ia, version: 1, fechaPieza: Date.now(), original: leido, notaCompleta: leido.length > 0});
-  componerAmbos(c);
+  Object.assign(c, {fuente: fs[0] || null, fuentes: fs, fuentesSec: [], etiquetaIA: RD_ETIQUETA_IA.replace(/\.$/, ""), ia, version: 1, fechaPieza: Date.now(), original: leido, notaCompleta: leido.length > 0});
+  aplicarFuentes(c, p); componerAmbos(c);
   const post = {id: uid(), propuesta_id: p.id, estado: "borrador", titulo: c.titular || p.titulo, contenido: c, formatos: ["feed", "historia"], comunas: p.comunas, sensible: !!p.sensible, programado: null, publicado: null, creado: new Date().toISOString()};
   aplicarFormato(post);
   try { await store.guardarPost(post); if (p.estado === "nueva") { await store.marcarPropuesta(p.id, "tomada"); p.estado = "tomada"; } }
@@ -374,7 +400,7 @@ async function rehacer(btn){
   if (!(await RD.ia)) return toast("La IA no está disponible aquí.");
   btn.disabled = true; btn.innerHTML = `${ico("ia")}Leyendo la nota original…`;
   const textos = await leerNotas(p), leido = textoLeido(textos); btn.innerHTML = `${ico("ia")}Redactando la nueva versión…`;
-  try { const c = limpiarIA(await pedirIA(promptRedaccion(p, textos)), p); Object.assign(post.contenido, c, {ia: true, version: (post.contenido.version || 1) + 1, original: leido.length ? leido : (post.contenido.original || []), notaCompleta: leido.length > 0 || Boolean(post.contenido.notaCompleta)}); componerAmbos(post.contenido); aplicarFormato(post); post.titulo = c.titular; await guardarAhora(true); render(); toast("Nueva versión redactada. Revísala."); }
+  try { const c = limpiarIA(await pedirIA(promptRedaccion(p, textos)), p); Object.assign(post.contenido, c, {ia: true, version: (post.contenido.version || 1) + 1, original: leido.length ? leido : (post.contenido.original || []), notaCompleta: leido.length > 0 || Boolean(post.contenido.notaCompleta)}); aplicarFuentes(post.contenido, p); componerAmbos(post.contenido); aplicarFormato(post); post.titulo = c.titular; await guardarAhora(true); render(); toast("Nueva versión redactada. Revísala."); }
   catch(e) { btn.disabled = false; btn.innerHTML = `${ico("ia")}Redactar de nuevo con IA`; toast(String(e.message || e)); }
 }
 
@@ -385,7 +411,7 @@ const RD_SIGLAS = /\b(RN|PS|PC|DC|PDG|FA|UDI|PPD)\b/;
 function textoFuentes(post){
   const p = RD.props.find(x => x.id === post.propuesta_id);
   const orig = ((post.contenido && post.contenido.original) || []).map(o => o.texto || "").join(" ");
-  return rdNorm(((p && p.notas) || []).map(n => n.titulo + " " + (n.desc || "")).join(" ") + " " + ((p && p.resumen) || "") + " " + (p ? p.comunas.join(" ") : "") + " " + orig);
+  return rdNorm(((p && p.notas) || []).map(n => n.titulo + " " + (n.desc || "")).join(" ") + " " + ((p && p.resumen) || "") + " " + (p ? p.comunas.join(" ") : "") + " " + orig + " " + ((post.contenido && post.contenido.complemento) || ""));
 }
 function revisar(post){
   const c = post.contenido || {}, out = [], add = (nivel, txt) => out.push({nivel, txt});
@@ -462,10 +488,11 @@ function vistaEditor(p){
     ${p.estado === "aprobado" || p.estado === "programado" ? `<p class="nota">Está aprobada: si cambias el contenido, vuelve a borrador y hay que aprobarla de nuevo.</p>` : ""}
     <div class="ed">
       <div class="ed-col">
-        <section class="panel" aria-labelledby="hPieza"><h3 id="hPieza">Pieza gráfica</h3>${campo("kicker", "Antetítulo", {max: 60, ayuda: "comuna · tema"})}${campo("titular", "Titular", {area: true, filas: 2, max: 160})}${campo("bajada", "Bajada", {area: true, filas: 2, max: 260})}${datos}</section>
+        <section class="panel" aria-labelledby="hPieza"><h3 id="hPieza">Pieza gráfica</h3>${campo("ambito", "Ámbito", {max: 40, ayuda: "área de interés; sale en el texto y en el antetítulo"})}${campo("kicker", "Antetítulo", {max: 60, ayuda: "comuna · ámbito"})}${campo("titular", "Titular", {area: true, filas: 2, max: 160})}${campo("bajada", "Bajada", {area: true, filas: 2, max: 260})}${datos}</section>
         <section class="panel" aria-labelledby="hTextos"><h3 id="hTextos">Textos</h3>
           ${campo("fb", "Facebook", {area: true, filas: 12, max: 2000, ayuda: "nueva versión de la noticia, con fuente y enlace a la nota original"})}
           ${campo("ig", "Instagram", {area: true, filas: 8, max: 2200, ayuda: "sin enlaces"})}
+          ${campo("cta", "Llamado a seguir la página", {area: true, filas: 2, max: 200, ayuda: "cierre de la publicación"})}
           <label class="campo" for="f-hashtags">Hashtags <small>separados por espacio, 3 a 5</small><input class="inp" id="f-hashtags" data-k="hashtags" value="${esc((c.hashtags || []).join(" "))}" ${dis}></label>
           ${campo("alt", "Texto alternativo de la imagen", {area: true, filas: 2, max: 260, ayuda: "para personas ciegas; Instagram lo permite"})}
           <div class="acciones">${bloqueado ? "" : `<button class="btn sm" type="button" data-act="fuente" title="Vuelve a poner el titular, la fuente, el enlace a la nota original y la mención de IA, sin tocar el cuerpo">Rearmar fuente y enlace</button>`}<button class="btn sm" type="button" data-act="copiar" data-q="fb">${ico("copiar")}Copiar texto para Facebook</button><button class="btn sm" type="button" data-act="copiar" data-q="ig">${ico("copiar")}Copiar texto para Instagram</button></div>
@@ -473,7 +500,7 @@ function vistaEditor(p){
         <section class="panel suave" aria-labelledby="hHist"><h3 id="hHist">Historia</h3>${campo("historia.t", "Titular de la historia", {max: 120})}${campo("historia.x", "Frase de contexto", {area: true, filas: 2, max: 220})}</section>
         ${(p.formatos || []).includes("carrusel") ? `<section class="panel suave" aria-labelledby="hCar"><h3 id="hCar">Carrusel</h3>${slides}${!bloqueado && (c.slides || []).length < 4 ? `<button class="btn sm" type="button" data-act="lamina">Agregar lámina</button>` : ""}</section>` : ""}
         ${(p.formatos || []).includes("reel") ? `<section class="panel suave" aria-labelledby="hGuion"><h3 id="hGuion">Guion del reel</h3>${campo("guion.intro", "Inicio", {area: true, filas: 2, max: 220})}${[0, 1, 2].map(i => (c.datos || [])[i] ? campo(`guion.datos.${i}`, `Dato ${i + 1}`, {area: true, filas: 2, max: 200}) : "").join("")}${campo("guion.cierre", "Cierre", {area: true, filas: 2, max: 160})}<p class="info">Cada parte se graba con voz sintética en español de Chile y marca la duración de su escena.</p></section>` : ""}
-        <section class="panel suave" aria-labelledby="hFuentes"><h3 id="hFuentes">Fuentes</h3><ul style="margin:0;padding-left:18px">${(c.fuentes || []).map(f => `<li><a href="${esc(f.url)}" target="_blank" rel="noopener noreferrer">${esc(f.medio)}</a> <span class="info">· ${esc(f.ambito || "")} · ${esc(new Date(f.fecha).toLocaleString("es-CL"))}</span></li>`).join("") || "<li>Sin fuentes</li>"}</ul>
+        <section class="panel suave" aria-labelledby="hFuentes"><h3 id="hFuentes">Fuentes</h3><ul style="margin:0;padding-left:18px">${(c.fuentes || []).map(f => `<li><a href="${esc(f.url)}" target="_blank" rel="noopener noreferrer">${esc(f.medio)}</a> <span class="info">· ${esc(f.ambito || "")}${f.fecha ? " · " + esc(new Date(f.fecha).toLocaleString("es-CL")) : ""}</span></li>`).join("") || "<li>Sin fuentes</li>"}</ul>${(c.fuentesSec || []).length ? `<h4 style="margin:12px 0 4px;font-size:14px">Fuentes secundarias (búsqueda web)</h4><ul style="margin:0;padding-left:18px">${c.fuentesSec.map(f => `<li>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener noreferrer">${esc(f.medio)}</a>` : esc(f.medio)}</li>`).join("")}</ul>` : ""}
           ${prop ? `<details class="fuentes"><summary>Todas las publicaciones del hecho (${(prop.notas || []).length})</summary><ul>${[...prop.notas].sort((a, b) => b.ts - a.ts).map(n => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer">${esc(n.titulo)}</a> <span>· ${esc(n.medio)}</span></li>`).join("")}</ul></details>` : ""}</section>
       </div>
       <div class="ed-col"><div class="vista">
