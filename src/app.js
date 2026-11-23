@@ -1921,7 +1921,7 @@ function pintarModo(){
   const pv = pruebaVigente(), i = MODO.info, real = MODO.tipo === "real" && i;
   if (!pv) { el.hidden = true; return; }
   el.hidden = false; el.className = "demo real";
-  const etiqueta = pv.ilimitada ? "Prueba comercial" : "Prueba gratis", hasta = pv.ilimitada ? "" : ` hasta el ${new Date(pv.hasta).toLocaleString("es-CL", {weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23"})}`;
+  const etiqueta = pv.ilimitada ? "Prueba comercial" : pv.extendida ? "Acceso de prueba" : "Prueba gratis", hasta = pv.ilimitada ? "" : ` hasta el ${new Date(pv.hasta).toLocaleString("es-CL", {weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23"})}`;
   if (MODO.cargando) { el.innerHTML = `<span class="demo-txt"><b>${etiqueta}</b>Leyendo ${prMedios().length} medios para ${esc(S.org)}<span class="demo-mas">; puede tardar hasta un minuto</span>…</span>`; return; }
   el.innerHTML = `<span class="demo-txt"><b>${MODO.actualizando ? "Actualizando…" : etiqueta}</b>${real ? `${plural(i.notas.length, "nota", "notas")} en ${i.ventana_dias} días<span class="demo-mas"> · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : i.ia_parcial ? " · tono clasificado en parte" : " · tono sin clasificar"}${hasta}</span>` : `<span class="demo-mas">${hasta.trim()}</span>`}</span>`;
 }

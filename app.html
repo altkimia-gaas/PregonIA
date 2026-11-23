@@ -3874,7 +3874,7 @@ async function insEnviar(e){
     try {
       const {prueba} = await insLlamar({accion: "verificar", id: INS.id, codigo});
       try { localStorage.setItem(PRUEBA_KEY, JSON.stringify({...prueba, reg: INS.reg, terr: INS.terr})); } catch(err) {}
-      fin(); toast(prueba.ilimitada ? "Correo validado. Prueba comercial: sin límite de tiempo en este navegador." : `Correo validado. Tu prueba gratis de 48 horas está activa hasta el ${new Date(prueba.hasta).toLocaleString("es-CL", {weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"})}.`);
+      fin(); toast(prueba.ilimitada ? "Correo validado. Prueba comercial: sin límite de tiempo en este navegador." : prueba.extendida ? `Correo validado. Tu acceso de prueba está activo hasta el ${new Date(prueba.hasta).toLocaleDateString("es-CL", {day: "numeric", month: "long", year: "numeric"})}.` : `Correo validado. Tu prueba gratis de 48 horas está activa hasta el ${new Date(prueba.hasta).toLocaleString("es-CL", {weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"})}.`);
       insContinuar({rol: INS.rol || prueba.rol, terr: INS.terr, reg: INS.reg});
     } catch (err) { fin(); insError(err.message, c); c.select?.(); }
     return;
@@ -5970,7 +5970,7 @@ function pintarModo(){
   const pv = pruebaVigente(), i = MODO.info, real = MODO.tipo === "real" && i;
   if (!pv) { el.hidden = true; return; }
   el.hidden = false; el.className = "demo real";
-  const etiqueta = pv.ilimitada ? "Prueba comercial" : "Prueba gratis", hasta = pv.ilimitada ? "" : ` hasta el ${new Date(pv.hasta).toLocaleString("es-CL", {weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23"})}`;
+  const etiqueta = pv.ilimitada ? "Prueba comercial" : pv.extendida ? "Acceso de prueba" : "Prueba gratis", hasta = pv.ilimitada ? "" : ` hasta el ${new Date(pv.hasta).toLocaleString("es-CL", {weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23"})}`;
   if (MODO.cargando) { el.innerHTML = `<span class="demo-txt"><b>${etiqueta}</b>Leyendo ${prMedios().length} medios para ${esc(S.org)}<span class="demo-mas">; puede tardar hasta un minuto</span>…</span>`; return; }
   el.innerHTML = `<span class="demo-txt"><b>${MODO.actualizando ? "Actualizando…" : etiqueta}</b>${real ? `${plural(i.notas.length, "nota", "notas")} en ${i.ventana_dias} días<span class="demo-mas"> · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : i.ia_parcial ? " · tono clasificado en parte" : " · tono sin clasificar"}${hasta}</span>` : `<span class="demo-mas">${hasta.trim()}</span>`}</span>`;
 }
@@ -6226,7 +6226,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search) || !pruebaV
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "157e7907c000", K = "app";
+  const V = "fca059336ccd", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
