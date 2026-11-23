@@ -284,7 +284,7 @@ function insCuerpo(){
   } else {
     const t = insTerritorios(INS.rol);
     cuerpo = `<div class="ent-tit"><span class="ent-pasoT">Paso 1 de 2</span><h2 id="insT" tabindex="-1">Activa tu prueba gratis</h2>
-        <p>48 horas sin costo ni tarjeta. Tu edición parte con el último mes de noticias reales de tu territorio. Te enviaremos un código para validar tu correo.</p></div>
+        <p>7 días sin costo ni tarjeta. Tu edición parte con el último mes de noticias reales de tu territorio. Te enviaremos un código para validar tu correo.</p></div>
       <div class="ent-bloque"><label class="ent-campo" for="insNom">Nombre y apellido</label><input id="insNom" class="ent-in" value="${esc(INS.nombre)}" autocomplete="name" maxlength="120"></div>
       <div class="ent-bloque"><label class="ent-campo" for="insCor">Correo</label><input id="insCor" class="ent-in" type="email" value="${esc(INS.correo)}" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="160"></div>
       <div class="ent-bloque"><label class="ent-campo" for="insRol">Tipo de autoridad</label><select id="insRol" class="ent-in"><option value="">Elige una opción</option>${ENT_ROLES.map(r => `<option value="${r.k}" ${INS.rol === r.k ? "selected" : ""}>${esc(r.n)}</option>`).join("")}</select></div>
@@ -335,7 +335,7 @@ async function insEnviar(e){
     try {
       const {prueba} = await insLlamar({accion: "verificar", id: INS.id, codigo});
       try { localStorage.setItem(PRUEBA_KEY, JSON.stringify({...prueba, terr: INS.terr})); } catch(err) {}
-      fin(); toast(prueba.ilimitada ? "Correo validado. Prueba comercial: sin límite de tiempo en este navegador." : `Correo validado. Tu prueba gratis de 48 horas está activa hasta el ${new Date(prueba.hasta).toLocaleString("es-CL", {weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"})}.`);
+      fin(); toast(prueba.ilimitada ? "Correo validado. Prueba comercial: sin límite de tiempo en este navegador." : `Correo validado. Tu prueba gratis de 7 días está activa hasta el ${new Date(prueba.hasta).toLocaleString("es-CL", {weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"})}.`);
       insContinuar({rol: INS.rol || prueba.rol, terr: INS.terr});
     } catch (err) { fin(); insError(err.message, c); c.select?.(); }
     return;

@@ -7,7 +7,7 @@
 // avisa al equipo comercial y devuelve la vigencia de la prueba.
 // Variables: SUPABASE_URL y SUPABASE_SECRET_KEY, RESEND_API_KEY (integración Resend–Vercel) y AVISOS_REMITENTE (por defecto
 // pregonia@avala.altkimia.com, dominio verificado en Resend; debe ser de un dominio verificado en
-// Resend: con el remitente de pruebas solo llegan correos a la cuenta dueña), CONTACTO_DESTINO, PRUEBA_HORAS (por defecto 48).
+// Resend: con el remitente de pruebas solo llegan correos a la cuenta dueña), CONTACTO_DESTINO, PRUEBA_HORAS (por defecto 168, 7 días).
 import { randomInt, randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import { sb, json } from "./_servidor.js";
 
@@ -24,7 +24,7 @@ const resumen = (correo, codigo, sal) => createHash("sha256").update(`${sal}:${c
 const SIN_LIMITE = (process.env.PRUEBA_SIN_LIMITE || "avillalobos@altkimia.com").split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
 const sinLimite = correo => SIN_LIMITE.includes(String(correo || "").toLowerCase());
 const fueraLimpieza = SIN_LIMITE.length ? `&correo=not.in.(${SIN_LIMITE.map(c => encodeURIComponent(`"${c}"`)).join(",")})` : "";
-const horas = () => Math.max(1, Math.min(24 * 30, parseInt(process.env.PRUEBA_HORAS, 10) || 48));
+const horas = () => Math.max(1, Math.min(24 * 30, parseInt(process.env.PRUEBA_HORAS, 10) || 168));
 
 function excedido(ip){
   const ahora = Date.now(), lista = (visitas.get(ip) || []).filter(t => ahora - t < VENTANA_MS);
