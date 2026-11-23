@@ -65,7 +65,7 @@ const ZONAS_II = {
 };
 const ACTIVA_AQUI = id => !!(REGIONES[id] && REGIONES[id].activa) || typeof window === "undefined";
 if (ACTIVA_AQUI("II")) Object.entries(ZONAS_II).forEach(([rol, zs]) => { ZONAS[rol] = (ZONAS[rol] || []).concat(zs); });
-const provinciaDe = c => Object.keys(PROVINCIAS).find(k => PROVINCIAS[k].includes(c)) || "";
+const provinciaDe = c => { for (const r of Object.values(REGIONES)) { const k = Object.keys(r.provincias).find(pv => r.provincias[pv].includes(c)); if (k) return k; } return ""; };
 /* n: nombre con que se le conoce; c: nombre completo; p: partido o pacto al momento de la elección; g: F o M. */
 const nuevaAut = (rol, zona, n, c, p, g) => ({id: rol.slice(0, 3) + "-" + n.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-"), rol, zona, n, c, p, g});
 const AUTORIDADES = [
@@ -172,8 +172,8 @@ const AUTORIDADES = [
    preside el Senado desde el 11 mar 2026); gobernador 2025-2029 (segunda vuelta del 24 nov 2024, 24horas); delegada presidencial
    regional (nómina del 7 feb 2026, Emol y 24horas; energia.gob.cl, abr 2026) y delegados provinciales (13 mar 2026, Emol, 24horas,
    interior.gob.cl; Diario Oficial del 24 sep 2026); alcaldes 2024-2028 (Emol, oct 2024; reunión con el Presidente, Subdere, 2 oct 2026;
-   Ollagüe solo con el resultado de 2024); consejo regional 2025-2029 (Wikipedia «Regional Council of Antofagasta», verificar con
-   el Gobierno Regional antes de usarla con un cliente). De alcaldes y delegados provinciales no se registra partido. */
+   Ollagüe según el reporte comunal 2026 de la BCN); consejo regional 2025-2029 (Wikipedia «Regional Council of Antofagasta»; el Gobierno Regional
+   no publica la nómina en una página que se pueda consultar, confirmarla con el cliente antes de venderle). De alcaldes y delegados provinciales no se registra partido. */
 const AUTORIDADES_II = [
   nuevaAut("diputado", "D3", "Sebastián Videla", "Sebastián Videla Castillo", "Ind.-PL", "M"),
   nuevaAut("diputado", "D3", "Fabián Ossandón", "Fabián Ossandón Briceño", "PDG", "M"),
@@ -215,6 +215,13 @@ const AUTORIDADES_II = [
 ];
 if (ACTIVA_AQUI("II")) AUTORIDADES.push(...AUTORIDADES_II);
 const zonaDe = (rol, id) => (ZONAS[rol] || []).find(z => z.id === id) || null;
+/* Región de una zona y zonas de una región, para los cargos cuyo territorio depende de la región (senado, gobierno y delegaciones). */
+const comunasDeProvincia = pv => { for (const r of Object.values(REGIONES)) if (r.provincias[pv]) return r.provincias[pv]; return []; };
+const regionDeZona = (rol, id) => { const z = zonaDe(rol, id); return z ? regionDeComuna(z.comunas[0]) : null; };
+const zonasDeRegion = (rol, reg) => (ZONAS[rol] || []).filter(z => regionDeComuna(z.comunas[0]) === reg);
+const esZonaRegional = id => /(^|-)REG$/.test(id);
+/* Nombre del órgano con su región: «Consejo Regional de Antofagasta» para un consejero de la II. */
+const organoDe = (rol, reg) => ((CARGOS[rol] || {}).organo || "").replace(/ de Valparaíso$/, " de " + (REGIONES[reg] || REGIONES[REGION_DEFECTO]).corto);
 const cargoDe = (rol, g) => CARGOS[rol] ? (g === "F" ? CARGOS[rol].f : CARGOS[rol].m) : "";
 /* Formas en que la prensa nombra a una autoridad: nombre conocido, nombre completo y cargo + primer apellido. */
 function variantesNombre(a){
@@ -227,6 +234,6 @@ function variantesNombre(a){
   if (a.rol === "core") { out.add("core " + sin(ap)); out.add((a.g === "F" ? "consejera " : "consejero ") + sin(ap)); }  // «consejero Urrutia», sin «regional»
   // La prensa abrevia: «gobernador Mundaca», «delegado Millones», «delegada presidencial provincial Loyola».
   if (a.rol === "gobernador") out.add((a.g === "F" ? "gobernadora " : "gobernador ") + sin(ap));
-  if (a.rol === "delegado") { const d = a.g === "F" ? "delegada " : "delegado "; out.add(d + sin(ap)); if (!/(^|-)REG$/.test(a.zona)) out.add(d + "presidencial provincial " + sin(ap)); else out.add(d + "presidencial regional " + sin(ap)); }
+  if (a.rol === "delegado") { const d = a.g === "F" ? "delegada " : "delegado "; out.add(d + sin(ap)); if (!esZonaRegional(a.zona)) out.add(d + "presidencial provincial " + sin(ap)); else out.add(d + "presidencial regional " + sin(ap)); }
   return [...out].filter(x => x.split(" ").length >= 2);
 }

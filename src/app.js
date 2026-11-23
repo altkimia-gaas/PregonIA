@@ -1129,7 +1129,7 @@ function gestionCard(ms, c){
 const VECINAS = {};
 function vecinasCard(){
   if (esAut() || !/^https?:$/.test(location.protocol)) return "";
-  const prov = provinciaDe(S.org); if (!prov || (PROVINCIAS[prov] || []).length < 2) return "";
+  const prov = provinciaDe(S.org); if (!prov || comunasDeProvincia(prov).length < 2) return "";
   const e = VECINAS[prov];
   if (!e || (!e.cargando && Date.now() - e.ts > 30 * 6e4)) pedirVecinas(prov);
   return `<div class="card" id="vecinasCard" style="margin-top:14px">${vecinasHtml(VECINAS[prov], prov)}</div>`;
@@ -1681,7 +1681,7 @@ async function iaServidor(){
 let samplePromise = ((window.claude && window.claude.use) ? window.claude.use("sample").catch(() => null) : Promise.resolve(null)).then(s => s || iaServidor());
 let ctl = null;
 function prompt(m, pieza, enfoque, base){
-  return `Eres el asistente de comunicaciones de PregonIA para ${esAut() ? "el equipo de " + inst() + " (" + cuenta().perfil.zonaNombre + ", Región de Valparaíso)" : inst()}, en Chile. Redacta en español de Chile: ${PIEZAS[pieza][2]}. Enfoque: ${ENFOQUES[enfoque]}.
+  return `Eres el asistente de comunicaciones de PregonIA para ${esAut() ? "el equipo de " + inst() + " (" + cuenta().perfil.zonaNombre + ", " + regionCuenta().nombre + ")" : inst()}, en Chile. Redacta en español de Chile: ${PIEZAS[pieza][2]}. Enfoque: ${ENFOQUES[enfoque]}.
 
 Reglas obligatorias:
 1. Usa solo datos que estén en los ${datosLbl()} o en la NOTICIA. Si falta un dato necesario, escribe [completar: qué dato falta]. No inventes cifras, fechas, nombres ni compromisos. Los datos marcados [Ejemplo] o [Completar] son ficticios o pendientes: si usas uno, deja la marca pegada al dato en el texto (por ejemplo, «[Ejemplo] 800 000 000»); nunca lo presentes como dato real.

@@ -238,7 +238,7 @@ async function cargarDatosPiloto(){
   const c = cuenta(), pend = PILOTO.editor ? leerPendiente() : null;
   // Lo que la IA ya confirmó como propio se ancla a la cuenta: la comuna, o el nombre de la autoridad (su tema núcleo).
   const ancla = esAut(c) ? " " + c.perfil.variantes[0] : " " + org + " comuna";
-  const anclaDe = r => esAut(c) && r.sobre === "institucion" ? " " + norm(CARGOS[c.perfil.rol].organo) : ancla;  // lo de su institución va a ese tema, no a la persona
+  const anclaDe = r => esAut(c) && r.sobre === "institucion" ? " " + norm(organoDe(c.perfil.rol, regionDeComuna((c.perfil.comunas || [])[0]))) : ancla;  // lo de su institución va a ese tema, no a la persona
   if (pend) {  // temas cambiados en este equipo que no alcanzaron a llegar a la base: se suben y prevalecen
     const cfg = JSON.parse(pend.cfg);
     const d = await pide(sb.from("municipios").update({config: cfg, actualizado: new Date().toISOString()}).eq("id", mid).select("id"));
