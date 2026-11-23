@@ -43,8 +43,8 @@ async function paresDe(a, desde){
     return {n_: x.n, p: x.p || (a.rol === "alcalde" ? x.zona : ""), n, yo: x === a};
   })).then(r => r.filter(x => x.n !== null));
 }
-async function deAutoridad(u){
-  const a = sujetoDe(u); if (!a) return json({ error: "Autoridad no disponible" }, 400);
+async function deAutoridad(u, req){
+  const a = sujetoDe(u); if (!a || !regionAbierta(regionDeAut(a).id, req)) return json({ error: "Autoridad no disponible" }, 400);
   const dias = diasDe(u), z = zonaDe(a.rol, a.zona), cargo = cargoDe(a.rol, a.g), ahora = Date.now(), desde = ahora - dias * 864e5, desdePares = ahora - VENTANA_DIAS * 864e5;
   // Primero lo que trae notas; la comparación con pares va después en la cola de Google News, mientras la IA clasifica.
   const [cat, gn, rs] = await Promise.all([leerCatalogo(regionDeAut(a).id), leerSujeto(a, dias).catch(() => null), leerRedes(redesDe(u))]);
@@ -78,12 +78,12 @@ function armar(lote, porI, deAutoridad = false){
    los últimos días y sus titulares más recientes. Solo los medios del catálogo, sin Google News ni IA: es barato y sirve para ver
    dónde se mueve la prensa del territorio, no para medir a la autoridad. ?pulso=1&rol=diputado&zona=D7 */
 const PULSO_DIAS = 3;
-async function pulso(u){
+async function pulso(u, req){
   // ?prov=San Antonio: las comunas de una provincia (comparación de un municipio con sus vecinas). ?todos=1: todos los titulares.
   const prov = u.searchParams.get("prov"), todos = u.searchParams.has("todos");
   const provs = prov && (Object.values(REGIONES).find(r => r.provincias[prov]) || {}).provincias;
   const z = prov ? (provs ? {n: "Provincia de " + prov, comunas: provs[prov]} : null) : zonaDe(u.searchParams.get("rol"), u.searchParams.get("zona"));
-  if (!z || z.comunas.length < 2) return json({error: "Zona no disponible"}, 400);
+  if (!z || z.comunas.length < 2 || !regionAbierta(regionDeComuna(z.comunas[0]), req)) return json({error: "Zona no disponible"}, 400);
   const ahora = Date.now(), desde = ahora - PULSO_DIAS * 864e5, mitad = ahora - 864e5, cat = await leerCatalogo(regionDeComuna(z.comunas[0]));
   // Solo lo que nombra a la comuna en el titular o la bajada: un medio local que cubre varias comunas no suma todas sus notas a cada una.
   const RUTINA = /pronostico del tiempo|el tiempo en|horoscopo|resultados del loto|farmacias de turno|cortes programados de/;
@@ -114,8 +114,8 @@ export async function GET(req){
     return json({errores: r.errores, detalle: r.detalle, total: r.items.length, porFuente: r.items.reduce((o, x) => (o[x.m.nombre] = (o[x.m.nombre] || 0) + 1, o), {}),
       items: r.items.slice(0, 60).map(x => ({fuente: x.m.nombre, fecha: new Date(x.fecha).toISOString(), titulo: x.titulo}))}, 200, {"cache-control": "public, max-age=0, s-maxage=600"});
   }
-  if (u.searchParams.has("pulso")) return pulso(u);
-  if (u.searchParams.has("autoridad") || u.searchParams.has("rol")) return deAutoridad(u);
+  if (u.searchParams.has("pulso")) return pulso(u, req);
+  if (u.searchParams.has("autoridad") || u.searchParams.has("rol")) return deAutoridad(u, req);
   const comuna = u.searchParams.get("comuna") || "Casablanca";
   if (!COMUNAS[comuna] || !regionAbierta(regionDeComuna(comuna), req)) return json({ error: "Comuna no disponible" }, 400);
   const dias = diasDe(u), ahora = Date.now(), desde = ahora - dias * 864e5;

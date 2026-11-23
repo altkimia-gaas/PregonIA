@@ -48,6 +48,23 @@ const ZONAS = {
     [["MM", "Marga Marga"], ["QUI", "Quillota"], ["SA", "San Antonio"], ["SF", "San Felipe de Aconcagua"], ["LA", "Los Andes"], ["PET", "Petorca"], ["IP", "Isla de Pascua"]]
       .map(([id, pv]) => ({id, n: "Provincia de " + pv, comunas: PROVINCIAS[pv]})))
 };
+/* Región de Antofagasta (II), en preparación. Sus zonas y su nómina se suman a ZONAS y AUTORIDADES en el servidor siempre
+   (para probarla con la clave del programador) y en la aplicación solo cuando la región está activa (src/regiones.js), para que
+   la entrada por rol y zona no la ofrezca antes de tiempo. Ids de zona propios: D3, C3, ANT, LOA, TOC e II-REG (la delegación
+   regional gobierna en forma directa la provincia de Antofagasta, por eso no hay delegación provincial de Antofagasta). */
+const COMUNAS_II = COMUNAS_DE("II"), PROV_II = REGIONES.II.provincias;
+const ZONAS_II = {
+  diputado: [{id: "D3", n: "Distrito 3", comunas: COMUNAS_II}],
+  senador: [{id: "C3", n: "Circunscripción 3 · Región de Antofagasta", comunas: COMUNAS_II}],
+  core: [{id: "ANT", n: "Antofagasta", comunas: PROV_II["Antofagasta"]}, {id: "LOA", n: "El Loa", comunas: PROV_II["El Loa"]}, {id: "TOC", n: "Tocopilla", comunas: PROV_II["Tocopilla"]}],
+  concejal: COMUNAS_II.map(c => ({id: c, n: c, comunas: [c]})),
+  alcalde: COMUNAS_II.map(c => ({id: c, n: c, comunas: [c]})),
+  gobernador: [{id: "II-REG", n: "Región de Antofagasta", comunas: COMUNAS_II}],
+  delegado: [{id: "II-REG", n: "Delegación regional · Región de Antofagasta", comunas: COMUNAS_II},
+    {id: "LOA", n: "Provincia de El Loa", comunas: PROV_II["El Loa"]}, {id: "TOC", n: "Provincia de Tocopilla", comunas: PROV_II["Tocopilla"]}]
+};
+const ACTIVA_AQUI = id => !!(REGIONES[id] && REGIONES[id].activa) || typeof window === "undefined";
+if (ACTIVA_AQUI("II")) Object.entries(ZONAS_II).forEach(([rol, zs]) => { ZONAS[rol] = (ZONAS[rol] || []).concat(zs); });
 const provinciaDe = c => Object.keys(PROVINCIAS).find(k => PROVINCIAS[k].includes(c)) || "";
 /* n: nombre con que se le conoce; c: nombre completo; p: partido o pacto al momento de la elección; g: F o M. */
 const nuevaAut = (rol, zona, n, c, p, g) => ({id: rol.slice(0, 3) + "-" + n.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-"), rol, zona, n, c, p, g});
@@ -150,6 +167,53 @@ const AUTORIDADES = [
   nuevaAut("delegado", "PET", "Andrés Soza", "Andrés Soza", "", "M"),
   nuevaAut("delegado", "IP", "Mai Teao", "Mai Teao", "", "M")
 ];
+/* Nómina de la Región de Antofagasta al 23 de noviembre de 2026. Fuentes: diputados 2026-2030 del distrito 3 (camara.cl,
+   fichas de Videla, Ossandón, Hernando, Arqueros y Araya); senadores 2022-2030 de la circunscripción 3 (senado.cl; Paulina Núñez
+   preside el Senado desde el 11 mar 2026); gobernador 2025-2029 (segunda vuelta del 24 nov 2024, 24horas); delegada presidencial
+   regional (nómina del 7 feb 2026, Emol y 24horas; energia.gob.cl, abr 2026) y delegados provinciales (13 mar 2026, Emol, 24horas,
+   interior.gob.cl; Diario Oficial del 24 sep 2026); alcaldes 2024-2028 (Emol, oct 2024; reunión con el Presidente, Subdere, 2 oct 2026;
+   Ollagüe solo con el resultado de 2024); consejo regional 2025-2029 (Wikipedia «Regional Council of Antofagasta», verificar con
+   el Gobierno Regional antes de usarla con un cliente). De alcaldes y delegados provinciales no se registra partido. */
+const AUTORIDADES_II = [
+  nuevaAut("diputado", "D3", "Sebastián Videla", "Sebastián Videla Castillo", "Ind.-PL", "M"),
+  nuevaAut("diputado", "D3", "Fabián Ossandón", "Fabián Ossandón Briceño", "PDG", "M"),
+  nuevaAut("diputado", "D3", "Marcela Hernando", "Marcela Hernando Pérez", "PR", "F"),
+  nuevaAut("diputado", "D3", "Carlo Arqueros", "Carlo Arqueros Pizarro", "Republicanos", "M"),
+  nuevaAut("diputado", "D3", "Jaime Araya", "Jaime Araya Guerrero", "Ind.-PPD", "M"),
+  nuevaAut("senador", "C3", "Paulina Núñez", "Paulina Núñez Urrutia", "RN", "F"),
+  nuevaAut("senador", "C3", "Pedro Araya", "Pedro Araya Guerrero", "PPD", "M"),
+  nuevaAut("senador", "C3", "Esteban Velásquez", "Esteban Velásquez Núñez", "FRVS", "M"),
+  nuevaAut("core", "ANT", "Alejandro Cifuentes", "Alejandro Cifuentes Mancilla", "Republicanos", "M"),
+  nuevaAut("core", "ANT", "Duzanka Flores", "Duzanka Flores Rojas", "PSC", "F"),
+  nuevaAut("core", "ANT", "Andrea Merino", "Andrea Merino Díaz", "PS", "F"),
+  nuevaAut("core", "ANT", "Paula Celis", "Paula Celis Sierralta", "PDG", "F"),
+  nuevaAut("core", "ANT", "Gonzalo Santolaya", "Gonzalo Santolaya Goicovic", "UDI", "M"),
+  nuevaAut("core", "ANT", "Paula Orellana", "Paula Orellana Uribe", "FA", "F"),
+  nuevaAut("core", "ANT", "Yasna Meneses", "Yasna Meneses González", "Republicanos", "F"),
+  nuevaAut("core", "ANT", "Víctor Guzmán", "Víctor Guzmán Rojas", "PC", "M"),
+  nuevaAut("core", "LOA", "Sandra Berna", "Sandra Berna Martínez", "DC", "F"),
+  nuevaAut("core", "LOA", "Emilio Mavrakis", "Emilio Mavrakis Assad", "Republicanos", "M"),
+  nuevaAut("core", "LOA", "Jorge Berna", "Jorge Berna Mendoza", "PDG", "M"),
+  nuevaAut("core", "LOA", "Dinka López", "Dinka López Durán", "FRVS", "F"),
+  nuevaAut("core", "LOA", "Luis Payero", "Luis Payero Cruz", "PS", "M"),
+  nuevaAut("core", "TOC", "Humberto Fuentes", "Humberto Fuentes Lagos", "Ind.-FRVS", "M"),
+  nuevaAut("core", "TOC", "Gustavo Carrasco", "Gustavo Carrasco Ortiz", "PPD", "M"),
+  nuevaAut("core", "TOC", "Patricio Tapia", "Patricio Tapia Julio", "DC", "M"),
+  nuevaAut("alcalde", "Antofagasta", "Sacha Razmilic", "Sacha Razmilic Burgos", "", "M"),
+  nuevaAut("alcalde", "Calama", "Eliecer Chamorro", "Eliecer Chamorro Vargas", "", "M"),
+  nuevaAut("alcalde", "Mejillones", "Marcelino Carvajal", "Marcelino Carvajal Ferreira", "", "M"),
+  nuevaAut("alcalde", "Sierra Gorda", "Adriana Rivera", "Adriana Rivera Vega", "", "F"),
+  nuevaAut("alcalde", "Taltal", "Mario Acuña", "Mario Acuña Villalobos", "", "M"),
+  nuevaAut("alcalde", "Ollagüe", "Jhean Ramírez", "Jhean Ramírez Domínguez", "", "M"),
+  nuevaAut("alcalde", "San Pedro de Atacama", "Justo Zuleta", "Justo Zuleta Santander", "", "M"),
+  nuevaAut("alcalde", "Tocopilla", "Ljubica Kurtovic", "Ljubica Kurtovic Cortés", "", "F"),
+  nuevaAut("alcalde", "María Elena", "Viviana Cuello", "Viviana Cuello Rivera", "", "F"),
+  nuevaAut("gobernador", "II-REG", "Ricardo Díaz", "Ricardo Díaz Cortés", "Ind.", "M"),
+  nuevaAut("delegado", "II-REG", "Katherine López", "Katherine López Rivera", "UDI", "F"),
+  nuevaAut("delegado", "LOA", "Cristián Ramírez", "Cristián Ramírez", "", "M"),
+  nuevaAut("delegado", "TOC", "Daniela Vecchiola", "Daniela Vecchiola Riquelme", "", "F")
+];
+if (ACTIVA_AQUI("II")) AUTORIDADES.push(...AUTORIDADES_II);
 const zonaDe = (rol, id) => (ZONAS[rol] || []).find(z => z.id === id) || null;
 const cargoDe = (rol, g) => CARGOS[rol] ? (g === "F" ? CARGOS[rol].f : CARGOS[rol].m) : "";
 /* Formas en que la prensa nombra a una autoridad: nombre conocido, nombre completo y cargo + primer apellido. */
@@ -163,6 +227,6 @@ function variantesNombre(a){
   if (a.rol === "core") { out.add("core " + sin(ap)); out.add((a.g === "F" ? "consejera " : "consejero ") + sin(ap)); }  // «consejero Urrutia», sin «regional»
   // La prensa abrevia: «gobernador Mundaca», «delegado Millones», «delegada presidencial provincial Loyola».
   if (a.rol === "gobernador") out.add((a.g === "F" ? "gobernadora " : "gobernador ") + sin(ap));
-  if (a.rol === "delegado") { const d = a.g === "F" ? "delegada " : "delegado "; out.add(d + sin(ap)); if (a.zona !== "REG") out.add(d + "presidencial provincial " + sin(ap)); else out.add(d + "presidencial regional " + sin(ap)); }
+  if (a.rol === "delegado") { const d = a.g === "F" ? "delegada " : "delegado "; out.add(d + sin(ap)); if (!/(^|-)REG$/.test(a.zona)) out.add(d + "presidencial provincial " + sin(ap)); else out.add(d + "presidencial regional " + sin(ap)); }
   return [...out].filter(x => x.split(" ").length >= 2);
 }

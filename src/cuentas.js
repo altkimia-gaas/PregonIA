@@ -118,7 +118,7 @@ const unir = a => a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " y " 
 function zonaDeComuna(rol, c){
   if (rol === "municipio" || rol === "concejal") return c;
   if (ZONA_FIJA[rol]) return ZONA_FIJA[rol];
-  if (rol === "delegado") { const z = ZONAS.delegado.find(x => x.id !== "REG" && x.comunas.includes(c)); return z ? z.id : "REG"; }  // provincia de Valparaíso: la delegación regional
+  if (rol === "delegado") { const z = ZONAS.delegado.find(x => !/(^|-)REG$/.test(x.id) && x.comunas.includes(c)); return z ? z.id : "REG"; }  // provincia de Valparaíso: la delegación regional
   const z = (ZONAS[rol] || []).find(x => x.comunas.includes(c)); return z ? z.id : "";
 }
 const entZona = () => ENT.rol === "municipio" || ENT.rol === "concejal" ? (COMUNAS_V.includes(ENT.zona) ? {id: ENT.zona, n: ENT.zona, comunas: [ENT.zona]} : null) : zonaDe(ENT.rol, ENT.zona);
