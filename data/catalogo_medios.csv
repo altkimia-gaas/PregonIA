@@ -1,152 +1,175 @@
-id,nombre,ambito,provincia,comuna,tipo,nivel,metodo,url_lectura,estado,observacion
-1,Meganoticias,nacional,,,TV,A,sitemap_noticias,https://www.meganoticias.cl/sitemaps/sitemap-news.xml,listo,Usar news:publication_date y no la fecha de la URL
-2,BioBioChile,nacional,,,Radio,A,rss,https://www.biobiochile.cl/static/feed-google,listo,Responde como application/octet-stream; el sitemap declarado está desactualizado
-3,Emol,nacional,,,Diario,A,google_news,,restringido,robots.txt bloquea bots de IA y Googlebot-News
-4,La Tercera,nacional,,,Diario,A,google_news,,restringido,robots.txt bloquea unos 55 bots de IA; muro parcial
-5,T13,nacional,,,TV,A,portada,https://www.t13.cl/,listo,Sin RSS ni mapa de noticias: se lee la portada (robots.txt la permite); la fecha va al final de cada dirección
-6,24 Horas,nacional,,,TV,A,sitemap_mensual,https://www.24horas.cl/24horas/site/sitemap_pags.xml,listo,"Índice de mapas mensuales comprimidos: se lee el del mes en curso, con fecha de modificación; titular desde la dirección"
-7,Cooperativa,nacional,,,Radio,A,sitemap_noticias,https://www.cooperativa.cl/noticias/sitemap_news.xml,listo,Su RSS no trae pubDate
-8,CNN Chile,nacional,,,TV,A,sitemap_noticias,https://www.cnnchile.com/_files/sitemaps/sitemap_news.xml,listo,Sin RSS
-9,CHV Noticias,nacional,,,TV,A,sitemap_noticias,https://www.chilevision.cl/_files/sitemaps/sitemap_news.xml,requiere_ajuste,Filtrar ruta /noticias/
-10,Diario Financiero,nacional,,,Economía,A,sitemap_noticias,https://www.df.cl/noticias/site/sitemap_news.xml,listo,Muro de pago; incluye notas de Capital
-11,El Mostrador,nacional,,,Nativo digital,A,sitemap_noticias,https://www.elmostrador.cl/sitemap_news.xml,listo,Sitemap con prefijo n: (corregido 11 nov 2026); su RSS está congelado desde 2021
-12,CIPER,nacional,,,Investigación,A,rss,https://www.ciperchile.cl/feed/,listo,
-13,Infobae Chile,nacional,,,Internacional,A,rss,https://www.infobae.com/arc/outboundfeeds/rss/tags_slug/chile/,listo,Feed de la etiqueta Chile; incluye notas de otros países que mencionan Chile
-14,El País Chile,nacional,,,Internacional,A,google_news,,restringido,robots.txt bloquea bots de IA y lectores de feeds
-15,ADN Radio,nacional,,,Radio,B,rss,https://www.adnradio.cl/arc/outboundfeeds/rss/,listo,
-16,Radio Agricultura,nacional,,,Radio,B,portada,https://www.radioagricultura.cl/noticias/,listo,"robots.txt cierra /_files/ (donde están sus mapas): se lee la sección Noticias; sin fecha en la dirección, vale la de la primera lectura"
-17,Duna,nacional,,,Radio,B,sitemap,https://duna.cl/sitemaps/articles.xml,listo,"Mapa de artículos de 8 MB ordenado del más nuevo al más antiguo: se leen los primeros 1,5 MB"
-18,Radio Universidad de Chile,nacional,,,Radio,B,portada,https://radio.uchile.cl/,listo,"robots.txt cierra /feed/ desde el 26-oct-2026 y no hay mapa del sitio: se lee la portada, con la fecha en la dirección"
-19,Pauta,nacional,,,Radio y digital,B,sitemap_noticias,https://www.pauta.cl/sitemap_news.xml,listo,Sitemap con prefijo n: (corregido 11 nov 2026)
-20,El Mercurio,nacional,,,Diario,B,google_news,,restringido,Suscripción; bloquea bots de IA
-21,La Segunda,nacional,,,Diario,B,google_news,,restringido,Bloquea bots de IA; suscripción
-22,Las Últimas Noticias,nacional,,,Diario,B,google_news,https://www.lun.com/,listo,E-paper: los titulares se abren con JavaScript y no tienen dirección propia; solo vía Google News
-23,SoyChile,nacional,,,Red regional,B,portada,https://www.soychile.cl/,listo,"Portada nacional, con fecha en la dirección; las ediciones de Valparaíso, San Antonio y Quillota se leen aparte"
-24,La Cuarta,nacional,,,Diario,B,google_news,,restringido,Mismo bloqueo que La Tercera
-25,Publimetro,nacional,,,Diario,B,rss,https://www.publimetro.cl/arc/outboundfeeds/rss/?outputType=xml,restringido,"Bloquea bots de IA en robots.txt; no se lee directo, solo vía Google News"
-26,Ex-Ante,nacional,,,Política y negocios,B,rss,https://www.ex-ante.cl/feed/,requiere_ajuste,Firewall filtra lectores; 7 ítems por consulta
-27,The Clinic,nacional,,,Nativo digital,B,rss,https://www.theclinic.cl/feed/,requiere_ajuste,Firewall rechaza algunos lectores
-28,El Dínamo,nacional,,,Nativo digital,B,sitemap_noticias,https://www.eldinamo.cl/_files/sitemaps/sitemap_news.xml,listo,XML puede llegar truncado; reintentar
-29,El Ciudadano,nacional,,,Nativo digital,B,rss,https://www.elciudadano.com/feed/,listo,
-30,El Desconcierto,nacional,,,Nativo digital,B,rss,https://eldesconcierto.cl/rss/pages/ultimas-noticias.xml,listo,Respaldo: /sitemap-news.xml
-31,El Líbero,nacional,,,Nativo digital,B,sitemap_noticias,https://ellibero.cl/news-sitemap.xml,listo,RSS desactivado
-32,Diario Constitucional,nacional,,,Judicial,B,rss,https://www.diarioconstitucional.cl/feed/,listo,
-33,La Red,nacional,,,TV,C,rss,https://www.lared.cl/feed,listo,Predomina promoción de programación
-34,TV+,nacional,,,TV,C,sitemap_noticias,https://www.tvmas.tv/_files/sitemaps/sitemap_news.xml,requiere_ajuste,Dominio migró a tvmas.tv
-35,Radio Nuevo Mundo,nacional,,,Radio,C,rss,https://radionuevomundo.cl/feed/,listo,
-36,La Nación,nacional,,,Diario digital,C,rss,https://www.lanacion.cl/feed/,listo,Filtrar por categoría
-37,El Siglo,nacional,,,Diario digital,C,rss,https://elsiglo.cl/feed/,listo,
-38,Diario Estrategia,nacional,,,Economía,C,sitemap_noticias,https://www.diarioestrategia.cl/sitemap/news,requiere_ajuste,Bloquea el user-agent por defecto de feedparser
-39,Chócale,nacional,,,Economía y consumo,C,rss,https://chocale.cl/feed/,listo,
-40,Bloomberg Línea Chile,nacional,,,Internacional,C,rss_filtrado,https://www.bloomberglinea.com/arc/outboundfeeds/google-news-feed-latam/?outputType=xml,requiere_ajuste,Se leen solo las notas de /latinoamerica/chile/
-41,Interferencia,nacional,,,Investigación,C,rss,https://interferencia.cl/rss.xml,listo,Muro por cuota mensual
-42,El Periodista,nacional,,,Nativo digital,C,rss,https://www.elperiodista.cl/feed/,listo,
-43,Cambio21,nacional,,,Nativo digital,C,rss,https://cambio21.cl/rss,listo,
-44,Página 7,nacional,,,Nativo digital,C,sitemap_noticias,https://www.pagina7.cl/_files/sitemaps/sitemap_news.xml,listo,
-45,Crónica Digital,nacional,,,Nativo digital,C,rss,https://www.cronicadigital.cl/feed/,listo,
-46,La Voz de los que Sobran,nacional,,,Nativo digital,C,rss,https://lavozdelosquesobran.cl/feed/,listo,Baja frecuencia
-47,El Clarín de Chile,nacional,,,Nativo digital,C,rss,https://www.elclarin.cl/feed/,listo,
-48,Le Monde Diplomatique Chile,nacional,,,Análisis,C,rss,https://www.lemondediplomatique.cl/spip.php?page=backend,listo,Sobre todo columnas
-49,Fast Check,nacional,,,Verificación,C,rss,https://www.fastcheck.cl/feed,listo,Baja frecuencia
-50,Mala Espina,nacional,,,Verificación,C,rss,https://www.malaespinacheck.cl/feed/,listo,
-51,El Mercurio de Valparaíso,regional,,,Diario,A,google_news,,restringido,Mayor alcance regional; robots.txt impide la lectura
-52,La Estrella de Valparaíso,regional,,,Diario,B,google_news,,restringido,robots.txt impide la lectura
-53,VTV,regional,,,TV,B,google_news,,restringido,robots.txt impide la lectura
-54,"BioBioChile, Región de Valparaíso",regional,,,Radio nacional,A,rss_filtrado,https://www.biobiochile.cl/static/feed-google,listo,"Mismo feed que BioBioChile, leído una vez; se queda con las notas de la sección /region-de-valparaiso/"
-55,SoyValparaíso,regional,,,Red regional,B,portada,https://www.soychile.cl/valparaiso/,listo,"Portada de la edición, con fecha en la dirección"
-56,Puranoticia,regional,,,Portal,B,sitemap_noticias,https://puranoticia.pnt.cl/cms/site/sitemap_news.xml,listo,
-57,"Meganoticias, Región de Valparaíso",regional,,,TV nacional,A,sitemap_filtrado,https://www.meganoticias.cl/sitemaps/sitemap-news.xml,listo,No tiene sección regional: del mapa de noticias de Meganoticias se quedan las notas cuya dirección nombra una comuna o la región
-58,"24 Horas, Valparaíso",regional,,,TV,A,sitemap_filtrado,https://www.24horas.cl/24horas/site/sitemap_pags.xml,listo,Mismo mapa mensual que 24 Horas: se quedan las notas de /regiones/zona-centro/valparaiso/
-59,Epicentro Chile,regional,Valparaíso,Viña del Mar,Portal,C,rss,https://www.epicentrochile.com/feed/,listo,
-60,G5noticias,regional,,,Portal,C,rss,https://g5noticias.cl/feed/,listo,Mucho comunicado institucional
-61,Radio Festival,regional,,,Radio,C,rss,https://www.radiofestival.cl/feed/,listo,
-62,UCV Radio,regional,,,Radio,C,sitemap,https://ucvradio.cl/news-sitemap1.xml,listo,RSS roto; su mapa de noticias está al día (el 1 es el más reciente)
-63,Panorama Noticioso,regional,Quillota,Quillota,Portal,C,rss,https://www.panoramanoticioso.cl/feed/,listo,Foco en Aconcagua y Petorca
-64,TuOpinas,regional,,,Portal,C,rss,https://www.tuopinas.cl/feed/,listo,"Lento o intermitente desde servidores en la nube (sin respuesta en 8 s el 11 nov 2026, luego normal); también llega vía Google News"
-65,Alerta Noticias Valparaíso,regional,,,Portal,C,rss,https://alertanoticias.cl/feed/,listo,robots.txt no verificado
-66,CasablancaHoy,local,Valparaíso,Casablanca,Portal,C,rss,https://casablancahoy.cl/feed/,listo,No identifica responsable
-67,Radio Quintay 92.7,local,Valparaíso,Casablanca,Radio,C,sitemap,https://www.radioquintay.cl/sitemap.xml,listo,Mapa del sitio con fechas desde nov-2026
-68,Diario Casablanca,local,Valparaíso,Casablanca,Diario,C,google_news,,restringido,robots.txt impide la lectura
-69,La Voz de Concón,local,Valparaíso,Concón,Diario,C,rss,https://www.lavozdeconcon.cl/?feed=rss2,listo,Sin publicaciones en 27 días al 11 nov 2026
-70,Concón al Día,local,Valparaíso,Concón,Portal,C,google_news,,restringido,robots.txt impide la lectura
-71,La Bahía on Line,local,Valparaíso,Quintero;Puchuncaví;Concón,Diario digital,C,rss,https://labahiaonline.cl/feed/,listo,Categorías por comuna
-72,El Martutino,local,Valparaíso,Valparaíso;Viña del Mar,Portal,C,portada,https://www.elmartutino.cl/,listo,"Feeds y mapas responden 403: se lee la portada; sin fecha en la dirección, vale la de la primera lectura"
-73,Gran Valparaíso,local,Valparaíso,Valparaíso,Portal ciudadano,C,google_news,,restringido,robots.txt impide la lectura
-74,Revista Arqueoturismo,local,Valparaíso,Juan Fernández,Revista,C,rss,https://www.arqueoturismo.org/feed/,listo,"Revista de turismo y patrimonio, no noticias; sin publicaciones en 29 días al 11 nov 2026"
-75,moeVarua Rapa Nui,local,Isla de Pascua,Isla de Pascua,Revista cultural,C,rss,https://moevarua.com/feed/,listo,Mensual
-76,Quilpué Online,local,Marga Marga,Quilpué,Portal,C,portada,https://www.quilpueonline.cl/,listo,"RSS vacío: se lee la portada, con la fecha en la dirección"
-77,Bicomunal,local,Marga Marga,Villa Alemana;Quilpué,Diario digital,C,rss,https://bicomunal.cl/feed/,listo,
-78,Diario Crónica,local,Marga Marga,Limache;Olmué,Diario digital,C,rss,https://www.diariocronica.cl/?feed=rss2,listo,Sin publicaciones en 18 días al 11 nov 2026
-79,El Digital,local,Quillota,Quillota;La Calera;La Cruz;Nogales;Hijuelas,Diario digital,C,rss,https://eldigital.cl/feed/,listo,Categorías por comuna
-80,El Observador,local,Quillota,Quillota,Diario,C,portada,https://www.observador.cl/,listo,"robots.txt cierra el RSS: se lee la portada (permitida); sin fecha en la dirección, vale la de la primera lectura"
-81,Radio Quillota 101.5,local,Quillota,Quillota,Radio,C,rss,https://radioquillota.cl/feed/,listo,
-82,Radio Crystal,local,Quillota,Quillota;La Calera;Nogales;La Ligua;Cabildo;San Felipe,Radio,C,rss,https://radiocrystal.cl/feed/,listo,Categorías por provincia y comuna
-83,La Estrella de Quillota,local,Quillota,Quillota,Diario,C,google_news,,restringido,robots.txt impide la lectura
-84,De Quillota,local,Quillota,Quillota;Limache;La Cruz;La Calera,Portal,C,google_news,,restringido,robots.txt impide la lectura
-85,El Diario de San Antonio,local,San Antonio,San Antonio;Cartagena;El Quisco;Algarrobo;Santo Domingo;El Tabo,Diario digital,C,rss,https://elproa.cl/feed/,listo,
-86,Canal 2 (Cablenoticias),local,San Antonio,San Antonio,TV local,C,rss,https://cablenoticias.cl/category/ahora/feed/,listo,Usar la categoría Ahora
-87,Radio Galactika,local,San Antonio,San Antonio;El Tabo;El Quisco;Algarrobo;Santo Domingo,Radio,C,rss,https://www.radiogalactika.cl/feed/,listo,Baja frecuencia
-88,Santo News,local,San Antonio,Santo Domingo,Portal,C,rss,https://santonews.cl/?feed=rss2,listo,RSS en /?feed=rss2; no tiene robots.txt
-89,TV Cartagena,local,San Antonio,Cartagena;El Tabo,Portal comunitario,C,rss,https://www.tvcartagena.cl/feed/,listo,Avisos comunitarios
-90,El Líder de San Antonio,local,San Antonio,San Antonio,Diario,C,google_news,,restringido,robots.txt impide la lectura
-91,La Ligua Noticias,local,Petorca,La Ligua;Cabildo;Petorca;Papudo;Zapallar,Diario digital,C,rss,https://laliguanoticias.cl/feed/,listo,Feeds por comuna en /category/provincia-de-petorca/{comuna}/feed/
-92,Diario El Trabajo,local,San Felipe,San Felipe,Diario,C,rss,https://eltrabajo.cl/web/feed/,requiere_ajuste,robots.txt pide no leer /feed/ en la raíz; confirmar con el medio
-93,Aconcagua News,local,San Felipe,San Felipe;Los Andes;Llaillay;Panquehue;Putaendo;Santa María;Catemu;Calle Larga;Rinconada;San Esteban,Portal,C,rss,https://www.aconcaguanews.cl/feed/,listo,Categorías por comuna
-94,Aconcagua al Día,local,San Felipe,San Felipe;Los Andes;Llaillay;Panquehue;Putaendo;Santa María;Catemu;Calle Larga;Rinconada;San Esteban,Portal,C,rss,https://aconcaguaaldia.cl/feed/,listo,Categorías por comuna
-95,Preludio Radio 100.9,local,San Felipe,San Felipe,Radio,C,rss,https://www.preludioradio.cl/feed/,listo,Lento o intermitente desde servidores en la nube (11 nov 2026). Lo local en la categoría Región de Aconcagua
-96,Putaendo Uno,local,San Felipe,Putaendo,Portal comunal,C,rss,https://putaendouno.cl/?feed=rss2,listo,Baja frecuencia
-97,Catemu Noticias,local,San Felipe,Catemu,Blog,C,rss,https://catemunoticias.blogspot.com/feeds/posts/default?alt=rss,listo,Republica notas antiguas con fecha nueva
-98,Radio Orolonco 107.1,local,San Felipe,Santa María,Radio,C,rss,https://oroloncofm.cl/feed/,listo,Feed dominado por notas nacionales
-99,Radio Superandina 88.5,local,Los Andes,Los Andes;Calle Larga;Rinconada;San Esteban,Radio,C,sitemap_noticias,https://www.superandina.cl/sitemap/google-news/sitemap.xml,listo,Fechas sin zona horaria
-100,Andes Online,local,Los Andes,Los Andes,Diario digital,C,google_news,http://www.losandesonline.cl/,listo,Sitio caído al 17-nov-2026 (no responde por http ni https); solo vía Google News
-101,31TV Casablanca,local,Valparaíso,Casablanca,TV en línea,C,facebook,https://www.facebook.com/31tv.cl,captura_asistida,Solo Facebook e Instagram (31tv.cl); sin sitio web ni feed. Se ingresa con captura asistida
-102,Agenda Regional,local,Valparaíso,Casablanca,Medio digital,C,facebook,https://www.facebook.com/profile.php?id=61576308577918,captura_asistida,"Solo Facebook; cubre la región de Valparaíso y Casablanca. No confundir con agendaregional.cl, que es otro proyecto"
-110,31TV Casablanca (Instagram),local,Valparaíso,Casablanca,TV en línea,C,instagram,https://www.instagram.com/31tv.cl/,red,"Cuenta de Instagram de 31TV. Se lee por la API de Meta si es cuenta profesional; si no, captura asistida"
-111,Canal 2 San Antonio (Facebook),local,San Antonio,San Antonio,TV local,C,facebook,https://www.facebook.com/canal2tvsanantonio,red,"Página de Facebook de Canal 2 (cablenoticias.cl), enlazada desde su sitio"
-112,Canal 2 San Antonio (Instagram),local,San Antonio,San Antonio,TV local,C,instagram,https://www.instagram.com/canal2chilenasaborfm/,red,Instagram enlazado desde cablenoticias.cl (compartido con Chilena Sabor FM)
-113,Radio Galactika (Facebook),local,San Antonio,San Antonio;El Tabo;El Quisco;Algarrobo;Santo Domingo,Radio,C,facebook,https://www.facebook.com/profile.php?id=61591891344038,retirado,Retirada: ninguna de sus dos páginas de Facebook muestra publicaciones públicas sin iniciar sesión (nov 2026). Se sigue por Instagram
-114,Radio Galactika (Instagram),local,San Antonio,San Antonio;El Tabo;El Quisco;Algarrobo;Santo Domingo,Radio,C,instagram,https://www.instagram.com/radiogalactikamedia/,red,Instagram enlazado desde radiogalactika.cl
-115,Santo News (Instagram),local,San Antonio,Santo Domingo,Medio digital,C,instagram,https://www.instagram.com/santonewscl/,red,Instagram enlazado desde santonews.cl
-116,Radio Quintay (Facebook),local,Valparaíso,Casablanca,Radio,C,facebook,https://www.facebook.com/radioquintay92.7,red,Página de Facebook @radioquintay92.7 (según su ficha de radio); su sitio no la enlaza
-103,MargaMargaTV,local,Marga Marga,Quilpué;Villa Alemana;Limache;Olmué,TV en línea,C,rss,https://margamargatv.cl/feed/,listo,"Categorías Nacional, Regional y Provincial; agregado 11 nov 2026"
-104,El Aconcagua,local,San Felipe,San Felipe;Los Andes;Santa María;Putaendo;Llaillay;Catemu;Panquehue;Calle Larga;Rinconada;San Esteban,Diario digital,C,rss,https://www.elaconcagua.cl/feed/,listo,Categorías por comuna; agregado 11 nov 2026
-105,Aconcagua Digital,local,San Felipe,San Felipe;Catemu;Llaillay;Panquehue;Putaendo;Santa María,Portal,C,rss,https://aconcaguadigital.cl/feed/,listo,Categoría Comunas; agregado 11 nov 2026
-106,El Diario de La Ligua,local,Petorca,La Ligua;Cabildo;Petorca;Papudo;Zapallar,Diario digital,C,google_news,https://laliguachile.cl/,restringido,robots.txt cierra /feed/ a todos los bots; se lee vía Google News
-107,PortalPortuario,nacional,,,Sectorial portuario,C,rss,https://portalportuario.cl/feed/,listo,Puertos de Valparaíso y San Antonio; mezcla notas internacionales; agregado 11 nov 2026
-108,Radio Universidad de Valparaíso (RVL),regional,,,Radio universitaria,C,google_news,https://rvl.uv.cl/,listo,Sin feed verificado; aparece en Google News; agregado 11 nov 2026
-109,El Informador,local,Los Andes,Los Andes;Calle Larga;Rinconada;San Esteban,Diario digital,C,rss,https://www.elinformador.cl/feed/,listo,Agregado 11 nov 2026
-200,Gobierno Regional de Valparaíso,institucional,,,Fuente institucional,C,google_news,https://www.gorevalparaiso.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas
-201,Universidad de Valparaíso,institucional,,,Fuente institucional,C,google_news,https://www.uv.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas
-202,Pontificia Universidad Católica de Valparaíso,institucional,,,Fuente institucional,C,google_news,https://www.pucv.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas
-203,Universidad Técnica Federico Santa María,institucional,,,Fuente institucional,C,google_news,https://usm.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas
-204,Universidad de Playa Ancha,institucional,,,Fuente institucional,C,google_news,https://www.upla.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas
-205,Municipalidad de Valparaíso,institucional,Valparaíso,Valparaíso,Fuente institucional,C,google_news,https://municipalidaddevalparaiso.cl/,listo,Comunicados municipales
-206,Municipalidad de Viña del Mar,institucional,Valparaíso,Viña del Mar,Fuente institucional,C,google_news,https://www.munivina.cl/,listo,Comunicados municipales
-207,Municipalidad de San Antonio,institucional,San Antonio,San Antonio,Fuente institucional,C,google_news,https://www.sanantonio.cl/,listo,Comunicados municipales
-208,Municipalidad de Quillota,institucional,Quillota,Quillota,Fuente institucional,C,google_news,https://www.quillota.cl/,listo,Comunicados municipales
-209,Municipalidad de Rapa Nui,institucional,Isla de Pascua,Isla de Pascua,Fuente institucional,C,google_news,https://www.rapanui.net/,listo,Comunicados municipales
-210,SoySanAntonio,local,San Antonio,San Antonio;Cartagena;El Quisco;Algarrobo;Santo Domingo;El Tabo,Red regional,B,portada,https://www.soychile.cl/san-antonio/,listo,Edición de SoyChile; portada con fecha en la dirección
-211,SoyQuillota,local,Quillota,Quillota;La Calera;La Cruz;Hijuelas;Nogales,Red regional,B,portada,https://www.soychile.cl/quillota/,listo,Edición de SoyChile; portada con fecha en la dirección
-117,MasContainer,nacional,,,Sectorial logístico,C,rss,https://www.mascontainer.com/feed/,listo,Logística y comercio exterior; puertos de San Antonio y Valparaíso; agregado 23 nov 2026 tras comparar con Atalaya
-118,MundoMaritimo,nacional,,,Sectorial marítimo,C,google_news,https://www.mundomaritimo.cl/,listo,Sin feed declarado; se lee vía Google News; agregado 23 nov 2026 tras comparar con Atalaya
-212,Subdere,institucional,,,Fuente institucional,C,google_news,https://www.subdere.gov.cl/,listo,"Fondos, programas y transferencias a municipios; anticipa noticias municipales; agregado 23 nov 2026"
-213,Asociación Chilena de Municipalidades,institucional,,,Fuente institucional,C,google_news,https://www.achm.cl/,listo,Posiciones del mundo municipal; agregado 23 nov 2026
-214,AMUCH,institucional,,,Fuente institucional,C,google_news,https://amuch.cl/,listo,Estudios y encuestas municipales; agregado 23 nov 2026
-215,Servicio de Evaluación Ambiental,institucional,,,Fuente institucional,C,google_news,https://www.sea.gob.cl/,listo,Proyectos en evaluación ambiental; anticipa conflictos territoriales; agregado 23 nov 2026
-216,Superintendencia del Medio Ambiente,institucional,,,Fuente institucional,C,google_news,https://sma.gob.cl/,listo,"Fiscalizaciones, sanciones y denuncias ambientales; agregado 23 nov 2026"
-217,CONAF,institucional,,,Fuente institucional,C,google_news,https://www.conaf.cl/,listo,"Incendios forestales, alertas y restricciones de uso del fuego; robots.txt no permite la lectura directa; agregado 23 nov 2026"
-218,Ministerio de Obras Públicas,institucional,,,Fuente institucional,C,google_news,https://www.mop.gob.cl/,listo,"Obras viales, agua potable rural y concesiones; agregado 23 nov 2026"
-219,Delegación Presidencial Regional de Valparaíso,institucional,,,Fuente institucional,C,google_news,,listo,"Seguridad, emergencias y vocería del Gobierno en la región; sin sitio propio verificado, se reconoce por el nombre de la fuente en Google News; agregado 23 nov 2026"
-220,Senado de Chile,institucional,,,Fuente institucional,C,google_news,https://www.senado.cl/,listo,Sesiona en Valparaíso; proyectos y dichos de senadores de la región; agregado 23 nov 2026
-221,Seremi de Salud Valparaíso,institucional,,,Fuente institucional,C,google_news,,listo,"Sumarios sanitarios, brotes y clausuras; se reconoce por el nombre de la fuente en Google News; agregado 23 nov 2026"
-222,Fiscalía de Chile,institucional,,,Fuente institucional,C,google_news,https://www.fiscaliadechile.cl/,listo,Querellas e investigaciones que involucran a municipios o autoridades; la matriz de competencias separa lo policial; agregado 23 nov 2026
-223,Poder Judicial,institucional,,,Fuente institucional,C,google_news,https://www.pjud.cl/,listo,Fallos de la Corte de Apelaciones de Valparaíso y otros tribunales; agregado 23 nov 2026
-224,Empresa Portuaria Valparaíso,institucional,Valparaíso,Valparaíso,Fuente institucional,C,google_news,https://www.puertovalparaiso.cl/,listo,Obras y anuncios del puerto; agregado 23 nov 2026
-225,Empresa Portuaria San Antonio,institucional,San Antonio,San Antonio,Fuente institucional,C,google_news,https://www.puertosanantonio.com/,listo,Puerto Exterior y relación puerto-ciudad; agregado 23 nov 2026
-226,Serviu Región de Valparaíso,institucional,,,Fuente institucional,C,google_news,https://serviuvalparaiso.minvu.gob.cl/,listo,"Reconstrucción, vivienda y pavimentación; agregado 23 nov 2026"
-227,Contraloría General de la República,institucional,,,Fuente institucional,C,oficial,https://www.contraloria.cl/web/cgr/informes-de-auditoria,listo,"Documentos oficiales: informes finales de auditoría, investigaciones especiales y seguimientos de la Contraloría Regional de Valparaíso, leídos directo del buscador público; agregado 23 nov 2026"
-228,Mercado Público,institucional,,,Fuente institucional,C,oficial,https://www.mercadopublico.cl/,listo,"Documentos oficiales: licitaciones municipales desiertas, revocadas o suspendidas vía la API de ChileCompra; requiere MERCADOPUBLICO_TICKET; agregado 23 nov 2026"
-229,Esval,institucional,,,Fuente institucional,C,oficial,https://www.esval.cl/personas/cortes-estado-del-servicio/,listo,"Documentos oficiales: cortes de agua activos y avisos de emergencia de la sanitaria, leídos de su oficina virtual; agregado 23 nov 2026"
-296,Otro medio regional (vía Google News),regional,,,Otro medio,C,google_news,,listo,Medios de la región que Google News encuentra y no están en el catálogo; cada nota muestra el nombre real del medio
-297,Otro medio nacional (vía Google News),nacional,,,Otro medio,C,google_news,,listo,Medios chilenos que Google News encuentra y no están en el catálogo; cada nota muestra el nombre real del medio
-299,Otra fuente institucional,institucional,,,Fuente institucional,C,google_news,,listo,"Ministerios, servicios, municipalidades y Fuerzas Armadas sin ficha propia; cada nota muestra el nombre real de la institución"
+id,nombre,ambito,provincia,comuna,tipo,nivel,metodo,url_lectura,estado,observacion,region
+1,Meganoticias,nacional,,,TV,A,sitemap_noticias,https://www.meganoticias.cl/sitemaps/sitemap-news.xml,listo,Usar news:publication_date y no la fecha de la URL,
+2,BioBioChile,nacional,,,Radio,A,rss,https://www.biobiochile.cl/static/feed-google,listo,Responde como application/octet-stream; el sitemap declarado está desactualizado,
+3,Emol,nacional,,,Diario,A,google_news,,restringido,robots.txt bloquea bots de IA y Googlebot-News,
+4,La Tercera,nacional,,,Diario,A,google_news,,restringido,robots.txt bloquea unos 55 bots de IA; muro parcial,
+5,T13,nacional,,,TV,A,portada,https://www.t13.cl/,listo,Sin RSS ni mapa de noticias: se lee la portada (robots.txt la permite); la fecha va al final de cada dirección,
+6,24 Horas,nacional,,,TV,A,sitemap_mensual,https://www.24horas.cl/24horas/site/sitemap_pags.xml,listo,"Índice de mapas mensuales comprimidos: se lee el del mes en curso, con fecha de modificación; titular desde la dirección",
+7,Cooperativa,nacional,,,Radio,A,sitemap_noticias,https://www.cooperativa.cl/noticias/sitemap_news.xml,listo,Su RSS no trae pubDate,
+8,CNN Chile,nacional,,,TV,A,sitemap_noticias,https://www.cnnchile.com/_files/sitemaps/sitemap_news.xml,listo,Sin RSS,
+9,CHV Noticias,nacional,,,TV,A,sitemap_noticias,https://www.chilevision.cl/_files/sitemaps/sitemap_news.xml,requiere_ajuste,Filtrar ruta /noticias/,
+10,Diario Financiero,nacional,,,Economía,A,sitemap_noticias,https://www.df.cl/noticias/site/sitemap_news.xml,listo,Muro de pago; incluye notas de Capital,
+11,El Mostrador,nacional,,,Nativo digital,A,sitemap_noticias,https://www.elmostrador.cl/sitemap_news.xml,listo,Sitemap con prefijo n: (corregido 11 nov 2026); su RSS está congelado desde 2021,
+12,CIPER,nacional,,,Investigación,A,rss,https://www.ciperchile.cl/feed/,listo,,
+13,Infobae Chile,nacional,,,Internacional,A,rss,https://www.infobae.com/arc/outboundfeeds/rss/tags_slug/chile/,listo,Feed de la etiqueta Chile; incluye notas de otros países que mencionan Chile,
+14,El País Chile,nacional,,,Internacional,A,google_news,,restringido,robots.txt bloquea bots de IA y lectores de feeds,
+15,ADN Radio,nacional,,,Radio,B,rss,https://www.adnradio.cl/arc/outboundfeeds/rss/,listo,,
+16,Radio Agricultura,nacional,,,Radio,B,portada,https://www.radioagricultura.cl/noticias/,listo,"robots.txt cierra /_files/ (donde están sus mapas): se lee la sección Noticias; sin fecha en la dirección, vale la de la primera lectura",
+17,Duna,nacional,,,Radio,B,sitemap,https://duna.cl/sitemaps/articles.xml,listo,"Mapa de artículos de 8 MB ordenado del más nuevo al más antiguo: se leen los primeros 1,5 MB",
+18,Radio Universidad de Chile,nacional,,,Radio,B,portada,https://radio.uchile.cl/,listo,"robots.txt cierra /feed/ desde el 26-oct-2026 y no hay mapa del sitio: se lee la portada, con la fecha en la dirección",
+19,Pauta,nacional,,,Radio y digital,B,sitemap_noticias,https://www.pauta.cl/sitemap_news.xml,listo,Sitemap con prefijo n: (corregido 11 nov 2026),
+20,El Mercurio,nacional,,,Diario,B,google_news,,restringido,Suscripción; bloquea bots de IA,
+21,La Segunda,nacional,,,Diario,B,google_news,,restringido,Bloquea bots de IA; suscripción,
+22,Las Últimas Noticias,nacional,,,Diario,B,google_news,https://www.lun.com/,listo,E-paper: los titulares se abren con JavaScript y no tienen dirección propia; solo vía Google News,
+23,SoyChile,nacional,,,Red regional,B,portada,https://www.soychile.cl/,listo,"Portada nacional, con fecha en la dirección; las ediciones de Valparaíso, San Antonio y Quillota se leen aparte",
+24,La Cuarta,nacional,,,Diario,B,google_news,,restringido,Mismo bloqueo que La Tercera,
+25,Publimetro,nacional,,,Diario,B,rss,https://www.publimetro.cl/arc/outboundfeeds/rss/?outputType=xml,restringido,"Bloquea bots de IA en robots.txt; no se lee directo, solo vía Google News",
+26,Ex-Ante,nacional,,,Política y negocios,B,rss,https://www.ex-ante.cl/feed/,requiere_ajuste,Firewall filtra lectores; 7 ítems por consulta,
+27,The Clinic,nacional,,,Nativo digital,B,rss,https://www.theclinic.cl/feed/,requiere_ajuste,Firewall rechaza algunos lectores,
+28,El Dínamo,nacional,,,Nativo digital,B,sitemap_noticias,https://www.eldinamo.cl/_files/sitemaps/sitemap_news.xml,listo,XML puede llegar truncado; reintentar,
+29,El Ciudadano,nacional,,,Nativo digital,B,rss,https://www.elciudadano.com/feed/,listo,,
+30,El Desconcierto,nacional,,,Nativo digital,B,rss,https://eldesconcierto.cl/rss/pages/ultimas-noticias.xml,listo,Respaldo: /sitemap-news.xml,
+31,El Líbero,nacional,,,Nativo digital,B,sitemap_noticias,https://ellibero.cl/news-sitemap.xml,listo,RSS desactivado,
+32,Diario Constitucional,nacional,,,Judicial,B,rss,https://www.diarioconstitucional.cl/feed/,listo,,
+33,La Red,nacional,,,TV,C,rss,https://www.lared.cl/feed,listo,Predomina promoción de programación,
+34,TV+,nacional,,,TV,C,sitemap_noticias,https://www.tvmas.tv/_files/sitemaps/sitemap_news.xml,requiere_ajuste,Dominio migró a tvmas.tv,
+35,Radio Nuevo Mundo,nacional,,,Radio,C,rss,https://radionuevomundo.cl/feed/,listo,,
+36,La Nación,nacional,,,Diario digital,C,rss,https://www.lanacion.cl/feed/,listo,Filtrar por categoría,
+37,El Siglo,nacional,,,Diario digital,C,rss,https://elsiglo.cl/feed/,listo,,
+38,Diario Estrategia,nacional,,,Economía,C,sitemap_noticias,https://www.diarioestrategia.cl/sitemap/news,requiere_ajuste,Bloquea el user-agent por defecto de feedparser,
+39,Chócale,nacional,,,Economía y consumo,C,rss,https://chocale.cl/feed/,listo,,
+40,Bloomberg Línea Chile,nacional,,,Internacional,C,rss_filtrado,https://www.bloomberglinea.com/arc/outboundfeeds/google-news-feed-latam/?outputType=xml,requiere_ajuste,Se leen solo las notas de /latinoamerica/chile/,
+41,Interferencia,nacional,,,Investigación,C,rss,https://interferencia.cl/rss.xml,listo,Muro por cuota mensual,
+42,El Periodista,nacional,,,Nativo digital,C,rss,https://www.elperiodista.cl/feed/,listo,,
+43,Cambio21,nacional,,,Nativo digital,C,rss,https://cambio21.cl/rss,listo,,
+44,Página 7,nacional,,,Nativo digital,C,sitemap_noticias,https://www.pagina7.cl/_files/sitemaps/sitemap_news.xml,listo,,
+45,Crónica Digital,nacional,,,Nativo digital,C,rss,https://www.cronicadigital.cl/feed/,listo,,
+46,La Voz de los que Sobran,nacional,,,Nativo digital,C,rss,https://lavozdelosquesobran.cl/feed/,listo,Baja frecuencia,
+47,El Clarín de Chile,nacional,,,Nativo digital,C,rss,https://www.elclarin.cl/feed/,listo,,
+48,Le Monde Diplomatique Chile,nacional,,,Análisis,C,rss,https://www.lemondediplomatique.cl/spip.php?page=backend,listo,Sobre todo columnas,
+49,Fast Check,nacional,,,Verificación,C,rss,https://www.fastcheck.cl/feed,listo,Baja frecuencia,
+50,Mala Espina,nacional,,,Verificación,C,rss,https://www.malaespinacheck.cl/feed/,listo,,
+51,El Mercurio de Valparaíso,regional,,,Diario,A,google_news,,restringido,Mayor alcance regional; robots.txt impide la lectura,V
+52,La Estrella de Valparaíso,regional,,,Diario,B,google_news,,restringido,robots.txt impide la lectura,V
+53,VTV,regional,,,TV,B,google_news,,restringido,robots.txt impide la lectura,V
+54,"BioBioChile, Región de Valparaíso",regional,,,Radio nacional,A,rss_filtrado,https://www.biobiochile.cl/static/feed-google,listo,"Mismo feed que BioBioChile, leído una vez; se queda con las notas de la sección /region-de-valparaiso/",V
+55,SoyValparaíso,regional,,,Red regional,B,portada,https://www.soychile.cl/valparaiso/,listo,"Portada de la edición, con fecha en la dirección",V
+56,Puranoticia,regional,,,Portal,B,sitemap_noticias,https://puranoticia.pnt.cl/cms/site/sitemap_news.xml,listo,,V
+57,"Meganoticias, Región de Valparaíso",regional,,,TV nacional,A,sitemap_filtrado,https://www.meganoticias.cl/sitemaps/sitemap-news.xml,listo,No tiene sección regional: del mapa de noticias de Meganoticias se quedan las notas cuya dirección nombra una comuna o la región,V
+58,"24 Horas, Valparaíso",regional,,,TV,A,sitemap_filtrado,https://www.24horas.cl/24horas/site/sitemap_pags.xml,listo,Mismo mapa mensual que 24 Horas: se quedan las notas de /regiones/zona-centro/valparaiso/,V
+59,Epicentro Chile,regional,Valparaíso,Viña del Mar,Portal,C,rss,https://www.epicentrochile.com/feed/,listo,,V
+60,G5noticias,regional,,,Portal,C,rss,https://g5noticias.cl/feed/,listo,Mucho comunicado institucional,V
+61,Radio Festival,regional,,,Radio,C,rss,https://www.radiofestival.cl/feed/,listo,,V
+62,UCV Radio,regional,,,Radio,C,sitemap,https://ucvradio.cl/news-sitemap1.xml,listo,RSS roto; su mapa de noticias está al día (el 1 es el más reciente),V
+63,Panorama Noticioso,regional,Quillota,Quillota,Portal,C,rss,https://www.panoramanoticioso.cl/feed/,listo,Foco en Aconcagua y Petorca,V
+64,TuOpinas,regional,,,Portal,C,rss,https://www.tuopinas.cl/feed/,listo,"Lento o intermitente desde servidores en la nube (sin respuesta en 8 s el 11 nov 2026, luego normal); también llega vía Google News",V
+65,Alerta Noticias Valparaíso,regional,,,Portal,C,rss,https://alertanoticias.cl/feed/,listo,robots.txt no verificado,V
+66,CasablancaHoy,local,Valparaíso,Casablanca,Portal,C,rss,https://casablancahoy.cl/feed/,listo,No identifica responsable,V
+67,Radio Quintay 92.7,local,Valparaíso,Casablanca,Radio,C,sitemap,https://www.radioquintay.cl/sitemap.xml,listo,Mapa del sitio con fechas desde nov-2026,V
+68,Diario Casablanca,local,Valparaíso,Casablanca,Diario,C,google_news,,restringido,robots.txt impide la lectura,V
+69,La Voz de Concón,local,Valparaíso,Concón,Diario,C,rss,https://www.lavozdeconcon.cl/?feed=rss2,listo,Sin publicaciones en 27 días al 11 nov 2026,V
+70,Concón al Día,local,Valparaíso,Concón,Portal,C,google_news,,restringido,robots.txt impide la lectura,V
+71,La Bahía on Line,local,Valparaíso,Quintero;Puchuncaví;Concón,Diario digital,C,rss,https://labahiaonline.cl/feed/,listo,Categorías por comuna,V
+72,El Martutino,local,Valparaíso,Valparaíso;Viña del Mar,Portal,C,portada,https://www.elmartutino.cl/,listo,"Feeds y mapas responden 403: se lee la portada; sin fecha en la dirección, vale la de la primera lectura",V
+73,Gran Valparaíso,local,Valparaíso,Valparaíso,Portal ciudadano,C,google_news,,restringido,robots.txt impide la lectura,V
+74,Revista Arqueoturismo,local,Valparaíso,Juan Fernández,Revista,C,rss,https://www.arqueoturismo.org/feed/,listo,"Revista de turismo y patrimonio, no noticias; sin publicaciones en 29 días al 11 nov 2026",V
+75,moeVarua Rapa Nui,local,Isla de Pascua,Isla de Pascua,Revista cultural,C,rss,https://moevarua.com/feed/,listo,Mensual,V
+76,Quilpué Online,local,Marga Marga,Quilpué,Portal,C,portada,https://www.quilpueonline.cl/,listo,"RSS vacío: se lee la portada, con la fecha en la dirección",V
+77,Bicomunal,local,Marga Marga,Villa Alemana;Quilpué,Diario digital,C,rss,https://bicomunal.cl/feed/,listo,,V
+78,Diario Crónica,local,Marga Marga,Limache;Olmué,Diario digital,C,rss,https://www.diariocronica.cl/?feed=rss2,listo,Sin publicaciones en 18 días al 11 nov 2026,V
+79,El Digital,local,Quillota,Quillota;La Calera;La Cruz;Nogales;Hijuelas,Diario digital,C,rss,https://eldigital.cl/feed/,listo,Categorías por comuna,V
+80,El Observador,local,Quillota,Quillota,Diario,C,portada,https://www.observador.cl/,listo,"robots.txt cierra el RSS: se lee la portada (permitida); sin fecha en la dirección, vale la de la primera lectura",V
+81,Radio Quillota 101.5,local,Quillota,Quillota,Radio,C,rss,https://radioquillota.cl/feed/,listo,,V
+82,Radio Crystal,local,Quillota,Quillota;La Calera;Nogales;La Ligua;Cabildo;San Felipe,Radio,C,rss,https://radiocrystal.cl/feed/,listo,Categorías por provincia y comuna,V
+83,La Estrella de Quillota,local,Quillota,Quillota,Diario,C,google_news,,restringido,robots.txt impide la lectura,V
+84,De Quillota,local,Quillota,Quillota;Limache;La Cruz;La Calera,Portal,C,google_news,,restringido,robots.txt impide la lectura,V
+85,El Diario de San Antonio,local,San Antonio,San Antonio;Cartagena;El Quisco;Algarrobo;Santo Domingo;El Tabo,Diario digital,C,rss,https://elproa.cl/feed/,listo,,V
+86,Canal 2 (Cablenoticias),local,San Antonio,San Antonio,TV local,C,rss,https://cablenoticias.cl/category/ahora/feed/,listo,Usar la categoría Ahora,V
+87,Radio Galactika,local,San Antonio,San Antonio;El Tabo;El Quisco;Algarrobo;Santo Domingo,Radio,C,rss,https://www.radiogalactika.cl/feed/,listo,Baja frecuencia,V
+88,Santo News,local,San Antonio,Santo Domingo,Portal,C,rss,https://santonews.cl/?feed=rss2,listo,RSS en /?feed=rss2; no tiene robots.txt,V
+89,TV Cartagena,local,San Antonio,Cartagena;El Tabo,Portal comunitario,C,rss,https://www.tvcartagena.cl/feed/,listo,Avisos comunitarios,V
+90,El Líder de San Antonio,local,San Antonio,San Antonio,Diario,C,google_news,,restringido,robots.txt impide la lectura,V
+91,La Ligua Noticias,local,Petorca,La Ligua;Cabildo;Petorca;Papudo;Zapallar,Diario digital,C,rss,https://laliguanoticias.cl/feed/,listo,Feeds por comuna en /category/provincia-de-petorca/{comuna}/feed/,V
+92,Diario El Trabajo,local,San Felipe,San Felipe,Diario,C,rss,https://eltrabajo.cl/web/feed/,requiere_ajuste,robots.txt pide no leer /feed/ en la raíz; confirmar con el medio,V
+93,Aconcagua News,local,San Felipe,San Felipe;Los Andes;Llaillay;Panquehue;Putaendo;Santa María;Catemu;Calle Larga;Rinconada;San Esteban,Portal,C,rss,https://www.aconcaguanews.cl/feed/,listo,Categorías por comuna,V
+94,Aconcagua al Día,local,San Felipe,San Felipe;Los Andes;Llaillay;Panquehue;Putaendo;Santa María;Catemu;Calle Larga;Rinconada;San Esteban,Portal,C,rss,https://aconcaguaaldia.cl/feed/,listo,Categorías por comuna,V
+95,Preludio Radio 100.9,local,San Felipe,San Felipe,Radio,C,rss,https://www.preludioradio.cl/feed/,listo,Lento o intermitente desde servidores en la nube (11 nov 2026). Lo local en la categoría Región de Aconcagua,V
+96,Putaendo Uno,local,San Felipe,Putaendo,Portal comunal,C,rss,https://putaendouno.cl/?feed=rss2,listo,Baja frecuencia,V
+97,Catemu Noticias,local,San Felipe,Catemu,Blog,C,rss,https://catemunoticias.blogspot.com/feeds/posts/default?alt=rss,listo,Republica notas antiguas con fecha nueva,V
+98,Radio Orolonco 107.1,local,San Felipe,Santa María,Radio,C,rss,https://oroloncofm.cl/feed/,listo,Feed dominado por notas nacionales,V
+99,Radio Superandina 88.5,local,Los Andes,Los Andes;Calle Larga;Rinconada;San Esteban,Radio,C,sitemap_noticias,https://www.superandina.cl/sitemap/google-news/sitemap.xml,listo,Fechas sin zona horaria,V
+100,Andes Online,local,Los Andes,Los Andes,Diario digital,C,google_news,http://www.losandesonline.cl/,listo,Sitio caído al 17-nov-2026 (no responde por http ni https); solo vía Google News,V
+101,31TV Casablanca,local,Valparaíso,Casablanca,TV en línea,C,facebook,https://www.facebook.com/31tv.cl,captura_asistida,Solo Facebook e Instagram (31tv.cl); sin sitio web ni feed. Se ingresa con captura asistida,V
+102,Agenda Regional,local,Valparaíso,Casablanca,Medio digital,C,facebook,https://www.facebook.com/profile.php?id=61576308577918,captura_asistida,"Solo Facebook; cubre la región de Valparaíso y Casablanca. No confundir con agendaregional.cl, que es otro proyecto",V
+110,31TV Casablanca (Instagram),local,Valparaíso,Casablanca,TV en línea,C,instagram,https://www.instagram.com/31tv.cl/,red,"Cuenta de Instagram de 31TV. Se lee por la API de Meta si es cuenta profesional; si no, captura asistida",V
+111,Canal 2 San Antonio (Facebook),local,San Antonio,San Antonio,TV local,C,facebook,https://www.facebook.com/canal2tvsanantonio,red,"Página de Facebook de Canal 2 (cablenoticias.cl), enlazada desde su sitio",V
+112,Canal 2 San Antonio (Instagram),local,San Antonio,San Antonio,TV local,C,instagram,https://www.instagram.com/canal2chilenasaborfm/,red,Instagram enlazado desde cablenoticias.cl (compartido con Chilena Sabor FM),V
+113,Radio Galactika (Facebook),local,San Antonio,San Antonio;El Tabo;El Quisco;Algarrobo;Santo Domingo,Radio,C,facebook,https://www.facebook.com/profile.php?id=61591891344038,retirado,Retirada: ninguna de sus dos páginas de Facebook muestra publicaciones públicas sin iniciar sesión (nov 2026). Se sigue por Instagram,V
+114,Radio Galactika (Instagram),local,San Antonio,San Antonio;El Tabo;El Quisco;Algarrobo;Santo Domingo,Radio,C,instagram,https://www.instagram.com/radiogalactikamedia/,red,Instagram enlazado desde radiogalactika.cl,V
+115,Santo News (Instagram),local,San Antonio,Santo Domingo,Medio digital,C,instagram,https://www.instagram.com/santonewscl/,red,Instagram enlazado desde santonews.cl,V
+116,Radio Quintay (Facebook),local,Valparaíso,Casablanca,Radio,C,facebook,https://www.facebook.com/radioquintay92.7,red,Página de Facebook @radioquintay92.7 (según su ficha de radio); su sitio no la enlaza,V
+103,MargaMargaTV,local,Marga Marga,Quilpué;Villa Alemana;Limache;Olmué,TV en línea,C,rss,https://margamargatv.cl/feed/,listo,"Categorías Nacional, Regional y Provincial; agregado 11 nov 2026",V
+104,El Aconcagua,local,San Felipe,San Felipe;Los Andes;Santa María;Putaendo;Llaillay;Catemu;Panquehue;Calle Larga;Rinconada;San Esteban,Diario digital,C,rss,https://www.elaconcagua.cl/feed/,listo,Categorías por comuna; agregado 11 nov 2026,V
+105,Aconcagua Digital,local,San Felipe,San Felipe;Catemu;Llaillay;Panquehue;Putaendo;Santa María,Portal,C,rss,https://aconcaguadigital.cl/feed/,listo,Categoría Comunas; agregado 11 nov 2026,V
+106,El Diario de La Ligua,local,Petorca,La Ligua;Cabildo;Petorca;Papudo;Zapallar,Diario digital,C,google_news,https://laliguachile.cl/,restringido,robots.txt cierra /feed/ a todos los bots; se lee vía Google News,V
+107,PortalPortuario,nacional,,,Sectorial portuario,C,rss,https://portalportuario.cl/feed/,listo,Puertos de Valparaíso y San Antonio; mezcla notas internacionales; agregado 11 nov 2026,
+108,Radio Universidad de Valparaíso (RVL),regional,,,Radio universitaria,C,google_news,https://rvl.uv.cl/,listo,Sin feed verificado; aparece en Google News; agregado 11 nov 2026,V
+109,El Informador,local,Los Andes,Los Andes;Calle Larga;Rinconada;San Esteban,Diario digital,C,rss,https://www.elinformador.cl/feed/,listo,Agregado 11 nov 2026,V
+200,Gobierno Regional de Valparaíso,institucional,,,Fuente institucional,C,google_news,https://www.gorevalparaiso.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas,V
+201,Universidad de Valparaíso,institucional,,,Fuente institucional,C,google_news,https://www.uv.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas,V
+202,Pontificia Universidad Católica de Valparaíso,institucional,,,Fuente institucional,C,google_news,https://www.pucv.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas,V
+203,Universidad Técnica Federico Santa María,institucional,,,Fuente institucional,C,google_news,https://usm.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas,V
+204,Universidad de Playa Ancha,institucional,,,Fuente institucional,C,google_news,https://www.upla.cl/,listo,Comunicados institucionales: no cuentan como prensa en las alertas,V
+205,Municipalidad de Valparaíso,institucional,Valparaíso,Valparaíso,Fuente institucional,C,google_news,https://municipalidaddevalparaiso.cl/,listo,Comunicados municipales,V
+206,Municipalidad de Viña del Mar,institucional,Valparaíso,Viña del Mar,Fuente institucional,C,google_news,https://www.munivina.cl/,listo,Comunicados municipales,V
+207,Municipalidad de San Antonio,institucional,San Antonio,San Antonio,Fuente institucional,C,google_news,https://www.sanantonio.cl/,listo,Comunicados municipales,V
+208,Municipalidad de Quillota,institucional,Quillota,Quillota,Fuente institucional,C,google_news,https://www.quillota.cl/,listo,Comunicados municipales,V
+209,Municipalidad de Rapa Nui,institucional,Isla de Pascua,Isla de Pascua,Fuente institucional,C,google_news,https://www.rapanui.net/,listo,Comunicados municipales,V
+210,SoySanAntonio,local,San Antonio,San Antonio;Cartagena;El Quisco;Algarrobo;Santo Domingo;El Tabo,Red regional,B,portada,https://www.soychile.cl/san-antonio/,listo,Edición de SoyChile; portada con fecha en la dirección,V
+211,SoyQuillota,local,Quillota,Quillota;La Calera;La Cruz;Hijuelas;Nogales,Red regional,B,portada,https://www.soychile.cl/quillota/,listo,Edición de SoyChile; portada con fecha en la dirección,V
+117,MasContainer,nacional,,,Sectorial logístico,C,rss,https://www.mascontainer.com/feed/,listo,Logística y comercio exterior; puertos de San Antonio y Valparaíso; agregado 23 nov 2026 tras comparar con Atalaya,
+118,MundoMaritimo,nacional,,,Sectorial marítimo,C,google_news,https://www.mundomaritimo.cl/,listo,Sin feed declarado; se lee vía Google News; agregado 23 nov 2026 tras comparar con Atalaya,
+212,Subdere,institucional,,,Fuente institucional,C,google_news,https://www.subdere.gov.cl/,listo,"Fondos, programas y transferencias a municipios; anticipa noticias municipales; agregado 23 nov 2026",
+213,Asociación Chilena de Municipalidades,institucional,,,Fuente institucional,C,google_news,https://www.achm.cl/,listo,Posiciones del mundo municipal; agregado 23 nov 2026,
+214,AMUCH,institucional,,,Fuente institucional,C,google_news,https://amuch.cl/,listo,Estudios y encuestas municipales; agregado 23 nov 2026,
+215,Servicio de Evaluación Ambiental,institucional,,,Fuente institucional,C,google_news,https://www.sea.gob.cl/,listo,Proyectos en evaluación ambiental; anticipa conflictos territoriales; agregado 23 nov 2026,
+216,Superintendencia del Medio Ambiente,institucional,,,Fuente institucional,C,google_news,https://sma.gob.cl/,listo,"Fiscalizaciones, sanciones y denuncias ambientales; agregado 23 nov 2026",
+217,CONAF,institucional,,,Fuente institucional,C,google_news,https://www.conaf.cl/,listo,"Incendios forestales, alertas y restricciones de uso del fuego; robots.txt no permite la lectura directa; agregado 23 nov 2026",
+218,Ministerio de Obras Públicas,institucional,,,Fuente institucional,C,google_news,https://www.mop.gob.cl/,listo,"Obras viales, agua potable rural y concesiones; agregado 23 nov 2026",
+219,Delegación Presidencial Regional de Valparaíso,institucional,,,Fuente institucional,C,google_news,,listo,"Seguridad, emergencias y vocería del Gobierno en la región; sin sitio propio verificado, se reconoce por el nombre de la fuente en Google News; agregado 23 nov 2026",V
+220,Senado de Chile,institucional,,,Fuente institucional,C,google_news,https://www.senado.cl/,listo,Sesiona en Valparaíso; proyectos y dichos de senadores de la región; agregado 23 nov 2026,
+221,Seremi de Salud Valparaíso,institucional,,,Fuente institucional,C,google_news,,listo,"Sumarios sanitarios, brotes y clausuras; se reconoce por el nombre de la fuente en Google News; agregado 23 nov 2026",V
+222,Fiscalía de Chile,institucional,,,Fuente institucional,C,google_news,https://www.fiscaliadechile.cl/,listo,Querellas e investigaciones que involucran a municipios o autoridades; la matriz de competencias separa lo policial; agregado 23 nov 2026,
+223,Poder Judicial,institucional,,,Fuente institucional,C,google_news,https://www.pjud.cl/,listo,Fallos de la Corte de Apelaciones de Valparaíso y otros tribunales; agregado 23 nov 2026,
+224,Empresa Portuaria Valparaíso,institucional,Valparaíso,Valparaíso,Fuente institucional,C,google_news,https://www.puertovalparaiso.cl/,listo,Obras y anuncios del puerto; agregado 23 nov 2026,V
+225,Empresa Portuaria San Antonio,institucional,San Antonio,San Antonio,Fuente institucional,C,google_news,https://www.puertosanantonio.com/,listo,Puerto Exterior y relación puerto-ciudad; agregado 23 nov 2026,V
+226,Serviu Región de Valparaíso,institucional,,,Fuente institucional,C,google_news,https://serviuvalparaiso.minvu.gob.cl/,listo,"Reconstrucción, vivienda y pavimentación; agregado 23 nov 2026",V
+227,Contraloría General de la República,institucional,,,Fuente institucional,C,oficial,https://www.contraloria.cl/web/cgr/informes-de-auditoria,listo,"Documentos oficiales: informes finales de auditoría, investigaciones especiales y seguimientos de la Contraloría Regional de Valparaíso, leídos directo del buscador público; agregado 23 nov 2026",
+228,Mercado Público,institucional,,,Fuente institucional,C,oficial,https://www.mercadopublico.cl/,listo,"Documentos oficiales: licitaciones municipales desiertas, revocadas o suspendidas vía la API de ChileCompra; requiere MERCADOPUBLICO_TICKET; agregado 23 nov 2026",
+229,Esval,institucional,,,Fuente institucional,C,oficial,https://www.esval.cl/personas/cortes-estado-del-servicio/,listo,"Documentos oficiales: cortes de agua activos y avisos de emergencia de la sanitaria, leídos de su oficina virtual; agregado 23 nov 2026",V
+296,Otro medio regional (vía Google News),regional,,,Otro medio,C,google_news,,listo,Medios de la región que Google News encuentra y no están en el catálogo; cada nota muestra el nombre real del medio,
+297,Otro medio nacional (vía Google News),nacional,,,Otro medio,C,google_news,,listo,Medios chilenos que Google News encuentra y no están en el catálogo; cada nota muestra el nombre real del medio,
+299,Otra fuente institucional,institucional,,,Fuente institucional,C,google_news,,listo,"Ministerios, servicios, municipalidades y Fuerzas Armadas sin ficha propia; cada nota muestra el nombre real de la institución",
+400,El Diario de Antofagasta,regional,,,Diario digital,B,rss,https://www.diarioantofagasta.cl/feed/,listo,"Diario regional independiente; RSS verificado el 23 nov 2026 (10 notas, al día)",II
+401,Timeline.cl,regional,,,Diario digital,B,rss,https://www.timeline.cl/feed/,listo,"Medio digital de Antofagasta (política, municipios, consejo regional); RSS verificado el 23 nov 2026",II
+402,Antofagasta TV,regional,,,TV,B,sitemap,https://www.antofagasta.tv/sitemap/news/sitemap.xml,listo,Índice de mapas mensuales (se leen los dos más recientes); titulares desde la dirección; verificado el 23 nov 2026,II
+403,SoyAntofagasta,regional,,,Red regional,B,portada,https://www.soychile.cl/antofagasta/,listo,"Portada de la edición de SoyChile, con fecha en la dirección; verificado el 23 nov 2026",II
+404,SoyCalama,local,El Loa,Calama,Red regional,B,portada,https://www.soychile.cl/calama/,listo,Portada de la edición de SoyChile; verificado el 23 nov 2026,II
+405,SoyTocopilla,local,Tocopilla,Tocopilla,Red regional,C,portada,https://www.soychile.cl/tocopilla/,listo,Portada de la edición de SoyChile; mezcla notas de Calama; verificado el 23 nov 2026,II
+406,Calama en Línea,local,El Loa,Calama,Diario digital,C,rss,https://noticias.calamaenlinea.cl/feed/,listo,RSS verificado el 23 nov 2026,II
+407,Radio Sol,regional,,,Radio,C,rss,https://radiosol.cl/feed/,listo,Radio de Antofagasta; poca actividad en su web (última nota del 10 oct 2026); verificado el 23 nov 2026,II
+408,Madero,regional,,,Radio,C,rss,https://madero.cl/feed/,listo,"Plataforma de Antofagasta, Atacama y Coquimbo: cuenta lo que nombra comunas de la región; verificado el 23 nov 2026",II
+409,El Mercurio de Antofagasta,regional,,,Diario,A,google_news,,restringido,Grupo El Mercurio; sus notas digitales salen en SoyAntofagasta; se reconoce por el nombre en Google News,II
+410,La Estrella de Antofagasta,regional,,,Diario,B,google_news,,restringido,Grupo El Mercurio; se reconoce por el nombre en Google News,II
+411,El Mercurio de Calama,local,El Loa,Calama,Diario,B,google_news,,restringido,Grupo El Mercurio; se reconoce por el nombre en Google News,II
+412,La Estrella del Loa,local,El Loa,Calama,Diario,C,google_news,,restringido,Grupo El Mercurio; se reconoce por el nombre en Google News,II
+413,La Prensa de Tocopilla,local,Tocopilla,Tocopilla,Diario,C,google_news,,restringido,Grupo El Mercurio; se reconoce por el nombre en Google News,II
+414,"BioBioChile, Región de Antofagasta",regional,,,Radio nacional,A,rss_filtrado,https://www.biobiochile.cl/static/feed-google,listo,Mismo feed que BioBioChile; se queda con la sección /region-de-antofagasta/ (verificado el 23 nov 2026),II
+415,"24 Horas, Antofagasta",regional,,,TV,A,sitemap_filtrado,https://www.24horas.cl/24horas/site/sitemap_pags.xml,listo,Mismo mapa mensual que 24 Horas: se quedan las notas de /regiones/zona-norte/antofagasta/ (Red Antofagasta de TVN),II
+416,"Meganoticias, Región de Antofagasta",regional,,,TV nacional,A,sitemap_filtrado,https://www.meganoticias.cl/sitemaps/sitemap-news.xml,listo,"Del mapa de noticias de Meganoticias, las notas cuya dirección nombra una comuna de la región",II
+420,Gobierno Regional de Antofagasta,institucional,,,Fuente institucional,C,google_news,https://www.goreantofagasta.cl/,listo,"Consejo regional, inversión y gobernador; por dominio en Google News",II
+421,Delegación Presidencial Regional de Antofagasta,institucional,,,Fuente institucional,C,google_news,,listo,"Seguridad, emergencias y vocería del Gobierno en la región; por el nombre de la fuente en Google News",II
+422,Empresa Portuaria Antofagasta,institucional,Antofagasta,Antofagasta,Fuente institucional,C,google_news,https://www.puertoantofagasta.cl/,listo,Obras del puerto y relación puerto-ciudad; por dominio en Google News,II
+423,Universidad de Antofagasta,institucional,,,Fuente institucional,C,google_news,https://www.uantof.cl/,listo,Por dominio en Google News,II
+424,Universidad Católica del Norte,institucional,,,Fuente institucional,C,google_news,https://www.ucn.cl/,listo,Por dominio en Google News,II
+425,Aguas Antofagasta,institucional,,,Fuente institucional,C,google_news,https://www.aguasantofagasta.cl/,listo,Sanitaria de la región: cortes y obras; por dominio en Google News,II
