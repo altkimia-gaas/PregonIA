@@ -21,7 +21,7 @@ Si se agregan pagos en línea, analítica, píxeles o correos comerciales, se ac
 
 | N° | Control | Estado | Evidencia o acción |
 |---|---|---|---|
-| 1 | Política de privacidad | Implementado | `legal.html#privacidad`, vigente desde el 13-nov-2026 (revisada) |
+| 1 | Política de privacidad | Implementado | `legal.html#privacidad`, vigente desde el 23-nov-2026 (prueba gratis de 7 días; antes 48 horas) |
 | 2 | Plazo de retención | Parcial | Plazos fijados en la política (cuentas: contrato + 90 días; actividad: 12 meses; noticias: 24 meses). Falta borrado automático programado (función SQL + llamada diaria desde `api/ingesta.js`) |
 | 3 | Descargar y borrar datos | Pendiente | Hoy se atiende por correo y desde Supabase. Falta "Exportar datos del municipio" (JSON) y flujo de baja de cuenta |
 | 4 | Minimización | Cumple | No se guarda el texto de los medios (`notas`), la imagen de las capturas no se almacena, perfiles con datos mínimos |

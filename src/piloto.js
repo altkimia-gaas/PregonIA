@@ -123,7 +123,7 @@ function menuCuenta(b){
 /* Aceptación de Términos y Política de privacidad (control 6 y 12 del checklist legal).
    Se pide una vez por versión de los documentos; la base guarda quién aceptó, qué versión y cuándo (tabla aceptaciones).
    Si la tabla aún no existe (esquema sin actualizar), no bloquea el ingreso y lo deja anotado en la consola. */
-const LEGAL_VERSION = "2026-11-13";
+const LEGAL_VERSION = "2026-11-23";  // 23-nov-2026: la prueba gratis pasa de 48 horas a 7 días
 async function aceptacion(user){
   const {data, error} = await PILOTO.sb.from("aceptaciones").select("id").eq("usuario", user.id).eq("version", LEGAL_VERSION).limit(1);
   if (error) { console.warn("PregonIA: falta la tabla aceptaciones; corre de nuevo supabase/esquema.sql.", error.message); return true; }
