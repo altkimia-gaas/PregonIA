@@ -2110,7 +2110,7 @@ function pintarAccesoPortada(){
   const out = $("#ptOut"); if (out) { const prueba = !dentro && pruebaVigente(); out.hidden = !(dentro || prueba); out.dataset.act = dentro ? "salir" : "salir-prueba"; out.lastChild.textContent = dentro ? "Cerrar sesión" : "Salir de la prueba"; }  // sin Supabase configurado (por ejemplo, el archivo suelto) no hay a qué ingresar
   $("#ptPiloto").hidden = dentro;
   $("#ptDemo").hidden = dentro;
-  $("#ptEstado").textContent = dentro ? "Edición de " + pl.muni.nombre : "Prueba gratis de 48 horas con noticias reales";
+  $("#ptEstado").textContent = dentro ? "Edición de " + pl.muni.nombre : "Prueba gratis de 7 días con noticias reales";
 }
 function salirPortada(){ mostrarPortada(false); if (!location.hash || location.hash === "#portada") location.hash = "inicio"; }
 function mostrarPortada(on){

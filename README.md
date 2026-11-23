@@ -5,7 +5,7 @@ Monitoreo de noticias sobre municipios y actores públicos en más de 100 medios
 Demo publicada: https://pregonia.cl
 
 Producto de ALTKimia. Piloto: Casablanca, Algarrobo, El Quisco, El Tabo, Cartagena y San Antonio.
-Sin demostración con noticias ficticias (retirada el 22-nov-2026): la aplicación se abre con la prueba gratis de 48 horas (noticias reales del último mes de la comuna o la autoridad elegida) o con la cuenta del cliente (piloto). Sin prueba vigente ni sesión, solo se ve la portada.
+Sin demostración con noticias ficticias (retirada el 22-nov-2026): la aplicación se abre con la prueba gratis de 7 días (noticias reales del último mes de la comuna o la autoridad elegida) o con la cuenta del cliente (piloto). Sin prueba vigente ni sesión, solo se ve la portada.
 
 ## Qué incluye el prototipo
 - **Portada:** como la de un diario: cabezal con la fecha, nombre y lema, doble filete, titular con la propuesta de valor, botones «Prueba gratis» y «Agendar demostración» (reunión comercial), más «Acceso clientes» (con sesión, «Entrar a mi edición»), la miniatura de la edición del día y tres columnas (Lee, Mide, Responde). Sin sesión la miniatura es siempre de "Comuna de Ejemplo", con datos de ejemplo; con sesión del piloto es la de la institución de esa persona, nunca la de otra. Aparece cada vez que se abre o recarga la aplicación, con `#portada` y al tocar el logo; la entrada lleva a la sección de la dirección o a Inicio. Para abrir sin portada: `?sin-portada`.
