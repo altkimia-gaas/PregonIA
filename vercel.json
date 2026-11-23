@@ -33,15 +33,79 @@
       "source": "/",
       "has": [
         {
-          "type": "host",
-          "value": "www.pregonia.cl"
+          "type": "query",
+          "key": "sin-portada"
         }
       ],
-      "destination": "/servicio.html"
+      "destination": "/app.html"
     },
     {
       "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "prueba"
+        }
+      ],
       "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "ingresar"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "alerta"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "avisos"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "instalar"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "compartir"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/app",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "destination": "/servicio.html"
     },
     {
       "source": "/compartir",

@@ -1,3 +1,6 @@
+/* La aplicación vive en /app; el inicio de pregonia.cl es la página del servicio. Si se abrió en «/» (enlaces con ?prueba, ?ingresar,
+   ?sin-portada de los avisos), la dirección pasa a /app para que recargar no lleve a la página del servicio. */
+if (location.pathname === "/" && /^https?:$/.test(location.protocol)) history.replaceState(null, "", "/app" + location.search + location.hash);
 const CATALOG = /*CATALOG*/;
 const MED = Object.fromEntries(CATALOG.map(m => [m.id, m]));
 const COMUNAS = ["Casablanca","San Antonio","Cartagena","El Quisco","El Tabo","Algarrobo"];
