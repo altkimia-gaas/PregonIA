@@ -3,6 +3,7 @@
 import { gunzipSync } from "node:zlib";
 import { CATALOGO } from "./_catalogo.js";
 import { COMUNAS_V } from "./_autoridades.js";
+import { leerOficiales } from "./_oficiales.js";
 
 /* Las 38 comunas de la Región de Valparaíso, con las formas en que la prensa las escribe. */
 const ALIAS = { "Llaillay": ["llay-llay", "llay llay"], "Isla de Pascua": ["rapa nui"] };
@@ -170,7 +171,11 @@ async function llamar1(prompt, maxTok){
    después de la primera letra. La IA escribe un titular limpio en la misma llamada del resumen, sin costo adicional. */
 export const esTituloUrl = t => { const s = String(t || "").trim(); return s.split(" ").length >= 3 && !/[áéíóúüñ¿¡,:;.!?"“”«»'‘’()]/i.test(s) && s.slice(1) === s.slice(1).toLowerCase(); };
 export const tituloFinal = (n, c) => esTituloUrl(n.titulo) && c && typeof c.t === "string" && c.t.trim().length > 8 ? c.t.trim().slice(0, 160) : n.titulo;
-const linea = (n, i) => `${i}. [${n.medio} · ${n.ambito}] ${n.titulo}${esTituloUrl(n.titulo) ? " (titular sacado de la dirección web)" : ""}${n.desc ? " — " + n.desc.slice(0, 240) : ""}`;
+const linea = (n, i) => `${i}. [${n.medio} · ${n.ambito}] ${n.titulo}${esTituloUrl(n.titulo) ? " (titular sacado de la dirección web)" : ""}${n.desc ? " — " + n.desc.slice(0, n.via === "oficial" ? 480 : 240) : ""}${n.via === "oficial" ? " (documento oficial)" : ""}`;
+/* Documentos oficiales (Contraloría, Mercado Público, Esval): no son prensa todavía; se clasifican igual, con estas precisiones. */
+const OFICIAL_INSTR = (sujeto) => `
+Las líneas marcadas «(documento oficial)» no son notas de prensa: son documentos públicos recién publicados por una institución (informes de Contraloría, licitaciones de Mercado Público, cortes de agua de Esval) que la prensa todavía puede tomar. Clasifícalos igual, con estas reglas: "rel" es true si el documento trata de ${sujeto}, de su comuna o de sus vecinos; "tono" es "cri" si el documento observa irregularidades, deficiencias o incumplimientos de ${sujeto} (por ejemplo, un informe de Contraloría con observaciones o sumarios) o si una licitación suya fracasa; un corte de agua es "neu" con área agua e impulsor gremio; "im" de un informe de Contraloría es fiscalizador; "res" debe decir qué podría publicar la prensa.
+`;
 const TITULO_INSTR = `- "t": solo en las notas marcadas «(titular sacado de la dirección web)»: un titular limpio de máximo 12 palabras, con tildes y mayúsculas correctas, fiel al hecho y sin agregar datos. En las demás notas, omítelo.`;
 /* Ficha editorial (ver claude/clasificacion-editorial-pregonia.md): la IA clasifica lo interpretativo; competencia, prioridad,
    acción y plazo los calcula la aplicación con reglas a partir de esto. Va en la misma llamada: solo suma unas palabras por nota. */
@@ -206,7 +211,7 @@ function promptLote(comuna, notas, base, ejemplos = []){
 ${notas.map((n, k) => linea(n, base + k) + (n.sobre === "pc" ? " (hallada por la comuna)" : "")).join("\n")}
 
 Las notas marcadas «(hallada por la comuna)» salieron de una búsqueda de ${comuna} y la nombran en el cuerpo aunque el titular no lo diga: decide por su tema si trata de la comuna.
-
+${notas.some(n => n.via === "oficial") ? OFICIAL_INSTR("la Municipalidad de " + comuna) : ""}
 Para cada nota devuelve un objeto con:
 - "i": su número.
 - "rel": true solo si trata de la comuna de ${comuna} en Chile, su municipio, sus autoridades o hechos ocurridos allí; false si es otro lugar con el mismo nombre, si la comuna aparece solo de pasada o si solo es el lugar de una cárcel, un tribunal, una carretera o un trámite judicial y el hecho no afecta a los vecinos ni al municipio.
@@ -228,7 +233,7 @@ function promptLoteAut(a, notas, base, ejemplos = []){
   return `Eres analista de prensa de PregonIA para el equipo de ${a.cargo} ${a.nombre} (${a.zona}, Región de Valparaíso, Chile). Revisa estas notas de prensa:
 
 ${notas.map((n, k) => lineaAut(n, base + k)).join("\n")}
-
+${notas.some(n => n.via === "oficial") ? OFICIAL_INSTR(a.nombre + " o " + inst) : ""}
 Para cada nota devuelve un objeto con:
 - "i": su número.
 - "rel": true si la nota nombra a ${a.nombre} como ${a.cargo.toLowerCase()} o trata directamente de su labor; también si trata de ${inst} (sus acuerdos, votaciones, proyectos, recursos, autoridades o polémicas), porque eso afecta a quien la integra. Las notas marcadas «(hallada por su nombre)» salieron de una búsqueda de su nombre y la mencionan en el cuerpo aunque el titular no lo diga: son true salvo que traten claramente de otra persona o de otro lugar. false si es otra persona con un nombre parecido, si es de otra región o si la institución o el territorio aparecen solo de pasada.
@@ -288,6 +293,8 @@ const FILTROS = { 54: u => /\/region-de-valparaiso\//.test(u), 40: u => /\/latin
 const seLee = m => METODOS.has(m.metodo) && m.url && m.estado !== "restringido" && m.estado !== "en_prueba" && !(m.metodo.endsWith("_filtrado") && !FILTROS[m.id]);
 export async function leerCatalogo(){
   const fuentes = CATALOGO.filter(seLee), errores = [], porUrl = new Map();
+  // Documentos oficiales (Contraloría, Esval): se leen en paralelo con los medios y entran a la misma lista (ver _oficiales.js).
+  const oficiales = leerOficiales().catch(() => ({items: [], total: 1, errores: ["Contraloría"]}));
   fuentes.forEach(m => { if (!porUrl.has(m.url)) porUrl.set(m.url, []); porUrl.get(m.url).push(m); });
   const items = (await Promise.all([...porUrl.entries()].map(async ([url, ms]) => {
     try {
@@ -297,7 +304,8 @@ export async function leerCatalogo(){
       return its.map(x => { const f = filtrados.find(m => FILTROS[m.id](x.url)); const m = f || resto; return m ? { ...x, m } : null; }).filter(Boolean);
     } catch(e) { ms.forEach(m => errores.push(m.nombre)); return []; }
   }))).flat();
-  return {items, total: fuentes.length, errores};
+  const of = await oficiales;
+  return {items: items.concat(of.items), total: fuentes.length + of.total, errores: errores.concat(of.errores)};
 }
 const porDominio = new Map(), porNombre = new Map();
 /* Fuentes institucionales sin ficha propia (ministerios, servicios, municipalidades, Fuerzas Armadas): una ficha común que conserva el nombre real. */

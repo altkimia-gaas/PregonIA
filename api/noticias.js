@@ -1,6 +1,7 @@
 // Noticias reales para PregonIA (etapa 1, sin base de datos): lee los medios al vuelo para una comuna, clasifica con Claude Haiku
 // y devuelve titular, enlace, medio, fecha y resumen propio. La respuesta queda 15 minutos en la caché de Vercel.
 // La lectura y la clasificación viven en _lectura.js, compartido con la lectura programada (/api/ingesta).
+import { leerOficiales } from "./_oficiales.js";
 import { tituloFinal, COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, fichaNota, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre, saludFuentes, plazoGoogleNews, statsGoogleNews, ahorroGoogleNews } from "./_lectura.js";
 import { AUTORIDADES, PROVINCIAS, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
 import { limpio, consulta, sujeto, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
@@ -103,6 +104,11 @@ export async function GET(req){
     // ?salud=1&ids=5,6,23 revisa solo esos medios y no consulta Google News (para verificar un ajuste sin gastar su cuota).
     const ids = (u.searchParams.get("ids") || "").split(",").map(Number).filter(Boolean);
     return json(await saludFuentes(ids.length ? [] : qs, ids.length ? new Set(ids) : null), 200, { "cache-control": "public, max-age=0, s-maxage=" + (ids.length ? 60 : 1800) });
+  }
+  if (u.searchParams.has("oficiales")) {  // diagnóstico de documentos oficiales (Contraloría, Esval): solo datos públicos, sin IA
+    const r = await leerOficiales();
+    return json({errores: r.errores, detalle: r.detalle, total: r.items.length, porFuente: r.items.reduce((o, x) => (o[x.m.nombre] = (o[x.m.nombre] || 0) + 1, o), {}),
+      items: r.items.slice(0, 60).map(x => ({fuente: x.m.nombre, fecha: new Date(x.fecha).toISOString(), titulo: x.titulo}))}, 200, {"cache-control": "public, max-age=0, s-maxage=600"});
   }
   if (u.searchParams.has("pulso")) return pulso(u);
   if (u.searchParams.has("autoridad") || u.searchParams.has("rol")) return deAutoridad(u);

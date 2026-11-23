@@ -15,6 +15,7 @@ import { avisar } from "./_avisos.js";
 import { parteWhatsapp, whatsappListo, horaChileWa } from "./_whatsapp.js";
 import { leerRedes, usuarioDe } from "./_redes.js";
 import { detectarRedaccion } from "./_redaccion.js";
+import { leerMercadoPublico, mercadoPublicoListo } from "./_oficiales.js";
 
 /* Cuentas de Facebook e Instagram de la base: las del catálogo fijo y las inscritas desde la aplicación. */
 const cuentaDe = r => ({id: r.id, nombre: r.nombre, ambito: r.ambito, comuna: r.comunas || "", red: r.metodo, usuario: r.usuario_red || usuarioDe(r.metodo, r.url_lectura)});
@@ -106,16 +107,21 @@ async function manejar(req){
   const [lectura] = await sb("lecturas", {method: "POST", prefer: "return=representation", body: {inicio: new Date(ahora).toISOString()}});
   try {
     const munis = await cuentasActivas();
-    const [cat0, enBase, filasRedes, ...gns] = await Promise.all([leerCatalogo(), sb("medios?select=id"),
-      sb("medios?metodo=in.(instagram,facebook)&estado=neq.retirado&select=id,nombre,ambito,comunas,metodo,url_lectura,usuario_red").catch(() => []),
+    // Mercado Público: cada dos horas (la primera lectura de las horas pares), solo para las comunas cliente; ver _oficiales.js.
+    const horaCl = Number(new Intl.DateTimeFormat("es-CL", {timeZone: "America/Santiago", hour: "2-digit", hourCycle: "h23"}).format(new Date(ahora)));
+    const mpToca = mercadoPublicoListo() && (horaCl % 2 === 0 && new Date(ahora).getMinutes() < 30 || new URL(req.url).searchParams.has("mercado"));
+    const mpComunas = [...new Set(munis.filter(m => !m.autoridad).map(m => m.comuna))];
+    const mpLectura = mpToca ? leerMercadoPublico(mpComunas, ahora, 90000).catch(e => ({items: [], error: String(e.message || e).slice(0, 160)})) : Promise.resolve(null);
+    const [cat0, enBase, filasRedes, mp, ...gns] = await Promise.all([leerCatalogo(), sb("medios?select=id"),
+      sb("medios?metodo=in.(instagram,facebook)&estado=neq.retirado&select=id,nombre,ambito,comunas,metodo,url_lectura,usuario_red").catch(() => []), mpLectura,
       ...munis.map(m => m.gn().catch(() => null))]);
     const rs = await leerRedes(filasRedes.map(cuentaDe));
     // Estado de cada cuenta para la vista Fuentes: cuándo se leyó y, si falló, por qué. Un error aquí no detiene la lectura.
     await Promise.all(rs.estado.filter(e => !e.pendiente).map(e => sb(`medios?id=eq.${e.id}`, {method: "PATCH", prefer: "return=minimal",
       body: e.ok ? {ultima_lectura: new Date().toISOString(), error_lectura: null} : {error_lectura: e.error}}).catch(() => null)));
     // Solo medios que ya existen en la base (clave foránea de notas): un medio nuevo del catálogo espera a que se cargue la semilla.
-    const ids = new Set(enBase.map(x => x.id)), cat = {...cat0, items: cat0.items.filter(x => ids.has(x.m.id)).concat(rs.items), total: cat0.total + rs.total};
-    const errores = cat.errores.concat(gns.some(g => !g) ? ["Google News"] : [], rs.errores);
+    const ids = new Set(enBase.map(x => x.id)), cat = {...cat0, items: cat0.items.concat(mp ? mp.items : []).filter(x => ids.has(x.m.id)).concat(rs.items), total: cat0.total + rs.total + (mp ? 1 : 0)};
+    const errores = cat.errores.concat(gns.some(g => !g) ? ["Google News"] : [], rs.errores, mp && mp.error ? ["Mercado Público"] : []);
     // Redacción (cuentas propias de PregonIA): usa lo ya leído (prensa, redes y Google News de las comunas cliente), en paralelo
     // con la clasificación de las cuentas y con su propio tope de tiempo, para que nunca demore ni rompa la lectura.
     const gnPorComuna = Object.fromEntries(munis.map((m, k) => [m.autoridad ? null : m.comuna, gns[k]]).filter(([c, g]) => c && g));
@@ -131,7 +137,9 @@ async function manejar(req){
       try { r.whatsapp = await parteWhatsapp(sb, munis[k], Date.now()); } catch(e) { r.whatsapp = {error: String(e.message || e).slice(0, 160)}; } }));
     const suma = k => res.reduce((s, r) => s + (r[k] || 0), 0);
     const resumen = {fin: new Date().toISOString(), fuentes_ok: cat.total + 1 - errores.length, fuentes_total: cat.total + 1, errores: errores.slice(0, 60),
-      candidatas: suma("candidatas"), nuevas: suma("nuevas"), clasificadas: suma("clasificadas"), detalle: {comunas: res, ia: DIAG.slice(0, 8), google_news: statsGoogleNews(), redaccion}};
+      candidatas: suma("candidatas"), nuevas: suma("nuevas"), clasificadas: suma("clasificadas"), detalle: {comunas: res, ia: DIAG.slice(0, 8), google_news: statsGoogleNews(), redaccion,
+      oficiales: {contraloria: cat0.items.filter(x => x.m.id === 227).length, esval: cat0.items.filter(x => x.m.id === 229).length,
+        mercado_publico: mp ? {licitaciones: mp.items.length, consultas: mp.consultas, organismos: mp.organismos, error: mp.error} : (mercadoPublicoListo() ? "fuera de turno" : "sin ticket")}}};
     await sb(`lecturas?id=eq.${lectura.id}`, {method: "PATCH", body: resumen, prefer: "return=minimal"});
     return json({ok: true, lectura: lectura.id, ...resumen}, 200, {"cache-control": "no-store"});
   } catch(e) {
