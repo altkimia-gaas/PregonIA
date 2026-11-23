@@ -1780,7 +1780,7 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
 .pd-mk i{display:block;width:.16em;border-radius:.045em;background:var(--accent)}
 .pd-mk i:nth-child(1){height:40%;opacity:.55}.pd-mk i:nth-child(2){height:70%;opacity:.8}.pd-mk i:nth-child(3){height:100%}
 .pd-lema{margin:0 0 16px;text-align:center;font-family:var(--f-news);font-style:italic;font-size:1.0625rem;color:var(--muted)}
-.pd-cuerpo{display:grid;justify-items:center;text-align:center}
+.pd-cuerpo{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;text-align:center}  /* la columna no crece con el teletipo: sin esto, en el celular la portada se desborda */
 .pd-ante{margin:26px 0 12px;font-size:.8125rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .pd-titulo{margin:0;max-width:24ch;font-family:var(--f-news);font-weight:700;font-size:clamp(2rem,4vw,3rem);line-height:1.08;letter-spacing:-.015em;text-wrap:balance}
 .pd-bajada{margin:18px 0 0;max-width:54ch;font-family:var(--f-news);font-size:clamp(1.0625rem,1.6vw,1.25rem);line-height:1.5;color:var(--lead)}
@@ -2007,6 +2007,8 @@ body.cliente .tools{flex:none}
 .tools #avisosBtn{order:1}.tools #temaBtn{order:2}.tools [data-act="help"]{order:3}.tools #cuentaBtn{order:4}.tools #salirBtn{order:5}
 @media (max-width:1180px){ body.cliente .tools{margin-left:auto} }
 @media (max-width:820px){ body.cliente .orgnom{padding-left:10px;font-size:14px;max-width:40vw} }
+/* Celular: la institución baja a su propia línea bajo el logo (en una fila con logo y herramientas quedaba en una letra). */
+@media (max-width:560px){ body.cliente .top-in{flex-wrap:wrap;row-gap:2px;padding-bottom:6px} body.cliente .orgnom{order:10;flex:1 0 100%;max-width:none;border-left:0;padding-left:0;font-size:13px} }
 /* Franja de la prueba, delgada */
 .demo{padding-block:4px}
 .demo[hidden]{display:none}
@@ -2082,6 +2084,7 @@ body.cliente .tools{flex:none}
   .ini-mov-k>div:first-child{padding-left:0}
   .ini-mov-k>div+div{border-left:1px solid var(--line)}
   .ini-mov-k .v{font-family:var(--f-news);font-weight:700;font-size:26px;line-height:1.05}
+  .ini-mov-k .v.word{font-size:clamp(15px,4.6vw,22px);overflow-wrap:anywhere}
   .ini-mov-k .v.word{font-size:19px;line-height:1.25}
   .ini-mov-k .v.pos{color:var(--pos)} .ini-mov-k .v.cri{color:var(--cri)}
   .ini-mov-k .s{font-size:12.5px;color:var(--muted)}
@@ -5991,7 +5994,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search) || !pruebaV
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "6849db2eab8e", K = "app";
+  const V = "d116b80dae9b", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
