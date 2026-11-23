@@ -9,7 +9,7 @@ const cargoCuenta = (c = cuenta()) => esAut(c) ? cargoDe(c.perfil.rol, c.perfil.
 function inst(c = cuenta()){ return esAut(c) ? `${cargoCuenta(c)} ${c.perfil.nombre}` : "Municipalidad de " + S.org; }
 const territorio = (c = cuenta()) => esAut(c) ? c.perfil.comunas : [S.org];
 /* Región de la cuenta: la de su comuna o de la primera comuna de su territorio. */
-const regionCuenta = (c = cuenta()) => REGIONES[regionDeComuna(territorio(c)[0]) || REGION_DEFECTO];
+const regionCuenta = (c = cuenta()) => { const p = (c && c.perfil) || {}; return REGIONES[regionDeComuna(p.comuna || (p.comunas || [])[0] || S.org) || REGION_DEFECTO]; };
 const datosLbl = () => esAut() ? "DATOS DE LA OFICINA" : "DATOS DEL MUNICIPIO";
 const baseAutoridad = p => `[Completar] Comisiones o espacios que integra ${p.nombre}.\n[Completar] Proyectos, mociones o iniciativas que impulsa, con su estado.\n[Completar] Gestiones recientes en ${p.zonaNombre}, con fecha y resultado.\n[Completar] Vocería autorizada y contacto de prensa.`;
 

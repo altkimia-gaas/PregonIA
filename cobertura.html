@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Cobertura · Qué medios lee PregonIA</title>
-<meta name="description" content="Los medios nacionales, regionales y comunales que lee PregonIA, comuna por comuna en la Región de Valparaíso, y el estado de la última lectura.">
+<meta name="description" content="Los medios nacionales, regionales y comunales que lee PregonIA, comuna por comuna, y el estado de la última lectura.">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" type="image/png" sizes="192x192" href="/icono-192.png">
 <link rel="apple-touch-icon" href="/icono-180.png">
@@ -64,7 +64,7 @@ ul.medios li .punto{position:relative;top:1px}
   </header>
   <main>
     <h1>Qué medios leemos, comuna por comuna</h1>
-    <p class="lead">PregonIA lee medios nacionales, regionales y comunales de la Región de Valparaíso, y las cuentas de redes de los medios locales. Esta es la lista completa y cómo salió la última lectura.</p>
+    <p class="lead">PregonIA lee medios nacionales, regionales y comunales, y las cuentas de redes de los medios locales. Esta es la lista completa y cómo salió la última lectura.</p>
     <div class="cifras" id="cifras" aria-live="polite"><div><b>…</b><small>medios y cuentas</small></div><div><b>…</b><small>comunales</small></div><div><b>…</b><small>regionales</small></div><div><b>…</b><small>nacionales</small></div></div>
     <p class="estado" id="estado"><span class="punto"></span><span>Revisando la última lectura…</span></p>
     <div class="filtro"><label for="comuna">Tu comuna</label><select id="comuna"><option value="">Todas las comunas</option></select></div>
@@ -81,8 +81,9 @@ ul.medios li .punto{position:relative;top:1px}
   </main>
 </div>
 <script>
-/* Las 38 comunas de la región, por provincia. Los medios comunales traen las suyas en «c». */
-const PROV = {"Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández"],
+/* Comunas por provincia: las entrega /api/config?cobertura (regiones abiertas); esta lista es el respaldo si la respuesta no las trae.
+   Los medios comunales traen las suyas en «c». */
+let PROV = {"Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández"],
   "Marga Marga": ["Quilpué", "Villa Alemana", "Limache", "Olmué"], "Quillota": ["Quillota", "La Calera", "Hijuelas", "La Cruz", "Nogales"],
   "San Antonio": ["San Antonio", "Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Santo Domingo"],
   "San Felipe de Aconcagua": ["San Felipe", "Catemu", "Llaillay", "Panquehue", "Putaendo", "Santa María"],
@@ -93,8 +94,15 @@ const plural = (n, a, b) => `${n.toLocaleString("es-CL")} ${n === 1 ? a : b}`;
 const VIA = {directa: ["Directa", ""], google: ["Google News", "google"], redes: ["Redes", "redes"], asistida: ["Asistida", ""]};
 let D = null;
 const sel = $("#comuna");
-Object.entries(PROV).forEach(([p, cs]) => { const g = document.createElement("optgroup"); g.label = "Provincia de " + p; cs.forEach(c => g.append(new Option(c, c))); sel.append(g); });
-try { const q = new URLSearchParams(location.search).get("comuna"); if (q && [...sel.options].some(o => o.value === q)) sel.value = q; } catch(e) {}
+let PEDIDA = ""; try { PEDIDA = new URLSearchParams(location.search).get("comuna") || ""; } catch(e) {}
+/* Arma el filtro con las provincias de todas las regiones abiertas; la lista muestra las de la región consultada. */
+function armarFiltro(regiones){
+  const actual = sel.value || PEDIDA;
+  sel.innerHTML = '<option value="">Todas las comunas</option>';
+  (regiones || [{provincias: PROV}]).forEach(r => Object.entries(r.provincias).forEach(([p, cs]) => { const g = document.createElement("optgroup"); g.label = "Provincia de " + p; cs.forEach(c => g.append(new Option(c, c))); sel.append(g); }));
+  if (actual && [...sel.options].some(o => o.value === actual)) sel.value = actual;
+}
+armarFiltro();
 
 function fila(m){
   const [vt, vc] = VIA[m.v] || VIA.directa, est = m.ok === true ? "ok" : m.ok === false ? "mal" : "";
@@ -127,12 +135,19 @@ function pintar(){
   $("#lista").innerHTML = html;
   try { const u = new URL(location.href); comuna ? u.searchParams.set("comuna", comuna) : u.searchParams.delete("comuna"); history.replaceState(null, "", u); } catch(e) {}
 }
-sel.addEventListener("change", pintar);
+/* Una comuna de otra región abierta trae la cobertura de su región. */
+sel.addEventListener("change", () => {
+  const r = D && (D.regiones || []).find(x => Object.values(x.provincias).flat().includes(sel.value));
+  if (r && r.id !== D.region) return cargar(sel.value);
+  pintar();
+});
 
-(async () => {
+async function cargar(comuna){
   try {
-    const r = await fetch("/api/config?cobertura"); if (!r.ok) throw new Error(r.status);
+    const r = await fetch("/api/config?cobertura" + (comuna ? "&comuna=" + encodeURIComponent(comuna) : "")); if (!r.ok) throw new Error(r.status);
     D = await r.json(); if (!D.medios) throw new Error("sin datos");
+    const propia = (D.regiones || []).find(x => x.id === D.region); if (propia) PROV = propia.provincias;
+    armarFiltro(D.regiones);
     const n = a => D.medios.filter(m => m.a === a).length;
     $("#cifras").innerHTML = [[D.medios.length, "medios y cuentas"], [n("local"), "comunales"], [n("regional"), "regionales"], [n("nacional"), "nacionales"]].map(([v, t]) => `<div><b>${v}</b><small>${t}</small></div>`).join("");
     const l = D.lectura;
@@ -145,7 +160,8 @@ sel.addEventListener("change", pintar);
   } catch(e) {
     $("#estado").innerHTML = `<span class="punto mal"></span><span>No pudimos cargar la cobertura en este momento. Intenta de nuevo en unos minutos.</span>`;
   }
-})();
+}
+cargar(PEDIDA);
 </script>
 </body>
 </html>

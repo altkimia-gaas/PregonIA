@@ -76,7 +76,7 @@ const EXCEPCIONES = [
     si: /\bmop\b|vialidad|ruta \d|ruta 68|autopista|concesionaria|serviu|ministerio de obras publicas|efe\b|tren/, no: /direccion de obras|dom\b|calle|pasaje|vereda|bacheo municipal/},
   {id: "sanitaria", area: "agua", roles: ["municipio", "alcalde", "concejal"], comp: "C",
     n: "Empresa sanitaria y DGA", d: "Los cortes y la calidad del agua potable urbana son de la sanitaria (Esval y otras), fiscalizada por la SISS; el municipio coordina y apoya con aljibes.",
-    si: /esval|sanitaria|siss|superintendencia de servicios sanitarios|aguas andinas|\bdga\b|direccion general de aguas/, no: /aljibe|camion aljibe|municipalidad repart|municipio repart/},
+    si: /esval|aguas antofagasta|sanitaria|siss|superintendencia de servicios sanitarios|aguas andinas|\bdga\b|direccion general de aguas/, no: /aljibe|camion aljibe|municipalidad repart|municipio repart/},
   {id: "policias", area: "seguridad", roles: ["municipio", "alcalde", "concejal"], comp: "A",
     n: "Hechos policiales y causas penales", d: "Un delito y su investigación son de Carabineros, la PDI y la Fiscalía. La seguridad municipal es prevención, patrullaje preventivo y apoyo a víctimas.",
     si: /carabineros|\bpdi\b|fiscalia|fiscal |detenid|formaliza|imputad|juzgado de garantia/, no: /seguridad municipal|seguridad publica municipal|plan comunal de seguridad|camaras municipales|patrullaje municipal|concejo comunal de seguridad|alcald/}

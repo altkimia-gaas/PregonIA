@@ -1,6 +1,6 @@
 # PregonIA · la prensa no espera, tú tampoco
 
-Monitoreo de noticias sobre municipios y actores públicos en más de 100 medios digitales chilenos (nacionales, regionales y comunales de la Región de Valparaíso), con lectura de tono, alcance territorial (comunal, regional, nacional), informes por lector y redacción asistida de respuestas.
+Monitoreo de noticias sobre municipios y actores públicos en más de 100 medios digitales chilenos (nacionales, regionales y comunales de las regiones abiertas: hoy Valparaíso; Antofagasta en preparación), con lectura de tono, alcance territorial (comunal, regional, nacional), informes por lector y redacción asistida de respuestas.
 
 Demo publicada: https://pregonia.cl
 
@@ -79,6 +79,15 @@ La función solo acepta pedidos desde el propio sitio, limita el largo del texto
 4. Alertas por Telegram, correo y WhatsApp Business; PDF del informe de gestión.
 5. Ver el plan completo y los requisitos en `docs/especificacion.md`.
 
+
+## Regiones
+
+Todo lo que cambia de una región a otra vive en `src/regiones.js` (provincias y comunas, homónimos, contexto de Google News,
+Contraloría Regional, senado y sanitaria). Cada región tiene su turno de lectura (`/api/ingesta?region=V`, `?region=II`), su
+catálogo (columna `region` de `data/catalogo_medios.csv`) y su nómina (`src/autoridades.js`). Una región con `activa: false`
+está en preparación: la aplicación no la ofrece y sus datos solo responden con la clave del programador. Para abrir una
+región: catálogo y nómina cargados, perfiles de sus comunas en `src/territorios.js`, `activa: true`, sus medios en la tabla
+`medios` y su turno en `supabase/programador.sql`. Los textos comerciales no nombran regiones.
 
 ## Piloto con base de datos (etapa 2)
 
