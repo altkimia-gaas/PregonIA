@@ -1784,6 +1784,16 @@ body{background-color:var(--bg);background-image:radial-gradient(circle,var(--do
 .pd-ante{margin:26px 0 12px;font-size:.8125rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .pd-titulo{margin:0;max-width:24ch;font-family:var(--f-news);font-weight:700;font-size:clamp(2rem,4vw,3rem);line-height:1.08;letter-spacing:-.015em;text-wrap:balance}
 .pd-bajada{margin:18px 0 0;max-width:54ch;font-family:var(--f-news);font-size:clamp(1.0625rem,1.6vw,1.25rem);line-height:1.5;color:var(--lead)}
+/* Teletipo: los 20 medios principales que se leen; se detiene al pasar el cursor y queda quieto si el sistema pide menos movimiento */
+.pd-tele{width:100%;max-width:760px;margin:22px 0 4px;display:flex;align-items:center;gap:14px;border-top:1.5px solid var(--frame);border-bottom:1px solid var(--line);padding:9px 0;text-align:left}
+.pd-tele-l{flex:none;font-size:.6875rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
+.pd-tele-v{flex:1;min-width:0;overflow:hidden;display:flex;-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.pd-tele-c{flex:none;display:flex;list-style:none;margin:0;padding:0;animation:pdTele 60s linear infinite}
+.pd-tele-c li{white-space:nowrap;font-family:var(--f-news);font-weight:600;font-size:.9375rem;color:var(--ink);padding:0 14px}
+.pd-tele-c li::after{content:"·";margin-left:28px;color:var(--muted)}
+.pd-tele:hover .pd-tele-c{animation-play-state:paused}
+@keyframes pdTele{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+@media (prefers-reduced-motion:reduce){ .pd-tele-c{animation:none} .pd-tele-c[aria-hidden]{display:none} .pd-tele-v{overflow-x:auto} }
 .pd-go{margin-top:26px;display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 34px;border:0;border-radius:999px;background:var(--accent-bg);color:var(--accent-ink);font:inherit;font-size:1.0625rem;font-weight:600;cursor:pointer}
 .pd-go:hover{background:var(--accent-bg-h)}
 .pd-go:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
@@ -2110,6 +2120,7 @@ body.cliente .tools{flex:none}
     <div class="pd-cuerpo">
       <p class="pd-ante">Municipios · Concejos · Consejos regionales · Parlamentarios</p>
       <h1 class="pd-titulo">Detecta lo que la prensa dice de tu gestión, mide hasta dónde llegó y responde antes de que el tema escale.</h1>
+      <div class="pd-tele" role="region" aria-label="Algunos de los medios que lee PregonIA"><span class="pd-tele-l">Lee cada día</span><div class="pd-tele-v"><ul class="pd-tele-c"><li>BioBioChile</li><li>Meganoticias</li><li>Emol</li><li>La Tercera</li><li>T13</li><li>24 Horas</li><li>Cooperativa</li><li>CNN Chile</li><li>El Mercurio de Valparaíso</li><li>Puranoticia</li><li>G5noticias</li><li>SoyValparaíso</li><li>ADN Radio</li><li>Radio Agricultura</li><li>El Mostrador</li><li>Diario Financiero</li><li>CIPER</li><li>La Estrella de Valparaíso</li><li>Epicentro Chile</li><li>El Observador</li></ul><ul class="pd-tele-c" aria-hidden="true"><li>BioBioChile</li><li>Meganoticias</li><li>Emol</li><li>La Tercera</li><li>T13</li><li>24 Horas</li><li>Cooperativa</li><li>CNN Chile</li><li>El Mercurio de Valparaíso</li><li>Puranoticia</li><li>G5noticias</li><li>SoyValparaíso</li><li>ADN Radio</li><li>Radio Agricultura</li><li>El Mostrador</li><li>Diario Financiero</li><li>CIPER</li><li>La Estrella de Valparaíso</li><li>Epicentro Chile</li><li>El Observador</li></ul></div></div>
       <p class="pd-bajada">PregonIA lee cada día más de 100 medios nacionales, regionales y locales, y sus redes, y entrega a quien decide alertas, informes y respuestas redactadas con IA.</p>
       <figure class="pd-video" id="ptVideo" data-video="/media/pregonia-explicativo-v2.mp4" data-poster="/media/pregonia-explicativo-v2.jpg">
         <button class="pd-video-b con-poster" type="button" style="background-image:url(/media/pregonia-explicativo-v2.jpg)" aria-label="Ver el video explicativo de PregonIA, 1 minuto"><span class="pd-video-i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></span><span class="pd-video-d">1:14</span></button>
@@ -5972,7 +5983,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search) || !pruebaV
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "2834faee3df6", K = "app";
+  const V = "e658d98b576e", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
