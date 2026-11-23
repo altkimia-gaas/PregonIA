@@ -43,6 +43,6 @@ revoke all on function public.lanzar_lectura_medios(text) from public, anon, aut
 -- Región de Valparaíso (V).
 select cron.unschedule(jobid) from cron.job where jobname = 'pregonia-lectura-medios';
 select cron.schedule('pregonia-lectura-medios', '7,37 * * * *', $$select public.lanzar_lectura_medios('V')$$);
--- Región de Antofagasta (II): descomentar al abrirla (activa: true en src/regiones.js).
--- select cron.unschedule(jobid) from cron.job where jobname = 'pregonia-lectura-II';
--- select cron.schedule('pregonia-lectura-II', '17,47 * * * *', $$select public.lanzar_lectura_medios('II')$$);
+-- Región de Antofagasta (II), abierta el 23 nov 2026.
+select cron.unschedule(jobid) from cron.job where jobname = 'pregonia-lectura-II';
+select cron.schedule('pregonia-lectura-II', '17,47 * * * *', $$select public.lanzar_lectura_medios('II')$$);

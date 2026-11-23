@@ -30,7 +30,7 @@ const REGIONES = {
     contraloria: "Regional Valparaíso",
     senado: {circ: 6, por: "Valparaíso"},
     sanitaria: "Esval"},
-  II: {id: "II", activa: false, nombre: "Región de Antofagasta", corto: "Antofagasta", romano: "II", minuto: 17,
+  II: {id: "II", activa: true, nombre: "Región de Antofagasta", corto: "Antofagasta", romano: "II", minuto: 17,
     provincias: {
       "Antofagasta": ["Antofagasta", "Mejillones", "Sierra Gorda", "Taltal"],
       "El Loa": ["Calama", "Ollagüe", "San Pedro de Atacama"],

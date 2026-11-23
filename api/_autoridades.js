@@ -31,7 +31,7 @@ const REGIONES = {
     contraloria: "Regional Valparaíso",
     senado: {circ: 6, por: "Valparaíso"},
     sanitaria: "Esval"},
-  II: {id: "II", activa: false, nombre: "Región de Antofagasta", corto: "Antofagasta", romano: "II", minuto: 17,
+  II: {id: "II", activa: true, nombre: "Región de Antofagasta", corto: "Antofagasta", romano: "II", minuto: 17,
     provincias: {
       "Antofagasta": ["Antofagasta", "Mejillones", "Sierra Gorda", "Taltal"],
       "El Loa": ["Calama", "Ollagüe", "San Pedro de Atacama"],
@@ -109,7 +109,7 @@ const ZONAS = {
     [["MM", "Marga Marga"], ["QUI", "Quillota"], ["SA", "San Antonio"], ["SF", "San Felipe de Aconcagua"], ["LA", "Los Andes"], ["PET", "Petorca"], ["IP", "Isla de Pascua"]]
       .map(([id, pv]) => ({id, n: "Provincia de " + pv, comunas: PROVINCIAS[pv]})))
 };
-/* Región de Antofagasta (II), en preparación. Sus zonas y su nómina se suman a ZONAS y AUTORIDADES en el servidor siempre
+/* Región de Antofagasta (II), abierta el 23 nov 2026. Sus zonas y su nómina se suman a ZONAS y AUTORIDADES en el servidor siempre
    (para probarla con la clave del programador) y en la aplicación solo cuando la región está activa (src/regiones.js), para que
    la entrada por rol y zona no la ofrezca antes de tiempo. Ids de zona propios: D3, C3, ANT, LOA, TOC e II-REG (la delegación
    regional gobierna en forma directa la provincia de Antofagasta, por eso no hay delegación provincial de Antofagasta). */
