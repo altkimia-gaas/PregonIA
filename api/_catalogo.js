@@ -1234,6 +1234,78 @@ export const CATALOGO = [
 "estado": "listo"
 },
 {
+"id": 219,
+"nombre": "Delegación Presidencial Regional de Valparaíso",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "",
+"estado": "listo"
+},
+{
+"id": 220,
+"nombre": "Senado de Chile",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.senado.cl/",
+"estado": "listo"
+},
+{
+"id": 221,
+"nombre": "Seremi de Salud Valparaíso",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "",
+"estado": "listo"
+},
+{
+"id": 222,
+"nombre": "Fiscalía de Chile",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.fiscaliadechile.cl/",
+"estado": "listo"
+},
+{
+"id": 223,
+"nombre": "Poder Judicial",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.pjud.cl/",
+"estado": "listo"
+},
+{
+"id": 224,
+"nombre": "Empresa Portuaria Valparaíso",
+"ambito": "institucional",
+"comuna": "Valparaíso",
+"metodo": "google_news",
+"url": "https://www.puertovalparaiso.cl/",
+"estado": "listo"
+},
+{
+"id": 225,
+"nombre": "Empresa Portuaria San Antonio",
+"ambito": "institucional",
+"comuna": "San Antonio",
+"metodo": "google_news",
+"url": "https://www.puertosanantonio.com/",
+"estado": "listo"
+},
+{
+"id": 226,
+"nombre": "Serviu Región de Valparaíso",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://serviuvalparaiso.minvu.gob.cl/",
+"estado": "listo"
+},
+{
 "id": 296,
 "nombre": "Otro medio regional (vía Google News)",
 "ambito": "regional",
