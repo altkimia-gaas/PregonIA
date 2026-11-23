@@ -120,7 +120,7 @@ async function redGuardar(ev){
       m = registrarRed(filaARed(data));
     } else {
       const id = Math.max(RED_ID0, ...S.redes.map(r => r.id)) + 1;
-      if (id >= 10000) throw new Error("Llegaste al máximo de cuentas en esta demostración.");
+      if (id >= 10000) throw new Error("Llegaste al máximo de cuentas en esta prueba.");
       const r = {id, red, u, n, a, c, ins: Date.now()}; S.redes.push(r); save(); m = registrarRed({...r, propia: true});
     }
   } catch(e) { btn.disabled = false; btn.textContent = "Inscribir"; return redError("No se pudo inscribir: " + (e.message || e)); }
