@@ -1306,6 +1306,33 @@ export const CATALOGO = [
 "estado": "listo"
 },
 {
+"id": 227,
+"nombre": "Contraloría General de la República",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "oficial",
+"url": "https://www.contraloria.cl/web/cgr/informes-de-auditoria",
+"estado": "listo"
+},
+{
+"id": 228,
+"nombre": "Mercado Público",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "oficial",
+"url": "https://www.mercadopublico.cl/",
+"estado": "listo"
+},
+{
+"id": 229,
+"nombre": "Esval",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "oficial",
+"url": "https://www.esval.cl/personas/cortes-estado-del-servicio/",
+"estado": "listo"
+},
+{
 "id": 296,
 "nombre": "Otro medio regional (vía Google News)",
 "ambito": "regional",
