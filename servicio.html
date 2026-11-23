@@ -40,7 +40,7 @@
 .pd-mk i{display:block;width:.16em;border-radius:.045em;background:var(--accent)}
 .pd-mk i:nth-child(1){height:40%;opacity:.55}.pd-mk i:nth-child(2){height:70%;opacity:.8}.pd-mk i:nth-child(3){height:100%}
 .pd-lema{margin:0 0 16px;text-align:center;font-family:var(--f-news);font-style:italic;font-size:1.0625rem;color:var(--muted)}
-.pd-cuerpo{display:grid;justify-items:center;text-align:center}
+.pd-cuerpo{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;text-align:center}  /* la columna no crece con el teletipo: sin esto, en el celular la portada se desborda */
 .pd-ante{margin:26px 0 12px;font-size:.8125rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .pd-titulo{margin:0;max-width:24ch;font-family:var(--f-news);font-weight:700;font-size:clamp(2rem,4vw,3rem);line-height:1.08;letter-spacing:-.015em;text-wrap:balance}
 .pd-bajada{margin:18px 0 0;max-width:54ch;font-family:var(--f-news);font-size:clamp(1.0625rem,1.6vw,1.25rem);line-height:1.5;color:var(--lead)}
@@ -149,8 +149,8 @@
     <div class="pd-cuerpo">
       <p class="pd-ante">Municipios · Concejos · Consejos regionales · Parlamentarios</p>
       <h1 class="pd-titulo">Detecta lo que la prensa dice de tu gestión, mide hasta dónde llegó y responde antes de que el tema escale.</h1>
-      <div class="pd-tele" role="region" aria-label="Algunos de los medios que lee PregonIA"><span class="pd-tele-l">Lee cada día</span><div class="pd-tele-v"><ul class="pd-tele-c"><li>BioBioChile</li><li>Meganoticias</li><li>Emol</li><li>La Tercera</li><li>T13</li><li>24 Horas</li><li>Cooperativa</li><li>CNN Chile</li><li>El Mercurio de Valparaíso</li><li>Puranoticia</li><li>G5noticias</li><li>SoyValparaíso</li><li>ADN Radio</li><li>Radio Agricultura</li><li>El Mostrador</li><li>Diario Financiero</li><li>CIPER</li><li>La Estrella de Valparaíso</li><li>Epicentro Chile</li><li>El Observador</li></ul><ul class="pd-tele-c" aria-hidden="true"><li>BioBioChile</li><li>Meganoticias</li><li>Emol</li><li>La Tercera</li><li>T13</li><li>24 Horas</li><li>Cooperativa</li><li>CNN Chile</li><li>El Mercurio de Valparaíso</li><li>Puranoticia</li><li>G5noticias</li><li>SoyValparaíso</li><li>ADN Radio</li><li>Radio Agricultura</li><li>El Mostrador</li><li>Diario Financiero</li><li>CIPER</li><li>La Estrella de Valparaíso</li><li>Epicentro Chile</li><li>El Observador</li></ul></div></div>
-      <p class="pd-bajada">PregonIA lee cada día más de 100 medios nacionales, regionales y locales, y sus redes, y entrega a quien decide alertas, informes y respuestas redactadas con IA.</p>
+      <div class="pd-tele" role="region" aria-label="Algunos de los medios que lee PregonIA"><span class="pd-tele-l">Lee cada día</span><div class="pd-tele-v"><ul class="pd-tele-c"><li>BioBioChile</li><li>Meganoticias</li><li>Emol</li><li>La Tercera</li><li>T13</li><li>24 Horas</li><li>Cooperativa</li><li>CNN Chile</li><li>CHV Noticias</li><li>Ex-Ante</li><li>SoyChile</li><li>Pauta</li><li>ADN Radio</li><li>Radio Agricultura</li><li>El Mostrador</li><li>Diario Financiero</li><li>CIPER</li><li>El Dínamo</li><li>The Clinic</li><li>Publimetro</li></ul><ul class="pd-tele-c" aria-hidden="true"><li>BioBioChile</li><li>Meganoticias</li><li>Emol</li><li>La Tercera</li><li>T13</li><li>24 Horas</li><li>Cooperativa</li><li>CNN Chile</li><li>CHV Noticias</li><li>Ex-Ante</li><li>SoyChile</li><li>Pauta</li><li>ADN Radio</li><li>Radio Agricultura</li><li>El Mostrador</li><li>Diario Financiero</li><li>CIPER</li><li>El Dínamo</li><li>The Clinic</li><li>Publimetro</li></ul></div></div>
+      <p class="pd-bajada">PregonIA lee cada día más de 50 medios nacionales y los regionales y locales de tu territorio, con sus redes, y entrega a quien decide alertas, informes y respuestas redactadas con IA.</p>
       <figure class="pd-video" id="ptVideo" data-video="/media/pregonia-explicativo-v2.mp4" data-poster="/media/pregonia-explicativo-v2.jpg">
         <button class="pd-video-b con-poster" type="button" style="background-image:url(/media/pregonia-explicativo-v2.jpg)" aria-label="Ver el video explicativo de PregonIA, 1 minuto"><span class="pd-video-i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></span><span class="pd-video-d">1:14</span></button>
       </figure>
@@ -274,9 +274,9 @@ details.q p{margin:0 2px 18px;color:#333}
 <p class="k">Qué lee</p>
 <h2 class="t">De la prensa nacional al portal de tu comuna.</h2>
 <div class="cifras">
-<div><b>51</b><span>medios nacionales: Meganoticias, T13, BioBioChile, Cooperativa, El Mostrador, CIPER…</span></div>
-<div><b>16</b><span>regionales: El Mercurio de Valparaíso, Puranoticia, Epicentro, Radio Festival…</span></div>
-<div><b>42</b><span>comunales en las 8 provincias de la Región de Valparaíso</span></div>
+<div><b>+50</b><span>medios nacionales: Meganoticias, T13, BioBioChile, Cooperativa, El Mostrador, CIPER…</span></div>
+<div><b>✓</b><span>regionales: diarios, radios, canales y ediciones regionales de los medios nacionales</span></div>
+<div><b>✓</b><span>comunales: portales, radios y diarios de cada comuna</span></div>
 <div><b>+</b><span>cuentas de Facebook e Instagram de medios locales, y búsqueda en Google Noticias</span></div>
 </div>
 <p class="mut" style="margin:16px 0 0;font-size:14.5px">Los medios que no permiten la lectura automatizada se siguen por Google Noticias, sin eludir sus bloqueos. PregonIA no copia notas: resume con palabras propias y enlaza al original.</p>
@@ -320,9 +320,9 @@ details.q p{margin:0 2px 18px;color:#333}
 <h2 class="t">Lo que más nos preguntan.</h2>
 <div style="margin-top:20px">
 <details class="q"><summary>¿No basta con Google Alertas o con alguien que revise?</summary><p>Llegan tarde, no conocen los portales comunales y no dicen qué es grave. PregonIA revisa los medios cada 15 a 30 minutos, junta la misma noticia publicada en varios medios y te dice qué hacer.</p></details>
-<details class="q"><summary>¿Qué medios leen de mi comuna?</summary><p>Los nacionales, los regionales y los comunales de la Región de Valparaíso, más las cuentas de redes de los medios locales. La lista completa, comuna por comuna y con el estado de la última lectura, está en <a href="/cobertura">pregonia.cl/cobertura</a>.</p></details>
+<details class="q"><summary>¿Qué medios leen de mi comuna?</summary><p>Los nacionales, los regionales y los comunales de tu territorio, más las cuentas de redes de los medios locales. La lista completa, comuna por comuna y con el estado de la última lectura, está en <a href="/cobertura">pregonia.cl/cobertura</a>.</p></details>
 <details class="q"><summary>¿Cuánto demora en funcionar?</summary><p>Un día. Eliges tu cargo, tu comuna y tu nombre, te proponemos los temas y tú los confirmas. Te acompañamos en la puesta en marcha y después por WhatsApp.</p></details>
-<details class="q"><summary>¿Puedo probarlo gratis?</summary><p>Sí, 48 horas sin costo ni tarjeta, y termina sola, sin cobro. Toca «Prueba gratis», deja tu nombre, correo, tipo de autoridad y territorio, y valida el correo con el código de 6 dígitos que te enviamos. Después eliges a quién seguir: tu edición parte con el último mes de noticias reales, ya clasificadas.</p></details>
+<details class="q"><summary>¿Puedo probarlo gratis?</summary><p>Sí, 7 días sin costo ni tarjeta, y termina sola, sin cobro. Toca «Prueba gratis», deja tu nombre, correo, tipo de autoridad y territorio, y valida el correo con el código de 6 dígitos que te enviamos. Después eliges a quién seguir: tu edición parte con el último mes de noticias reales, ya clasificadas.</p></details>
 <details class="q"><summary>¿Cómo se contrata?</summary><p>Los municipios, por Compra Ágil, sin licitación, con pago mensual. Los parlamentarios, como licencia mensual de software para su oficina, nunca como asesoría de imagen.</p></details>
 <details class="q"><summary>¿Mi adversario puede ver mi información?</summary><p>No. Cada cuenta está aislada: nadie ve tus temas, alertas ni borradores. La neutralidad es una cláusula del contrato.</p></details>
 <details class="q"><summary>¿Me llegan los avisos al celular?</summary><p>Sí. PregonIA se instala desde el navegador, sin tienda de aplicaciones, y avisa aunque esté cerrada. Cada persona elige qué recibir.</p></details>

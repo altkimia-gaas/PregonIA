@@ -18,13 +18,15 @@ const ENCUADRES = {
 const IMPULSORES = {propia: "Agenda propia", autoridad: "Otra autoridad", vecinos: "Vecinos u organizaciones", gremio: "Gremio o empresa", fiscalizador: "Fiscalizador", medio: "Iniciativa del medio"};
 const PAPELES_F = {prot: "Protagonista", fuente: "Fuente citada", menc: "Mencionada", alud: "Aludida sin nombre", aus: "Ausente: vacío de vocería", no: "No aparece"};
 const COMPETENCIAS = {P: "Competencia propia", C: "Competencia compartida", I: "Incidencia (fiscaliza o legisla)", AE: "Ajena, pero la exponen", A: "Competencia ajena"};
+/* Fuentes oficiales leídas directo (catálogo 227 Contraloría, 228 Mercado Público, 229 Esval). */
+const OFICIALES = {227: "Contraloría", 228: "Mercado Público", 229: "Esval"};
 const PRIORIDADES = {P1: "P1 · Crisis", P2: "P2 · Atender", P3: "P3 · Oportunidad", P4: "P4 · Monitoreo", R: "Ruido"};
 const ACCIONES = {
   responder: ["Responder", "Dar la versión propia con vocería, por los canales que el tema exige."],
   aclarar: ["Aclarar con datos", "Es de su competencia y la prensa no recoge su versión ni su gestión: informar qué se está haciendo, con datos y una vocería breve."],
   aportar: ["Aportar posición", "Tema de terceros donde la cuenta puede aportar: fijar posición o una gestión concreta."],
   amplificar: ["Amplificar", "Buena noticia: llevarla a más medios y a las redes propias."],
-  anticipar: ["Anticipar", "Hay un hito cerca: preparar mensaje y vocería antes de que llegue."],
+  anticipar: ["Anticipar", "Hay un hito cerca o un documento oficial que la prensa aún no publica: preparar mensaje y vocería antes de que llegue."],
   coordinar: ["Coordinar", "La solución depende de otra institución: coordinar con ella y comunicar la gestión, no prometer lo ajeno."],
   escalar: ["Escalar a jurídico", "Probidad o tribunales: revisar con jurídico y la jefatura antes de cualquier declaración."],
   monitorear: ["Monitorear", "Seguirlo sin acción por ahora; reaccionar si cambia el tono, el alcance o la gravedad."],
@@ -74,7 +76,7 @@ const EXCEPCIONES = [
     si: /\bmop\b|vialidad|ruta \d|ruta 68|autopista|concesionaria|serviu|ministerio de obras publicas|efe\b|tren/, no: /direccion de obras|dom\b|calle|pasaje|vereda|bacheo municipal/},
   {id: "sanitaria", area: "agua", roles: ["municipio", "alcalde", "concejal"], comp: "C",
     n: "Empresa sanitaria y DGA", d: "Los cortes y la calidad del agua potable urbana son de la sanitaria (Esval y otras), fiscalizada por la SISS; el municipio coordina y apoya con aljibes.",
-    si: /esval|sanitaria|siss|superintendencia de servicios sanitarios|aguas andinas|\bdga\b|direccion general de aguas/, no: /aljibe|camion aljibe|municipalidad repart|municipio repart/},
+    si: /esval|aguas antofagasta|sanitaria|siss|superintendencia de servicios sanitarios|aguas andinas|\bdga\b|direccion general de aguas/, no: /aljibe|camion aljibe|municipalidad repart|municipio repart/},
   {id: "policias", area: "seguridad", roles: ["municipio", "alcalde", "concejal"], comp: "A",
     n: "Hechos policiales y causas penales", d: "Un delito y su investigación son de Carabineros, la PDI y la Fiscalía. La seguridad municipal es prevención, patrullaje preventivo y apoyo a víctimas.",
     si: /carabineros|\bpdi\b|fiscalia|fiscal |detenid|formaliza|imputad|juzgado de garantia/, no: /seguridad municipal|seguridad publica municipal|plan comunal de seguridad|camaras municipales|patrullaje municipal|concejo comunal de seguridad|alcald/}
@@ -133,6 +135,10 @@ function fichaDe(m, c = cuenta()){
   const txt = m.notas.map(n => n.hay || "").join(" ");
   const preventiva = !critico && Date.now() - m.last < 3 * 864e5 && /(^|[^a-z])(shoa|senapred|onemi|marejada|oleaje|sistema frontal|frente frontal|temporal|lluvias? intensas?|precipitaciones|vientos? (fuertes|intensos)|ola de calor|calor extremo|alerta (temprana|amarilla|roja|preventiva|meteorologica)|aviso (meteorologico|especial)|alarma (de|por) tsunami|riesgo de incendio)/.test(txt)
     && /(hasta el|desde el|a partir de|este (fin de semana|lunes|martes|miercoles|jueves|viernes|sabado|domingo)|manana|proxim|se espera|se pronostica|regira|vigente|durante (el|la|los|las)|entre el)/.test(txt);
+  // Documento oficial que la prensa aún no publica (Contraloría, Mercado Público, Esval; ver api/_oficiales.js): se anticipa mientras
+  // esté fresco. Un informe de Contraloría con observaciones sube a P2 («preparar la versión con jurídico»); lo demás, P3.
+  const ofi = m.notas.filter(n => OFICIALES[n.m]);
+  const anticipa = ofi.length > 0 && ofi.length === m.notas.length && comp !== "A" && Date.now() - m.last < 5 * 864e5;
   // Qué hacer: prioridad
   let prio;
   if (comp === "A") prio = "R";
@@ -142,6 +148,7 @@ function fichaDe(m, c = cuenta()){
   else if ((comp === "I" || comp === "C") && ["reclamo", "conflicto", "emergencia"].includes(encuadre) && gravedad >= 2) prio = "P3";
   else if (preventiva) prio = "P3";
   else prio = "P4";
+  if (anticipa && prio !== "P1" && !cor.prio) prio = ofi.some(n => n.m === 227) && (critico || gravedad >= 2) ? "P2" : prio === "P2" ? "P2" : "P3";
   // Una oportunidad que ya pasó no queda en la cola: baja a monitoreo (no hay nada que atender a destiempo).
   if (prio === "P3" && !cor.prio && m.last + plazosDe(c).P3 * 36e5 < Date.now()) prio = "P4";
   if (cor.prio) prio = cor.prio;
@@ -154,6 +161,7 @@ function fichaDe(m, c = cuenta()){
     : (comp === "C" || comp === "AE") && papel !== "prot" ? "coordinar" : "responder";
   else if (prio === "P3") acc = preventiva && tono !== "pos" ? "anticipar" : (tono === "pos" || tono2 === "pos") ? "amplificar" : "aportar";
   else acc = "monitorear";
+  if (anticipa && prio !== "R" && !cor.acc) acc = "anticipar";
   if (cor.acc) acc = cor.acc;
   // Plazo: corre desde la última publicación (cada nota nueva es un desarrollo del hecho).
   const h = plazosDe(c)[prio], vence = h ? m.last + h * 36e5 : null;

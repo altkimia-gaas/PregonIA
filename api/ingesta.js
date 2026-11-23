@@ -4,17 +4,20 @@
 // Solo se clasifica lo nuevo (lo ya visto no se vuelve a pagar) y las notas nuevas se agrupan con los hechos de días anteriores,
 // para que el historial, las respuestas y las marcas queden en el mismo hecho aunque lleguen notas días después.
 // La llama el programador de Supabase (pg_cron, cada 30 min) con un pase de un solo uso; a mano o desde GitHub Actions, con Authorization: Bearer CRON_SECRET.
+// Un turno por región (?region=V, ?region=II; sin parámetro, la Región de Valparaíso): cada turno lee los medios nacionales y los de
+// su región, y procesa solo las cuentas de su región. Así una región que falla o se demora no frena a la otra (src/regiones.js).
 // Variables: SUPABASE_URL, SUPABASE_SECRET_KEY, CRON_SECRET, ANTHROPIC_API_KEY. Para avisos: ver api/_avisos.js.
 // Cuentas de Facebook e Instagram de medios: META_ACCESS_TOKEN, META_IG_USER_ID, META_FB_PPCA (ver api/_redes.js).
 // Después de guardar, revisa los hechos que recibieron notas nuevas y avisa lo urgente (notificación y correo).
 // Además, propone a los editores de PregonIA las noticias de alto impacto de sus territorios (api/_redaccion.js).
 import { tituloFinal, COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, fichaNota, json, leerCatalogo, leerGoogleNews, candidatasDe, candidatasPorNombre, plazoGoogleNews, statsGoogleNews } from "./_lectura.js";
-import { variantesNombre } from "./_autoridades.js";
-import { sujetoDeCuenta, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
+import { variantesNombre, regionDeComuna, regionValida, REGIONES, REGION_DEFECTO } from "./_autoridades.js";
+import { sujetoDeCuenta, fichaIA, institucion, leerSujeto, regionDeAut } from "./_sujetos.js";
 import { avisar } from "./_avisos.js";
 import { parteWhatsapp, whatsappListo, horaChileWa } from "./_whatsapp.js";
 import { leerRedes, usuarioDe } from "./_redes.js";
 import { detectarRedaccion } from "./_redaccion.js";
+import { leerMercadoPublico, mercadoPublicoListo } from "./_oficiales.js";
 
 /* Cuentas de Facebook e Instagram de la base: las del catálogo fijo y las inscritas desde la aplicación. */
 const cuentaDe = r => ({id: r.id, nombre: r.nombre, ambito: r.ambito, comuna: r.comunas || "", red: r.metodo, usuario: r.usuario_red || usuarioDe(r.metodo, r.url_lectura)});
@@ -32,13 +35,13 @@ async function sb(ruta, {method = "GET", body, prefer} = {}){
 
 /* Cuentas activas: municipios de las comunas conocidas y autoridades con ficha válida.
    Cada una sabe qué buscar en Google News, cómo elegir sus candidatas y a quién le habla la IA. */
-async function cuentasActivas(){
+async function cuentasActivas(region){
   // Si la base aún no tiene las columnas de autoridades (esquema sin actualizar), se sigue leyendo solo municipios.
   const filas = await sb("municipios?activo=eq.true&select=id,comuna,nombre,tipo,autoridad,config").catch(() => sb("municipios?activo=eq.true&select=id,comuna,nombre"));
   return filas.map(f => {
-    if ((f.tipo || "municipio") === "municipio") return COMUNAS[f.comuna] ? {...f, etiqueta: f.comuna, institucion: "Municipalidad de " + f.comuna, ia: f.comuna,
+    if ((f.tipo || "municipio") === "municipio") return COMUNAS[f.comuna] && regionDeComuna(f.comuna) === region ? {...f, etiqueta: f.comuna, institucion: "Municipalidad de " + f.comuna, ia: f.comuna,
       gn: () => leerGoogleNews(f.comuna), candidatas: (items, desde, ahora) => candidatasDe(f.comuna, items, desde, ahora)} : null;
-    const a = sujetoDeCuenta(f); if (!a) return null;
+    const a = sujetoDeCuenta(f); if (!a || regionDeAut(a).id !== region) return null;
     const ficha = fichaIA(a), nombre = f.nombre || `${ficha.cargo} ${a.n}`;
     return {...f, etiqueta: nombre, institucion: nombre, ia: ficha, autoridad: true,
       gn: () => leerSujeto(a), candidatas: (items, desde, ahora) => candidatasPorNombre(variantesNombre(a), items, desde, ahora, institucion(a))};
@@ -101,28 +104,40 @@ async function manejar(req){
   const porClave = secreto && (req.headers.get("authorization") || "").trim() === "Bearer " + secreto;
   const porPase = !porClave && /^[a-f0-9]{48}$/.test(pase) && await usarPase(pase).catch(() => false);
   if (!porClave && !porPase) return json({error: "No autorizado"}, 401);
+  const region = regionValida(new URL(req.url).searchParams.get("region") || REGION_DEFECTO);
+  if (!region) return json({error: "Región desconocida"}, 400);
   DIAG.length = 0; plazoGoogleNews(45000);  // Google News va en cola (responde 429 si se le pide mucho a la vez); el resto de los 300 s es para clasificar
   const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
-  const [lectura] = await sb("lecturas", {method: "POST", prefer: "return=representation", body: {inicio: new Date(ahora).toISOString()}});
+  // La columna region de lecturas (supabase/esquema.sql) separa el estado de cada turno; si aún no existe, se registra sin ella.
+  const [lectura] = await sb("lecturas", {method: "POST", prefer: "return=representation", body: {inicio: new Date(ahora).toISOString(), region}})
+    .catch(e => { if (!/region/.test(String(e.message))) throw e; return sb("lecturas", {method: "POST", prefer: "return=representation", body: {inicio: new Date(ahora).toISOString()}}); });
   try {
-    const munis = await cuentasActivas();
-    const [cat0, enBase, filasRedes, ...gns] = await Promise.all([leerCatalogo(), sb("medios?select=id"),
-      sb("medios?metodo=in.(instagram,facebook)&estado=neq.retirado&select=id,nombre,ambito,comunas,metodo,url_lectura,usuario_red").catch(() => []),
+    const munis = await cuentasActivas(region);
+    // Mercado Público: cada dos horas (la primera lectura de las horas pares), solo para las comunas cliente; ver _oficiales.js.
+    const horaCl = Number(new Intl.DateTimeFormat("es-CL", {timeZone: "America/Santiago", hour: "2-digit", hourCycle: "h23"}).format(new Date(ahora)));
+    const mpToca = mercadoPublicoListo() && (horaCl % 2 === 0 && new Date(ahora).getMinutes() < 30 || new URL(req.url).searchParams.has("mercado"));
+    const mpComunas = [...new Set(munis.filter(m => !m.autoridad).map(m => m.comuna))];
+    const mpLectura = mpToca ? leerMercadoPublico(mpComunas, ahora, 90000).catch(e => ({items: [], error: String(e.message || e).slice(0, 160)})) : Promise.resolve(null);
+    const [cat0, enBase, filasRedes0, mp, ...gns] = await Promise.all([leerCatalogo(region), sb("medios?select=id"),
+      sb("medios?metodo=in.(instagram,facebook)&estado=neq.retirado&select=id,nombre,ambito,comunas,metodo,url_lectura,usuario_red").catch(() => []), mpLectura,
       ...munis.map(m => m.gn().catch(() => null))]);
+    // Cuentas de Facebook e Instagram de medios: las de las comunas de esta región (y las que no tienen comuna, en todos los turnos).
+    const filasRedes = filasRedes0.filter(r => { const c = String(r.comunas || "").split(";")[0].trim(); return !c || (regionDeComuna(c) || region) === region; });
     const rs = await leerRedes(filasRedes.map(cuentaDe));
     // Estado de cada cuenta para la vista Fuentes: cuándo se leyó y, si falló, por qué. Un error aquí no detiene la lectura.
     await Promise.all(rs.estado.filter(e => !e.pendiente).map(e => sb(`medios?id=eq.${e.id}`, {method: "PATCH", prefer: "return=minimal",
       body: e.ok ? {ultima_lectura: new Date().toISOString(), error_lectura: null} : {error_lectura: e.error}}).catch(() => null)));
     // Solo medios que ya existen en la base (clave foránea de notas): un medio nuevo del catálogo espera a que se cargue la semilla.
-    const ids = new Set(enBase.map(x => x.id)), cat = {...cat0, items: cat0.items.filter(x => ids.has(x.m.id)).concat(rs.items), total: cat0.total + rs.total};
-    const errores = cat.errores.concat(gns.some(g => !g) ? ["Google News"] : [], rs.errores);
+    const ids = new Set(enBase.map(x => x.id)), cat = {...cat0, items: cat0.items.concat(mp ? mp.items : []).filter(x => ids.has(x.m.id)).concat(rs.items), total: cat0.total + rs.total + (mp ? 1 : 0)};
+    const errores = cat.errores.concat(gns.some(g => !g) ? ["Google News"] : [], rs.errores, mp && mp.error ? ["Mercado Público"] : []);
     // Redacción (cuentas propias de PregonIA): usa lo ya leído (prensa, redes y Google News de las comunas cliente), en paralelo
     // con la clasificación de las cuentas y con su propio tope de tiempo, para que nunca demore ni rompa la lectura.
     const gnPorComuna = Object.fromEntries(munis.map((m, k) => [m.autoridad ? null : m.comuna, gns[k]]).filter(([c, g]) => c && g));
     const tope = new Promise(ok => setTimeout(() => ok({error: "tiempo agotado"}), 40000));
     const [res, redaccion] = await Promise.all([
       Promise.all(munis.map((m, k) => procesarCuenta(m, cat.items.concat((gns[k] || []).filter(x => ids.has(x.m.id))), desde, ahora).catch(e => ({[m.autoridad ? "autoridad" : "comuna"]: m.etiqueta, error: String(e.message || e).slice(0, 200)})))),
-      Promise.race([detectarRedaccion(sb, cat0.items.concat(rs.items), {gnPorComuna, ahora}), tope]).catch(e => ({error: String(e.message || e).slice(0, 200)}))]);
+      // El Pregonero cubre la Región de Valparaíso: su detección corre solo en ese turno.
+      region === "V" ? Promise.race([detectarRedaccion(sb, cat0.items.concat(rs.items), {gnPorComuna, ahora}), tope]).catch(e => ({error: String(e.message || e).slice(0, 200)})) : Promise.resolve({omitida: "fuera de la Región de Valparaíso"})]);
     // Avisos: un error aquí no debe perder la lectura ya guardada.
     await Promise.all(res.map(async (r, k) => { const grupos = r.grupos || []; delete r.grupos; if (!grupos.length) return;
       try { r.avisos = await avisar(sb, munis[k], grupos, Date.now()); } catch(e) { r.avisos = {error: String(e.message || e).slice(0, 160)}; } }));
@@ -131,9 +146,11 @@ async function manejar(req){
       try { r.whatsapp = await parteWhatsapp(sb, munis[k], Date.now()); } catch(e) { r.whatsapp = {error: String(e.message || e).slice(0, 160)}; } }));
     const suma = k => res.reduce((s, r) => s + (r[k] || 0), 0);
     const resumen = {fin: new Date().toISOString(), fuentes_ok: cat.total + 1 - errores.length, fuentes_total: cat.total + 1, errores: errores.slice(0, 60),
-      candidatas: suma("candidatas"), nuevas: suma("nuevas"), clasificadas: suma("clasificadas"), detalle: {comunas: res, ia: DIAG.slice(0, 8), google_news: statsGoogleNews(), redaccion}};
+      candidatas: suma("candidatas"), nuevas: suma("nuevas"), clasificadas: suma("clasificadas"), detalle: {comunas: res, ia: DIAG.slice(0, 8), google_news: statsGoogleNews(), redaccion,
+      oficiales: {contraloria: cat0.items.filter(x => x.m.id === 227).length, esval: cat0.items.filter(x => x.m.id === 229).length,
+        mercado_publico: mp ? {licitaciones: mp.items.length, consultas: mp.consultas, organismos: mp.organismos, error: mp.error} : (mercadoPublicoListo() ? "fuera de turno" : "sin ticket")}}};
     await sb(`lecturas?id=eq.${lectura.id}`, {method: "PATCH", body: resumen, prefer: "return=minimal"});
-    return json({ok: true, lectura: lectura.id, ...resumen}, 200, {"cache-control": "no-store"});
+    return json({ok: true, lectura: lectura.id, region, ...resumen}, 200, {"cache-control": "no-store"});
   } catch(e) {
     await sb(`lecturas?id=eq.${lectura.id}`, {method: "PATCH", body: {fin: new Date().toISOString(), detalle: {error: String(e.message || e).slice(0, 300)}}, prefer: "return=minimal"}).catch(() => {});
     return json({ok: false, error: String(e.message || e).slice(0, 300)}, 500);

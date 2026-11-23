@@ -12,7 +12,7 @@ SRC, DATA = RAIZ / "src", RAIZ / "data"
 def catalogo():
     filas = csv.DictReader(open(DATA / "catalogo_medios.csv", encoding="utf-8"))
     return [{"id": int(f["id"]), "n": f["nombre"], "a": f["ambito"], "c": f["comuna"], "t": f["tipo"],
-             "l": f["nivel"], "m": f["metodo"], "e": f["estado"], "o": f["observacion"], "u": f["url_lectura"]} for f in filas]
+             "l": f["nivel"], "m": f["metodo"], "e": f["estado"], "o": f["observacion"], "u": f["url_lectura"], "r": f.get("region") or ""} for f in filas]
 
 def main():
     # Un id repetido mezcla dos medios en la aplicación y rompe la semilla de la base: se detiene antes de generar nada.
@@ -24,12 +24,12 @@ def main():
     (RAIZ / "api" / "_reglas.js").write_text("// Generado por scripts/build.py desde src/reglas.js. No editar a mano.\n" + leer("reglas.js") +
         "export { NIVEL_AVISO, PREF_MINIMO, tonoHecho, rafagaDe, alertasDeHecho, horaChile, pasaPreferencia };\n", encoding="utf-8")
     # Zonas y nómina de autoridades: el mismo archivo en la aplicación y en el servidor (api/_autoridades.js).
-    (RAIZ / "api" / "_autoridades.js").write_text("// Generado por scripts/build.py desde src/autoridades.js. No editar a mano.\n" + leer("autoridades.js") +
-        "export { NOMINA_CORTE, PROVINCIAS, COMUNAS_V, CARGOS, ZONAS, AUTORIDADES, zonaDe, cargoDe, variantesNombre, provinciaDe };\n", encoding="utf-8")
+    (RAIZ / "api" / "_autoridades.js").write_text("// Generado por scripts/build.py desde src/regiones.js y src/autoridades.js. No editar a mano.\n" + leer("regiones.js") + "\n" + leer("autoridades.js") +
+        "export { REGIONES, REGION_DEFECTO, COMUNAS_DE, regionDeComuna, regionesActivas, regionValida, NOMINA_CORTE, PROVINCIAS, COMUNAS_V, CARGOS, ZONAS, AUTORIDADES, zonaDe, cargoDe, variantesNombre, provinciaDe };\n", encoding="utf-8")
     # Usuario y enlace de cuentas de redes: el mismo archivo en la aplicación y en el servidor (api/_cuentasred.js).
     (RAIZ / "api" / "_cuentasred.js").write_text("// Generado por scripts/build.py desde src/cuentasred.js. No editar a mano.\n" + leer("cuentasred.js") +
         "export { usuarioDe, urlDe };\n", encoding="utf-8")
-    js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("calendario.js") + "\n" + leer("autoridades.js") + "\n" + leer("territorios.js") + "\n" + leer("categorias.js") + "\n" + leer("ficha.js") + "\n" + leer("cuentas.js") + "\n" + leer("app.js") + "\n" + leer("captura.js") + "\n" + leer("cuentasred.js") + "\n" + leer("redes.js") + "\n" + leer("vocero.js") + "\n" + leer("compartir.js") + "\n" + leer("reglas.js") + "\n" + leer("alertas.js") + "\n" + leer("piloto.js") + "\n" + leer("video.js") + "\n" + leer("ejecutivo.js")
+    js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("calendario.js") + "\n" + leer("regiones.js") + "\n" + leer("autoridades.js") + "\n" + leer("territorios.js") + "\n" + leer("categorias.js") + "\n" + leer("ficha.js") + "\n" + leer("cuentas.js") + "\n" + leer("app.js") + "\n" + leer("captura.js") + "\n" + leer("cuentasred.js") + "\n" + leer("redes.js") + "\n" + leer("vocero.js") + "\n" + leer("compartir.js") + "\n" + leer("reglas.js") + "\n" + leer("alertas.js") + "\n" + leer("piloto.js") + "\n" + leer("video.js") + "\n" + leer("ejecutivo.js")
     js = js.replace("/*CATALOG*/", json.dumps(catalogo(), ensure_ascii=False, separators=(",", ":")), 1)
     cuerpo = leer("shell.html") + "<script>\n" + js + "\n</script>\n"
     # Documento completo para Vercel o GitHub Pages: sin charset ni viewport el celular lo mostraría como escritorio.
@@ -46,7 +46,7 @@ def main():
     html = html.replace("__PREGONIA_VERSION__", v_app)
     (RAIZ / "app.html").write_text(html, encoding="utf-8")  # sin index.html: así vercel.json decide qué se sirve en «/» según el dominio
     # Catálogo para la función de noticias reales (api/noticias.js); el guion bajo evita que Vercel lo publique como ruta.
-    filas = [{"id": int(f["id"]), "nombre": f["nombre"], "ambito": f["ambito"], "comuna": f["comuna"], "metodo": f["metodo"], "url": f["url_lectura"], "estado": f["estado"]}
+    filas = [{"id": int(f["id"]), "nombre": f["nombre"], "ambito": f["ambito"], "comuna": f["comuna"], "metodo": f["metodo"], "url": f["url_lectura"], "estado": f["estado"], "region": f.get("region") or ""}
              for f in csv.DictReader(open(DATA / "catalogo_medios.csv", encoding="utf-8"))]
     # Semilla del catálogo para la base de datos del piloto (supabase/semilla.sql).
     q = lambda v: "null" if v in ("", None) else "'" + str(v).replace("'", "''") + "'"
@@ -61,7 +61,7 @@ def main():
     # (autoridades.js) y con el servidor el puntaje de impacto (impacto.js → api/_impacto.js), para que ambos puntúen igual.
     (RAIZ / "api" / "_impacto.js").write_text("// Generado por scripts/build.py desde src/impacto.js. No editar a mano.\n" + leer("impacto.js") +
         "export { IMP_PESOS, IMP_TEMAS, IMP_REGION, impNorm, impTiene, impAutoridades, impPalabras, impParecido, impAgrupar, impAlcance, impInteraccion, impPuntaje, IMP_UMBRAL_GRUPO, IMP_AMBITOS, impAmbito, impSeleccion };\n", encoding="utf-8")
-    rd_js = "\n".join(leer(n) for n in ["autoridades.js", "impacto.js", "piezas.js", "redaccion-prueba.js", "redaccion.js"])
+    rd_js = "\n".join(leer(n) for n in ["regiones.js", "autoridades.js", "impacto.js", "piezas.js", "redaccion-prueba.js", "redaccion.js"])
     rd_cabeza = ('<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n'
                  '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
                  '<link rel="manifest" href="/manifest-redaccion.json">\n<meta name="theme-color" content="#FFFFFF">\n'

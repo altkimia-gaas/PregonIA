@@ -7,7 +7,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_noticias",
 "url": "https://www.meganoticias.cl/sitemaps/sitemap-news.xml",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 2,
@@ -16,7 +17,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.biobiochile.cl/static/feed-google",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 3,
@@ -25,7 +27,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": ""
 },
 {
 "id": 4,
@@ -34,7 +37,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": ""
 },
 {
 "id": 5,
@@ -43,7 +47,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "portada",
 "url": "https://www.t13.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 6,
@@ -52,7 +57,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_mensual",
 "url": "https://www.24horas.cl/24horas/site/sitemap_pags.xml",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 7,
@@ -61,7 +67,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_noticias",
 "url": "https://www.cooperativa.cl/noticias/sitemap_news.xml",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 8,
@@ -70,7 +77,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_noticias",
 "url": "https://www.cnnchile.com/_files/sitemaps/sitemap_news.xml",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 9,
@@ -79,7 +87,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_noticias",
 "url": "https://www.chilevision.cl/_files/sitemaps/sitemap_news.xml",
-"estado": "requiere_ajuste"
+"estado": "requiere_ajuste",
+"region": ""
 },
 {
 "id": 10,
@@ -88,7 +97,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_noticias",
 "url": "https://www.df.cl/noticias/site/sitemap_news.xml",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 11,
@@ -97,7 +107,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_noticias",
 "url": "https://www.elmostrador.cl/sitemap_news.xml",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 12,
@@ -106,7 +117,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.ciperchile.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 13,
@@ -115,7 +127,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.infobae.com/arc/outboundfeeds/rss/tags_slug/chile/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 14,
@@ -124,7 +137,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": ""
 },
 {
 "id": 15,
@@ -133,7 +147,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.adnradio.cl/arc/outboundfeeds/rss/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 16,
@@ -142,7 +157,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "portada",
 "url": "https://www.radioagricultura.cl/noticias/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 17,
@@ -151,7 +167,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap",
 "url": "https://duna.cl/sitemaps/articles.xml",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 18,
@@ -160,7 +177,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "portada",
 "url": "https://radio.uchile.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 19,
@@ -169,7 +187,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_noticias",
 "url": "https://www.pauta.cl/sitemap_news.xml",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 20,
@@ -178,7 +197,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": ""
 },
 {
 "id": 21,
@@ -187,7 +207,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": ""
 },
 {
 "id": 22,
@@ -196,7 +217,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://www.lun.com/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 23,
@@ -205,7 +227,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "portada",
 "url": "https://www.soychile.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 24,
@@ -214,7 +237,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": ""
 },
 {
 "id": 25,
@@ -223,7 +247,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.publimetro.cl/arc/outboundfeeds/rss/?outputType=xml",
-"estado": "restringido"
+"estado": "restringido",
+"region": ""
 },
 {
 "id": 26,
@@ -232,7 +257,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.ex-ante.cl/feed/",
-"estado": "requiere_ajuste"
+"estado": "requiere_ajuste",
+"region": ""
 },
 {
 "id": 27,
@@ -241,7 +267,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.theclinic.cl/feed/",
-"estado": "requiere_ajuste"
+"estado": "requiere_ajuste",
+"region": ""
 },
 {
 "id": 28,
@@ -250,7 +277,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_noticias",
 "url": "https://www.eldinamo.cl/_files/sitemaps/sitemap_news.xml",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 29,
@@ -259,7 +287,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.elciudadano.com/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 30,
@@ -268,7 +297,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://eldesconcierto.cl/rss/pages/ultimas-noticias.xml",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 31,
@@ -277,7 +307,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_noticias",
 "url": "https://ellibero.cl/news-sitemap.xml",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 32,
@@ -286,7 +317,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.diarioconstitucional.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 33,
@@ -295,7 +327,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.lared.cl/feed",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 34,
@@ -304,7 +337,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_noticias",
 "url": "https://www.tvmas.tv/_files/sitemaps/sitemap_news.xml",
-"estado": "requiere_ajuste"
+"estado": "requiere_ajuste",
+"region": ""
 },
 {
 "id": 35,
@@ -313,7 +347,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://radionuevomundo.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 36,
@@ -322,7 +357,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.lanacion.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 37,
@@ -331,7 +367,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://elsiglo.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 38,
@@ -340,7 +377,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_noticias",
 "url": "https://www.diarioestrategia.cl/sitemap/news",
-"estado": "requiere_ajuste"
+"estado": "requiere_ajuste",
+"region": ""
 },
 {
 "id": 39,
@@ -349,7 +387,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://chocale.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 40,
@@ -358,7 +397,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss_filtrado",
 "url": "https://www.bloomberglinea.com/arc/outboundfeeds/google-news-feed-latam/?outputType=xml",
-"estado": "requiere_ajuste"
+"estado": "requiere_ajuste",
+"region": ""
 },
 {
 "id": 41,
@@ -367,7 +407,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://interferencia.cl/rss.xml",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 42,
@@ -376,7 +417,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.elperiodista.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 43,
@@ -385,7 +427,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://cambio21.cl/rss",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 44,
@@ -394,7 +437,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_noticias",
 "url": "https://www.pagina7.cl/_files/sitemaps/sitemap_news.xml",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 45,
@@ -403,7 +447,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.cronicadigital.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 46,
@@ -412,7 +457,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://lavozdelosquesobran.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 47,
@@ -421,7 +467,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.elclarin.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 48,
@@ -430,7 +477,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.lemondediplomatique.cl/spip.php?page=backend",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 49,
@@ -439,7 +487,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.fastcheck.cl/feed",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 50,
@@ -448,7 +497,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.malaespinacheck.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 51,
@@ -457,7 +507,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": "V"
 },
 {
 "id": 52,
@@ -466,7 +517,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": "V"
 },
 {
 "id": 53,
@@ -475,7 +527,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": "V"
 },
 {
 "id": 54,
@@ -484,7 +537,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss_filtrado",
 "url": "https://www.biobiochile.cl/static/feed-google",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 55,
@@ -493,7 +547,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "portada",
 "url": "https://www.soychile.cl/valparaiso/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 56,
@@ -502,7 +557,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_noticias",
 "url": "https://puranoticia.pnt.cl/cms/site/sitemap_news.xml",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 57,
@@ -511,7 +567,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_filtrado",
 "url": "https://www.meganoticias.cl/sitemaps/sitemap-news.xml",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 58,
@@ -520,7 +577,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap_filtrado",
 "url": "https://www.24horas.cl/24horas/site/sitemap_pags.xml",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 59,
@@ -529,7 +587,8 @@ export const CATALOGO = [
 "comuna": "Viña del Mar",
 "metodo": "rss",
 "url": "https://www.epicentrochile.com/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 60,
@@ -538,7 +597,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://g5noticias.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 61,
@@ -547,7 +607,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.radiofestival.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 62,
@@ -556,7 +617,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "sitemap",
 "url": "https://ucvradio.cl/news-sitemap1.xml",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 63,
@@ -565,7 +627,8 @@ export const CATALOGO = [
 "comuna": "Quillota",
 "metodo": "rss",
 "url": "https://www.panoramanoticioso.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 64,
@@ -574,7 +637,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.tuopinas.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 65,
@@ -583,7 +647,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://alertanoticias.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 66,
@@ -592,7 +657,8 @@ export const CATALOGO = [
 "comuna": "Casablanca",
 "metodo": "rss",
 "url": "https://casablancahoy.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 67,
@@ -601,7 +667,8 @@ export const CATALOGO = [
 "comuna": "Casablanca",
 "metodo": "sitemap",
 "url": "https://www.radioquintay.cl/sitemap.xml",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 68,
@@ -610,7 +677,8 @@ export const CATALOGO = [
 "comuna": "Casablanca",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": "V"
 },
 {
 "id": 69,
@@ -619,7 +687,8 @@ export const CATALOGO = [
 "comuna": "Concón",
 "metodo": "rss",
 "url": "https://www.lavozdeconcon.cl/?feed=rss2",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 70,
@@ -628,7 +697,8 @@ export const CATALOGO = [
 "comuna": "Concón",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": "V"
 },
 {
 "id": 71,
@@ -637,7 +707,8 @@ export const CATALOGO = [
 "comuna": "Quintero;Puchuncaví;Concón",
 "metodo": "rss",
 "url": "https://labahiaonline.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 72,
@@ -646,7 +717,8 @@ export const CATALOGO = [
 "comuna": "Valparaíso;Viña del Mar",
 "metodo": "portada",
 "url": "https://www.elmartutino.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 73,
@@ -655,7 +727,8 @@ export const CATALOGO = [
 "comuna": "Valparaíso",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": "V"
 },
 {
 "id": 74,
@@ -664,7 +737,8 @@ export const CATALOGO = [
 "comuna": "Juan Fernández",
 "metodo": "rss",
 "url": "https://www.arqueoturismo.org/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 75,
@@ -673,7 +747,8 @@ export const CATALOGO = [
 "comuna": "Isla de Pascua",
 "metodo": "rss",
 "url": "https://moevarua.com/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 76,
@@ -682,7 +757,8 @@ export const CATALOGO = [
 "comuna": "Quilpué",
 "metodo": "portada",
 "url": "https://www.quilpueonline.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 77,
@@ -691,7 +767,8 @@ export const CATALOGO = [
 "comuna": "Villa Alemana;Quilpué",
 "metodo": "rss",
 "url": "https://bicomunal.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 78,
@@ -700,7 +777,8 @@ export const CATALOGO = [
 "comuna": "Limache;Olmué",
 "metodo": "rss",
 "url": "https://www.diariocronica.cl/?feed=rss2",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 79,
@@ -709,7 +787,8 @@ export const CATALOGO = [
 "comuna": "Quillota;La Calera;La Cruz;Nogales;Hijuelas",
 "metodo": "rss",
 "url": "https://eldigital.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 80,
@@ -718,7 +797,8 @@ export const CATALOGO = [
 "comuna": "Quillota",
 "metodo": "portada",
 "url": "https://www.observador.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 81,
@@ -727,7 +807,8 @@ export const CATALOGO = [
 "comuna": "Quillota",
 "metodo": "rss",
 "url": "https://radioquillota.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 82,
@@ -736,7 +817,8 @@ export const CATALOGO = [
 "comuna": "Quillota;La Calera;Nogales;La Ligua;Cabildo;San Felipe",
 "metodo": "rss",
 "url": "https://radiocrystal.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 83,
@@ -745,7 +827,8 @@ export const CATALOGO = [
 "comuna": "Quillota",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": "V"
 },
 {
 "id": 84,
@@ -754,7 +837,8 @@ export const CATALOGO = [
 "comuna": "Quillota;Limache;La Cruz;La Calera",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": "V"
 },
 {
 "id": 85,
@@ -763,7 +847,8 @@ export const CATALOGO = [
 "comuna": "San Antonio;Cartagena;El Quisco;Algarrobo;Santo Domingo;El Tabo",
 "metodo": "rss",
 "url": "https://elproa.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 86,
@@ -772,7 +857,8 @@ export const CATALOGO = [
 "comuna": "San Antonio",
 "metodo": "rss",
 "url": "https://cablenoticias.cl/category/ahora/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 87,
@@ -781,7 +867,8 @@ export const CATALOGO = [
 "comuna": "San Antonio;El Tabo;El Quisco;Algarrobo;Santo Domingo",
 "metodo": "rss",
 "url": "https://www.radiogalactika.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 88,
@@ -790,7 +877,8 @@ export const CATALOGO = [
 "comuna": "Santo Domingo",
 "metodo": "rss",
 "url": "https://santonews.cl/?feed=rss2",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 89,
@@ -799,7 +887,8 @@ export const CATALOGO = [
 "comuna": "Cartagena;El Tabo",
 "metodo": "rss",
 "url": "https://www.tvcartagena.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 90,
@@ -808,7 +897,8 @@ export const CATALOGO = [
 "comuna": "San Antonio",
 "metodo": "google_news",
 "url": "",
-"estado": "restringido"
+"estado": "restringido",
+"region": "V"
 },
 {
 "id": 91,
@@ -817,7 +907,8 @@ export const CATALOGO = [
 "comuna": "La Ligua;Cabildo;Petorca;Papudo;Zapallar",
 "metodo": "rss",
 "url": "https://laliguanoticias.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 92,
@@ -826,7 +917,8 @@ export const CATALOGO = [
 "comuna": "San Felipe",
 "metodo": "rss",
 "url": "https://eltrabajo.cl/web/feed/",
-"estado": "requiere_ajuste"
+"estado": "requiere_ajuste",
+"region": "V"
 },
 {
 "id": 93,
@@ -835,7 +927,8 @@ export const CATALOGO = [
 "comuna": "San Felipe;Los Andes;Llaillay;Panquehue;Putaendo;Santa María;Catemu;Calle Larga;Rinconada;San Esteban",
 "metodo": "rss",
 "url": "https://www.aconcaguanews.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 94,
@@ -844,7 +937,8 @@ export const CATALOGO = [
 "comuna": "San Felipe;Los Andes;Llaillay;Panquehue;Putaendo;Santa María;Catemu;Calle Larga;Rinconada;San Esteban",
 "metodo": "rss",
 "url": "https://aconcaguaaldia.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 95,
@@ -853,7 +947,8 @@ export const CATALOGO = [
 "comuna": "San Felipe",
 "metodo": "rss",
 "url": "https://www.preludioradio.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 96,
@@ -862,7 +957,8 @@ export const CATALOGO = [
 "comuna": "Putaendo",
 "metodo": "rss",
 "url": "https://putaendouno.cl/?feed=rss2",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 97,
@@ -871,7 +967,8 @@ export const CATALOGO = [
 "comuna": "Catemu",
 "metodo": "rss",
 "url": "https://catemunoticias.blogspot.com/feeds/posts/default?alt=rss",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 98,
@@ -880,7 +977,8 @@ export const CATALOGO = [
 "comuna": "Santa María",
 "metodo": "rss",
 "url": "https://oroloncofm.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 99,
@@ -889,7 +987,8 @@ export const CATALOGO = [
 "comuna": "Los Andes;Calle Larga;Rinconada;San Esteban",
 "metodo": "sitemap_noticias",
 "url": "https://www.superandina.cl/sitemap/google-news/sitemap.xml",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 100,
@@ -898,7 +997,8 @@ export const CATALOGO = [
 "comuna": "Los Andes",
 "metodo": "google_news",
 "url": "http://www.losandesonline.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 101,
@@ -907,7 +1007,8 @@ export const CATALOGO = [
 "comuna": "Casablanca",
 "metodo": "facebook",
 "url": "https://www.facebook.com/31tv.cl",
-"estado": "captura_asistida"
+"estado": "captura_asistida",
+"region": "V"
 },
 {
 "id": 102,
@@ -916,7 +1017,8 @@ export const CATALOGO = [
 "comuna": "Casablanca",
 "metodo": "facebook",
 "url": "https://www.facebook.com/profile.php?id=61576308577918",
-"estado": "captura_asistida"
+"estado": "captura_asistida",
+"region": "V"
 },
 {
 "id": 110,
@@ -925,7 +1027,8 @@ export const CATALOGO = [
 "comuna": "Casablanca",
 "metodo": "instagram",
 "url": "https://www.instagram.com/31tv.cl/",
-"estado": "red"
+"estado": "red",
+"region": "V"
 },
 {
 "id": 111,
@@ -934,7 +1037,8 @@ export const CATALOGO = [
 "comuna": "San Antonio",
 "metodo": "facebook",
 "url": "https://www.facebook.com/canal2tvsanantonio",
-"estado": "red"
+"estado": "red",
+"region": "V"
 },
 {
 "id": 112,
@@ -943,7 +1047,8 @@ export const CATALOGO = [
 "comuna": "San Antonio",
 "metodo": "instagram",
 "url": "https://www.instagram.com/canal2chilenasaborfm/",
-"estado": "red"
+"estado": "red",
+"region": "V"
 },
 {
 "id": 113,
@@ -952,7 +1057,8 @@ export const CATALOGO = [
 "comuna": "San Antonio;El Tabo;El Quisco;Algarrobo;Santo Domingo",
 "metodo": "facebook",
 "url": "https://www.facebook.com/profile.php?id=61591891344038",
-"estado": "retirado"
+"estado": "retirado",
+"region": "V"
 },
 {
 "id": 114,
@@ -961,7 +1067,8 @@ export const CATALOGO = [
 "comuna": "San Antonio;El Tabo;El Quisco;Algarrobo;Santo Domingo",
 "metodo": "instagram",
 "url": "https://www.instagram.com/radiogalactikamedia/",
-"estado": "red"
+"estado": "red",
+"region": "V"
 },
 {
 "id": 115,
@@ -970,7 +1077,8 @@ export const CATALOGO = [
 "comuna": "Santo Domingo",
 "metodo": "instagram",
 "url": "https://www.instagram.com/santonewscl/",
-"estado": "red"
+"estado": "red",
+"region": "V"
 },
 {
 "id": 116,
@@ -979,7 +1087,8 @@ export const CATALOGO = [
 "comuna": "Casablanca",
 "metodo": "facebook",
 "url": "https://www.facebook.com/radioquintay92.7",
-"estado": "red"
+"estado": "red",
+"region": "V"
 },
 {
 "id": 103,
@@ -988,7 +1097,8 @@ export const CATALOGO = [
 "comuna": "Quilpué;Villa Alemana;Limache;Olmué",
 "metodo": "rss",
 "url": "https://margamargatv.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 104,
@@ -997,7 +1107,8 @@ export const CATALOGO = [
 "comuna": "San Felipe;Los Andes;Santa María;Putaendo;Llaillay;Catemu;Panquehue;Calle Larga;Rinconada;San Esteban",
 "metodo": "rss",
 "url": "https://www.elaconcagua.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 105,
@@ -1006,7 +1117,8 @@ export const CATALOGO = [
 "comuna": "San Felipe;Catemu;Llaillay;Panquehue;Putaendo;Santa María",
 "metodo": "rss",
 "url": "https://aconcaguadigital.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 106,
@@ -1015,7 +1127,8 @@ export const CATALOGO = [
 "comuna": "La Ligua;Cabildo;Petorca;Papudo;Zapallar",
 "metodo": "google_news",
 "url": "https://laliguachile.cl/",
-"estado": "restringido"
+"estado": "restringido",
+"region": "V"
 },
 {
 "id": 107,
@@ -1024,7 +1137,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://portalportuario.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 108,
@@ -1033,7 +1147,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://rvl.uv.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 109,
@@ -1042,7 +1157,8 @@ export const CATALOGO = [
 "comuna": "Los Andes;Calle Larga;Rinconada;San Esteban",
 "metodo": "rss",
 "url": "https://www.elinformador.cl/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 200,
@@ -1051,7 +1167,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://www.gorevalparaiso.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 201,
@@ -1060,7 +1177,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://www.uv.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 202,
@@ -1069,7 +1187,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://www.pucv.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 203,
@@ -1078,7 +1197,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://usm.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 204,
@@ -1087,7 +1207,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://www.upla.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 205,
@@ -1096,7 +1217,8 @@ export const CATALOGO = [
 "comuna": "Valparaíso",
 "metodo": "google_news",
 "url": "https://municipalidaddevalparaiso.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 206,
@@ -1105,7 +1227,8 @@ export const CATALOGO = [
 "comuna": "Viña del Mar",
 "metodo": "google_news",
 "url": "https://www.munivina.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 207,
@@ -1114,7 +1237,8 @@ export const CATALOGO = [
 "comuna": "San Antonio",
 "metodo": "google_news",
 "url": "https://www.sanantonio.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 208,
@@ -1123,7 +1247,8 @@ export const CATALOGO = [
 "comuna": "Quillota",
 "metodo": "google_news",
 "url": "https://www.quillota.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 209,
@@ -1132,7 +1257,8 @@ export const CATALOGO = [
 "comuna": "Isla de Pascua",
 "metodo": "google_news",
 "url": "https://www.rapanui.net/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 210,
@@ -1141,7 +1267,8 @@ export const CATALOGO = [
 "comuna": "San Antonio;Cartagena;El Quisco;Algarrobo;Santo Domingo;El Tabo",
 "metodo": "portada",
 "url": "https://www.soychile.cl/san-antonio/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 211,
@@ -1150,7 +1277,8 @@ export const CATALOGO = [
 "comuna": "Quillota;La Calera;La Cruz;Hijuelas;Nogales",
 "metodo": "portada",
 "url": "https://www.soychile.cl/quillota/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 117,
@@ -1159,7 +1287,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "rss",
 "url": "https://www.mascontainer.com/feed/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 118,
@@ -1168,7 +1297,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://www.mundomaritimo.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 212,
@@ -1177,7 +1307,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://www.subdere.gov.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 213,
@@ -1186,7 +1317,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://www.achm.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 214,
@@ -1195,7 +1327,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://amuch.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 215,
@@ -1204,7 +1337,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://www.sea.gob.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 216,
@@ -1213,7 +1347,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://sma.gob.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 217,
@@ -1222,7 +1357,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://www.conaf.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 218,
@@ -1231,7 +1367,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://www.mop.gob.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 219,
@@ -1240,7 +1377,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 220,
@@ -1249,7 +1387,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://www.senado.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 221,
@@ -1258,7 +1397,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 222,
@@ -1267,7 +1407,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://www.fiscaliadechile.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 223,
@@ -1276,7 +1417,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://www.pjud.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 224,
@@ -1285,7 +1427,8 @@ export const CATALOGO = [
 "comuna": "Valparaíso",
 "metodo": "google_news",
 "url": "https://www.puertovalparaiso.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 225,
@@ -1294,7 +1437,8 @@ export const CATALOGO = [
 "comuna": "San Antonio",
 "metodo": "google_news",
 "url": "https://www.puertosanantonio.com/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 226,
@@ -1303,7 +1447,38 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "https://serviuvalparaiso.minvu.gob.cl/",
-"estado": "listo"
+"estado": "listo",
+"region": "V"
+},
+{
+"id": 227,
+"nombre": "Contraloría General de la República",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "oficial",
+"url": "https://www.contraloria.cl/web/cgr/informes-de-auditoria",
+"estado": "listo",
+"region": ""
+},
+{
+"id": 228,
+"nombre": "Mercado Público",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "oficial",
+"url": "https://www.mercadopublico.cl/",
+"estado": "listo",
+"region": ""
+},
+{
+"id": 229,
+"nombre": "Esval",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "oficial",
+"url": "https://www.esval.cl/personas/cortes-estado-del-servicio/",
+"estado": "listo",
+"region": "V"
 },
 {
 "id": 296,
@@ -1312,7 +1487,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 297,
@@ -1321,7 +1497,8 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "",
-"estado": "listo"
+"estado": "listo",
+"region": ""
 },
 {
 "id": 299,
@@ -1330,6 +1507,237 @@ export const CATALOGO = [
 "comuna": "",
 "metodo": "google_news",
 "url": "",
-"estado": "listo"
+"estado": "listo",
+"region": ""
+},
+{
+"id": 400,
+"nombre": "El Diario de Antofagasta",
+"ambito": "regional",
+"comuna": "",
+"metodo": "rss",
+"url": "https://www.diarioantofagasta.cl/feed/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 401,
+"nombre": "Timeline.cl",
+"ambito": "regional",
+"comuna": "",
+"metodo": "rss",
+"url": "https://www.timeline.cl/feed/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 402,
+"nombre": "Antofagasta TV",
+"ambito": "regional",
+"comuna": "",
+"metodo": "sitemap",
+"url": "https://www.antofagasta.tv/sitemap/news/sitemap.xml",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 403,
+"nombre": "SoyAntofagasta",
+"ambito": "regional",
+"comuna": "",
+"metodo": "portada",
+"url": "https://www.soychile.cl/antofagasta/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 404,
+"nombre": "SoyCalama",
+"ambito": "local",
+"comuna": "Calama",
+"metodo": "portada",
+"url": "https://www.soychile.cl/calama/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 405,
+"nombre": "SoyTocopilla",
+"ambito": "local",
+"comuna": "Tocopilla",
+"metodo": "portada",
+"url": "https://www.soychile.cl/tocopilla/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 406,
+"nombre": "Calama en Línea",
+"ambito": "local",
+"comuna": "Calama",
+"metodo": "rss",
+"url": "https://noticias.calamaenlinea.cl/feed/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 407,
+"nombre": "Radio Sol",
+"ambito": "regional",
+"comuna": "",
+"metodo": "rss",
+"url": "https://radiosol.cl/feed/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 408,
+"nombre": "Madero",
+"ambito": "regional",
+"comuna": "",
+"metodo": "rss",
+"url": "https://madero.cl/feed/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 409,
+"nombre": "El Mercurio de Antofagasta",
+"ambito": "regional",
+"comuna": "",
+"metodo": "google_news",
+"url": "",
+"estado": "restringido",
+"region": "II"
+},
+{
+"id": 410,
+"nombre": "La Estrella de Antofagasta",
+"ambito": "regional",
+"comuna": "",
+"metodo": "google_news",
+"url": "",
+"estado": "restringido",
+"region": "II"
+},
+{
+"id": 411,
+"nombre": "El Mercurio de Calama",
+"ambito": "local",
+"comuna": "Calama",
+"metodo": "google_news",
+"url": "",
+"estado": "restringido",
+"region": "II"
+},
+{
+"id": 412,
+"nombre": "La Estrella del Loa",
+"ambito": "local",
+"comuna": "Calama",
+"metodo": "google_news",
+"url": "",
+"estado": "restringido",
+"region": "II"
+},
+{
+"id": 413,
+"nombre": "La Prensa de Tocopilla",
+"ambito": "local",
+"comuna": "Tocopilla",
+"metodo": "google_news",
+"url": "",
+"estado": "restringido",
+"region": "II"
+},
+{
+"id": 414,
+"nombre": "BioBioChile, Región de Antofagasta",
+"ambito": "regional",
+"comuna": "",
+"metodo": "rss_filtrado",
+"url": "https://www.biobiochile.cl/static/feed-google",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 415,
+"nombre": "24 Horas, Antofagasta",
+"ambito": "regional",
+"comuna": "",
+"metodo": "sitemap_filtrado",
+"url": "https://www.24horas.cl/24horas/site/sitemap_pags.xml",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 416,
+"nombre": "Meganoticias, Región de Antofagasta",
+"ambito": "regional",
+"comuna": "",
+"metodo": "sitemap_filtrado",
+"url": "https://www.meganoticias.cl/sitemaps/sitemap-news.xml",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 420,
+"nombre": "Gobierno Regional de Antofagasta",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.goreantofagasta.cl/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 421,
+"nombre": "Delegación Presidencial Regional de Antofagasta",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 422,
+"nombre": "Empresa Portuaria Antofagasta",
+"ambito": "institucional",
+"comuna": "Antofagasta",
+"metodo": "google_news",
+"url": "https://www.puertoantofagasta.cl/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 423,
+"nombre": "Universidad de Antofagasta",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.uantof.cl/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 424,
+"nombre": "Universidad Católica del Norte",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.ucn.cl/",
+"estado": "listo",
+"region": "II"
+},
+{
+"id": 425,
+"nombre": "Aguas Antofagasta",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.aguasantofagasta.cl/",
+"estado": "listo",
+"region": "II"
 }
 ];

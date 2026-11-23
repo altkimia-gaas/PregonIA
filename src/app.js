@@ -181,7 +181,9 @@ const medioN = n => { const nm = nomMedio(n), red = n.via === "instagram" || MED
 const signo = n => (n > 0 ? "+" : "") + n;
 const plural = (n, s, p) => n + " " + (n === 1 ? s : p);
 /* Una sola cifra de medios en toda la aplicación, calculada del catálogo: medios de prensa (sin redes sociales ni fuentes institucionales). */
-const N_MEDIOS = CATALOG.filter(m => m.m !== "facebook" && m.m !== "instagram" && m.a !== "institucional" && m.t !== "Otro medio" && m.e !== "retirado").length;
+/* Medios de las regiones abiertas (src/regiones.js): los de una región en preparación no se cuentan ni se listan. */
+const deRegionAbierta = m => !m.r || !!(REGIONES[m.r] && REGIONES[m.r].activa);
+const N_MEDIOS = CATALOG.filter(m => deRegionAbierta(m) && m.m !== "facebook" && m.m !== "instagram" && m.a !== "institucional" && m.t !== "Otro medio" && m.e !== "retirado").length;
 /* Balance del tono: veredicto en cinco niveles. El índice (positivas − críticas) / total solo decide el nivel; el usuario ve palabras y conteos. */
 const VER = [[40,"Muy favorable","claramente más a favor que en contra","Muy a favor"],[10,"Favorable","más a favor que en contra","A favor"],[-9,"Equilibrada","lo positivo y lo crítico se compensan","Equilibrado"],[-39,"Desfavorable","más en contra que a favor","En contra"],[-101,"Muy desfavorable","claramente más en contra que a favor","Muy en contra"]];
 function veredicto(M){ if (!M.vol) return {n:"Sin noticias", f:"no hubo noticias en el período", c:"Sin datos", k:"neu", i:-1}; const i = VER.findIndex(x => M.neto >= x[0]), v = VER[i]; return {n:v[1], f:v[2], c:v[3], k: i <= 1 ? "pos" : i >= 3 ? "cri" : "neu", i}; }
@@ -697,11 +699,11 @@ function propHtml(){
 function vFuentes(){
   // Las cuentas de Facebook e Instagram tienen un estado vivo (lectura automática, pendiente de Meta, captura asistida o error): src/redes.js.
   const f = tState.fuente, est = m => esRed(m) ? estadoRed(m) : {k: m.e, l: null, o: m.o};
-  const todas = CATALOG.filter(m => m.e !== "retirado"), redes = todas.filter(esRed), web = todas.filter(m => !esRed(m) && m.a !== "institucional" && m.t !== "Otro medio");
+  const todas = CATALOG.filter(m => m.e !== "retirado" && deRegionAbierta(m)), redes = todas.filter(esRed), web = todas.filter(m => !esRed(m) && m.a !== "institucional" && m.t !== "Otro medio");
   const rows = todas.filter(m => (f.a==="todos"||m.a===f.a) && (f.e==="todos" || (f.e==="redes" ? esRed(m) : !esRed(m) && m.e===f.e)));
   const cnt = k => todas.filter(m => !esRed(m) && m.e===k).length;
   const lbl = {listo:"Listo", requiere_ajuste:"Requiere ajuste", restringido:"Restringido", captura_asistida:"Captura asistida"};
-  const met = {rss:"RSS", sitemap_noticias:"Sitemap de noticias", sitemap:"Sitemap", sitemap_mensual:"Sitemap mensual", portada:"Portada", google_news:"Google News", rss_filtrado:"RSS filtrado", sitemap_filtrado:"Sitemap filtrado", facebook:"Facebook", instagram:"Instagram"};
+  const met = {rss:"RSS", sitemap_noticias:"Sitemap de noticias", sitemap:"Sitemap", sitemap_mensual:"Sitemap mensual", portada:"Portada", google_news:"Google News", rss_filtrado:"RSS filtrado", sitemap_filtrado:"Sitemap filtrado", facebook:"Facebook", instagram:"Instagram", oficial:"Lectura directa de documentos oficiales"};
   const nIg = redes.filter(m => m.m === "instagram").length, nFb = redes.length - nIg;
   return `<div class="head"><div><h2 tabindex="-1">Fuentes</h2><p>Los ${web.length} medios web que PregonIA lee y cómo se lee cada uno (verificado el 3 de noviembre de 2026), más ${plural(redes.length, "cuenta", "cuentas")} de medios en redes sociales (${nIg} de Instagram y ${nFb} de Facebook). Los restringidos se consultan solo vía Google News. Las cuentas de redes se leen solas cuando hay un lector conectado; si no, sus publicaciones se agregan con Agregar publicación.</p></div>
     ${puedeInscribir() ? `<button class="btn alt" type="button" data-act="red-abrir">Inscribir cuenta de red social</button>` : ""}</div>
@@ -1127,7 +1129,7 @@ function gestionCard(ms, c){
 const VECINAS = {};
 function vecinasCard(){
   if (esAut() || !/^https?:$/.test(location.protocol)) return "";
-  const prov = provinciaDe(S.org); if (!prov || (PROVINCIAS[prov] || []).length < 2) return "";
+  const prov = provinciaDe(S.org); if (!prov || comunasDeProvincia(prov).length < 2) return "";
   const e = VECINAS[prov];
   if (!e || (!e.cargando && Date.now() - e.ts > 30 * 6e4)) pedirVecinas(prov);
   return `<div class="card" id="vecinasCard" style="margin-top:14px">${vecinasHtml(VECINAS[prov], prov)}</div>`;
@@ -1679,7 +1681,7 @@ async function iaServidor(){
 let samplePromise = ((window.claude && window.claude.use) ? window.claude.use("sample").catch(() => null) : Promise.resolve(null)).then(s => s || iaServidor());
 let ctl = null;
 function prompt(m, pieza, enfoque, base){
-  return `Eres el asistente de comunicaciones de PregonIA para ${esAut() ? "el equipo de " + inst() + " (" + cuenta().perfil.zonaNombre + ", Región de Valparaíso)" : inst()}, en Chile. Redacta en español de Chile: ${PIEZAS[pieza][2]}. Enfoque: ${ENFOQUES[enfoque]}.
+  return `Eres el asistente de comunicaciones de PregonIA para ${esAut() ? "el equipo de " + inst() + " (" + cuenta().perfil.zonaNombre + ", " + regionCuenta().nombre + ")" : inst()}, en Chile. Redacta en español de Chile: ${PIEZAS[pieza][2]}. Enfoque: ${ENFOQUES[enfoque]}.
 
 Reglas obligatorias:
 1. Usa solo datos que estén en los ${datosLbl()} o en la NOTICIA. Si falta un dato necesario, escribe [completar: qué dato falta]. No inventes cifras, fechas, nombres ni compromisos. Los datos marcados [Ejemplo] o [Completar] son ficticios o pendientes: si usas uno, deja la marca pegada al dato en el texto (por ejemplo, «[Ejemplo] 800 000 000»); nunca lo presentes como dato real.
@@ -1759,7 +1761,7 @@ const AYUDA_VISTA = {
   comunicados:["Comunicados", "Prepara una respuesta en tres decisiones: a qué respondes, qué pieza necesitas y con qué enfoque. La IA redacta solo con la noticia y los datos del municipio; lo que falta queda marcado [completar]. Nada se publica: tú apruebas y difundes. Desde el borrador o la lista de aprobados lo envías en PDF por WhatsApp, por correo (Gmail, Outlook o tu programa) o lo guardas en PDF."],
   temas:["Mis temas", "Los temas que PregonIA vigila. Cada tema tiene términos (lo que se busca), contexto (palabras que deben acompañar) y exclusiones (lo que descarta). Tu plan define cuántos temas activos puedes tener."],
   asistente:["Asistente de temas", "Responde cinco preguntas sobre el municipio y PregonIA propone los temas base de tu plan, más sugerencias para sumar. Revisa la propuesta antes de activarla."],
-  fuentes:["Fuentes", "Los medios web del catálogo: nacionales, regionales y comunales de las ocho provincias de la Región de Valparaíso. Cada uno muestra cómo se lee y su estado: listo, requiere ajuste o restringido (se lee vía Google News)."],
+  fuentes:["Fuentes", "Los medios web del catálogo: nacionales, regionales y comunales. Cada uno muestra cómo se lee y su estado: listo, requiere ajuste o restringido (se lee vía Google News)."],
   rep_alcalde:["Reportes · Parte del alcalde", "Para el alcalde, cada lunes, en dos minutos. Dice cómo lo trató la prensa en la semana, hasta tres asuntos que se pueden complicar con qué hacer y quién se encarga, y una buena noticia para aprovechar. Se envía en PDF por WhatsApp, por correo o se guarda en PDF, y el botón Video resumen lo convierte en un video corto para el celular."],
   rep_diario:["Reportes · Informe diario", "Indicadores del período (publicaciones, noticias distintas, tono, críticas sin respuesta, alcance, temas y medios) y el clipping: cada mención agrupa las publicaciones del mismo hecho, con un código para citarla y el enlace a cada nota original. Elige últimas 24 horas, hoy o ayer, y compártelo en PDF por WhatsApp o correo."],
   rep_mesa:["Reportes · Mesa de comunicaciones", "Para el encargado de comunicaciones, cada mañana. Críticas sin respuesta, temas que están subiendo de la prensa comunal a la regional o nacional, buenas noticias por difundir y los medios a los que conviene llamar."],
@@ -1788,7 +1790,7 @@ const FAQ = [
     ["¿Puedo agregar fechas de mi comuna?", "Sí. En Reportes · Calendario de riesgos, «Agregar fecha propia»: aniversario, fiestas locales o sesiones clave del concejo, con sus palabras clave y lo que hay que preparar."]
   ]],
   ["Monitoreo", [
-    ["¿Qué medios revisa PregonIA?", N_MEDIOS + " medios digitales: nacionales, regionales de Valparaíso y comunales de las ocho provincias de la región, más páginas de Facebook de medios locales que se ingresan con captura asistida. La lista completa, con el estado de cada uno, está en Ajustes › Fuentes."],
+    ["¿Qué medios revisa PregonIA?", N_MEDIOS + " medios digitales: nacionales, regionales y comunales de tu territorio, más páginas de Facebook de medios locales que se ingresan con captura asistida. La lista completa, con el estado de cada uno, está en Ajustes › Fuentes."],
     ["¿Cada cuánto se actualiza?", "En el piloto, cada 30 minutos; la barra superior muestra la hora de la última lectura. En la prueba gratis, al entrar: la edición se actualiza sola en segundo plano."],
     ["¿Por qué no aparece una noticia que vi?", "Puede que el medio no esté en el catálogo, que sea un medio restringido (se lee vía Google News y llega con retraso) o que la nota no calce con los términos del tema. Revisa términos, variantes y exclusiones en Ajustes › Mis temas."],
     ["¿Por qué aparece una noticia que no tiene que ver?", "Suele ser una coincidencia de nombre, como Casablanca la película o San Antonio de Texas. Márcala como \"No corresponde\" y agrega esa palabra a las exclusiones del tema."],
@@ -1823,8 +1825,8 @@ const FAQ = [
     ["¿Cómo envío o guardo una respuesta?", "Bajo el borrador está la barra Compartir. En el celular, WhatsApp y Correo abren la hoja de compartir con el PDF adjunto: eliges la app y el contacto. En el computador, WhatsApp abre el chat y guarda el PDF para que lo adjuntes con el clip; Correo te deja elegir Gmail, Outlook o el programa de correo del equipo, con asunto y texto listos. Nada se envía solo: tú eliges a quién."]
   ]],
   ["Autoridades", [
-    ["¿Para quién es la versión de autoridades?", "Para alcaldesas y alcaldes, diputadas y diputados, senadoras y senadores, consejeras y consejeros regionales, concejales, el gobernador regional y las delegaciones presidenciales de la Región de Valparaíso, y sus equipos de prensa. Se entra eligiendo el cargo, la zona (distrito, circunscripción o comuna) y el nombre."],
-    ["¿Puedo seguir cualquier municipio de la región?", "Sí. Al activar la prueba eliges entre las 38 comunas de la Región de Valparaíso, por provincia, con su alcalde o alcaldesa del período 2024-2028. La cuenta sigue a la municipalidad, a la comuna y a la persona por su nombre, y la compara con los alcaldes de su provincia."],
+    ["¿Para quién es la versión de autoridades?", "Para alcaldesas y alcaldes, diputadas y diputados, senadoras y senadores, consejeras y consejeros regionales, concejales, el gobernador regional y las delegaciones presidenciales, y sus equipos de prensa. Se entra eligiendo el cargo, la zona (distrito, circunscripción o comuna) y el nombre."],
+    ["¿Puedo seguir cualquier municipio?", "Sí, cualquiera de las comunas disponibles. Al activar la prueba eliges la comuna, por provincia, con su alcalde o alcaldesa del período 2024-2028. La cuenta sigue a la municipalidad, a la comuna y a la persona por su nombre, y la compara con los alcaldes de su provincia."],
     ["¿De dónde sale la lista de nombres?", "Parlamentarios, consejeros regionales y alcaldes vienen precargados según la nómina vigente al " + NOMINA_CORTE + ". Si falta alguien o cambió, elige «Otra persona» y escribe el nombre. Los concejales escriben el suyo."],
     ["¿Qué noticias ve una autoridad?", "Las que la nombran en los medios leídos y en Google News del último mes; la IA descarta homónimos y mide el tono respecto de su imagen y su trabajo."],
     ["¿Qué es «Frente a sus pares»?", "Cuántas notas nombraron a cada autoridad del mismo cargo y zona en los últimos 14 días. Mide presencia, no aprobación: una polémica también suma."],
@@ -1919,8 +1921,8 @@ function pintarModo(){
   const pv = pruebaVigente(), i = MODO.info, real = MODO.tipo === "real" && i;
   if (!pv) { el.hidden = true; return; }
   el.hidden = false; el.className = "demo real";
-  const etiqueta = pv.ilimitada ? "Prueba comercial" : "Prueba gratis", hasta = pv.ilimitada ? "" : ` hasta el ${new Date(pv.hasta).toLocaleString("es-CL", {weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23"})}`;
-  if (MODO.cargando) { el.innerHTML = `<span class="demo-txt"><b>${etiqueta}</b>Leyendo ${N_MEDIOS} medios para ${esc(S.org)}<span class="demo-mas">; puede tardar hasta un minuto</span>…</span>`; return; }
+  const etiqueta = pv.ilimitada ? "Prueba comercial" : pv.extendida ? "Acceso de prueba" : "Prueba gratis", hasta = pv.ilimitada ? "" : ` hasta el ${new Date(pv.hasta).toLocaleString("es-CL", {weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23"})}`;
+  if (MODO.cargando) { el.innerHTML = `<span class="demo-txt"><b>${etiqueta}</b>Leyendo ${prMedios().length} medios para ${esc(S.org)}<span class="demo-mas">; puede tardar hasta un minuto</span>…</span>`; return; }
   el.innerHTML = `<span class="demo-txt"><b>${MODO.actualizando ? "Actualizando…" : etiqueta}</b>${real ? `${plural(i.notas.length, "nota", "notas")} en ${i.ventana_dias} días<span class="demo-mas"> · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : i.ia_parcial ? " · tono clasificado en parte" : " · tono sin clasificar"}${hasta}</span>` : `<span class="demo-mas">${hasta.trim()}</span>`}</span>`;
 }
 /* Última lectura guardada en el navegador: al recargar, la edición aparece al instante con lo último leído
@@ -1962,33 +1964,46 @@ async function cargarReales(force, silencioso){
 const IP_PAG = '<path class="ip-p" d="M32 14H54.5a1.5 1.5 0 0 1 1.5 1.5v33a1.5 1.5 0 0 1-1.5 1.5H32Z"/><line class="ip-t" x1="36" y1="19.5" x2="52" y2="19.5"/><line class="ip-l" x1="36" y1="26" x2="42.5" y2="26"/><line class="ip-l" x1="36" y1="30.5" x2="42.5" y2="30.5"/><line class="ip-l" x1="36" y1="35" x2="42.5" y2="35"/><line class="ip-l" x1="36" y1="39.5" x2="42.5" y2="39.5"/><line class="ip-l" x1="36" y1="44" x2="41" y2="44"/><line class="ip-l" x1="45.5" y1="26" x2="52" y2="26"/><line class="ip-l" x1="45.5" y1="30.5" x2="52" y2="30.5"/><rect class="ip-f" x="45.5" y="34" width="6.5" height="11" rx="1.2"/>';
 const icoPeriodico = (px = 20) => `<svg class="ico-per" viewBox="0 0 64 64" width="${px}" height="${px}" aria-hidden="true"><g class="ip-izq">${IP_PAG}</g><g>${IP_PAG}</g><path class="ip-som" d="M32 14H56V50H32Z"/><g class="ip-hoja">${IP_PAG}</g><line class="ip-lomo" x1="32" y1="14" x2="32" y2="50"/></svg>`;
 /* Pantalla de lectura: posiciona a PregonIA mientras el servidor lee los medios y la IA clasifica.
-   Siete diarios de colores giran en órbita; uno a la vez pasa al centro, se abre y se le dan vuelta las páginas;
-   al terminar queda con visto en la órbita y entra el siguiente. Sin movimiento si el sistema lo pide. */
-const DIARIOS = [
-  {n: "DIARIO", c: "#1976D2", p: "#E3F0FB"}, {n: "NOTICIAS", c: "#D9443C", p: "#FBE7E5"}, {n: "CRÓNICA", c: "#2E9E6B", p: "#E2F4EA"},
-  {n: "GACETA", c: "#C98A0B", p: "#FBF0D9"}, {n: "EL PREGÓN", c: "#7B4BC4", p: "#EFE7FA"}, {n: "SEMANARIO", c: "#0F8C99", p: "#DDF2F4"}, {n: "LA VOZ", c: "#E0598B", p: "#FBE5EE"}
-];
-const PR_ORB = 7, PR_MS = 2600;  // 3 páginas por diario
-function diarioMini(d, i){
-  // Edición · Edición: diarios en blanco y negro (papel, cabezal en tinta, foto gris); los colores salen del modo claro u oscuro.
+   Doce diarios giran en órbita, cada uno con el color de su tipo de medio; al centro, el nombre real del medio que «se lee»
+   (los del catálogo que aplican a la cuenta: nacionales, los de su región y comuna, fuentes oficiales y redes), su tipo y el
+   contador. El anillo se llena con el color de cada medio leído y debajo quedan los tres últimos. El ritmo es visual: la
+   respuesta del servidor llega de una vez; al completar la cuenta, sigue la vuelta con el contador lleno hasta que llega.
+   Sin movimiento de la órbita si el sistema lo pide. */
+const PR_TIPOS = {loc: ["#D85A30", "Comunal"], nac: ["#378ADD", "Nacional"], reg: ["#1D9E75", "Regional"], ofi: ["#7F77DD", "Oficial"], red: ["#D4537E", "Redes"]};
+const PR_ORB = 12, PR_MS = 260, PR_R = 112;
+const prTipo = m => esRed(m) ? "red" : m.a === "institucional" ? "ofi" : m.a === "local" ? "loc" : m.a === "regional" ? "reg" : "nac";
+/* Medios de la cuenta, intercalados por tipo para que los colores se mezclen (los comunales de la cuenta abren la lista). */
+function prMedios(){
+  const terr = territorio(), reg = regionCuenta().id, deTerr = m => (m.c || "").split(";").some(c => terr.includes(c.trim()));
+  const ms = CATALOG.filter(m => m.e !== "retirado" && m.t !== "Otro medio" && !/^Otr[oa] (medio|fuente)/i.test(m.n) && (!m.r || m.r === reg)
+    && (m.a === "nacional" || m.a === "regional" || (m.a === "institucional" && (!m.c || deTerr(m))) || (m.a === "local" && deTerr(m))));
+  const grupos = {}; ms.forEach(m => (grupos[prTipo(m)] = grupos[prTipo(m)] || []).push(m));
+  const orden = Object.keys(PR_TIPOS);
+  return Object.entries(grupos).flatMap(([k, g]) => g.map((m, i) => ({n: m.n, k, f: (i + .5) / g.length - (k === "loc" && i < 2 ? 1 : 0)})))
+    .sort((x, y) => x.f - y.f || orden.indexOf(x.k) - orden.indexOf(y.k));
+}
+function diarioMini(i){
+  // Diario en miniatura: papel, cabezal y filete con el color de su tipo (--tc), foto gris y líneas de texto.
   const ln = (y, w) => `<rect class="dm-l" x="5" y="${y}" width="${w}" height="2" rx="1"/>`;
   return `<svg viewBox="0 0 40 50" aria-hidden="true"><rect class="dm-papel" x=".75" y=".75" width="38.5" height="48.5" rx="3"/><rect class="dm-cab" x="5" y="4.5" width="30" height="3.5" rx="1"/><rect class="dm-filete" x="5" y="10" width="30" height="1"/>
     <rect class="dm-foto" x="5" y="15" width="${i % 2 ? 30 : 14}" height="${i % 2 ? 10 : 14}" rx="1.5"/>${i % 2 ? ln(29, 30) + ln(33, 26) : ln(16, 12) + ln(20, 12) + ln(24, 10)}${ln(37, 30)}${ln(41, 24)}</svg>`;
 }
-const prPagina = lado => `<div class="pr-pag ${lado}">${[0, 1, 2, 3, 4, 5].map(k => `<i style="width:${[86, 70, 92, 64, 88, 74][(k + (lado === "der" ? 2 : 0)) % 6]}%"></i>`).join("")}</div>`;
-function prLibro(d){
-  return `<div class="pr-libro" style="--c:var(--ink);--p:var(--surface)"><div class="pr-cab"><span>${d.n}</span></div>
-    <div class="pr-abierto">${prPagina("izq")}${prPagina("der")}<div class="pr-hoja"><div class="pr-cara fr">${prPagina("der")}</div><div class="pr-cara re">${prPagina("izq")}</div></div></div></div>`;
-}
+const prCentro = (m, n, total) => `<span class="pr-ahora">Leyendo ahora</span><b class="pr-nm">${esc(m.n)}</b>
+  <span class="pr-tp" style="--tc:${PR_TIPOS[m.k][0]}">${PR_TIPOS[m.k][1]}</span><span class="pr-cnt">${n} de ${total} medios</span>`;
 const PR_PASOS = [[0, "Leyendo los medios nacionales, regionales y locales…"], [8, "Juntando la misma noticia publicada en varios medios…"], [18, "La IA está leyendo el tono y escribiendo resúmenes propios…"], [32, "Ordenando por alcance y preparando qué conviene hacer…"], [55, "Unos segundos más: hay muchas fuentes para revisar…"]];
 function procesandoHtml(){
   const quien = esAut() ? cuenta().perfil.nombre : S.org, hoy = new Date(NOW).toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long"});
-  const orbita = DIARIOS.map((d, i) => `<span class="pr-o${i ? "" : " leyendo"}" style="--a:${i * 360 / PR_ORB}deg"><span class="pr-oi">${diarioMini(d, i)}<span class="pr-ok">✓</span></span></span>`).join("");
+  const ms = prMedios(); procesandoHtml.ms = ms;
+  const orbita = Array.from({length: PR_ORB}, (_, i) => { const m = ms[i % ms.length];
+    return `<span class="pr-o${i ? "" : " leyendo"}" style="--a:${i * 360 / PR_ORB}deg;--tc:${PR_TIPOS[m.k][0]}"><span class="pr-oi">${diarioMini(i)}<span class="pr-ok">✓</span></span></span>`; }).join("");
+  const largo = (2 * Math.PI * PR_R).toFixed(1);
   return `<section class="pr" role="status" aria-live="polite" aria-labelledby="prT">
-    <div class="pr-circ" aria-hidden="true"><span class="pr-pista"></span><div class="pr-orbita">${orbita}</div><div class="pr-centro" id="prCentro">${prLibro(DIARIOS[0])}</div></div>
+    <div class="pr-circ" aria-hidden="true"><svg class="pr-anillo" viewBox="0 0 284 284"><circle class="pr-pista" cx="142" cy="142" r="${PR_R}"/><g id="prArco" transform="rotate(-90 142 142)" data-largo="${largo}"></g></svg>
+      <div class="pr-orbita">${orbita}</div><div class="pr-centro" id="prCentro">${prCentro(ms[0], 0, ms.length)}</div></div>
+    <p class="pr-rec" id="prRec" aria-hidden="true"></p>
     <span class="ini-ekick">Leyendo la prensa · ${esc(hoy)}</span>
     <h2 id="prT" class="pr-t" tabindex="-1">Estamos leyendo la prensa por ti</h2>
-    <p class="pr-s">${N_MEDIOS} medios nacionales, regionales y locales en una sola lectura: qué se dice de <b>${esc(quien)}</b>, hasta dónde llegó y qué conviene hacer.</p>
+    <p class="pr-s">${ms.length} medios y fuentes nacionales, regionales y locales en una sola lectura: qué se dice de <b>${esc(quien)}</b>, hasta dónde llegó y qué conviene hacer.</p>
     <p class="pr-paso">${icoPeriodico(24)}<span id="prPaso">${PR_PASOS[0][1]}</span></p>
     <p class="pr-nota" id="prNota">Suele tardar menos de un minuto.</p>
   </section>`;
@@ -1998,12 +2013,21 @@ function procesandoPaso(){
   const tick = () => { const el = $("#prPaso"); if (!el || !MODO.cargando) { clearInterval(procesandoPaso.t); return; }
     const seg = Math.round((Date.now() - (MODO.inicio || Date.now())) / 1000), p = PR_PASOS.filter(x => seg >= x[0]).pop()[1];
     if (el.textContent !== p) el.textContent = p; const n = $("#prNota"); if (n) n.textContent = seg < 5 ? "Suele tardar menos de un minuto." : `Llevamos ${seg} s · suele tardar menos de un minuto.`; };
-  // Un diario a la vez: el leído queda con visto en la órbita y el siguiente pasa al centro. Al completar la vuelta, empieza otra tanda.
-  let i = 0; const leer = () => { const c = $("#prCentro"); if (!c || !MODO.cargando) { clearInterval(procesandoPaso.l); return; }
-    const os = [...document.querySelectorAll(".pr-o")]; os[i].classList.remove("leyendo"); os[i].classList.add("leido");
-    i = (i + 1) % PR_ORB; if (!i) os.forEach(o => o.classList.remove("leido"));
-    os[i].classList.add("leyendo"); c.innerHTML = prLibro(DIARIOS[i]); };
-  tick(); procesandoPaso.t = setInterval(tick, 1000); procesandoPaso.l = setInterval(leer, PR_MS);
+  // Un medio a la vez: el diario de la órbita que lo representa se agranda con su color, los tres anteriores quedan con visto,
+  // el anillo suma un tramo de su color y la línea de abajo muestra los tres últimos. Completa la cuenta y sigue girando.
+  const ms = procesandoHtml.ms || prMedios(), total = ms.length, rec = [];
+  let n = 0; const leer = () => { const c = $("#prCentro"), arco = $("#prArco"); if (!c || !arco || !MODO.cargando) { clearInterval(procesandoPaso.l); return; }
+    const os = [...document.querySelectorAll(".pr-o")], i = n % PR_ORB, m = ms[n % total], ant = os[(i + PR_ORB - 1) % PR_ORB];
+    ant.classList.remove("leyendo"); if (n) ant.classList.add("leido");
+    const viejo = os[(i + PR_ORB - 4) % PR_ORB]; if (n >= 4) viejo.classList.remove("leido");
+    os[i].style.setProperty("--tc", PR_TIPOS[m.k][0]); os[i].classList.remove("leido"); os[i].classList.add("leyendo");
+    const leidos = Math.min(n + 1, total); c.innerHTML = prCentro(m, leidos, total);
+    if (n < total) { const largo = +arco.dataset.largo, tramo = largo / total;
+      arco.insertAdjacentHTML("beforeend", `<circle cx="142" cy="142" r="${PR_R}" style="stroke:${PR_TIPOS[m.k][0]}" stroke-dasharray="${(tramo + .5).toFixed(2)} ${largo}" stroke-dashoffset="${(-n * tramo).toFixed(2)}"/>`); }
+    rec.unshift(m); rec.length = Math.min(rec.length, 4);
+    const r = $("#prRec"); if (r) r.innerHTML = rec.slice(1).length ? "Recién leídos: " + rec.slice(1).map(x => `<span><i style="background:${PR_TIPOS[x.k][0]}"></i>${esc(x.n)}</span>`).join("") : "";
+    n++; };
+  tick(); leer(); procesandoPaso.t = setInterval(tick, 1000); procesandoPaso.l = setInterval(leer, PR_MS);
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (b && b.dataset.act === "modo-real") cargarReales(true); });
 $("#org").addEventListener("change", () => { if ($("#entBack")) return; pintarModo(); if (pruebaVigente() && MODO.disponible) cargarReales(true); });  // con el selector de cuentas abierto no hay cambio todavía
@@ -2086,7 +2110,7 @@ function pintarAccesoPortada(){
   const out = $("#ptOut"); if (out) { const prueba = !dentro && pruebaVigente(); out.hidden = !(dentro || prueba); out.dataset.act = dentro ? "salir" : "salir-prueba"; out.lastChild.textContent = dentro ? "Cerrar sesión" : "Salir de la prueba"; }  // sin Supabase configurado (por ejemplo, el archivo suelto) no hay a qué ingresar
   $("#ptPiloto").hidden = dentro;
   $("#ptDemo").hidden = dentro;
-  $("#ptEstado").textContent = dentro ? "Edición de " + pl.muni.nombre : "Prueba gratis de 48 horas con noticias reales";
+  $("#ptEstado").textContent = dentro ? "Edición de " + pl.muni.nombre : "Prueba gratis de 7 días con noticias reales";
 }
 function salirPortada(){ mostrarPortada(false); if (!location.hash || location.hash === "#portada") location.hash = "inicio"; }
 function mostrarPortada(on){

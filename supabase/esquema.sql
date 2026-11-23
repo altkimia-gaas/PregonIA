@@ -637,3 +637,8 @@ create table if not exists public.pruebas_ingresos (
 );
 create index if not exists pruebas_ingresos_correo_creado on public.pruebas_ingresos (correo, creado_en desc);
 alter table public.pruebas_ingresos enable row level security;
+
+-- Regiones (src/regiones.js): un turno de lectura por región. Cada lectura queda marcada con su región para que la app y la
+-- página de cobertura muestren el estado del turno que corresponde. Las lecturas anteriores son de la Región de Valparaíso.
+alter table lecturas add column if not exists region text not null default 'V';
+create index if not exists lecturas_region_fin on lecturas (region, fin desc);

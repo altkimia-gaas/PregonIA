@@ -2,20 +2,27 @@
 // Lee los RSS y sitemaps de noticias del catálogo y Google News; nunca guarda ni devuelve el texto de los medios.
 import { gunzipSync } from "node:zlib";
 import { CATALOGO } from "./_catalogo.js";
-import { COMUNAS_V } from "./_autoridades.js";
+import { REGIONES, COMUNAS_DE, regionDeComuna } from "./_autoridades.js";
+import { leerOficiales } from "./_oficiales.js";
 
-/* Las 38 comunas de la Región de Valparaíso, con las formas en que la prensa las escribe. */
-const ALIAS = { "Llaillay": ["llay-llay", "llay llay"], "Isla de Pascua": ["rapa nui"] };
-const COMUNAS = Object.fromEntries(COMUNAS_V.map(c => [c, [c.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].concat(ALIAS[c] || [])]));
-/* Frases que contienen el nombre de una comuna sin hablar de ella. */
-const QUITAR = ["ascensor santo domingo", "calle santo domingo", "region de valparaiso", "cordillera de los andes", "universidad de los andes", "federico santa maria", "universidad santa maria", "cruz roja"];
-// Palabras que en Google News acotan la búsqueda a la comuna chilena (Casablanca de Marruecos, Cartagena de Colombia, San Antonio de Texas).
-const CONTEXTO = '(Valparaíso OR comuna OR municipalidad OR alcalde OR Chile OR "litoral central")';
-const EXCLUIR = ["marruecos", "marroqui", "rabat", "wydad", "raja casablanca", "colombia", "cartagena de indias", "texas", "spurs", "ibiza", "murcia", "san antonio de padua", "san antonio abad", "tachira"];
+/* Comunas de todas las regiones configuradas (src/regiones.js), con las formas en que la prensa las escribe.
+   Lo que depende de la región (contexto de Google News, homónimos, frases que nombran una comuna sin hablar de ella)
+   se toma de la región de cada comuna. */
+const normC = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const COMUNAS = Object.fromEntries(Object.values(REGIONES).flatMap(r => COMUNAS_DE(r.id).map(c => [c, [normC(c)].concat((r.alias || {})[c] || [])])));
+const regionDe = comuna => REGIONES[regionDeComuna(comuna)] || REGIONES.V;
+/* Homónimos extranjeros de todas las regiones (Casablanca de Marruecos, Antofagasta de la Sierra): sirven para cualquier comuna. */
+const EXCLUIR = [...new Set(Object.values(REGIONES).flatMap(r => r.excluir || []))];
+const QUITAR_DE = comuna => regionDe(comuna).quitar || [];
+/* Comunas cuyo nombre es una palabra común (Mejillones, María Elena): la nota debe traer algo del territorio. */
+const reglaComuna = comuna => (regionDe(comuna).comuna || {})[comuna] || null;
+const pasaRegla = (comuna, t) => { const r = reglaComuna(comuna); if (!r) return true;
+  if (r.excluir && r.excluir.some(w => t.includes(w))) return false;
+  return !r.requiere || r.requiere.some(w => t.includes(w)); };
 /* Deporte: fuera antes de la IA (ahorra clasificación y ruido), salvo que la nota trate de la gestión local: el municipio,
    el alcalde, el concejo, un recinto municipal o un club con apoyo municipal. Solo para lo que se halló por la comuna; lo que
    nombra a una autoridad siempre pasa. */
-const DEPORTE = /(^|[^a-z])(goles?|golea\w*|futbol\w*|partido de (ida|vuelta)|playoffs?|campeonato|torneo|liga de primera|primera b|segunda division|ascenso|copa chile|fixture|hinchas?|barra brava|tenistas?|basquetbol|clasificatori\w+|mundial sub|wanderers|everton|colo[ -]colo|universidad de chile|la calera vive|union la calera)([^a-z]|$)/;
+const DEPORTE = /(^|[^a-z])(goles?|golea\w*|futbol\w*|partido de (ida|vuelta)|playoffs?|campeonato|torneo|liga de primera|primera b|segunda division|ascenso|copa chile|fixture|hinchas?|barra brava|tenistas?|basquetbol|clasificatori\w+|mundial sub|wanderers|everton|colo[ -]colo|universidad de chile|la calera vive|union la calera|deportes antofagasta|cobreloa)([^a-z]|$)/;
 const GESTION_LOCAL = /municipi|alcald|concej|corporacion municipal|estadio municipal|recinto municipal|polideportivo|subvencion|fondeve|dideco|oficina de deportes/;
 const esDeporte = t => DEPORTE.test(t) && !GESTION_LOCAL.test(t);
 const METODOS = new Set(["rss", "rss_filtrado", "sitemap_noticias", "sitemap_filtrado", "sitemap", "sitemap_mensual", "portada"]);
@@ -120,7 +127,7 @@ function parsearPortada(html, base, excluir = null){
   return [...porUrl.values()].filter(x => x.titulo.split(" ").length >= 4);
 }
 /* Rutas que una portada no debe tomar porque son de otra ficha del catálogo (ediciones locales de SoyChile). */
-const EXCLUIR_RUTA = { 23: /^\/(valparaiso|san-antonio|quillota)\// };
+const EXCLUIR_RUTA = { 23: /^\/(valparaiso|san-antonio|quillota|antofagasta|calama|tocopilla)\// };  // ediciones regionales de SoyChile: se leen aparte
 /* Cómo se lee cada método. */
 async function leerFuente(url, m){
   if (m.metodo === "portada") return parsearPortada(await leer(url, 10000, 2500000), url, EXCLUIR_RUTA[m.id]);
@@ -170,7 +177,11 @@ async function llamar1(prompt, maxTok){
    después de la primera letra. La IA escribe un titular limpio en la misma llamada del resumen, sin costo adicional. */
 export const esTituloUrl = t => { const s = String(t || "").trim(); return s.split(" ").length >= 3 && !/[áéíóúüñ¿¡,:;.!?"“”«»'‘’()]/i.test(s) && s.slice(1) === s.slice(1).toLowerCase(); };
 export const tituloFinal = (n, c) => esTituloUrl(n.titulo) && c && typeof c.t === "string" && c.t.trim().length > 8 ? c.t.trim().slice(0, 160) : n.titulo;
-const linea = (n, i) => `${i}. [${n.medio} · ${n.ambito}] ${n.titulo}${esTituloUrl(n.titulo) ? " (titular sacado de la dirección web)" : ""}${n.desc ? " — " + n.desc.slice(0, 240) : ""}`;
+const linea = (n, i) => `${i}. [${n.medio} · ${n.ambito}] ${n.titulo}${esTituloUrl(n.titulo) ? " (titular sacado de la dirección web)" : ""}${n.desc ? " — " + n.desc.slice(0, n.via === "oficial" ? 480 : 240) : ""}${n.via === "oficial" ? " (documento oficial)" : ""}`;
+/* Documentos oficiales (Contraloría, Mercado Público, Esval): no son prensa todavía; se clasifican igual, con estas precisiones. */
+const OFICIAL_INSTR = (sujeto) => `
+Las líneas marcadas «(documento oficial)» no son notas de prensa: son documentos públicos recién publicados por una institución (informes de Contraloría, licitaciones de Mercado Público, cortes de agua de Esval) que la prensa todavía puede tomar. Clasifícalos igual, con estas reglas: "rel" es true si el documento trata de ${sujeto}, de su comuna o de sus vecinos; "tono" es "cri" si el documento observa irregularidades, deficiencias o incumplimientos de ${sujeto} (por ejemplo, un informe de Contraloría con observaciones o sumarios) o si una licitación suya fracasa; un corte de agua es "neu" con área agua e impulsor gremio; "im" de un informe de Contraloría es fiscalizador; "res" debe decir qué podría publicar la prensa.
+`;
 const TITULO_INSTR = `- "t": solo en las notas marcadas «(titular sacado de la dirección web)»: un titular limpio de máximo 12 palabras, con tildes y mayúsculas correctas, fiel al hecho y sin agregar datos. En las demás notas, omítelo.`;
 /* Ficha editorial (ver claude/clasificacion-editorial-pregonia.md): la IA clasifica lo interpretativo; competencia, prioridad,
    acción y plazo los calcula la aplicación con reglas a partir de esto. Va en la misma llamada: solo suma unas palabras por nota. */
@@ -201,12 +212,12 @@ export function fichaNota(c){
   return Object.keys(f).length ? f : null;
 }
 function promptLote(comuna, notas, base, ejemplos = []){
-  return `Eres analista de prensa de PregonIA para la Municipalidad de ${comuna}, Región de Valparaíso, Chile. Revisa estas notas de prensa:
+  return `Eres analista de prensa de PregonIA para la Municipalidad de ${comuna}, ${regionDe(comuna).nombre}, Chile. Revisa estas notas de prensa:
 
 ${notas.map((n, k) => linea(n, base + k) + (n.sobre === "pc" ? " (hallada por la comuna)" : "")).join("\n")}
 
 Las notas marcadas «(hallada por la comuna)» salieron de una búsqueda de ${comuna} y la nombran en el cuerpo aunque el titular no lo diga: decide por su tema si trata de la comuna.
-
+${notas.some(n => n.via === "oficial") ? OFICIAL_INSTR("la Municipalidad de " + comuna) : ""}
 Para cada nota devuelve un objeto con:
 - "i": su número.
 - "rel": true solo si trata de la comuna de ${comuna} en Chile, su municipio, sus autoridades o hechos ocurridos allí; false si es otro lugar con el mismo nombre, si la comuna aparece solo de pasada o si solo es el lugar de una cárcel, un tribunal, una carretera o un trámite judicial y el hecho no afecta a los vecinos ni al municipio.
@@ -225,10 +236,10 @@ const MARCA = {pc: " (hallada por su nombre)", i: " (sobre su institución)"};
 const lineaAut = (n, i) => linea(n, i) + (MARCA[n.sobre] || "");
 function promptLoteAut(a, notas, base, ejemplos = []){
   const inst = a.institucion || a.zona;
-  return `Eres analista de prensa de PregonIA para el equipo de ${a.cargo} ${a.nombre} (${a.zona}, Región de Valparaíso, Chile). Revisa estas notas de prensa:
+  return `Eres analista de prensa de PregonIA para el equipo de ${a.cargo} ${a.nombre} (${a.zona}, ${a.region || "Región de Valparaíso"}, Chile). Revisa estas notas de prensa:
 
 ${notas.map((n, k) => lineaAut(n, base + k)).join("\n")}
-
+${notas.some(n => n.via === "oficial") ? OFICIAL_INSTR(a.nombre + " o " + inst) : ""}
 Para cada nota devuelve un objeto con:
 - "i": su número.
 - "rel": true si la nota nombra a ${a.nombre} como ${a.cargo.toLowerCase()} o trata directamente de su labor; también si trata de ${inst} (sus acuerdos, votaciones, proyectos, recursos, autoridades o polémicas), porque eso afecta a quien la integra. Las notas marcadas «(hallada por su nombre)» salieron de una búsqueda de su nombre y la mencionan en el cuerpo aunque el titular no lo diga: son true salvo que traten claramente de otra persona o de otro lugar. false si es otra persona con un nombre parecido, si es de otra región o si la institución o el territorio aparecen solo de pasada.
@@ -284,10 +295,16 @@ async function clasificar(comuna, notas, existentes = [], ejemplos = []){
    57 Meganoticias Región de Valparaíso (no tiene sección: las notas cuya dirección nombra una comuna o la región). */
 const RE_URL_REGION = /valparaiso|vina-del-mar|con-?con|quintero|puchuncavi|casablanca|quilpue|villa-alemana|limache|olmue|quillota|la-calera|hijuelas|nogales|san-antonio|cartagena|el-quisco|el-tabo|algarrobo|santo-domingo|san-felipe|los-andes|la-ligua|cabildo|papudo|zapallar|petorca|llay-?llay|putaendo|catemu|panquehue|rinconada|calle-larga|san-esteban|rapa-nui|isla-de-pascua|juan-fernandez/;
 const FILTROS = { 54: u => /\/region-de-valparaiso\//.test(u), 40: u => /\/latinoamerica\/chile\//.test(u),
-  58: u => /\/regiones\/zona-centro\/valparaiso\//.test(u), 57: u => RE_URL_REGION.test(u.split("/").pop() || "") };
+  58: u => /\/regiones\/zona-centro\/valparaiso\//.test(u), 57: u => RE_URL_REGION.test(u.split("/").pop() || ""),
+  // Región de Antofagasta: 414 BioBío (su sección), 415 24 Horas (Red Antofagasta), 416 Meganoticias (dirección que nombra una comuna de la región).
+  414: u => /\/region-de-antofagasta\//.test(u), 415: u => /\/regiones\/zona-norte\/antofagasta\//.test(u),
+  416: u => /antofagasta|calama|tocopilla|mejillones|taltal|sierra-gorda|ollague|san-pedro-de-atacama|maria-elena/.test(u.split("/").pop() || "") };
 const seLee = m => METODOS.has(m.metodo) && m.url && m.estado !== "restringido" && m.estado !== "en_prueba" && !(m.metodo.endsWith("_filtrado") && !FILTROS[m.id]);
-export async function leerCatalogo(){
-  const fuentes = CATALOGO.filter(seLee), errores = [], porUrl = new Map();
+/* Con region, solo los medios nacionales y los de esa región (turnos de lectura por región); sin region, todo el catálogo. */
+export async function leerCatalogo(region = null){
+  const fuentes = CATALOGO.filter(m => seLee(m) && (!region || !m.region || m.region === region)), errores = [], porUrl = new Map();
+  // Documentos oficiales (Contraloría, Esval): se leen en paralelo con los medios y entran a la misma lista (ver _oficiales.js).
+  const oficiales = leerOficiales(Date.now(), region).catch(() => ({items: [], total: 1, errores: ["Contraloría"]}));
   fuentes.forEach(m => { if (!porUrl.has(m.url)) porUrl.set(m.url, []); porUrl.get(m.url).push(m); });
   const items = (await Promise.all([...porUrl.entries()].map(async ([url, ms]) => {
     try {
@@ -297,7 +314,8 @@ export async function leerCatalogo(){
       return its.map(x => { const f = filtrados.find(m => FILTROS[m.id](x.url)); const m = f || resto; return m ? { ...x, m } : null; }).filter(Boolean);
     } catch(e) { ms.forEach(m => errores.push(m.nombre)); return []; }
   }))).flat();
-  return {items, total: fuentes.length, errores};
+  const of = await oficiales;
+  return {items: items.concat(of.items), total: fuentes.length + of.total, errores: errores.concat(of.errores)};
 }
 const porDominio = new Map(), porNombre = new Map();
 /* Fuentes institucionales sin ficha propia (ministerios, servicios, municipalidades, Fuerzas Armadas): una ficha común que conserva el nombre real. */
@@ -307,7 +325,7 @@ const esInstitucional = (d, nombre) => /(^|\.)(gob|mil)\.cl$/.test(d) || /munici
    Ahora entran con una ficha común que conserva el nombre real del medio: regional si el medio es de la región, nacional si no.
    Quedan fuera los medios extranjeros (dominio de otro país) y los de deportes, clima o agregadores, que no traen noticias de gestión. */
 const OTRO_NAC = CATALOGO.find(m => m.id === 297), OTRO_REG = CATALOGO.find(m => m.id === 296);
-const RE_REGION = /valpara|vina del mar|aconcagua|litoral|quinta region|v region|san antonio|quillota|quilpue|villa alemana|casablanca|limache|la ligua|petorca|los andes|san felipe|rapa nui|con ?con|quintero|puchuncavi|cartagena|algarrobo|el quisco|el tabo|la calera/;
+const RE_REGION = new RegExp(Object.values(REGIONES).map(r => r.medioRegional).filter(Boolean).join("|"));
 const RE_AJENO = /(^|\.)(as\.com|365scores\.com|bolavip\.com|besoccer\.com|transfermarkt\.\w+|flashscore\.\w+|espn\.\w+|volcanodiscovery\.com|tutiempo\.net|accuweather\.com)$/;
 const extranjero = d => { const t = d.split(".").pop(); return t.length === 2 && t !== "cl"; };
 function otroMedio(d, nombre){
@@ -376,7 +394,7 @@ async function porTramos(q, desde, hasta, prof, vistos, out){
     if (its.length >= GN_TOPE - 2 && prof > 1 && b - a > 1.5 * 864e5 && Date.now() + 8000 < limite()) await porTramos(q, a, b, prof - 1, vistos, out);
   }
 }
-export async function leerGoogleNews(comuna, dias = VENTANA_DIAS){ return (await leerGoogleNewsConsulta(`"${comuna}" ${CONTEXTO}`, dias)).map(x => ({...x, q: "comuna"})); }
+export async function leerGoogleNews(comuna, dias = VENTANA_DIAS){ return (await leerGoogleNewsConsulta(`"${comuna}" ${regionDe(comuna).contexto}`, dias)).map(x => ({...x, q: "comuna"})); }
 /* Google News con una consulta cualquiera. Con catalogo = true quedan los medios del catálogo y los demás medios chilenos con ficha común;
    con false, todo lo que encuentre (para contar). Con tramos = true, una consulta que llega al tope se completa por tramos de fechas. */
 export async function leerGoogleNewsConsulta(q, dias = VENTANA_DIAS, catalogo = true, tramos = catalogo, prescindible = false){
@@ -418,13 +436,13 @@ export function candidatasPorNombre(variantes, items, desde, ahora = Date.now(),
 /* Lo que menciona la comuna en la ventana, sin duplicados (mismo enlace o mismo titular en el mismo medio), del más reciente al más antiguo. */
 export function candidatasDe(comuna, items, desde, ahora = Date.now()){
   const claves = COMUNAS[comuna] || [norm(comuna)], re = new RegExp(`(^|[^a-z])(${claves.join("|")})([^a-z]|$)`);
-  const menciona = t => re.test(t) && !EXCLUIR.some(w => t.includes(w));
+  const quitar = QUITAR_DE(comuna), menciona = t => re.test(t) && !EXCLUIR.some(w => t.includes(w)) && pasaRegla(comuna, t);
   const vistos = new Set(), out = [];
   for (const x of items) {
     if (!Number.isFinite(x.fecha) || x.fecha < desde || x.fecha > ahora + 36e5) continue;
-    const t = QUITAR.reduce((s, q) => s.split(q).join(" "), norm(x.titulo + " " + x.desc)), local = x.m.ambito === "local" && (x.m.comuna || "").split(";").map(norm).includes(norm(comuna));
+    const t = quitar.reduce((s, q) => s.split(q).join(" "), norm(x.titulo + " " + x.desc)), local = x.m.ambito === "local" && (x.m.comuna || "").split(";").map(norm).includes(norm(comuna));
     // Lo que Google News halló buscando la comuna la nombra en el cuerpo aunque el titular no lo haga (un 30% en Viña del Mar).
-    const porConsulta = x.q === "comuna" && !EXCLUIR.some(w => t.includes(w));
+    const porConsulta = x.q === "comuna" && !EXCLUIR.some(w => t.includes(w)) && pasaRegla(comuna, t);
     if (!menciona(t) && !(local && !EXCLUIR.some(w => t.includes(w))) && !porConsulta) continue;
     if (esDeporte(t)) continue;
     const k1 = x.url, k2 = x.m.id + "|" + norm(x.titulo);
@@ -468,4 +486,4 @@ export async function saludFuentes(consultasGN = [], soloIds = null){
   const gn = [...vistos.values()].sort((a, b) => b.notas - a.notas);
   return {generado: new Date(ahora).toISOString(), fuentes, googleNews: {consultas: consultasGN.length, enCatalogo: gn.filter(x => x.catalogo), fueraDelCatalogo: gn.filter(x => !x.catalogo).slice(0, 60)}};
 }
-export { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, hash, clasificar, json };
+export { COMUNAS, regionDe, VENTANA_DIAS, MAX_IA, DIAG, norm, hash, clasificar, json };

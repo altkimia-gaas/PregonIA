@@ -9,6 +9,9 @@ PILOTO = {activo: false, disponible: false, sb: null, user: null, perfil: null, 
 const ROLES = {admin: "Administración", comunicaciones: "Comunicaciones", alcalde: "Alcalde", autoridad: "Autoridad", directivo: "Equipo directivo", lector: "Solo lectura"};
 /* En una cuenta de autoridad, la persona titular se muestra con su cargo y el equipo directivo como su equipo. */
 const esPilotoAut = () => !!(PILOTO.muni && PILOTO.muni.tipo && PILOTO.muni.tipo !== "municipio");
+/* Región de la cuenta del piloto (src/regiones.js): la de su comuna o la de la zona de la autoridad. Cada región tiene su propio turno de lectura. */
+const regionPiloto = () => { const m = PILOTO.muni || {}; if (!esPilotoAut()) return regionDeComuna(m.comuna) || REGION_DEFECTO;
+  const a = m.autoridad || {}, z = zonaDe(m.tipo, a.zona); return (z && regionDeComuna(z.comunas[0])) || REGION_DEFECTO; };
 function rolNombre(rol){
   if (!esPilotoAut()) return ROLES[rol] || rol;
   const a = PILOTO.muni.autoridad || {};
@@ -120,7 +123,7 @@ function menuCuenta(b){
 /* Aceptación de Términos y Política de privacidad (control 6 y 12 del checklist legal).
    Se pide una vez por versión de los documentos; la base guarda quién aceptó, qué versión y cuándo (tabla aceptaciones).
    Si la tabla aún no existe (esquema sin actualizar), no bloquea el ingreso y lo deja anotado en la consola. */
-const LEGAL_VERSION = "2026-11-13";
+const LEGAL_VERSION = "2026-11-23";  // 23-nov-2026: la prueba gratis pasa de 48 horas a 7 días
 async function aceptacion(user){
   const {data, error} = await PILOTO.sb.from("aceptaciones").select("id").eq("usuario", user.id).eq("version", LEGAL_VERSION).limit(1);
   if (error) { console.warn("PregonIA: falta la tabla aceptaciones; corre de nuevo supabase/esquema.sql.", error.message); return true; }
@@ -226,14 +229,16 @@ async function cargarDatosPiloto(){
     pide(sb.from("marcas").select("grupo, tipo").eq("municipio_id", mid)),
     pide(sb.from("comunicados").select("id, grupo, pieza, origen, texto, creado").eq("municipio_id", mid).order("creado", {ascending: false}).limit(300)),
     pide(sb.from("capturas").select("*").eq("municipio_id", mid).gte("publicado", desde)),
-    pide(sb.from("lecturas").select("fin, fuentes_ok, fuentes_total").not("fin", "is", null).order("id", {ascending: false}).limit(1)),
+    // La última lectura del turno de su región; sin la columna region (esquema anterior), la última de todas.
+    pide(sb.from("lecturas").select("fin, fuentes_ok, fuentes_total").eq("region", regionPiloto()).not("fin", "is", null).order("id", {ascending: false}).limit(1))
+      .catch(() => pide(sb.from("lecturas").select("fin, fuentes_ok, fuentes_total").not("fin", "is", null).order("id", {ascending: false}).limit(1))),
     pide(sb.from("municipios").select("config").eq("id", mid).single()),
     cargarRedesPiloto(sb).catch(() => null)  // cuentas de Facebook e Instagram: antes de las notas, que las necesitan como medio
   ]);
   const c = cuenta(), pend = PILOTO.editor ? leerPendiente() : null;
   // Lo que la IA ya confirmó como propio se ancla a la cuenta: la comuna, o el nombre de la autoridad (su tema núcleo).
   const ancla = esAut(c) ? " " + c.perfil.variantes[0] : " " + org + " comuna";
-  const anclaDe = r => esAut(c) && r.sobre === "institucion" ? " " + norm(CARGOS[c.perfil.rol].organo) : ancla;  // lo de su institución va a ese tema, no a la persona
+  const anclaDe = r => esAut(c) && r.sobre === "institucion" ? " " + norm(organoDe(c.perfil.rol, regionDeComuna((c.perfil.comunas || [])[0]))) : ancla;  // lo de su institución va a ese tema, no a la persona
   if (pend) {  // temas cambiados en este equipo que no alcanzaron a llegar a la base: se suben y prevalecen
     const cfg = JSON.parse(pend.cfg);
     const d = await pide(sb.from("municipios").update({config: cfg, actualizado: new Date().toISOString()}).eq("id", mid).select("id"));

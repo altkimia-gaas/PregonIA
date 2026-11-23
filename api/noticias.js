@@ -1,9 +1,10 @@
 // Noticias reales para PregonIA (etapa 1, sin base de datos): lee los medios al vuelo para una comuna, clasifica con Claude Haiku
 // y devuelve titular, enlace, medio, fecha y resumen propio. La respuesta queda 15 minutos en la caché de Vercel.
 // La lectura y la clasificación viven en _lectura.js, compartido con la lectura programada (/api/ingesta).
+import { leerOficiales } from "./_oficiales.js";
 import { tituloFinal, COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, fichaNota, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre, saludFuentes, plazoGoogleNews, statsGoogleNews, ahorroGoogleNews } from "./_lectura.js";
-import { AUTORIDADES, PROVINCIAS, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
-import { limpio, consulta, sujeto, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
+import { AUTORIDADES, PROVINCIAS, REGIONES, regionDeComuna, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
+import { limpio, consulta, sujeto, fichaIA, institucion, leerSujeto, regionDeAut } from "./_sujetos.js";
 import { CATALOGO } from "./_catalogo.js";
 import { leerRedes, usuarioDe, cuentasCatalogo } from "./_redes.js";
 
@@ -42,11 +43,11 @@ async function paresDe(a, desde){
     return {n_: x.n, p: x.p || (a.rol === "alcalde" ? x.zona : ""), n, yo: x === a};
   })).then(r => r.filter(x => x.n !== null));
 }
-async function deAutoridad(u){
-  const a = sujetoDe(u); if (!a) return json({ error: "Autoridad no disponible" }, 400);
+async function deAutoridad(u, req){
+  const a = sujetoDe(u); if (!a || !regionAbierta(regionDeAut(a).id, req)) return json({ error: "Autoridad no disponible" }, 400);
   const dias = diasDe(u), z = zonaDe(a.rol, a.zona), cargo = cargoDe(a.rol, a.g), ahora = Date.now(), desde = ahora - dias * 864e5, desdePares = ahora - VENTANA_DIAS * 864e5;
   // Primero lo que trae notas; la comparación con pares va después en la cola de Google News, mientras la IA clasifica.
-  const [cat, gn, rs] = await Promise.all([leerCatalogo(), leerSujeto(a, dias).catch(() => null), leerRedes(redesDe(u))]);
+  const [cat, gn, rs] = await Promise.all([leerCatalogo(regionDeAut(a).id), leerSujeto(a, dias).catch(() => null), leerRedes(redesDe(u))]);
   const paresP = a.nomina ? paresDe(a, desdePares).catch(() => []) : Promise.resolve([]);
   const errores = cat.errores.concat(gn ? [] : ["Google News"], rs.errores);
   const candidatas = candidatasPorNombre(variantesNombre(a), cat.items.concat(gn || [], rs.items), desde, ahora, institucion(a)), lote = candidatas.slice(0, MAX_IA);
@@ -77,12 +78,13 @@ function armar(lote, porI, deAutoridad = false){
    los últimos días y sus titulares más recientes. Solo los medios del catálogo, sin Google News ni IA: es barato y sirve para ver
    dónde se mueve la prensa del territorio, no para medir a la autoridad. ?pulso=1&rol=diputado&zona=D7 */
 const PULSO_DIAS = 3;
-async function pulso(u){
+async function pulso(u, req){
   // ?prov=San Antonio: las comunas de una provincia (comparación de un municipio con sus vecinas). ?todos=1: todos los titulares.
   const prov = u.searchParams.get("prov"), todos = u.searchParams.has("todos");
-  const z = prov ? (PROVINCIAS[prov] ? {n: "Provincia de " + prov, comunas: PROVINCIAS[prov]} : null) : zonaDe(u.searchParams.get("rol"), u.searchParams.get("zona"));
-  if (!z || z.comunas.length < 2) return json({error: "Zona no disponible"}, 400);
-  const ahora = Date.now(), desde = ahora - PULSO_DIAS * 864e5, mitad = ahora - 864e5, cat = await leerCatalogo();
+  const provs = prov && (Object.values(REGIONES).find(r => r.provincias[prov]) || {}).provincias;
+  const z = prov ? (provs ? {n: "Provincia de " + prov, comunas: provs[prov]} : null) : zonaDe(u.searchParams.get("rol"), u.searchParams.get("zona"));
+  if (!z || z.comunas.length < 2 || !regionAbierta(regionDeComuna(z.comunas[0]), req)) return json({error: "Zona no disponible"}, 400);
+  const ahora = Date.now(), desde = ahora - PULSO_DIAS * 864e5, mitad = ahora - 864e5, cat = await leerCatalogo(regionDeComuna(z.comunas[0]));
   // Solo lo que nombra a la comuna en el titular o la bajada: un medio local que cubre varias comunas no suma todas sus notas a cada una.
   const RUTINA = /pronostico del tiempo|el tiempo en|horoscopo|resultados del loto|farmacias de turno|cortes programados de/;
   const comunas = z.comunas.filter(c => COMUNAS[c]).map(c => {
@@ -95,6 +97,9 @@ async function pulso(u){
     200, {"cache-control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=3600"});
 }
 
+/* Una región en preparación (src/regiones.js, activa: false) solo se lee con la clave del programador, para probarla antes de abrirla. */
+const regionAbierta = (id, req) => Boolean(REGIONES[id] && (REGIONES[id].activa ||
+  ((process.env.CRON_SECRET || "").trim() && (req.headers.get("authorization") || "").trim() === "Bearer " + (process.env.CRON_SECRET || "").trim())));
 export async function GET(req){
   const u = new URL(req.url); DIAG.length = 0; plazoGoogleNews(32000);  // deja tiempo a la clasificación dentro de los 60 s de la función
   if (u.searchParams.has("ping")) return json({ ok: true, ia: Boolean(process.env.ANTHROPIC_API_KEY) }, 200, { "cache-control": "no-store" });
@@ -104,13 +109,18 @@ export async function GET(req){
     const ids = (u.searchParams.get("ids") || "").split(",").map(Number).filter(Boolean);
     return json(await saludFuentes(ids.length ? [] : qs, ids.length ? new Set(ids) : null), 200, { "cache-control": "public, max-age=0, s-maxage=" + (ids.length ? 60 : 1800) });
   }
-  if (u.searchParams.has("pulso")) return pulso(u);
-  if (u.searchParams.has("autoridad") || u.searchParams.has("rol")) return deAutoridad(u);
+  if (u.searchParams.has("oficiales")) {  // diagnóstico de documentos oficiales (Contraloría, Esval): solo datos públicos, sin IA
+    const r = await leerOficiales();
+    return json({errores: r.errores, detalle: r.detalle, total: r.items.length, porFuente: r.items.reduce((o, x) => (o[x.m.nombre] = (o[x.m.nombre] || 0) + 1, o), {}),
+      items: r.items.slice(0, 60).map(x => ({fuente: x.m.nombre, fecha: new Date(x.fecha).toISOString(), titulo: x.titulo}))}, 200, {"cache-control": "public, max-age=0, s-maxage=600"});
+  }
+  if (u.searchParams.has("pulso")) return pulso(u, req);
+  if (u.searchParams.has("autoridad") || u.searchParams.has("rol")) return deAutoridad(u, req);
   const comuna = u.searchParams.get("comuna") || "Casablanca";
-  if (!COMUNAS[comuna]) return json({ error: "Comuna no disponible" }, 400);
+  if (!COMUNAS[comuna] || !regionAbierta(regionDeComuna(comuna), req)) return json({ error: "Comuna no disponible" }, 400);
   const dias = diasDe(u), ahora = Date.now(), desde = ahora - dias * 864e5;
   const alcalde = AUTORIDADES.find(x => x.rol === "alcalde" && x.zona === comuna);
-  const [cat, gn, rs] = await Promise.all([leerCatalogo(), leerGoogleNews(comuna, dias).catch(() => null), leerRedes(redesDe(u))]);
+  const [cat, gn, rs] = await Promise.all([leerCatalogo(regionDeComuna(comuna)), leerGoogleNews(comuna, dias).catch(() => null), leerRedes(redesDe(u))]);
   const paresP = alcalde ? paresDe(alcalde, ahora - VENTANA_DIAS * 864e5).catch(() => []) : Promise.resolve([]);
   const errores = cat.errores.concat(gn ? [] : ["Google News"], rs.errores);
   const candidatas = candidatasDe(comuna, cat.items.concat(gn || [], rs.items), desde, ahora), lote = candidatas.slice(0, MAX_IA);

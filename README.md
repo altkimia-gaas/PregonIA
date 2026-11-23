@@ -1,11 +1,11 @@
 # PregonIA · la prensa no espera, tú tampoco
 
-Monitoreo de noticias sobre municipios y actores públicos en más de 100 medios digitales chilenos (nacionales, regionales y comunales de la Región de Valparaíso), con lectura de tono, alcance territorial (comunal, regional, nacional), informes por lector y redacción asistida de respuestas.
+Monitoreo de noticias sobre municipios y actores públicos en más de 100 medios digitales chilenos (nacionales, regionales y comunales de las regiones abiertas: Valparaíso y Antofagasta), con lectura de tono, alcance territorial (comunal, regional, nacional), informes por lector y redacción asistida de respuestas.
 
 Demo publicada: https://pregonia.cl
 
 Producto de ALTKimia. Piloto: Casablanca, Algarrobo, El Quisco, El Tabo, Cartagena y San Antonio.
-Sin demostración con noticias ficticias (retirada el 22-nov-2026): la aplicación se abre con la prueba gratis de 48 horas (noticias reales del último mes de la comuna o la autoridad elegida) o con la cuenta del cliente (piloto). Sin prueba vigente ni sesión, solo se ve la portada.
+Sin demostración con noticias ficticias (retirada el 22-nov-2026): la aplicación se abre con la prueba gratis de 7 días (noticias reales del último mes de la comuna o la autoridad elegida) o con la cuenta del cliente (piloto). Sin prueba vigente ni sesión, solo se ve la portada.
 
 ## Qué incluye el prototipo
 - **Portada:** como la de un diario: cabezal con la fecha, nombre y lema, doble filete, titular con la propuesta de valor, botones «Prueba gratis» y «Agendar demostración» (reunión comercial), más «Acceso clientes» (con sesión, «Entrar a mi edición»), la miniatura de la edición del día y tres columnas (Lee, Mide, Responde). Sin sesión la miniatura es siempre de "Comuna de Ejemplo", con datos de ejemplo; con sesión del piloto es la de la institución de esa persona, nunca la de otra. Aparece cada vez que se abre o recarga la aplicación, con `#portada` y al tocar el logo; la entrada lleva a la sección de la dirección o a Inicio. Para abrir sin portada: `?sin-portada`.
@@ -79,6 +79,15 @@ La función solo acepta pedidos desde el propio sitio, limita el largo del texto
 4. Alertas por Telegram, correo y WhatsApp Business; PDF del informe de gestión.
 5. Ver el plan completo y los requisitos en `docs/especificacion.md`.
 
+
+## Regiones
+
+Todo lo que cambia de una región a otra vive en `src/regiones.js` (provincias y comunas, homónimos, contexto de Google News,
+Contraloría Regional, senado y sanitaria). Cada región tiene su turno de lectura (`/api/ingesta?region=V`, `?region=II`), su
+catálogo (columna `region` de `data/catalogo_medios.csv`) y su nómina (`src/autoridades.js`). Una región con `activa: false`
+está en preparación: la aplicación no la ofrece y sus datos solo responden con la clave del programador. Para abrir una
+región: catálogo y nómina cargados, perfiles de sus comunas en `src/territorios.js`, `activa: true`, sus medios en la tabla
+`medios` y su turno en `supabase/programador.sql`. Los textos comerciales no nombran regiones.
 
 ## Piloto con base de datos (etapa 2)
 

@@ -58,7 +58,7 @@ function redesParam(){
 const RED_F = {red: "instagram", verificada: null, insistir: false};
 function redAbrir(){
   RED_F.verificada = null; RED_F.insistir = false;
-  const terr = territorio(), local = COMUNAS_V.includes(terr[0]) ? terr[0] : "";
+  const terr = territorio(), local = comunaAbierta(terr[0]) ? terr[0] : "", provs = regionCuenta().provincias;
   const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "redBack";
   ov.innerHTML = `<section class="vid cap" role="dialog" aria-modal="true" aria-labelledby="redT">
     <header class="vid-h"><div><h2 id="redT">Inscribir cuenta de red social</h2><p>Un medio local o regional que publica en Instagram o Facebook. Queda en el listado de fuentes para todas las cuentas de PregonIA.</p></div><button class="btn ghost" type="button" data-act="red-cerrar" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
@@ -71,7 +71,7 @@ function redAbrir(){
         <label class="cap-l">Nombre del medio<input id="redN" required autocomplete="off" placeholder="Por ejemplo: Litoral Noticias"></label>
         <label class="cap-l">Alcance<select id="redA"><option value="local">Comunal</option><option value="regional">Regional</option><option value="nacional">Nacional</option></select></label>
       </div>
-      <label class="cap-l" id="redCL">Comuna que cubre<select id="redC">${Object.entries(PROVINCIAS).map(([pv, cs]) => `<optgroup label="Provincia de ${esc(pv)}">${cs.map(c => `<option ${c === local ? "selected" : ""}>${esc(c)}</option>`).join("")}</optgroup>`).join("")}</select></label>
+      <label class="cap-l" id="redCL">Comuna que cubre<select id="redC">${Object.entries(provs).map(([pv, cs]) => `<optgroup label="Provincia de ${esc(pv)}">${cs.map(c => `<option ${c === local ? "selected" : ""}>${esc(c)}</option>`).join("")}</optgroup>`).join("")}</select></label>
       <p class="hint" id="redHint" style="margin:0"></p>
       <p class="cap-err" id="redErr" role="alert" hidden></p>
       <div class="cap-acts"><button class="btn alt" type="submit" id="redOk">Inscribir</button><button class="btn" type="button" data-act="red-cerrar">Cancelar</button></div>

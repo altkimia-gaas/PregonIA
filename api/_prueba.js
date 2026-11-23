@@ -7,7 +7,7 @@
 // avisa al equipo comercial y devuelve la vigencia de la prueba.
 // Variables: SUPABASE_URL y SUPABASE_SECRET_KEY, RESEND_API_KEY (integración Resend–Vercel) y AVISOS_REMITENTE (por defecto
 // pregonia@avala.altkimia.com, dominio verificado en Resend; debe ser de un dominio verificado en
-// Resend: con el remitente de pruebas solo llegan correos a la cuenta dueña), CONTACTO_DESTINO, PRUEBA_HORAS (por defecto 48).
+// Resend: con el remitente de pruebas solo llegan correos a la cuenta dueña), CONTACTO_DESTINO, PRUEBA_HORAS (por defecto 168, es decir, 7 días).
 import { randomInt, randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import { sb, json } from "./_servidor.js";
 
@@ -24,7 +24,14 @@ const resumen = (correo, codigo, sal) => createHash("sha256").update(`${sal}:${c
 const SIN_LIMITE = (process.env.PRUEBA_SIN_LIMITE || "avillalobos@altkimia.com").split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
 const sinLimite = correo => SIN_LIMITE.includes(String(correo || "").toLowerCase());
 const fueraLimpieza = SIN_LIMITE.length ? `&correo=not.in.(${SIN_LIMITE.map(c => encodeURIComponent(`"${c}"`)).join(",")})` : "";
-const horas = () => Math.max(1, Math.min(24 * 30, parseInt(process.env.PRUEBA_HORAS, 10) || 48));
+const horas = () => Math.max(1, Math.min(24 * 30, parseInt(process.env.PRUEBA_HORAS, 10) || 168));
+// Pruebas extendidas (colaboradores que prueban el servicio): correo y fecha de término. Siguen el flujo normal, con código al
+// correo, pero la prueba dura hasta esa fecha en vez de PRUEBA_HORAS. PRUEBA_EXTENDIDA (correo=AAAA-MM-DD, separados por coma)
+// suma o reemplaza las de esta lista.
+const EXTENDIDAS = Object.assign({
+  "gigliavaccani@gmail.com": "2027-02-21"  // Giglia Vaccani: 90 días desde el 23 nov 2026, para probar, reportar errores y proponer mejoras
+}, Object.fromEntries((process.env.PRUEBA_EXTENDIDA || "").split(",").map(x => x.split("=").map(y => y.trim())).filter(([c, f]) => c && /^\d{4}-\d{2}-\d{2}$/.test(f || "")).map(([c, f]) => [c.toLowerCase(), f])));
+const finExtendida = correo => { const f = EXTENDIDAS[String(correo || "").toLowerCase()]; return f ? Date.parse(f + "T23:59:59-03:00") : 0; };
 
 function excedido(ip){
   const ahora = Date.now(), lista = (visitas.get(ip) || []).filter(t => ahora - t < VENTANA_MS);
@@ -67,8 +74,8 @@ async function solicitar(d){
   sb(`pruebas?verificado_en=is.null&creado_en=lt.${atras(30)}${fueraLimpieza}`, {method: "DELETE"}).catch(() => {});
   sb(`pruebas?creado_en=lt.${atras(365)}${fueraLimpieza}`, {method: "DELETE"}).catch(() => {});
   const demo = sinLimite(p.correo);
-  const inicio = demo ? 0 : await primeraVerificacion(p.correo);
-  if (inicio && inicio + horas() * 36e5 < Date.now()) return json({error: "La prueba gratis de este correo ya terminó. Agenda una demostración en www.pregonia.cl y te mostramos los planes."}, 403);
+  const inicio = demo ? 0 : await primeraVerificacion(p.correo), ext = finExtendida(p.correo);
+  if (ext ? ext < Date.now() : inicio && inicio + horas() * 36e5 < Date.now()) return json({error: "La prueba gratis de este correo ya terminó. Agenda una demostración en www.pregonia.cl y te mostramos los planes."}, 403);
   const desde = new Date(Date.now() - VENTANA_MS).toISOString();
   const recientes = await sb(`pruebas?correo=eq.${encodeURIComponent(p.correo)}&creado_en=gte.${desde}&select=id`);
   if (!demo && (recientes || []).length >= POR_CORREO) return json({error: "Ya enviamos varios códigos a ese correo. Revisa tu bandeja (y la de spam) o intenta en 10 minutos."}, 429);
@@ -111,8 +118,10 @@ async function verificar(d){
   if (!f) return json({error: "No encontramos esa inscripción. Pide un código nuevo."}, 404);
   const demo = sinLimite(f.correo);
   let inicio = demo ? 0 : await primeraVerificacion(f.correo);
-  const hasta = () => demo ? "2099-12-31T23:59:59.000Z" : new Date((inicio || Date.now()) + horas() * 36e5).toISOString();
-  const prueba = () => ({nombre: f.nombre, correo: f.correo, rol: f.rol, territorio: f.territorio, hasta: hasta(), ...(demo ? {ilimitada: true} : {})});
+  const ext = finExtendida(f.correo);
+  const hasta = () => demo ? "2099-12-31T23:59:59.000Z" : ext ? new Date(ext).toISOString() : new Date((inicio || Date.now()) + horas() * 36e5).toISOString();
+  const prueba = () => ({nombre: f.nombre, correo: f.correo, rol: f.rol, territorio: f.territorio, hasta: hasta(), ...(demo ? {ilimitada: true} : ext ? {extendida: true} : {})});
+  if (ext && ext < Date.now()) return json({error: "El acceso de prueba de este correo ya terminó. Escríbenos a soporte@altkimia.cl."}, 403);
   if (f.verificado_en) return json({ok: true, prueba: prueba()});
   if (f.intentos >= MAX_INTENTOS) return json({error: "Superaste los intentos. Pide un código nuevo."}, 429);
   if (new Date(f.expira).getTime() < Date.now()) return json({error: "El código venció. Pide uno nuevo."}, 410);
