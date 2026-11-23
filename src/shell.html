@@ -1972,19 +1972,18 @@ details.corr summary{cursor:pointer;font-size:13px;color:var(--muted)}
 .orgnom[hidden]{display:none}
 .orgnom img{height:28px;width:auto;max-width:84px;object-fit:contain}
 .orgnom span{overflow:hidden;text-overflow:ellipsis}
-body.cliente .org,body.cliente .planbox,body.cliente .slogan,body.cliente .navbar{display:none}
+body.cliente .org,body.cliente .planbox,body.cliente .slogan{display:none}
 body.piloto-on .demo{display:none}
-body.cliente .topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;border-bottom:1.5px solid var(--frame,var(--line))}
-body.cliente .top-in{flex-wrap:nowrap;gap:8px 18px;padding-block:0;min-height:56px}
-body.cliente .top-in .nav{display:flex;flex-direction:row;gap:2px;flex:1 1 auto;min-width:0;overflow-x:auto;margin:0 0 0 8px;max-width:none;scrollbar-width:none}
-body.cliente .top-in .nav a{border-radius:0;padding:18px 12px 16px;color:var(--muted);font-weight:600;border-bottom:2px solid transparent;white-space:nowrap;background:transparent}
-body.cliente .top-in .nav a:hover{color:var(--ink);background:transparent}
-body.cliente .top-in .nav a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--frame,var(--accent))}
-body.cliente .top-in .nav a:last-child{margin-left:0}
-body.cliente .top-in .perslot{flex:none}
-body.cliente .live{display:none}
-@media (min-width:1500px){ body.cliente .live{display:inline-flex;margin-left:0} }
-@media (max-width:820px){ body.cliente .top-in .nav,body.cliente .top-in .perslot{display:none} body.cliente .top-in{min-height:0;padding-block:8px} }
+/* Fila 1: logo · institución · estado de la lectura · herramientas. Fila 2 (barra de secciones): secciones · Ajustes · período. */
+body.cliente .top-in{flex-wrap:nowrap;gap:10px 20px;padding-block:10px}
+body.cliente .orgnom{color:var(--top-ink);font-size:15px;padding-left:16px;border-left:1px solid var(--top-line);max-width:38vw}
+body.cliente .live{margin-left:auto;white-space:nowrap}
+body.cliente .tools{flex:none}
+.tools .helpbtn,.tools .themebtn{white-space:nowrap;flex:none}
+/* Orden lógico de las herramientas: avisos, modo claro u oscuro, ayuda y, al final, la cuenta (ingresar o salir). */
+.tools #avisosBtn{order:1}.tools #temaBtn{order:2}.tools [data-act="help"]{order:3}.tools #cuentaBtn{order:4}.tools #salirBtn{order:5}
+@media (max-width:1180px){ body.cliente .tools{margin-left:auto} }
+@media (max-width:820px){ body.cliente .orgnom{padding-left:10px;font-size:14px;max-width:40vw} }
 /* Franja de la prueba, delgada */
 .demo{padding-block:4px}
 .demo[hidden]{display:none}

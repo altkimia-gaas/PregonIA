@@ -198,11 +198,9 @@ const perCtl = () => `<div class="perg" role="group" aria-label="Período">${PER
 function renderChrome(){
   const k = route(), cfg = isConfig(k);
   const pg = $("#perG"); if (pg) pg.innerHTML = perAplica() ? perCtl() : "";
-  // Cuenta de cliente: las secciones y el período suben a la cabecera, que queda en una sola franja.
-  const cli = esCliente(), tools = $(".top-in .tools"), navEl = $("#nav");
+  // Cuenta de cliente: arriba la marca, la institución y las herramientas; abajo, las secciones y el período (dos filas ordenadas).
+  const cli = esCliente();
   document.body.classList.toggle("cliente", cli); document.body.classList.toggle("piloto-on", !!(PILOTO && PILOTO.activo));
-  if (cli && tools && navEl && !navEl.closest(".top-in")) tools.before(navEl, pg);
-  if (!cli && navEl && navEl.closest(".top-in")) $(".nav-in").append(navEl, pg);
   $("#org").innerHTML = opcionesCuenta();
   const c = cuenta(), pl = PLANES[c.perfil.plan];
   const on = $("#orgNom"); if (on) { on.hidden = !cli; if (cli) on.innerHTML = (c.logo ? `<img src="${c.logo}" alt="">` : "") + `<span>${esc(inst())}</span>`; }
