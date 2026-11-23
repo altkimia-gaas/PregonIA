@@ -1153,6 +1153,159 @@ export const CATALOGO = [
 "estado": "listo"
 },
 {
+"id": 117,
+"nombre": "MasContainer",
+"ambito": "nacional",
+"comuna": "",
+"metodo": "rss",
+"url": "https://www.mascontainer.com/feed/",
+"estado": "listo"
+},
+{
+"id": 118,
+"nombre": "MundoMaritimo",
+"ambito": "nacional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.mundomaritimo.cl/",
+"estado": "listo"
+},
+{
+"id": 212,
+"nombre": "Subdere",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.subdere.gov.cl/",
+"estado": "listo"
+},
+{
+"id": 213,
+"nombre": "Asociación Chilena de Municipalidades",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.achm.cl/",
+"estado": "listo"
+},
+{
+"id": 214,
+"nombre": "AMUCH",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://amuch.cl/",
+"estado": "listo"
+},
+{
+"id": 215,
+"nombre": "Servicio de Evaluación Ambiental",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.sea.gob.cl/",
+"estado": "listo"
+},
+{
+"id": 216,
+"nombre": "Superintendencia del Medio Ambiente",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://sma.gob.cl/",
+"estado": "listo"
+},
+{
+"id": 217,
+"nombre": "CONAF",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.conaf.cl/",
+"estado": "listo"
+},
+{
+"id": 218,
+"nombre": "Ministerio de Obras Públicas",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.mop.gob.cl/",
+"estado": "listo"
+},
+{
+"id": 219,
+"nombre": "Delegación Presidencial Regional de Valparaíso",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "",
+"estado": "listo"
+},
+{
+"id": 220,
+"nombre": "Senado de Chile",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.senado.cl/",
+"estado": "listo"
+},
+{
+"id": 221,
+"nombre": "Seremi de Salud Valparaíso",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "",
+"estado": "listo"
+},
+{
+"id": 222,
+"nombre": "Fiscalía de Chile",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.fiscaliadechile.cl/",
+"estado": "listo"
+},
+{
+"id": 223,
+"nombre": "Poder Judicial",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.pjud.cl/",
+"estado": "listo"
+},
+{
+"id": 224,
+"nombre": "Empresa Portuaria Valparaíso",
+"ambito": "institucional",
+"comuna": "Valparaíso",
+"metodo": "google_news",
+"url": "https://www.puertovalparaiso.cl/",
+"estado": "listo"
+},
+{
+"id": 225,
+"nombre": "Empresa Portuaria San Antonio",
+"ambito": "institucional",
+"comuna": "San Antonio",
+"metodo": "google_news",
+"url": "https://www.puertosanantonio.com/",
+"estado": "listo"
+},
+{
+"id": 226,
+"nombre": "Serviu Región de Valparaíso",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://serviuvalparaiso.minvu.gob.cl/",
+"estado": "listo"
+},
+{
 "id": 296,
 "nombre": "Otro medio regional (vía Google News)",
 "ambito": "regional",
