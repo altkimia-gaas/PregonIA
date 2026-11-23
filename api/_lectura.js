@@ -166,7 +166,12 @@ async function llamar1(prompt, maxTok){
     throw new SyntaxError("sin JSON");
   } catch(e) { console.error("Anthropic", e && e.name, String(e).slice(0, 200)); DIAG.push((e && e.name || "error") + ": " + String(e && e.message || e).slice(0, 80) + (txt ? " | salida: " + txt.slice(0, 80) + " … " + txt.slice(-60) : "")); return null; }
 }
-const linea = (n, i) => `${i}. [${n.medio} · ${n.ambito}] ${n.titulo}${n.desc ? " — " + n.desc.slice(0, 240) : ""}`;
+/* Titular sacado de la dirección web («Hospital casablanca como acceder rehabilitacion»): sin tildes, sin signos y en minúscula
+   después de la primera letra. La IA escribe un titular limpio en la misma llamada del resumen, sin costo adicional. */
+export const esTituloUrl = t => { const s = String(t || "").trim(); return s.split(" ").length >= 3 && !/[áéíóúüñ¿¡,:;.!?"“”«»'‘’()]/i.test(s) && s.slice(1) === s.slice(1).toLowerCase(); };
+export const tituloFinal = (n, c) => esTituloUrl(n.titulo) && c && typeof c.t === "string" && c.t.trim().length > 8 ? c.t.trim().slice(0, 160) : n.titulo;
+const linea = (n, i) => `${i}. [${n.medio} · ${n.ambito}] ${n.titulo}${esTituloUrl(n.titulo) ? " (titular sacado de la dirección web)" : ""}${n.desc ? " — " + n.desc.slice(0, 240) : ""}`;
+const TITULO_INSTR = `- "t": solo en las notas marcadas «(titular sacado de la dirección web)»: un titular limpio de máximo 12 palabras, con tildes y mayúsculas correctas, fiel al hecho y sin agregar datos. En las demás notas, omítelo.`;
 /* Ficha editorial (ver claude/clasificacion-editorial-pregonia.md): la IA clasifica lo interpretativo; competencia, prioridad,
    acción y plazo los calcula la aplicación con reglas a partir de esto. Va en la misma llamada: solo suma unas palabras por nota. */
 const AREAS_IA = ["agua", "seguridad", "salud", "educacion", "vivienda", "obras", "ambiente", "emergencias", "fomento", "social", "territorio", "probidad", "politica", "local"];
@@ -207,6 +212,7 @@ Para cada nota devuelve un objeto con:
 - "rel": true solo si trata de la comuna de ${comuna} en Chile, su municipio, sus autoridades o hechos ocurridos allí; false si es otro lugar con el mismo nombre, si la comuna aparece solo de pasada o si solo es el lugar de una cárcel, un tribunal, una carretera o un trámite judicial y el hecho no afecta a los vecinos ni al municipio.
 - "tono": la postura de la nota hacia el municipio y su gestión. "cri" si lo critica, lo cuestiona o recoge reclamos contra él (servicios que fallan, demoras, denuncias, conflictos con vecinos); "pos" si lo favorece (logros, inversiones, eventos exitosos); "neu" si es informativa. Una emergencia o un accidente que solo se informa, sin reclamos ni cuestionamientos al municipio, es "neu".
 - "res": un resumen propio de una frase, de máximo 20 palabras, en español de Chile, sin copiar frases del medio.
+${TITULO_INSTR}
 - "x": entre 3 y 6 palabras clave en minúsculas separadas por espacios (temas, lugares, instituciones).
 ${fichaInstr("la Municipalidad de " + comuna, "el alcalde o la alcaldesa de " + comuna)}
 ${ejemplosInstr(ejemplos)}
@@ -228,6 +234,7 @@ Para cada nota devuelve un objeto con:
 - "rel": true si la nota nombra a ${a.nombre} como ${a.cargo.toLowerCase()} o trata directamente de su labor; también si trata de ${inst} (sus acuerdos, votaciones, proyectos, recursos, autoridades o polémicas), porque eso afecta a quien la integra. Las notas marcadas «(hallada por su nombre)» salieron de una búsqueda de su nombre y la mencionan en el cuerpo aunque el titular no lo diga: son true salvo que traten claramente de otra persona o de otro lugar. false si es otra persona con un nombre parecido, si es de otra región o si la institución o el territorio aparecen solo de pasada.
 - "tono": la postura de la nota hacia ${a.nombre} o, si la nota trata de su institución, hacia la gestión de ${inst}; no lo grave del hecho. "cri" si la critica, la cuestiona o la vincula a una polémica o denuncia; "pos" si la favorece (iniciativas, logros, reconocimientos); "neu" si es informativa, solo la cita o informa un hecho grave sin cuestionarla.
 - "res": un resumen propio de una frase, de máximo 20 palabras, en español de Chile, sin copiar frases del medio.
+${TITULO_INSTR}
 - "x": entre 3 y 6 palabras clave en minúsculas separadas por espacios (temas, lugares, instituciones).
 ${fichaInstr(a.nombre, inst)}
 ${ejemplosInstr(ejemplos)}

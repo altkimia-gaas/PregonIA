@@ -8,7 +8,7 @@
 // Cuentas de Facebook e Instagram de medios: META_ACCESS_TOKEN, META_IG_USER_ID, META_FB_PPCA (ver api/_redes.js).
 // Después de guardar, revisa los hechos que recibieron notas nuevas y avisa lo urgente (notificación y correo).
 // Además, propone a los editores de PregonIA las noticias de alto impacto de sus territorios (api/_redaccion.js).
-import { COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, fichaNota, json, leerCatalogo, leerGoogleNews, candidatasDe, candidatasPorNombre, plazoGoogleNews, statsGoogleNews } from "./_lectura.js";
+import { tituloFinal, COMUNAS, VENTANA_DIAS, DIAG, norm, clasificar, fichaNota, json, leerCatalogo, leerGoogleNews, candidatasDe, candidatasPorNombre, plazoGoogleNews, statsGoogleNews } from "./_lectura.js";
 import { variantesNombre } from "./_autoridades.js";
 import { sujetoDeCuenta, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
 import { avisar } from "./_avisos.js";
@@ -62,12 +62,12 @@ async function procesarCuenta(cta, items, desde, ahora){
     .forEach(p => { if (!porGrupo.has(p.grupo)) porGrupo.set(p.grupo, {grupo: p.grupo, titulo: p.notas.titulo}); });
   const existentes = [...porGrupo.values()].slice(0, 40);
 
-  await sb("notas?on_conflict=id", {method: "POST", prefer: "resolution=ignore-duplicates,return=minimal",
-    body: nuevas.map(n => ({id: n.id, medio_id: n.m, url: n.url, titulo: n.titulo.slice(0, 400), publicado: new Date(n.ts).toISOString(), via: ["google_news", "instagram", "facebook"].includes(n.via) ? n.via : "lectura"}))});
-
   // Aprendizaje: las correcciones de la ficha que hizo el equipo de la cuenta entran como criterios para la IA.
   const ejemplos = Object.values((cta.config && cta.config.correcciones) || {}).filter(x => x && x.t && (x.a || x.e || x.p || x.im)).sort((a, b) => (b.ts || 0) - (a.ts || 0));
   const clas = await clasificar(cta.ia, nuevas, existentes, ejemplos);
+  // Las notas se guardan después de clasificar: si el medio no trajo titular, queda el que escribió la IA y no la dirección web.
+  await sb("notas?on_conflict=id", {method: "POST", prefer: "resolution=ignore-duplicates,return=minimal",
+    body: nuevas.map((n, i) => ({id: n.id, medio_id: n.m, url: n.url, titulo: tituloFinal(n, clas.porI.get(i)).slice(0, 400), publicado: new Date(n.ts).toISOString(), via: ["google_news", "instagram", "facebook"].includes(n.via) ? n.via : "lectura"}))});
   // Grupo estable: el de un hecho existente, o la nota más antigua de un hecho nuevo.
   const etiquetaDe = (n, c) => c && c.grupoExistente ? "e:" + c.grupoExistente : c && c.g ? "g:" + norm(c.g) : "n:" + n.id;
   const grupoPorEtiqueta = new Map();

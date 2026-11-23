@@ -128,6 +128,11 @@ function fichaDe(m, c = cuenta()){
   // Vacío de vocería: tema crítico o grave de su competencia propia, en dos o más medios, sin su versión.
   // No aplica a lo policial o judicial, a las historias humanas ni a la opinión: ahí no se espera una versión de la cuenta.
   if (!cor.p && comp === "P" && papel === "no" && !["local", "politica"].includes(area) && !["judicial", "humano", "opinion"].includes(encuadre) && (critico || gravedad >= 2) && medios >= 2) papel = "aus";
+  // Alerta preventiva con fecha próxima (SHOA, Senapred, marejadas, sistemas frontales, calor extremo): no es una crítica, pero hay que
+  // avisar a vecinos y turistas antes de que llegue. Pasa a P3 «Anticipar» con plazo, mientras la nota sea de los últimos 3 días.
+  const txt = m.notas.map(n => n.hay || "").join(" ");
+  const preventiva = !critico && Date.now() - m.last < 3 * 864e5 && /(^|[^a-z])(shoa|senapred|onemi|marejada|oleaje|sistema frontal|frente frontal|temporal|lluvias? intensas?|precipitaciones|vientos? (fuertes|intensos)|ola de calor|calor extremo|alerta (temprana|amarilla|roja|preventiva|meteorologica)|aviso (meteorologico|especial)|alarma (de|por) tsunami|riesgo de incendio)/.test(txt)
+    && /(hasta el|desde el|a partir de|este (fin de semana|lunes|martes|miercoles|jueves|viernes|sabado|domingo)|manana|proxim|se espera|se pronostica|regira|vigente|durante (el|la|los|las)|entre el)/.test(txt);
   // Qué hacer: prioridad
   let prio;
   if (comp === "A") prio = "R";
@@ -135,6 +140,7 @@ function fichaDe(m, c = cuenta()){
   else if ((critico && (comp === "P" || comp === "C" || (comp === "AE" && papel !== "menc"))) || papel === "aus" || (critico && papel === "prot")) prio = "P2";
   else if ((tono === "pos" || tono2 === "pos") && (expuesta || comp === "P")) prio = "P3";
   else if ((comp === "I" || comp === "C") && ["reclamo", "conflicto", "emergencia"].includes(encuadre) && gravedad >= 2) prio = "P3";
+  else if (preventiva) prio = "P3";
   else prio = "P4";
   // Una oportunidad que ya pasó no queda en la cola: baja a monitoreo (no hay nada que atender a destiempo).
   if (prio === "P3" && !cor.prio && m.last + plazosDe(c).P3 * 36e5 < Date.now()) prio = "P4";
@@ -146,7 +152,7 @@ function fichaDe(m, c = cuenta()){
   else if (prio === "P2") acc = papel === "aus" ? "aclarar"
     : (medios === 1 && alcance === 0 && gravedad <= 1 && papel !== "prot") ? "noamp"
     : (comp === "C" || comp === "AE") && papel !== "prot" ? "coordinar" : "responder";
-  else if (prio === "P3") acc = (tono === "pos" || tono2 === "pos") ? "amplificar" : "aportar";
+  else if (prio === "P3") acc = preventiva && tono !== "pos" ? "anticipar" : (tono === "pos" || tono2 === "pos") ? "amplificar" : "aportar";
   else acc = "monitorear";
   if (cor.acc) acc = cor.acc;
   // Plazo: corre desde la última publicación (cada nota nueva es un desarrollo del hecho).
@@ -180,6 +186,17 @@ function fichaHtml(m){
   const f = fichaDe(m), [an, ad] = ACCIONES[f.acc];
   return `<p class="clasif ficha"><span class="pill ${PRIO_CLS[f.prio]} prio" title="Prioridad">${PRIORIDADES[f.prio]}</span>${venceTxt(f) ? `<span class="${f.vence < Date.now() ? "venc" : ""}">${venceTxt(f)}</span>` : ""}${f.alza ? `<span class="alza" title="Tema en alza: varios medios lo publicaron en poco tiempo">En alza · ${esc(f.alza)}</span>` : ""}<span class="cl-cat">${esc(AREAS[f.area])}</span><span${f.exc ? ` title="${esc((EXCEPCIONES.find(x => x.id === f.exc) || {}).d || "")}"` : ""}>${esc(COMPETENCIAS[f.comp])}${f.exc ? " · " + esc((EXCEPCIONES.find(x => x.id === f.exc) || {}).n || "") : ""}</span><span>${esc(ENCUADRES[f.encuadre])}</span><span>${esc(PAPELES_F[f.papel] || "")}</span>${f.impulsor ? `<span>${esc(IMPULSORES[f.impulsor])}</span>` : ""}${f.sinTono ? `<span class="rev" title="La IA no alcanzó a leer el tono; se completa en la próxima lectura. Revísalo antes de descartar.">Tono por confirmar</span>` : f.revisar ? `<span class="rev" title="La IA no está segura de esta ficha">Revisar</span>` : ""}${f.corregida ? `<span class="rev ok" title="Corregida por el equipo">Corregida</span>` : ""}</p>
     ${f.decidido ? "" : `<p class="acc sm accion-${f.acc}"><b>${esc(an)}</b>${esc(ad)}</p>`}`;
+}
+/* Ficha en dos niveles (Menciones): a la vista, prioridad, plazo y acción; el resto, en «Ver ficha completa», con palabras de jefe de prensa. */
+function fichaCorta(m, f = fichaDe(m)){
+  const rev = f.sinTono ? `<span class="rev" title="La IA no alcanzó a leer el tono; se completa en la próxima lectura. Revísalo antes de descartar.">Tono por confirmar</span>` : f.revisar ? `<span class="rev" title="La IA no está segura de esta ficha">Revisar</span>` : "";
+  return `<span class="pill ${PRIO_CLS[f.prio]} prio" title="Prioridad">${PRIORIDADES[f.prio]}</span>${venceTxt(f) ? `<span class="mf-plazo ${f.vence < Date.now() ? "venc" : ""}">${venceTxt(f)}</span>` : ""}${f.alza ? `<span class="alza" title="Tema en alza: varios medios lo publicaron en poco tiempo">En alza · ${esc(f.alza)}</span>` : ""}${rev}${f.corregida ? `<span class="rev ok" title="Corregida por el equipo">Corregida</span>` : ""}`;
+}
+const accionHtml = (f = {}) => { if (f.decidido) return ""; const [an, ad] = ACCIONES[f.acc]; return `<p class="acc sm accion-${f.acc}"><b>Qué hacer: ${esc(an)}.</b> ${esc(ad)}</p>`; };
+function fichaDetalle(m, f = fichaDe(m)){
+  const ex = f.exc ? EXCEPCIONES.find(x => x.id === f.exc) : null, quien = typeof esAut === "function" && esAut() ? "a la autoridad" : "al municipio";
+  const filas = [["Área", AREAS[f.area]], ["¿Le corresponde " + quien + "?", COMPETENCIAS[f.comp] + (ex ? " · " + ex.n : "")], ["Cómo lo cuenta la prensa", ENCUADRES[f.encuadre]], ["Papel " + (quien === "al municipio" ? "del municipio" : "de la autoridad"), PAPELES_F[f.papel] || ""], ["Quién lo instaló", f.impulsor ? IMPULSORES[f.impulsor] : ""]].filter(x => x[1]);
+  return `<dl class="mf-dl">${filas.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>`;
 }
 /* Corrección de la ficha: los mismos campos que calcula el sistema; lo que no se toca queda automático. */
 function correccionHtml(m){
