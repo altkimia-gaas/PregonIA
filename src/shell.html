@@ -1963,6 +1963,124 @@ details.corr summary{cursor:pointer;font-size:13px;color:var(--muted)}
   .ej-col:first-child{border-top:0;padding-top:0}
   .ej-eo{grid-template-columns:minmax(0,1fr)}
 }
+
+/* Cuenta de cliente (piloto o prueba): cabecera en una sola franja con logo, institución, secciones, período, avisos y ayuda; sin selector de cuentas ni plan */
+.orgnom{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:var(--top-muted);white-space:nowrap;min-width:0}
+.orgnom[hidden]{display:none}
+.orgnom img{height:28px;width:auto;max-width:84px;object-fit:contain}
+.orgnom span{overflow:hidden;text-overflow:ellipsis}
+body.cliente .org,body.cliente .planbox,body.cliente .slogan,body.cliente .navbar{display:none}
+body.piloto-on .demo{display:none}
+body.cliente .topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;border-bottom:1.5px solid var(--frame,var(--line))}
+body.cliente .top-in{flex-wrap:nowrap;gap:8px 18px;padding-block:0;min-height:56px}
+body.cliente .top-in .nav{display:flex;flex-direction:row;gap:2px;flex:1 1 auto;min-width:0;overflow-x:auto;margin:0 0 0 8px;max-width:none;scrollbar-width:none}
+body.cliente .top-in .nav a{border-radius:0;padding:18px 12px 16px;color:var(--muted);font-weight:600;border-bottom:2px solid transparent;white-space:nowrap;background:transparent}
+body.cliente .top-in .nav a:hover{color:var(--ink);background:transparent}
+body.cliente .top-in .nav a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--frame,var(--accent))}
+body.cliente .top-in .nav a:last-child{margin-left:0}
+body.cliente .top-in .perslot{flex:none}
+body.cliente .live{display:none}
+@media (min-width:1500px){ body.cliente .live{display:inline-flex;margin-left:0} }
+@media (max-width:820px){ body.cliente .top-in .nav,body.cliente .top-in .perslot{display:none} body.cliente .top-in{min-height:0;padding-block:8px} }
+/* Franja de demostración más delgada */
+.demo{padding-block:4px}
+
+/* Menciones: lista y detalle (escritorio), filas que se abren y barra fija (celular), hoja de filtros */
+.mf-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.mf-bar #fQ{flex:1 1 220px;min-width:0;min-height:40px}
+.mf-btn{gap:6px}
+.mf-btn .c{font-family:var(--f-mono);font-size:11px;background:var(--ink);color:var(--surface);border-radius:99px;padding:1px 7px}
+.mlist{list-style:none;margin:0 0 6px;padding:0;border-top:1px solid var(--line)}
+.md-list .day{margin:18px 0 6px}
+.md-list .day:first-child{margin-top:4px}
+.mrow{border-bottom:1px solid var(--line);background:var(--surface)}
+.mrow-b{appearance:none;border:0;background:transparent;font:inherit;color:inherit;text-align:left;display:flex;flex-direction:column;gap:6px;width:100%;padding:12px 14px;cursor:pointer}
+.mrow-b:hover{background:var(--surface-2)}
+.mrow-b:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.mrow.on>.mrow-b{background:var(--surface-2)}
+.mrow-m{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.mrow-pl{margin-left:auto;font-weight:600;color:var(--ink)}
+.mrow-pl.venc,.mf-plazo.venc{color:var(--cri)}
+.mrow-t{font-family:var(--f-news);font-weight:600;font-size:16.5px;line-height:1.3;color:var(--ink);text-wrap:pretty}
+.mrow.resp .mrow-t{color:var(--muted)}
+.mrow-det{padding:2px 14px 16px;background:var(--surface-2)}
+.md-det .meta{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;margin:8px 0 0}
+.md-det .md-t{font-family:var(--f-news);font-weight:700;font-size:24px;line-height:1.2;margin:10px 0 8px;text-wrap:pretty}
+.mrow-det .md-t{display:none}
+.md-det .res{margin:0 0 10px;line-height:1.55}
+.md-det .acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.mf-prio{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:0;font-size:12.5px}
+.mf-plazo{font-weight:600}
+.mf-mas{margin-top:6px;font-size:13.5px}
+.mf-mas>summary{cursor:pointer;color:var(--accent);font-weight:600;width:max-content}
+.mf-dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px 18px;margin:12px 0}
+.mf-dl dt{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.mf-dl dd{margin:2px 0 0;font-weight:600}
+.mf-por{color:var(--muted);margin:0 0 10px}
+@media (min-width:1025px){
+  .md{display:grid;grid-template-columns:minmax(320px,420px) minmax(0,1fr);align-items:start;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+  .md-list{border-right:1px solid var(--line);padding:0 0 8px}
+  .md-list .day{padding:0 14px}
+  .mrow.on>.mrow-b{box-shadow:inset 3px 0 0 var(--ink)}
+  .md-pane{position:sticky;top:72px;padding:22px 28px;max-height:calc(100vh - 90px);overflow:auto}
+  .mrow-det,.md-bar{display:none}
+}
+@media (max-width:1024px){
+  .md-pane{display:none}
+  .md{padding-bottom:76px}
+  .md-bar{position:fixed;left:0;right:0;bottom:0;z-index:19;background:var(--surface);border-top:1px solid var(--line);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;gap:10px}
+  .md-bar .btn{flex:1;min-height:46px;justify-content:center}
+  .md-bar .btn+.btn{flex:0 0 auto}
+}
+@media (max-width:820px){ .md-bar{bottom:calc(62px + env(safe-area-inset-bottom,0px));padding-bottom:10px} }
+.fs-back{position:fixed;inset:0;background:rgba(20,20,20,.45);z-index:40}
+.fsheet{position:fixed;z-index:41;background:var(--surface);color:var(--ink);display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.2)}
+@media (max-width:820px){ .fsheet{left:0;right:0;bottom:0;max-height:86vh;border-radius:18px 18px 0 0;border-top:1.5px solid var(--ink);padding-bottom:env(safe-area-inset-bottom,0px)} }
+@media (min-width:821px){ .fsheet{top:0;right:0;bottom:0;width:380px;border-left:1.5px solid var(--ink)} }
+.fs-h{display:flex;align-items:center;gap:8px;padding:16px 18px 8px}
+.fs-h h3{margin:0 auto 0 0;font-family:var(--f-news);font-size:22px}
+.fs-x{width:44px;height:44px;border:0;background:transparent;font-size:26px;line-height:1;cursor:pointer;color:var(--ink);border-radius:999px}
+.fs-body{overflow:auto;padding:4px 18px 14px;display:flex;flex-direction:column;gap:14px}
+.fs-f{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+.fs-f select{text-transform:none;letter-spacing:0;font-size:15px;font-weight:500;min-height:44px;width:100%}
+.fs-foot{padding:12px 18px;border-top:1px solid var(--line)}
+.fs-foot .btn{width:100%;min-height:48px;justify-content:center}
+
+/* Inicio en el celular: tres cifras y decisiones del día en la primera pantalla */
+.ini-mov{display:none}
+@media (max-width:820px){
+  .ini-mov{display:block;margin:10px 0 18px}
+  .ini-ver .ini-lead.nm{display:none}
+  .ini-mov-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1.5px solid var(--ink);border-bottom:1px solid var(--line)}
+  .ini-mov-k>div{display:flex;flex-direction:column;gap:2px;padding:10px 8px}
+  .ini-mov-k>div:first-child{padding-left:0}
+  .ini-mov-k>div+div{border-left:1px solid var(--line)}
+  .ini-mov-k .v{font-family:var(--f-news);font-weight:700;font-size:26px;line-height:1.05}
+  .ini-mov-k .v.word{font-size:19px;line-height:1.25}
+  .ini-mov-k .v.pos{color:var(--pos)} .ini-mov-k .v.cri{color:var(--cri)}
+  .ini-mov-k .s{font-size:12.5px;color:var(--muted)}
+  .ini-mov-h{margin:18px 0 10px;font-size:12.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+  .ini-mov-c{border:1.5px solid var(--ink);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+  .ini-mov-c h4{margin:0;font-family:var(--f-news);font-weight:600;font-size:18px;line-height:1.3}
+  .ini-mov-c .acc{margin:0}
+  .ini-mov-a{display:flex;gap:8px;flex-wrap:wrap}
+  .ini-mov-a .btn{min-height:44px}
+  .ini-mov-mas{display:inline-block;margin-top:4px;font-weight:600;text-decoration:none}
+}
+
+/* Informes: selector «Informe para» y acciones arriba a la derecha */
+.repsel{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;margin:4px 0 14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.repsel-op{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.repsel-l{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.repsel-b{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:14px;font-weight:600;border-radius:999px;padding:7px 14px;cursor:pointer;min-height:38px}
+.repsel-b:hover{border-color:var(--ink)}
+.repsel-b[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.repsel-mas select{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:14px;font-weight:600;border-radius:999px;padding:7px 12px;min-height:38px;cursor:pointer}
+.repsel-mas.on select{border-color:var(--ink);background:var(--ink);color:var(--surface)}
+.repsel-acc{display:flex;align-items:center;gap:8px;margin-left:auto}
+.repsel-acc .shr{margin:0;display:flex;gap:8px;padding-top:0;border-top:0}
+.repsel-acc .shr .lbl{display:none}
+@media (max-width:820px){ .repsel-op{flex-wrap:nowrap;overflow-x:auto;width:100%;padding-bottom:2px;scrollbar-width:none} .repsel-b,.repsel-mas select{white-space:nowrap} .repsel-acc{margin-left:0} }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="pat-pos" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" style="fill:var(--pos)"/></pattern></defs></svg>
@@ -2002,6 +2120,7 @@ details.corr summary{cursor:pointer;font-size:13px;color:var(--muted)}
       <a class="logo" href="#portada" aria-label="PregonIA, portada"><span class="mk" aria-hidden="true"><i></i><i></i><i></i></span><span>Pregon<b>IA</b></span></a>
       <span class="slogan">La prensa no espera. Tú tampoco.</span>
       <div class="org"><label for="org">Cuenta</label><select id="org" aria-label="Cuenta"></select></div>
+      <span class="orgnom" id="orgNom" hidden></span>
       <span class="live"><i class="dot" aria-hidden="true"></i><span id="fecha"></span></span>
       <details class="planbox"><summary id="planLbl"></summary><div class="usage" id="usage"></div></details>
       <div class="tools"><button class="themebtn" type="button" data-act="tema" id="temaBtn" aria-label="Cambiar a modo claro" title="Modo claro"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" id="temaIco"></svg></button>

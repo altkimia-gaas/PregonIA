@@ -1,7 +1,7 @@
 // Noticias reales para PregonIA (etapa 1, sin base de datos): lee los medios al vuelo para una comuna, clasifica con Claude Haiku
 // y devuelve titular, enlace, medio, fecha y resumen propio. La respuesta queda 15 minutos en la caché de Vercel.
 // La lectura y la clasificación viven en _lectura.js, compartido con la lectura programada (/api/ingesta).
-import { COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, fichaNota, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre, saludFuentes, plazoGoogleNews, statsGoogleNews, ahorroGoogleNews } from "./_lectura.js";
+import { tituloFinal, COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, fichaNota, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre, saludFuentes, plazoGoogleNews, statsGoogleNews, ahorroGoogleNews } from "./_lectura.js";
 import { AUTORIDADES, PROVINCIAS, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
 import { limpio, consulta, sujeto, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
 import { CATALOGO } from "./_catalogo.js";
@@ -65,7 +65,7 @@ function armar(lote, porI, deAutoridad = false){
     const c = porI.get(i);
     if (c && c.rel === false) return;
     const etiqueta = c && c.g ? "g:" + norm(c.g) : n.id, clasificada = Boolean(c && c.tono);
-    notas.push({ id: n.id, m: n.m, ts: n.ts, t: n.titulo, url: n.url, tono: c && ["cri", "neu", "pos"].includes(c.tono) ? c.tono : "neu", res: c && c.res ? String(c.res).slice(0, 220) : n.titulo, x: c && c.x ? String(c.x).slice(0, 120) : "", clasificada, etiqueta, ...(fichaNota(c) ? {f: fichaNota(c)} : {}), ...(deAutoridad && n.sobre ? {sobre: n.sobre === "i" ? "institucion" : "persona"} : {}), ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via === "instagram" || n.via === "facebook" ? {via: n.via} : {}) });
+    notas.push({ id: n.id, m: n.m, ts: n.ts, t: tituloFinal(n, c), url: n.url, tono: c && ["cri", "neu", "pos"].includes(c.tono) ? c.tono : "neu", res: c && c.res ? String(c.res).slice(0, 220) : n.titulo, x: c && c.x ? String(c.x).slice(0, 120) : "", clasificada, etiqueta, ...(fichaNota(c) ? {f: fichaNota(c)} : {}), ...(deAutoridad && n.sobre ? {sobre: n.sobre === "i" ? "institucion" : "persona"} : {}), ...(n.fuente ? {fuente: n.fuente} : {}), ...(n.via === "instagram" || n.via === "facebook" ? {via: n.via} : {}) });
   });
   // Grupo estable: el id de la nota más antigua del mismo hecho, para que "respondida" o "no corresponde" sobrevivan a una nueva lectura.
   notas.slice().sort((a, b) => a.ts - b.ts).forEach(n => { if (!grupos.has(n.etiqueta)) grupos.set(n.etiqueta, n.id); });
