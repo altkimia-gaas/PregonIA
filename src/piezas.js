@@ -134,18 +134,35 @@ function pzTitular(ctx, t, y, {max = 78, min = 52, lineas = 5, color = PZC.tinta
   ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = PZC.coral; ctx.fillRect(PZ_MARGEN, y - px * 0.06 + 10, 96, 8); ctx.restore();
   return y + 24;
 }
-/* Feed 4:5 */
+/* Ilustración de portada: valle de viñedos y cerros en capas planas (sin fotos ni imágenes de terceros). */
+function pzIlustracion(ctx, x, y, w, h){
+  ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  ctx.fillStyle = "#CFE0F5"; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = "#EAF1FB"; ctx.beginPath(); ctx.arc(x + w * 0.78, y + h * 0.2, h * 0.09, 0, Math.PI * 2); ctx.fill();
+  const capa = (color, base, amp, fase, k) => { ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(x, y + h);
+    for (let px = 0; px <= w; px += 12) ctx.lineTo(x + px, y + h * base - amp * (Math.sin(px / w * Math.PI * k + fase) * 0.6 + Math.sin(px / w * Math.PI * k * 2.3 + fase * 2) * 0.4));
+    ctx.lineTo(x + w, y + h); ctx.closePath(); ctx.fill(); };
+  capa("#9DB9E0", 0.52, h * 0.16, 0.4, 2.2);
+  capa("#6F93C9", 0.66, h * 0.12, 1.6, 2.8);
+  capa("#3F63A6", 0.80, h * 0.09, 2.8, 3.4);
+  // hileras de viñedo que convergen hacia el centro, sobre la capa del frente
+  ctx.save(); ctx.beginPath(); ctx.moveTo(x, y + h); for (let px = 0; px <= w; px += 12) ctx.lineTo(x + px, y + h * 0.80 - h * 0.09 * (Math.sin(px / w * Math.PI * 3.4 + 2.8) * 0.6 + Math.sin(px / w * Math.PI * 3.4 * 2.3 + 5.6) * 0.4)); ctx.lineTo(x + w, y + h); ctx.closePath(); ctx.clip();
+  ctx.strokeStyle = "rgba(207,224,245,.55)"; ctx.lineWidth = 3;
+  for (let k = -9; k <= 9; k++) { ctx.beginPath(); ctx.moveTo(x + w * 0.5 + k * 16, y + h * 0.7); ctx.lineTo(x + w * 0.5 + k * 120, y + h); ctx.stroke(); }
+  ctx.restore();
+  ctx.restore();
+}
+/* Feed 4:5 · «Primera plana»: mancheta, ilustración a sangre y bloque azul noche con ámbito, titular y bajada. */
 function pzFeed(ctx, c){
-  const H = PZ.FEED; pzFondo(ctx, H);
-  let y = pzMancheta(ctx, c) + 74;
-  y = pzKicker(ctx, c.kicker, y) + 14;
-  y = pzTitular(ctx, c.titular, y);
-  if (c.bajada) y = pzTexto(ctx, c.bajada, PZ_MARGEN, y + 40, {px: 32, w: 400, color: PZC.gris, max: 4, lh: 44}) + 10;
-  // Entran tantos datos como quepan completos sobre el pie (se mide antes de dibujar).
-  const datos = (c.datos || []).filter(Boolean), tope = H - 150 - 30, alto = d => { pzFuente(ctx, 500, 31, PZF.b); return Math.min(3, pzLineas(ctx, d, PZ.W - 2 * PZ_MARGEN - 74).length) * 31 * 1.3 + 34; };
-  let caben = 0, yy = y + 62; for (const d of datos.slice(0, 3)) { if (yy + alto(d) - 31 > tope) break; yy += alto(d); caben++; }
-  if (caben) pzDatos(ctx, datos, y + 62, {max: caben});
-  pzPie(ctx, c, H);
+  const H = PZ.FEED, yIl = 168, yBloque = 640;
+  pzFondo(ctx, H);
+  pzMancheta(ctx, c, {alto: 130, yLogo: 36, logo: 54});
+  pzIlustracion(ctx, 0, yIl, PZ.W, yBloque - yIl);
+  ctx.fillStyle = PZC.noche; ctx.fillRect(0, yBloque, PZ.W, H - yBloque);
+  let y = pzKicker(ctx, c.kicker || c.ambito, yBloque + 72, 1, {color: PZC.ink}) + 18;
+  y = pzTitular(ctx, c.titular, y, {max: 68, min: 46, lineas: 4, color: PZC.ink});
+  if (c.bajada) pzTexto(ctx, c.bajada, PZ_MARGEN, y + 34, {px: 30, w: 400, color: "#CFE0F5", max: 3, lh: 42});
+  pzPie(ctx, c, H, 1, 130);
 }
 /* Historia 9:16: el contenido evita los 250 px de arriba y los 300 de abajo, donde Instagram pone su interfaz. */
 function pzHistoria(ctx, c){

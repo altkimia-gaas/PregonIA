@@ -7,7 +7,8 @@
 const MODELOS = { quick: "claude-haiku-5-5", default: "claude-sonnet-5-5" };
 const VENTANA_MS = 10 * 60 * 1000;
 const MAX_CARACTERES = 24000; // Redacción envía el texto completo de la nota original
-const MAX_TOKENS = 4096; // holgado: si el modelo razona antes de escribir, ese razonamiento también consume tokens
+const MAX_TOKENS = 4096;
+const BUSQUEDA = {type: "web_search_20250305", name: "web_search", max_uses: 4, user_location: {type: "approximate", country: "CL", region: "Valparaíso", timezone: "America/Santiago"}}; // solo si el editor la pide (Redacción: completar con otras fuentes) // holgado: si el modelo razona antes de escribir, ese razonamiento también consume tokens
 const TIPOS_IMG = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_IMG = 2_800_000; // caracteres en base64, unos 2 MB
 const SISTEMA = "Eres el asistente de PregonIA, una plataforma que monitorea la prensa para municipios chilenos. " +
@@ -60,7 +61,7 @@ async function handler(req) {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": clave, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: modelo, max_tokens: MAX_TOKENS, system: SISTEMA, stream: true, messages: [{ role: "user", content: contenido }] })
+    body: JSON.stringify({ model: modelo, max_tokens: cuerpo.research === true ? MAX_TOKENS * 2 : MAX_TOKENS, system: SISTEMA, stream: true, ...(cuerpo.research === true ? { tools: [BUSQUEDA] } : {}), messages: [{ role: "user", content: contenido }] })
   });
   if (!r.ok || !r.body) {
     console.error("Anthropic", r.status, await r.text().catch(() => ""));

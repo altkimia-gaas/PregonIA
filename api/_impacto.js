@@ -102,4 +102,35 @@ function impPuntaje(h, ctx = {}){
       autoridades: auts.map(a => a.n), temas: temas.map(t => t.n), grave},
     sensible: cercanos.length > 0, cercanos};
 }
-export { IMP_PESOS, IMP_TEMAS, IMP_REGION, impNorm, impTiene, impAutoridades, impPalabras, impParecido, impAgrupar, impAlcance, impInteraccion, impPuntaje, IMP_UMBRAL_GRUPO };
+
+/* Ámbito de una noticia (área de interés), para que la selección del día cubra temas distintos y no cinco notas del mismo.
+   Se decide por palabras, sin IA; gana el ámbito con más coincidencias y, si empatan, el primero de la lista. */
+const IMP_AMBITOS = [
+  ["Seguridad", ["homicidio", "balacera", "disparos", "baleado", "asalto", "portonazo", "robo", "delincuencia", "narcotrafico", "detenido", "carabineros", "pdi", "fiscalia", "seguridad publica", "crimen", "secuestro", "encerrona", "formalizado"]],
+  ["Agua y medio ambiente", ["agua potable", "sequia", "escasez hidrica", "aljibe", "esval", "embalse", "napas", "acuifero", "apr ", "derechos de agua", "desalinizadora", "humedal", "contaminacion", "medio ambiente", "reciclaje", "basural", "sma", "seia"]],
+  ["Emergencias", ["incendio", "evacuacion", "senapred", "alerta roja", "alerta amarilla", "temporal", "marejada", "sismo", "terremoto", "aluvion", "inundacion", "corte de luz", "sin luz", "emergencia", "bomberos", "accidente", "choque", "volcamiento"]],
+  ["Salud", ["hospital", "cesfam", "sapu", "urgencia", "lista de espera", "brote", "virus", "contagio", "vacunacion", "seremi de salud", "intoxicacion", "medicos", "salud primaria", "influenza", "dengue"]],
+  ["Economía y fomento", ["empleo", "desempleo", "emprendedor", "emprendimiento", "pyme", "pymes", "comercio", "feria", "sercotec", "corfo", "turismo", "enoturismo", "vendimia", "vino", "viña", "vinedo", "agricola", "exportacion", "inversion", "empresa", "plataforma logistica", "puerto", "zona franca"]],
+  ["Obras e infraestructura", ["obra", "obras", "pavimentacion", "ruta 68", "ruta 78", "camino", "puente", "alcantarillado", "luminarias", "licitacion", "polideportivo", "construccion", "mop", "serviu", "vivienda", "subsidio habitacional", "tranque", "plaza"]],
+  ["Educación", ["colegio", "escuela", "liceo", "educacion", "alumnos", "estudiantes", "profesores", "jardin infantil", "junji", "daem", "universidad", "matricula", "sae", "simce", "paes"]],
+  ["Cultura, deporte y comunidad", ["cultura", "festival", "fiesta", "concierto", "museo", "biblioteca", "patrimonio", "deporte", "club deportivo", "campeonato", "futbol", "aniversario", "vecinos", "junta de vecinos", "voluntarios", "adulto mayor", "mujeres", "juventud"]],
+  ["Gestión y política local", ["alcalde", "concejo municipal", "concejales", "municipalidad", "municipio", "presupuesto municipal", "ordenanza", "core", "gobierno regional", "gobernador", "delegado presidencial", "contraloria", "diputado", "senador"]]
+];
+const IMP_AMBITO_BASE = "Comunidad";
+function impAmbito(h){
+  const t = impNorm((h.notas || []).map(n => n.titulo + " " + (n.desc || "")).join(" · ")) + " " + impNorm(h.titulo || "");
+  let mejor = IMP_AMBITO_BASE, mv = 0;
+  IMP_AMBITOS.forEach(([n, ps]) => { const v = ps.filter(p => impTiene(t, p)).length; if (v > mv) { mv = v; mejor = n; } });
+  return mejor;
+}
+/* Selección del día: lo de mayor impacto, con tope por ámbito para que cubra áreas distintas.
+   Primero toma lo mejor de cada ámbito (en orden de puntaje) y después completa con lo que quede, hasta «max» y «porAmbito» por ámbito. */
+function impSeleccion(props, {max = 8, porAmbito = 2, piso = 30} = {}){
+  const ord = [...props].filter(p => p.puntaje >= piso).sort((a, b) => b.puntaje - a.puntaje).map(p => ({p, a: impAmbito(p)}));
+  const cuenta = new Map(), elegidas = [], vistos = new Set();
+  const tomar = x => { if (elegidas.length >= max || vistos.has(x.p.id) || (cuenta.get(x.a) || 0) >= porAmbito) return; vistos.add(x.p.id); cuenta.set(x.a, (cuenta.get(x.a) || 0) + 1); elegidas.push(x); };
+  ord.forEach(x => { if (!cuenta.get(x.a)) tomar(x); });
+  ord.forEach(tomar);
+  return elegidas.sort((a, b) => b.p.puntaje - a.p.puntaje);
+}
+export { IMP_PESOS, IMP_TEMAS, IMP_REGION, impNorm, impTiene, impAutoridades, impPalabras, impParecido, impAgrupar, impAlcance, impInteraccion, impPuntaje, IMP_UMBRAL_GRUPO, IMP_AMBITOS, impAmbito, impSeleccion };
