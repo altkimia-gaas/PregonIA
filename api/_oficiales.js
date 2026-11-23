@@ -6,6 +6,8 @@
 //   228 Mercado Público: licitaciones municipales declaradas desiertas, revocadas o suspendidas (API oficial de ChileCompra;
 //       requiere MERCADOPUBLICO_TICKET, que se pide con Clave Única en api.mercadopublico.cl; sin ticket no se lee).
 //   229 Esval: cortes de agua activos y avisos de emergencia de la sanitaria (API pública de su oficina virtual).
+//       Medido el 23-nov-2026: desde los servidores de Vercel la conexión a ov.esval.cl no responde (UND_ERR_CONNECT_TIMEOUT; su
+//       cortafuegos no atiende fuera de Chile). Queda apagado salvo ESVAL_DIRECTO=1 (por ejemplo, si la lectura corre desde Chile).
 // Solo se leen datos públicos; no se guarda el texto completo de los documentos, solo un titular y una bajada propios.
 import { CATALOGO } from "./_catalogo.js";
 import { COMUNAS_V } from "./_autoridades.js";
@@ -154,7 +156,7 @@ export async function leerMercadoPublico(comunas, ahora = Date.now(), plazoMs = 
 
 /* Contraloría y Esval: dos o tres consultas por pasada, en paralelo con la lectura de medios. */
 export async function leerOficiales(ahora = Date.now()){
-  const fuentes = [["Contraloría", leerContraloria], ["Esval", leerEsval]], errores = [], detalle = {};
+  const fuentes = [["Contraloría", leerContraloria]].concat(process.env.ESVAL_DIRECTO === "1" ? [["Esval", leerEsval]] : []), errores = [], detalle = {};
   const items = (await Promise.all(fuentes.map(([n, f]) => f(ahora).catch(e => { errores.push(n); detalle[n] = [e.message, e.cause && (e.cause.code || e.cause.message)].filter(Boolean).join(" · ").slice(0, 160); return []; })))).flat();
   return {items, total: fuentes.length, errores, detalle};
 }

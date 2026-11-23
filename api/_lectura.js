@@ -294,7 +294,7 @@ const seLee = m => METODOS.has(m.metodo) && m.url && m.estado !== "restringido" 
 export async function leerCatalogo(){
   const fuentes = CATALOGO.filter(seLee), errores = [], porUrl = new Map();
   // Documentos oficiales (Contraloría, Esval): se leen en paralelo con los medios y entran a la misma lista (ver _oficiales.js).
-  const oficiales = leerOficiales().catch(() => ({items: [], total: 2, errores: ["Contraloría", "Esval"]}));
+  const oficiales = leerOficiales().catch(() => ({items: [], total: 1, errores: ["Contraloría"]}));
   fuentes.forEach(m => { if (!porUrl.has(m.url)) porUrl.set(m.url, []); porUrl.get(m.url).push(m); });
   const items = (await Promise.all([...porUrl.entries()].map(async ([url, ms]) => {
     try {
