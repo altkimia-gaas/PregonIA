@@ -122,6 +122,10 @@
     {
       "source": "/cobertura",
       "destination": "/cobertura.html"
+    },
+    {
+      "source": "/el-pregonero",
+      "destination": "/el-pregonero.html"
     }
   ],
   "headers": [
