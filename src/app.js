@@ -769,7 +769,7 @@ function deltaHtml(cur, prev, upGood, period="vs. 15 días anteriores"){
 }
 function deltaVer(Mr, Ma){ const a = veredicto(Mr), b = veredicto(Ma); if (a.i < 0 || b.i < 0) return `<span class="delta">${ri("flat")} Sin datos para comparar quincenas</span>`; if (a.i === b.i) return `<span class="delta">${ri("flat")} Igual que la quincena anterior</span>`; const mejor = a.i < b.i; return `<span class="delta">${ri(mejor ? "up" : "down")} ${mejor ? "Mejoró" : "Empeoró"} desde ${b.n.toLowerCase()}</span>`; }
 function deltaPts(cur, prev){ const d = cur - prev; return `<span class="delta ${d>0?"up-good":d<0?"up-bad":""}">${ri(d > 0 ? "up" : d < 0 ? "down" : "flat")} ${d === 0 ? "Igual" : (d > 0 ? "+" : "−") + Math.abs(d) + " pts"} vs. quincena anterior</span>`; }
-function serieDias(ms, n = 30){ const a = Array(n).fill(0); ms.forEach(m => { const d = Math.floor((NOW - m.last) / DAY); if (d < n) a[n-1-d]++; }); return a; }
+function serieDias(ms, n = 30){ const a = Array(n).fill(0); ms.forEach(m => { const d = Math.max(0, Math.floor((NOW - m.last) / DAY)); if (d < n) a[n-1-d]++; }); return a; }  // una nota publicada después de abrir la página cuenta como de hoy
 function sparkline(vals){
   const W = 200, H = 40, max = Math.max(1, ...vals), x = i => 2 + i * (W - 6) / (vals.length - 1), y = v => H - 4 - (H - 10) * v / max;
   const pts = vals.map((v,i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
@@ -785,7 +785,7 @@ function ambitos(ms){ const r = {nacional:0, regional:0, local:0, institucional:
 function chartDias(ms, n = 30){
   const W = 720, H = 200, L = 30, B = 26, top = 10;
   const days = Array.from({length:n}, (_,i) => ({pos:0, neu:0, cri:0, d: n-1-i}));
-  ms.forEach(m => { const d = Math.floor((NOW - m.last)/DAY); if (d < n) days[n-1-d][m.tono]++; });
+  ms.forEach(m => { const d = Math.max(0, Math.floor((NOW - m.last)/DAY)); if (d < n && days[n-1-d][m.tono] != null) days[n-1-d][m.tono]++; });  // sin esto, una nota publicada tras abrir la página rompía el informe de gestión
   const max = Math.max(3, ...days.map(x => x.pos+x.neu+x.cri)), step = Math.ceil(max/3), ymax = step*3, slot = (W-L-8)/n, bw = Math.min(16, slot - 4);
   const y = v => top + (H-top-B) * (1 - v/ymax);
   let g = "";
@@ -1953,14 +1953,16 @@ async function cargarReales(force, silencioso){
   const org = S.org, pa = esAut() ? cuenta().perfil : null;
   const q = !pa ? "comuna=" + encodeURIComponent(org) : pa.autoridadId ? "autoridad=" + encodeURIComponent(pa.autoridadId) : "rol=" + encodeURIComponent(pa.rol) + "&zona=" + encodeURIComponent(pa.zona) + "&nombre=" + encodeURIComponent(pa.nombre) + "&g=" + pa.g;
   const guardada = ultimaLectura(q);
-  if (guardada) { aplicarReales(guardada, org, pa); MODO.actualizando = true; pintarModo(); render(); }  // edición al instante; la lectura nueva llega sola
-  else { MODO.cargando = true; MODO.inicio = Date.now(); pintarModo(); render(); }
+  // Si el dibujo falla, las banderas de carga no pueden quedar pegadas: con «actualizando» fijo, cambiar de cuenta ya no cargaba nada.
+  const dibujar = () => { try { pintarModo(); render(); } catch(e) { console.error(e); } };
+  if (guardada) { aplicarReales(guardada, org, pa); MODO.actualizando = true; dibujar(); }  // edición al instante; la lectura nueva llega sola
+  else { MODO.cargando = true; MODO.inicio = Date.now(); dibujar(); }
   try {
     const r = await fetch("/api/noticias?" + q + "&dias=" + DIAS_REALES + redesParam()); if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json(); if (PILOTO && PILOTO.activo) { MODO.cargando = MODO.actualizando = false; render(); return; } if (org !== S.org) { MODO.cargando = MODO.actualizando = false; return cargarReales(); }
     guardarLectura(q, j);
     const nuevas = aplicarReales(j, org, pa);
-    pintarModo(); render();
+    dibujar();
     const quien = pa ? pa.nombre : org, criticas = new Set(nuevas.filter(n => n.tono === "cri").map(n => n.g)).size, hechos = new Set(nuevas.map(n => n.g)).size;
     if (guardada) toast("Edición actualizada con la lectura de las " + horaCorta(j.generado) + ".");
     else if (!silencioso) toast(nuevas.length ? `Listo: ${plural(hechos, "noticia", "noticias")} sobre ${quien} en ${j.ventana_dias} días${criticas ? `, ${plural(criticas, "crítica", "críticas")} por revisar` : ""}. Empieza por Inicio.` : `Los medios leídos no publicaron sobre ${quien} en los últimos ${j.ventana_dias} días.`);
