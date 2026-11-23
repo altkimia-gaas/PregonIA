@@ -1056,7 +1056,7 @@ function repGestion(){
   ].filter(Boolean);
   const maxSide = Math.max(1, ...porTema.map(x => Math.max(x.cri + x.neu/2, x.pos + x.neu/2))), w = v => (v / maxSide * 100).toFixed(2) + "%";
   const notas = ms.flatMap(m => m.notas.map(n => ({n, tono: n.tono}))).sort((a,b) => b.n.ts - a.n.ts);
-  return `<div class="rhead"><h3>${esc(S.org)} · informe de gestión</h3><span class="per">${ri("cal")} ${rango(NOW - 29*DAY, NOW)}</span></div>
+  return `<div class="rhead"><h3>${esc(S.org)} · informe de gestión</h3><span class="per">${ri("cal")} ${rango(NOW - (P.d - 1) * DAY, NOW)}</span></div>
   <div class="card" style="margin-bottom:14px"><h3>Lo principal</h3><ul class="find">${finds.map(([k, t]) => `<li><span class="chipi ${k}">${ri(k)}</span><p>${t}</p></li>`).join("")}</ul></div>
   <div class="rgrid r4">
     ${tile({icon:"noticias", label:"Noticias", value:M.vol, delta: deltaHtml(Mr.vol, Ma.vol, null), viz: sparkline(serieDias(ms)), sub:"sin contar réplicas de la misma noticia"})}

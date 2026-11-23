@@ -2019,7 +2019,7 @@ body.cliente .live{display:none}
 .mrow-det{padding:2px 14px 16px;background:var(--surface-2)}
 .md-det .meta{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;margin:8px 0 0}
 .md-det .md-t{font-family:var(--f-news);font-weight:700;font-size:24px;line-height:1.2;margin:10px 0 8px;text-wrap:pretty}
-.mrow-det .md-t{display:none}
+.mrow-det .md-t,.mrow-det .mf-prio .prio,.mrow-det .acts [data-act="responder"],.mrow-det .acts [data-act="vocero"]{display:none}
 .md-det .res{margin:0 0 10px;line-height:1.55}
 .md-det .acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
 .mf-prio{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:0;font-size:12.5px}
@@ -2084,7 +2084,7 @@ body.cliente .live{display:none}
 /* Informes: selector «Informe para» y acciones arriba a la derecha */
 .repsel{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;margin:4px 0 14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
 .repsel-op{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.repsel-l{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.repsel-l{white-space:nowrap;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:4px}
 .repsel-b{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:14px;font-weight:600;border-radius:999px;padding:7px 14px;cursor:pointer;min-height:38px}
 .repsel-b:hover{border-color:var(--ink)}
 .repsel-b[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
@@ -4866,7 +4866,7 @@ function repGestion(){
   ].filter(Boolean);
   const maxSide = Math.max(1, ...porTema.map(x => Math.max(x.cri + x.neu/2, x.pos + x.neu/2))), w = v => (v / maxSide * 100).toFixed(2) + "%";
   const notas = ms.flatMap(m => m.notas.map(n => ({n, tono: n.tono}))).sort((a,b) => b.n.ts - a.n.ts);
-  return `<div class="rhead"><h3>${esc(S.org)} · informe de gestión</h3><span class="per">${ri("cal")} ${rango(NOW - 29*DAY, NOW)}</span></div>
+  return `<div class="rhead"><h3>${esc(S.org)} · informe de gestión</h3><span class="per">${ri("cal")} ${rango(NOW - (P.d - 1) * DAY, NOW)}</span></div>
   <div class="card" style="margin-bottom:14px"><h3>Lo principal</h3><ul class="find">${finds.map(([k, t]) => `<li><span class="chipi ${k}">${ri(k)}</span><p>${t}</p></li>`).join("")}</ul></div>
   <div class="rgrid r4">
     ${tile({icon:"noticias", label:"Noticias", value:M.vol, delta: deltaHtml(Mr.vol, Ma.vol, null), viz: sparkline(serieDias(ms)), sub:"sin contar réplicas de la misma noticia"})}
@@ -5960,7 +5960,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search));  // ?ingr
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "bde12d5038cb", K = "app";
+  const V = "d55de151240c", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
