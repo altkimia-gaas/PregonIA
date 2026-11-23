@@ -45,6 +45,20 @@ create table if not exists municipios (
   creado  timestamptz not null default now(),
   actualizado timestamptz not null default now()
 );
+-- Autoridades como clientes del piloto (nov 2026). La tabla se sigue llamando municipios, pero también guarda cuentas de autoridad:
+-- diputado, senador, core, concejal, gobernador y delegado. En ellas la comuna queda vacía y "autoridad" describe a la persona:
+--   {"id": id de la nómina de PregonIA o null, "zona": distrito, circunscripción, comuna o provincia, "nombre": como la nombra la prensa,
+--    "g": "F" o "M", "partido": opcional}. La lectura programada busca sus menciones por nombre, y la IA juzga relevancia y tono respecto de la persona.
+alter table municipios add column if not exists tipo text not null default 'municipio';
+alter table municipios add column if not exists autoridad jsonb;
+alter table municipios alter column comuna drop not null;
+alter table municipios drop constraint if exists municipios_tipo_check;
+alter table municipios add constraint municipios_tipo_check check (tipo in ('municipio', 'diputado', 'senador', 'core', 'concejal', 'gobernador', 'delegado'));
+alter table municipios drop constraint if exists municipios_cuenta_check;
+alter table municipios add constraint municipios_cuenta_check check (
+  (tipo = 'municipio' and comuna is not null) or
+  (tipo <> 'municipio' and comuna is null and coalesce(autoridad ->> 'zona', '') <> '' and length(trim(coalesce(autoridad ->> 'nombre', ''))) >= 5));
+create unique index if not exists municipios_autoridad on municipios (tipo, (autoridad ->> 'zona'), lower(autoridad ->> 'nombre')) where tipo <> 'municipio';
 
 -- Usuarios: el registro en auth.users lo crea Supabase (invitación por correo); aquí se asigna municipio y rol.
 create table if not exists perfiles (
@@ -54,6 +68,9 @@ create table if not exists perfiles (
   rol          text not null default 'lector' check (rol in ('admin', 'comunicaciones', 'alcalde', 'directivo', 'lector')),
   creado       timestamptz not null default now()
 );
+-- Rol "autoridad" (nov 2026): la persona titular de una cuenta de autoridad. Como el alcalde, solo lee y recibe lo urgente.
+alter table perfiles drop constraint if exists perfiles_rol_check;
+alter table perfiles add constraint perfiles_rol_check check (rol in ('admin', 'comunicaciones', 'alcalde', 'autoridad', 'directivo', 'lector'));
 
 -- Una fila por publicación (enlace). Es compartida: la misma nota puede ser mención de varias comunas.
 -- No se guarda el texto del medio: solo titular, enlace, medio y fecha.
@@ -81,6 +98,11 @@ create table if not exists menciones (
   clasificado  timestamptz not null default now(),
   primary key (nota_id, municipio_id)
 );
+-- En cuentas de autoridad: 'persona' si la nota la nombra, 'institucion' si trata del órgano que integra en su territorio
+-- (las mismas reglas que un municipio, que lee lo que trata de la comuna). En municipios queda vacío.
+alter table menciones add column if not exists sobre text check (sobre in ('persona', 'institucion'));
+-- Ficha editorial de la IA: área, encuadre, impulsor, papel, tono hacia la contraparte, gravedad y confianza (ver api/_lectura.js).
+alter table menciones add column if not exists ficha jsonb;
 create index if not exists menciones_muni on menciones (municipio_id, clasificado desc);
 create index if not exists menciones_grupo on menciones (municipio_id, grupo);
 
@@ -163,6 +185,18 @@ create or replace function mi_rol() returns text language sql stable security de
 $$ select rol from perfiles where id = auth.uid() $$;
 create or replace function puedo_editar() returns boolean language sql stable security definer set search_path = public as
 $$ select coalesce((select rol in ('admin', 'comunicaciones') from perfiles where id = auth.uid()), false) $$;
+-- Ayudantes solo para sesiones iniciadas (las reglas los usan); sin acceso anónimo por la API.
+revoke execute on function mi_municipio() from public;
+revoke execute on function mi_rol() from public;
+revoke execute on function puedo_editar() from public;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then
+    execute 'revoke execute on function mi_municipio() from anon'; execute 'revoke execute on function mi_rol() from anon'; execute 'revoke execute on function puedo_editar() from anon';
+  end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then
+    execute 'grant execute on function mi_municipio() to authenticated'; execute 'grant execute on function mi_rol() to authenticated'; execute 'grant execute on function puedo_editar() to authenticated';
+  end if;
+end $$;
 
 -- Row Level Security
 alter table medios      enable row level security;
@@ -299,6 +333,12 @@ drop trigger if exists act_capturas on capturas;
 create trigger act_capturas after insert or delete on capturas for each row execute function registrar_actividad();
 drop trigger if exists act_config on municipios;
 create trigger act_config after update of config on municipios for each row when (old.config is distinct from new.config) execute function registrar_actividad();
+-- La función del registro solo la usan los disparadores: nadie la llama por la API.
+revoke execute on function registrar_actividad() from public;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then execute 'revoke execute on function registrar_actividad() from anon'; end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then execute 'revoke execute on function registrar_actividad() from authenticated'; end if;
+end $$;
 
 -- Avisos (alertas): lo que la lectura programada detectó, las preferencias de cada persona y sus celulares suscritos.
 -- Una fila por aviso emitido; la clave (hecho + regla + nivel) evita avisar dos veces lo mismo.
@@ -326,6 +366,20 @@ create table if not exists avisos (
   correo       boolean not null default true,
   actualizado  timestamptz not null default now()
 );
+-- Parte diario por WhatsApp (nov 2026): celular de la persona y su aceptación expresa (Meta exige consentimiento previo).
+alter table avisos add column if not exists whatsapp    text;
+alter table avisos add column if not exists whatsapp_ok boolean not null default false;
+-- Un parte por cuenta y día: la lectura de las 8:07 toma la fila antes de enviar; la de las 8:37 la encuentra y no repite.
+create table if not exists partes_whatsapp (
+  municipio_id uuid not null references municipios (id) on delete cascade,
+  fecha        date not null,
+  enviados     int,
+  noticias     int,
+  criticas     int,
+  creado       timestamptz not null default now(),
+  primary key (municipio_id, fecha)
+);
+alter table partes_whatsapp enable row level security;  -- sin políticas: solo el servidor (clave secreta) la usa
 -- Celulares y computadores suscritos a notificaciones (Web Push). Las llaves son del navegador, no secretos del municipio.
 create table if not exists suscripciones (
   endpoint     text primary key,
@@ -346,12 +400,12 @@ create policy avisos_propios on avisos for all to authenticated using (usuario =
 drop policy if exists suscripciones_propias on suscripciones;
 create policy suscripciones_propias on suscripciones for all to authenticated using (usuario = auth.uid()) with check (usuario = auth.uid() and municipio_id = mi_municipio());
 -- Destinatarios de un municipio con su correo y preferencias. Solo la usa el servidor (lectura programada).
--- Sin preferencia guardada: el alcalde y los directivos reciben solo lo urgente; el resto, lo crítico.
+-- Sin preferencia guardada: el alcalde, la autoridad y los directivos reciben solo lo urgente; el resto, lo crítico.
 create or replace function destinatarios_avisos(muni uuid)
 returns table (usuario uuid, correo text, nivel text, silencio boolean, por_correo boolean)
 language sql stable security definer set search_path = public, auth as $$
   select p.id, u.email::text,
-         coalesce(a.nivel, case when p.rol in ('alcalde', 'directivo') then 'urgente' else 'importante' end),
+         coalesce(a.nivel, case when p.rol in ('alcalde', 'autoridad', 'directivo') then 'urgente' else 'importante' end),
          coalesce(a.silencio, true), coalesce(a.correo, true)
   from perfiles p join auth.users u on u.id = p.id left join avisos a on a.usuario = p.id
   where p.municipio_id = muni
@@ -400,3 +454,191 @@ do $$ begin
   if exists (select 1 from pg_roles where rolname = 'anon') then execute 'revoke execute on function aceptar_documentos(text, text) from anon'; end if;
   if exists (select 1 from pg_roles where rolname = 'authenticated') then execute 'grant execute on function aceptar_documentos(text, text) to authenticated'; end if;
 end $$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Redacción (nov 2026): las cuentas propias de PregonIA en Facebook e Instagram, como medio informativo.
+-- Solo para editores de PregonIA (tabla editores), separado de los municipios y autoridades clientes:
+-- un editor no ve datos de clientes y un cliente no ve nada de esto.
+-- La lectura programada propone noticias de alto impacto de los territorios elegidos (api/_redaccion.js);
+-- el editor las redacta con IA, las revisa, las aprueba y las programa en /redaccion. Nada se publica sin aprobación.
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists editores (
+  usuario uuid primary key references auth.users (id) on delete cascade,
+  nombre  text,
+  creado  timestamptz not null default now()
+);
+create or replace function es_editor() returns boolean language sql stable security definer set search_path = public as
+$$ select exists (select 1 from editores where usuario = auth.uid()) $$;
+
+-- Territorios y preferencias de cada editor. cercanos: términos que activan la revisión reforzada (conflicto de interés).
+create table if not exists redaccion_config (
+  usuario         uuid primary key default auth.uid() references auth.users (id) on delete cascade,
+  comunas         text[] not null default '{}',
+  nacional        boolean not null default true,
+  umbral          int not null default 80 check (umbral between 30 and 100),
+  silencio        boolean not null default true,
+  resumen_hora    int not null default 8 check (resumen_hora between 5 and 11),
+  resumen_enviado date,
+  cercanos        text[] not null default '{}',
+  pesos           jsonb,
+  meta_diaria     int not null default 4 check (meta_diaria between 1 and 10),
+  actualizado     timestamptz not null default now()
+);
+
+-- Hechos propuestos: notas agrupadas, puntaje y por qué. Solo titular, enlace, medio y fecha de cada nota (no su texto).
+create table if not exists redaccion_propuestas (
+  id          text primary key,
+  titulo      text not null,
+  resumen     text,
+  comunas     text[] not null default '{}',
+  alcance     text check (alcance in ('comunal', 'regional', 'nacional')),
+  puntaje     int not null default 0,
+  senales     jsonb,
+  detalle     jsonb,
+  notas       jsonb not null default '[]',
+  sensible    boolean not null default false,
+  cercanos    text[],
+  estado      text not null default 'nueva' check (estado in ('nueva', 'tomada', 'descartada')),
+  motivo      text,
+  ia          boolean not null default false,
+  avisado     boolean not null default false,
+  detectado   timestamptz not null default now(),
+  ultima      timestamptz,
+  actualizado timestamptz not null default now()
+);
+create index if not exists redaccion_prop_act on redaccion_propuestas (actualizado desc);
+create index if not exists redaccion_prop_puntaje on redaccion_propuestas (estado, puntaje desc);
+
+-- Publicaciones: textos para Facebook e Instagram, datos de las piezas (feed, historia, carrusel, reel), estado y agenda.
+-- Las imágenes y videos se generan en el navegador a partir de estos datos; en la fase 2 se guardarán para publicarlos por Meta.
+create table if not exists redaccion_posts (
+  id           uuid primary key default gen_random_uuid(),
+  propuesta_id text references redaccion_propuestas (id) on delete set null,
+  estado       text not null default 'borrador' check (estado in ('borrador', 'aprobado', 'programado', 'publicado', 'descartado')),
+  titulo       text,
+  contenido    jsonb not null default '{}',
+  formatos     text[] not null default '{feed,historia}',
+  comunas      text[] not null default '{}',
+  sensible     boolean not null default false,
+  programado   timestamptz,
+  recordado    boolean not null default false,
+  publicado    timestamptz,
+  enlaces      jsonb,
+  aprobado     timestamptz,
+  aprobado_por uuid references auth.users (id) on delete set null,
+  revision     jsonb,
+  autor        uuid references auth.users (id) on delete set null default auth.uid(),
+  creado       timestamptz not null default now(),
+  actualizado  timestamptz not null default now()
+);
+create index if not exists redaccion_posts_estado on redaccion_posts (estado, programado);
+-- Publicación por la API de Meta (fase 2): id de la publicación en Facebook, si quedó programada en Meta o ya salió, y cuándo.
+alter table redaccion_posts add column if not exists meta jsonb;
+
+-- Celulares y computadores del editor suscritos a los avisos de Redacción (Web Push).
+create table if not exists redaccion_suscripciones (
+  endpoint    text primary key,
+  usuario     uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  p256dh      text not null,
+  auth        text not null,
+  dispositivo text,
+  creada      timestamptz not null default now()
+);
+
+alter table editores                enable row level security;
+alter table redaccion_config        enable row level security;
+alter table redaccion_propuestas    enable row level security;
+alter table redaccion_posts         enable row level security;
+alter table redaccion_suscripciones enable row level security;
+drop policy if exists editores_leer on editores;
+create policy editores_leer on editores for select to authenticated using (usuario = auth.uid());
+drop policy if exists redaccion_config_propia on redaccion_config;
+create policy redaccion_config_propia on redaccion_config for all to authenticated using (usuario = auth.uid() and es_editor()) with check (usuario = auth.uid() and es_editor());
+drop policy if exists redaccion_prop_editor on redaccion_propuestas;
+create policy redaccion_prop_editor on redaccion_propuestas for all to authenticated using (es_editor()) with check (es_editor());
+drop policy if exists redaccion_posts_editor on redaccion_posts;
+create policy redaccion_posts_editor on redaccion_posts for all to authenticated using (es_editor()) with check (es_editor());
+drop policy if exists redaccion_subs_propias on redaccion_suscripciones;
+create policy redaccion_subs_propias on redaccion_suscripciones for all to authenticated using (usuario = auth.uid() and es_editor()) with check (usuario = auth.uid() and es_editor());
+
+-- Registro editorial (control 6 del checklist): quién creó, aprobó, programó, publicó o descartó cada publicación, y cuándo.
+-- Queda en la tabla actividad sin municipio. Lo escribe la base, no la aplicación.
+create or replace function registrar_redaccion() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' or new.estado is distinct from old.estado then
+    insert into actividad (municipio_id, usuario, accion, detalle)
+    values (null, auth.uid(), 'redaccion.' || case when tg_op = 'INSERT' then 'crear' else new.estado end,
+            jsonb_build_object('post', new.id, 'propuesta', new.propuesta_id, 'titulo', left(coalesce(new.titulo, ''), 160), 'programado', new.programado, 'sensible', new.sensible));
+  end if;
+  return new;
+end $$;
+drop trigger if exists act_redaccion on redaccion_posts;
+create trigger act_redaccion after insert or update of estado on redaccion_posts for each row execute function registrar_redaccion();
+drop policy if exists actividad_editor on actividad;
+create policy actividad_editor on actividad for select to authenticated using (municipio_id is null and accion like 'redaccion.%' and es_editor());
+-- es_editor() solo para sesiones iniciadas; la función del registro solo la usa el disparador (nadie la llama por la API).
+revoke execute on function es_editor() from public;
+revoke execute on function registrar_redaccion() from public;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then execute 'revoke execute on function es_editor() from anon'; execute 'revoke execute on function registrar_redaccion() from anon'; end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then execute 'grant execute on function es_editor() to authenticated'; execute 'revoke execute on function registrar_redaccion() from authenticated'; end if;
+end $$;
+-- Para habilitar a un editor (una vez, en SQL Editor, con el correo de su cuenta de Supabase):
+--   insert into editores (usuario, nombre) select id, 'Nombre' from auth.users where email = 'correo@dominio.cl' on conflict do nothing;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Contacto (nov 2026): solicitudes del formulario de la página del servicio (/servicio).
+-- Solo las escribe y lee el servidor (api/contacto.js) con la clave secreta: sin políticas para anon ni authenticated.
+-- Plazo: 12 meses desde la solicitud, o antes si la persona pide eliminarla (ver legal.html).
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists contactos (
+  id                 bigint generated always as identity primary key,
+  creado_en          timestamptz not null default now(),
+  nombre             text not null,
+  cargo              text,
+  institucion        text not null,
+  correo             text not null,
+  telefono           text,
+  interes            text,
+  mensaje            text,
+  origen             text,
+  version_privacidad text
+);
+alter table contactos enable row level security;
+
+-- Prueba gratis (/api/contacto?prueba): inscripción con verificación del correo por código de 6 dígitos.
+-- Guarda solo el resumen con sal del código (se borra al verificar). Sin políticas: solo la clave secreta del servidor accede.
+create table if not exists public.pruebas (
+  id bigint generated always as identity primary key,
+  creado_en timestamptz not null default now(),
+  nombre text not null,
+  correo text not null,
+  rol text not null,
+  territorio text not null,
+  codigo_hash text,
+  expira timestamptz not null,
+  intentos int not null default 0,
+  verificado_en timestamptz,
+  acepta_contacto boolean not null default false,
+  version_privacidad text
+);
+create index if not exists pruebas_correo_creado on public.pruebas (correo, creado_en desc);
+alter table public.pruebas enable row level security;
+
+-- Ingresos a la demostración de los correos sin límite (PRUEBA_SIN_LIMITE): fecha, cargo, territorio y autoridad elegida.
+create table if not exists public.pruebas_ingresos (
+  id bigint generated always as identity primary key,
+  creado_en timestamptz not null default now(),
+  correo text not null,
+  rol text not null,
+  territorio text,
+  autoridad text,
+  cuenta text
+);
+create index if not exists pruebas_ingresos_correo_creado on public.pruebas_ingresos (correo, creado_en desc);
+alter table public.pruebas_ingresos enable row level security;
+
+-- Regiones (src/regiones.js): un turno de lectura por región. Cada lectura queda marcada con su región para que la app y la
+-- página de cobertura muestren el estado del turno que corresponde. Las lecturas anteriores son de la Región de Valparaíso.
+alter table lecturas add column if not exists region text not null default 'V';
+create index if not exists lecturas_region_fin on lecturas (region, fin desc);

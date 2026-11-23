@@ -1,17 +1,20 @@
 /* Calendario de riesgos: fechas que se repiten cada año y en las que ciertos temas suelen estallar (o abrir una oportunidad).
-   Sirve para preparar datos, vocería y mensajes antes, no durante. Cada municipio puede sumar fechas propias.
-   Las fechas son ventanas aproximadas; cada municipio las ajusta a su realidad. */
+   Sirve para preparar datos, vocería y mensajes antes, no durante. Cada cuenta puede sumar fechas propias.
+   Las fechas son ventanas aproximadas; cada cuenta las ajusta a su realidad.
+   Cada fecha dice a qué cargos les toca (cargos): sin ese dato es municipal (alcaldía y concejo). Un senador no ve el PADEM
+   ni el presupuesto municipal; ve la Ley de Presupuestos, la cuenta pública presidencial y las emergencias de su territorio. */
+const MUNI = ["municipio", "concejal"], TODOS = ["municipio", "concejal", "diputado", "senador", "core", "gobernador", "delegado"];
 const COSTA = ["Casablanca","Algarrobo","El Quisco","El Tabo","Cartagena","San Antonio"];
 const HITOS = [
-  {id:"estival", nombre:"Temporada estival", desde:[12,15], hasta:[3,1], tipo:"riesgo", comunas:COSTA,
+  {id:"estival", nombre:"Temporada estival", desde:[12,15], hasta:[3,1], tipo:"riesgo", comunas:COSTA, cargos:MUNI.concat("delegado"),
     kw:["playa","turista","turismo","basura","residuos","agua","aljibe","transito","taco","estacionamiento","salvavidas","ahog","ruido","ocupacion"],
     que:"Reclamos por basura, agua y tránsito; accidentes en playas. La ocupación turística suele ser la noticia positiva.",
     prep:["Cifras de refuerzo de aseo, salvavidas y fiscalización listas antes del inicio","Mensaje de bienvenida con servicios y teléfonos útiles para visitantes","Protocolo y vocero definidos ante un accidente en playa","Balance de la temporada preparado para la primera semana de marzo"]},
-  {id:"incendios", nombre:"Temporada de incendios forestales", desde:[12,1], hasta:[4,30], tipo:"riesgo", comunas:"*",
+  {id:"incendios", nombre:"Temporada de incendios forestales", desde:[12,1], hasta:[4,30], tipo:"riesgo", comunas:"*", cargos:TODOS,
     kw:["incendio","forestal","conaf","senapred","bomberos","evacua","quema","humo","brigada"],
-    que:"Un incendio cerca de zonas pobladas lleva la comuna a la prensa nacional en pocas horas.",
+    que:"Un incendio cerca de zonas pobladas lleva el territorio a la prensa nacional en pocas horas.",
     prep:["Datos de cortafuegos, brigadas y puntos de encuentro verificados","Canal único de información a vecinos acordado con Senapred y Conaf","Plantilla de declaración de emergencia y vocero designado","Lista de teléfonos de emergencia publicada en redes municipales"]},
-  {id:"anonuevo", nombre:"Año Nuevo en la costa", desde:[12,28], hasta:[1,2], tipo:"riesgo", comunas:COSTA,
+  {id:"anonuevo", nombre:"Año Nuevo en la costa", desde:[12,28], hasta:[1,2], tipo:"riesgo", comunas:COSTA, cargos:MUNI.concat("delegado"),
     kw:["ano nuevo","fuegos artificiales","pirotecnia","aglomeracion","carabineros","transito","fiesta"],
     que:"Aglomeraciones, tránsito colapsado y hechos de seguridad marcan el balance del 1 de enero.",
     prep:["Plan de seguridad y tránsito comunicado con una semana de anticipación","Balance de la noche listo para la mañana del 1 de enero"]},
@@ -31,9 +34,9 @@ const HITOS = [
     kw:["cesfam","salud","urgencia","sapu","sar","vacuna","influenza","virus","consultorio","espera"],
     que:"Esperas en urgencias y falta de horas en los Cesfam son el reclamo más repetido.",
     prep:["Horarios de urgencia y vacunación publicados y actualizados","Datos de atenciones y refuerzos para responder reclamos por esperas"]},
-  {id:"frontales", nombre:"Lluvias, temporales y marejadas", desde:[5,1], hasta:[8,31], tipo:"riesgo", comunas:"*",
+  {id:"frontales", nombre:"Lluvias, temporales y marejadas", desde:[5,1], hasta:[8,31], tipo:"riesgo", comunas:"*", cargos:TODOS,
     kw:["lluvia","temporal","anega","inunda","corte de luz","sin luz","arbol caido","marejada","borde costero","viento"],
-    que:"Calles anegadas, cortes de luz y marejadas en el borde costero; se pregunta por la respuesta municipal.",
+    que:"Calles anegadas, cortes de luz y marejadas en el borde costero; se pregunta por la respuesta de las autoridades.",
     prep:["Puntos críticos de anegamiento y cuadrillas disponibles","Coordinación con la empresa eléctrica y Senapred para avisos","Albergues y ayuda disponible con dirección y teléfono"]},
   {id:"patrimonio", nombre:"Día del Patrimonio", desde:[5,20], hasta:[5,31], tipo:"oportunidad", comunas:"*",
     kw:["patrimonio","historia","museo","recorrido"],
@@ -43,7 +46,7 @@ const HITOS = [
     kw:["san pedro","pescador","caleta","procesion"],
     que:"Celebraciones en caletas con cobertura regional; buena vitrina para la pesca artesanal.",
     prep:["Programa e invitación a medios con los pescadores de la caleta"]},
-  {id:"patrias", nombre:"Fiestas Patrias", desde:[9,10], hasta:[9,21], tipo:"riesgo", comunas:"*",
+  {id:"patrias", nombre:"Fiestas Patrias", desde:[9,10], hasta:[9,21], tipo:"riesgo", comunas:"*", cargos:MUNI.concat("delegado"),
     kw:["fonda","ramada","fiestas patrias","dieciocho","alcohol","accidente","transito","seguridad"],
     que:"Fiscalización de fondas, accidentes de tránsito y seguridad marcan el balance.",
     prep:["Permisos y fiscalización de fondas informados con anticipación","Balance de seguridad y tránsito listo el 20 de septiembre"]},
@@ -54,11 +57,29 @@ const HITOS = [
   {id:"presupuesto", nombre:"Presupuesto municipal en el concejo", desde:[10,1], hasta:[12,15], tipo:"riesgo", comunas:"*",
     kw:["presupuesto","recorte","deficit","deuda municipal"],
     que:"Críticas de concejales por recortes o prioridades del presupuesto.",
-    prep:["Explicación de las prioridades del presupuesto en una página","Respuesta preparada para críticas por recortes"]}
+    prep:["Explicación de las prioridades del presupuesto en una página","Respuesta preparada para críticas por recortes"]},
+  // Congreso, gobierno regional y delegación presidencial
+  {id:"leypresupuestos", nombre:"Ley de Presupuestos en el Congreso", desde:[10,1], hasta:[11,30], tipo:"oportunidad", comunas:"*", cargos:["diputado","senador","gobernador","core"],
+    kw:["ley de presupuestos","presupuesto nacional","partida","glosa","hacienda","dipres","fndr","recursos para la region"],
+    que:"La discusión del presupuesto nacional define los recursos para la región; la prensa pregunta qué se consiguió y quién votó qué.",
+    prep:["Lista de obras y recursos para la región que se juegan en la discusión","Posición y votaciones explicadas en un mensaje simple","Balance de lo conseguido para la región listo al despacho de la ley"]},
+  {id:"cuentapresidencial", nombre:"Cuenta pública presidencial", desde:[5,25], hasta:[6,5], tipo:"oportunidad", comunas:"*", cargos:["diputado","senador","gobernador","core","delegado"],
+    kw:["cuenta publica","presidente","presidenta","anuncio","mensaje presidencial"],
+    que:"Los anuncios del 1 de junio abren espacio para valorar o criticar lo que toca a la región.",
+    prep:["Reacción breve preparada sobre los anuncios que afectan a la región","Datos de la región a mano para contrastar los anuncios"]},
+  {id:"receso", nombre:"Receso legislativo de febrero", desde:[2,1], hasta:[2,28], tipo:"oportunidad", comunas:"*", cargos:["diputado","senador"],
+    kw:["terreno","visita","recorrido","vecinos","verano"],
+    que:"Sin sesiones en el Congreso, es el mes de terreno: la prensa local cubre visitas, compromisos y reclamos del territorio.",
+    prep:["Agenda de visitas en el territorio con aviso a medios locales","Resumen de la labor legislativa del año para entrevistas de verano"]},
+  {id:"presupuestoregional", nombre:"Presupuesto regional en el consejo", desde:[12,15], hasta:[3,31], tipo:"riesgo", comunas:"*", cargos:["gobernador","core"],
+    kw:["presupuesto regional","fndr","consejo regional","core","distribucion","marco presupuestario","cartera de proyectos"],
+    que:"La distribución de los recursos regionales entre provincias y comunas genera disputas y reclamos de abandono.",
+    prep:["Criterios de distribución explicados en una página","Proyectos por provincia listos para responder reclamos"]}
 ];
 const MES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const fechaHito = ([m, d]) => d + " " + MES[m - 1];
-function hitosDe(c = cuenta()){ return HITOS.filter(h => h.comunas === "*" || territorio(c).some(x => h.comunas.includes(x))).concat((c.hitos || []).map(h => ({...h, propio: true}))); }
+const rolCal = (c = cuenta()) => esAut(c) ? c.perfil.rol : "municipio";
+function hitosDe(c = cuenta()){ const rol = rolCal(c); return HITOS.filter(h => (h.cargos || MUNI).includes(rol) && (h.comunas === "*" || territorio(c).some(x => h.comunas.includes(x)))).concat((c.hitos || []).map(h => ({...h, propio: true}))); }
 /* La próxima vez que ocurre (o la actual, si está en curso). */
 function ocurrencia(h, ahora = NOW){
   const vuelta = h.hasta[0] < h.desde[0] || (h.hasta[0] === h.desde[0] && h.hasta[1] < h.desde[1]), y = new Date(ahora).getFullYear();

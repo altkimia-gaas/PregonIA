@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Privacidad, términos y uso de IA · PregonIA</title>
 <meta name="description" content="Política de privacidad, términos de uso, uso de inteligencia artificial, proveedores y contacto de PregonIA.">
-<meta name="theme-color" content="#080B12">
+<meta name="theme-color" content="#FFFFFF">
 <link rel="icon" type="image/png" sizes="192x192" href="/icono-192.png">
 <style>
 /* Página autónoma: sin fuentes ni scripts de terceros, para no transferir datos al leer la política de privacidad. */
-:root{--bg:#F4F4F0;--surface:#FFFFFF;--ink:#111827;--muted:#56627A;--line:#D8D4CC;--accent:#1565C0;--warn-bg:#FBEFD9;--warn-ink:#6B3F07;color-scheme:light dark}
-@media (prefers-color-scheme:dark){:root{--bg:#080B12;--surface:#111827;--ink:#F0F4FF;--muted:#8B9DC3;--line:#1E2D4A;--accent:#42A5F5;--warn-bg:#2A1F0E;--warn-ink:#F2C98A}}
+/* Diseño Edición: papel blanco (o casi negro en modo oscuro), filete negro y titulares en serif del sistema. */
+:root{--bg:#FFFFFF;--surface:#FFFFFF;--ink:#141414;--muted:#555555;--line:#DADADA;--rule:#141414;--accent:#2B4BE0;--warn-bg:#FBEFD9;--warn-ink:#6B3F07;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--bg:#121212;--surface:#1A1A1A;--ink:#EDEDED;--muted:#A8A8A8;--line:#2E2E2E;--rule:#EDEDED;--accent:#8FA2FF;--warn-bg:#33260C;--warn-ink:#F0C46A}}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
@@ -19,19 +20,19 @@ a{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .skip{position:absolute;left:-999px;top:8px;background:var(--surface);padding:8px 12px;border-radius:6px}
 .skip:focus{left:8px}
-header{background:#080B12;color:#F0F4FF;padding:20px max(20px,env(safe-area-inset-left))}
+header{background:var(--bg);color:var(--ink);padding:20px max(20px,env(safe-area-inset-left));border-bottom:3px double var(--rule)}
 header .in,main,footer{max-width:820px;margin:0 auto}
-header a{color:#F0F4FF;text-decoration:none;font-weight:800;font-size:22px}
-header a b{color:#42A5F5}
-header p{margin:4px 0 0;color:#8B9DC3;font-size:14px}
+header a{color:var(--ink);text-decoration:none;font:700 24px Georgia,"Times New Roman",serif}
+header a b{color:var(--accent)}
+header p{margin:4px 0 0;color:var(--muted);font-size:14px}
 main{padding:24px 20px 48px}
 .aviso{background:var(--warn-bg);color:var(--warn-ink);border-radius:8px;padding:12px 14px;font-size:14px}
 nav.indice{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:20px 0}
 nav.indice ol{margin:6px 0 0;padding-left:20px;columns:2;column-gap:28px}
 @media (max-width:600px){nav.indice ol{columns:1}}
-section{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 22px 18px;margin:18px 0;scroll-margin-top:12px}
-h1{font-size:28px;line-height:1.2;margin:8px 0 4px}
-h2{font-size:21px;margin:18px 0 8px}
+section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 22px 18px;margin:18px 0;scroll-margin-top:12px}
+h1{font:700 30px/1.15 Georgia,"Times New Roman",serif;margin:8px 0 4px}
+h2{font:700 22px/1.25 Georgia,"Times New Roman",serif;margin:18px 0 8px}
 h3{font-size:16.5px;margin:18px 0 6px}
 .meta{color:var(--muted);font-size:14px;margin:0}
 table{border-collapse:collapse;width:100%;font-size:14.5px;margin:8px 0}
@@ -47,7 +48,7 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
 <header><div class="in"><a href="/">Pregon<b>IA</b></a><p>Privacidad, términos y uso de inteligencia artificial</p></div></header>
 <main id="contenido">
   <h1>Cómo funciona PregonIA y qué hacemos con los datos</h1>
-  <p class="meta">Versión 2026-11-13 · Vigente desde el 13 de noviembre de 2026</p>
+  <p class="meta">Versión 2026-11-23 · Vigente desde el 23 de noviembre de 2026</p>
 
   <nav class="indice" aria-label="Índice">
     <b>Contenido</b>
@@ -59,6 +60,7 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
       <li><a href="#proveedores">Proveedores que procesan datos</a></li>
       <li><a href="#medios">Medios y derechos de autor</a></li>
       <li><a href="#contacto">Contacto y derechos sobre tus datos</a></li>
+      <li><a href="#editorial">Línea editorial de las cuentas de PregonIA en redes</a></li>
     </ol>
   </nav>
 
@@ -80,7 +82,7 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
 
     <h3>2.1 Dos modos de uso</h3>
     <ul>
-      <li><b>Demostración (sin iniciar sesión).</b> Noticias y cifras ficticias. Lo que configuras queda solo en tu navegador (almacenamiento local) y no se envía a nuestros servidores, salvo lo que pidas redactar con IA (ver sección 4).</li>
+      <li><b>Demostración (sin iniciar sesión).</b> Noticias y cifras ficticias. Lo que configuras queda solo en tu navegador (almacenamiento local) y no se envía a nuestros servidores, salvo lo que pidas redactar con IA (ver sección 4). Al empezar te pedimos aceptar estos documentos; esa aceptación queda guardada solo en tu navegador.</li>
       <li><b>Servicio (con sesión).</b> Para los equipos de las instituciones clientes, que ingresan por invitación. Los datos se guardan en la base de datos de PregonIA y cada persona ve solo la información de su municipio.</li>
     </ul>
 
@@ -92,10 +94,14 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
         <tr><td>Registro de actividad (quién hizo qué cambio y cuándo)</td><td>Usuarios del servicio</td><td>Seguridad, trazabilidad y soporte</td><td>Interés legítimo en la seguridad del servicio</td></tr>
         <tr><td>Aceptación de estos documentos (usuario, versión, fecha y hora, navegador)</td><td>Usuarios del servicio</td><td>Acreditar qué versión aceptaste y cuándo</td><td>Cumplimiento de obligación legal</td></tr>
         <tr><td>Preferencias de avisos y suscripción a notificaciones del navegador (dirección técnica del dispositivo)</td><td>Usuarios del servicio que activan avisos</td><td>Enviar alertas de noticias críticas</td><td>Consentimiento, que retiras desactivando los avisos</td></tr>
+        <tr><td>Celular para el parte diario por WhatsApp y tu aceptación (opcional)</td><td>Usuarios del servicio que lo piden en la campana de avisos</td><td>Enviar cada mañana el parte de prensa de su institución</td><td>Consentimiento, que retiras borrando el número en la campana de avisos</td></tr>
         <tr><td>Titular, enlace, medio, fecha, tono y un resumen propio de cada noticia. <b>No guardamos el texto completo de la nota.</b></td><td>Medios de prensa; puede incluir nombres de personas mencionadas en la noticia</td><td>Detectar menciones sobre el municipio y medir su alcance</td><td>Fuentes de acceso público e interés legítimo del municipio en conocer lo que se publica sobre su gestión</td></tr>
         <tr><td>Nómina de autoridades: nombre, cargo, territorio y afiliación política declarada públicamente</td><td>Autoridades electas en ejercicio</td><td>Reconocer cuándo una noticia menciona a una autoridad</td><td>Fuentes de acceso público sobre el ejercicio de funciones públicas</td></tr>
         <tr><td>Publicaciones agregadas a mano y capturas de pantalla subidas para análisis. De la captura se guarda solo el titular, el resumen y palabras clave; la imagen no se almacena.</td><td>Usuarios del servicio</td><td>Incorporar al monitoreo notas que no se leen automáticamente</td><td>Ejecución del contrato</td></tr>
         <tr><td>Borradores de comunicados aprobados</td><td>Equipo municipal</td><td>Guardar las respuestas aprobadas por el municipio</td><td>Ejecución del contrato</td></tr>
+        <tr><td>Formulario de contacto de la página del servicio: nombre, cargo, institución o comuna, correo, celular, interés y mensaje</td><td>Personas interesadas en contratar el servicio</td><td>Responder la consulta y coordinar una demostración o cotización</td><td>Consentimiento, que retiras escribiendo a soporte@altkimia.cl</td></tr>
+        <tr><td>Inscripción a la prueba gratis: nombre, correo, tipo de autoridad, territorio, fecha de validación del correo, si aceptas contacto comercial y versión de esta política. El código de validación se guarda solo como resumen cifrado y se borra al validarlo.</td><td>Personas que piden la prueba gratis</td><td>Validar que el correo es tuyo, activar la prueba por 7 días y evitar abusos. Solo si lo autorizas en una casilla aparte, opcional, contactarte con información comercial del servicio</td><td>Consentimiento, que retiras escribiendo a soporte@altkimia.cl</td></tr>
+        <tr><td>Preguntas al asistente de la página del servicio. <b>No se guardan:</b> se envían a Anthropic solo para responder.</td><td>Visitantes de la página del servicio</td><td>Responder dudas sobre el servicio</td><td>Interés legítimo en atender consultas</td></tr>
       </tbody>
     </table></div>
     <p>No pedimos datos sensibles de los usuarios, no vendemos datos personales y no los usamos para publicidad.</p>
@@ -110,8 +116,11 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
         <tr><td>Cuenta de usuario y perfil</td><td>Mientras dure el contrato con el municipio, y 90 días después para cierre y entrega de información</td></tr>
         <tr><td>Registro de actividad</td><td>12 meses</td></tr>
         <tr><td>Noticias, menciones y resúmenes</td><td>24 meses, para informes comparativos</td></tr>
+        <tr><td>Celular para el parte por WhatsApp</td><td>Hasta que lo borres en la campana de avisos o termine tu cuenta</td></tr>
         <tr><td>Suscripciones a notificaciones</td><td>Hasta que desactives los avisos o el navegador invalide la suscripción (se borra automáticamente)</td></tr>
         <tr><td>Registro de aceptación de documentos</td><td>Mientras exista la cuenta y luego por el plazo de prescripción de las acciones legales aplicables</td></tr>
+        <tr><td>Solicitudes del formulario de contacto</td><td>12 meses desde la solicitud, o antes si pides eliminarlas</td></tr>
+        <tr><td>Inscripciones a la prueba gratis</td><td>12 meses desde la inscripción, o antes si pides eliminarlas; las inscripciones con el correo sin validar se eliminan a los 30 días</td></tr>
         <tr><td>Datos de la demostración</td><td>Quedan en tu navegador hasta que los borres desde Ajustes o limpies los datos del sitio</td></tr>
       </tbody>
     </table></div>
@@ -146,6 +155,7 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
     <p>El servicio se entrega sin un nivel de disponibilidad garantizado, salvo el que se acuerde por escrito. La lectura de medios depende de que cada sitio y red social siga accesible; cuando una fuente no se puede leer, PregonIA lo muestra en Ajustes › Fuentes. Cualquier compromiso de disponibilidad se fija por escrito en el contrato con cada institución.</p>
     <h3>3.6 Precio</h3>
     <p>PregonIA no cobra en línea. El precio, el plan y su duración se acuerdan en el contrato con cada municipio, que indica también cómo terminarlo.</p>
+    <p>La prueba gratis dura 7 días desde que validas tu correo, una vez por correo. No pide tarjeta ni medio de pago y termina sola, sin cobro ni renovación. Durante la prueba la edición se arma con noticias reales de los últimos 30 días, leídas de los medios al momento de abrirla (la demostración con noticias ficticias queda a un toque), y lo que configures queda solo en tu navegador.</p>
     <h3>3.7 Propiedad intelectual</h3>
     <p>El software, la marca y los informes de PregonIA pertenecen a ALTKimia. Las noticias pertenecen a sus medios: PregonIA muestra titular, enlace y un resumen propio, y envía al lector al medio original (ver sección 6).</p>
     <h3>3.8 Cambios</h3>
@@ -163,6 +173,7 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
         <tr><td>Clasificación de noticias y capturas</td><td>Decide si la nota trata del municipio, estima el tono y escribe un resumen propio; en una captura de pantalla, lee la imagen para extraer el titular</td><td>Anthropic (Claude)</td></tr>
         <tr><td>Comunicados y kit de vocería</td><td>Redacta borradores con los datos de la noticia y del municipio; lo que falta queda marcado [completar]</td><td>Anthropic (Claude)</td></tr>
         <tr><td>Lectura del analista y "Pregúntale a PregonIA"</td><td>Interpreta las cifras del mes y responde dudas de uso</td><td>Anthropic (Claude)</td></tr>
+        <tr><td>Asistente de la página del servicio</td><td>Responde dudas de potenciales clientes sobre qué hace PregonIA, sus planes y cómo se contrata; puede equivocarse, por eso los precios y condiciones se confirman con el equipo</td><td>Anthropic (Claude)</td></tr>
         <tr><td>Video resumen con voz</td><td>Pule el guion y lo lee con una voz sintética</td><td>Anthropic (Claude) y ElevenLabs</td></tr>
         <tr><td>Imagen de la portada</td><td>Imagen ilustrativa generada con IA</td><td>—</td></tr>
       </tbody>
@@ -184,8 +195,9 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
         <tr><td>Vercel</td><td>Alojamiento de la aplicación y funciones del servidor</td><td>EE.UU.</td><td>Solicitudes a la aplicación y textos enviados a la IA</td></tr>
         <tr><td>Anthropic</td><td>Inteligencia artificial (Claude)</td><td>EE.UU.</td><td>Textos de noticias, preguntas y datos del municipio necesarios para cada tarea</td></tr>
         <tr><td>ElevenLabs</td><td>Voz sintética del video resumen</td><td>EE.UU.</td><td>Guion del video resumen</td></tr>
-        <tr><td>Resend</td><td>Correos de aviso a usuarios del servicio</td><td>EE.UU.</td><td>Correo del destinatario y el contenido del aviso</td></tr>
-        <tr><td>Meta Platforms</td><td>Lectura de cuentas públicas de medios en Instagram y Facebook</td><td>EE.UU.</td><td>Ninguno de usuarios: solo consultas sobre cuentas públicas de medios</td></tr>
+        <tr><td>Resend</td><td>Correos de aviso a usuarios del servicio, código de validación de la prueba gratis y aviso interno de las solicitudes del formulario de contacto y de las pruebas activadas</td><td>EE.UU.</td><td>Correo del destinatario y el contenido del aviso</td></tr>
+        <tr><td>Meta (WhatsApp Business)</td><td>Envío del parte diario por WhatsApp a quien lo pidió</td><td>EE.UU.</td><td>Celular del destinatario y el contenido del parte (cifras y titulares)</td></tr>
+        <tr><td>Meta Platforms</td><td>Lectura de cuentas públicas de medios en Instagram y Facebook, y publicación en la página de Facebook de El Pregonero</td><td>EE.UU.</td><td>Ninguno de usuarios: consultas sobre cuentas públicas de medios y publicaciones ya aprobadas por el editor</td></tr>
         <tr><td>Apify</td><td>Lectura de publicaciones públicas de medios en redes sociales (etapa de demostración)</td><td>República Checa (UE)</td><td>Ninguno de usuarios: solo consultas sobre cuentas públicas de medios</td></tr>
         <tr><td>GitHub (Microsoft)</td><td>Ejecución programada de la lectura de medios</td><td>EE.UU.</td><td>Ninguno de usuarios: solo dispara la lectura programada</td></tr>
         <tr><td>Google Fonts</td><td>Tipografías de la aplicación (recibe la dirección IP)</td><td>EE.UU.</td><td>Solo la dirección IP del navegador</td></tr>
@@ -205,6 +217,18 @@ footer{padding:0 20px 32px;color:var(--muted);font-size:13.5px}
     <p>Puedes pedir en cualquier momento acceso a tus datos, su rectificación, su supresión, oponerte a un tratamiento, pedir su bloqueo temporal o recibirlos en un formato de uso común (portabilidad). Escribe a <a href="mailto:soporte@altkimia.cl">soporte@altkimia.cl</a> con el asunto "Datos personales" desde el correo asociado a tu cuenta. Responderemos dentro del plazo legal.</p>
     <p>Si eres usuario del servicio, también puedes pedirlo al administrador de tu institución. Si no quedas conforme con la respuesta, puedes recurrir a la Agencia de Protección de Datos Personales.</p>
     <p>Soporte del servicio: <a href="mailto:soporte@altkimia.cl">soporte@altkimia.cl</a>.</p>
+  </section>
+  <section id="editorial" aria-labelledby="edT">
+    <h2 id="edT">8. Línea editorial de las cuentas de PregonIA en redes</h2>
+    <p><span class="pend">BORRADOR – revisar con abogado antes de publicar las cuentas.</span></p>
+    <p>Las cuentas de PregonIA en Facebook e Instagram son un medio informativo digital de la Región de Valparaíso operado por ALTKIMIA Consultoría y Tecnología SpA. Editor responsable: <span class="pend">[COMPLETAR: nombre]</span>.</p>
+    <ul>
+      <li><b>Neutralidad estricta.</b> Publicamos hechos atribuidos a su fuente, sin adjetivos valorativos ni opinión, con el mismo trato para todos los sectores y autoridades. No hacemos propaganda ni llamados a apoyar o rechazar a nadie.</li>
+      <li><b>Fuentes.</b> Cada publicación nombra el o los medios que informaron el hecho y, cuando la red lo permite, enlaza a la nota original. Escribimos resúmenes propios; no reproducimos textos, fotos ni logos de los medios.</li>
+      <li><b>Inteligencia artificial.</b> La IA ayuda a detectar noticias y a redactar borradores. Una persona del equipo verifica los hechos en la fuente original y aprueba cada publicación; nada se publica de forma automática sin esa aprobación. Las piezas no usan imágenes realistas generadas con IA, y los videos indican cuando la voz es sintética.</li>
+      <li><b>Conflictos de interés.</b> Quienes editan las cuentas declaran sus relaciones con instituciones, territorios u organizaciones; las noticias que los tocan pasan por una revisión reforzada antes de aprobarse. <span class="pend">[COMPLETAR: declaración de relaciones del editor responsable]</span></li>
+      <li><b>Correcciones y aclaraciones.</b> Si una publicación contiene un error o una persona aludida quiere aclararla, escribe a <a href="mailto:soporte@altkimia.cl">soporte@altkimia.cl</a> con el asunto "Corrección" y el enlace. Revisamos dentro de 2 días hábiles y, si corresponde, corregimos de forma visible, indicando qué cambió.</li>
+    </ul>
   </section>
 </main>
 <footer><p>PregonIA · un producto de ALTKimia · <a href="/">Volver a la aplicación</a></p></footer>

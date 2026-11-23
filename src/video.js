@@ -3,8 +3,17 @@
    Escenas dibujadas en canvas a partir de parteData(); se exporta a MP4 con WebCodecs + mp4-muxer
    (más rápido que tiempo real) y, si el navegador no lo permite, se graba con MediaRecorder. Todo en el navegador. */
 const VW = 1080, VH = 1920, VFPS = 30, VOUT = [720, 1280];
-const VC = {bg:"#080B12", card:"#111827", line:"#1E2D4A", text:"#F0F4FF", muted:"#8B9DC3", blue:"#2196F3", cri:"#EF6A50", pos:"#2BB3A3", neu:"#A3AEBB"};
-const VF = {h:'Inter, system-ui, sans-serif', b:'Inter, system-ui, sans-serif', n:'Newsreader, Georgia, serif'};
+/* Edición · Paleta Edición. El video sale siempre en claro: es una pieza para compartir y todos deben recibir la misma.
+   La paleta oscura queda definida por si más adelante se quiere ofrecer como opción. */
+const VPALETA = {
+  claro: {bg:"#FFFFFF", card:"#FFFFFF", line:"#141414", text:"#141414", muted:"#555555", blue:"#2B4BE0", cri:"#B3261E", pos:"#1E6B3F", neu:"#6E737B", grave:"#9A5B00",
+          track:"#ECECE9", soft:"#F5F5F2", progBg:"#D6D6D2", prog:"#141414", rule:"#141414", ambN:"#14217A", ambR:"#2B4BE0", ambL:"#6F86E8"},
+  oscuro: {bg:"#121212", card:"#1A1A1A", line:"#3A3A3A", text:"#EDEDED", muted:"#A8A8A8", blue:"#8FA2FF", cri:"#E5534B", pos:"#4CC38A", neu:"#A9ADB4", grave:"#F0C46A",
+          track:"#2A2A2A", soft:"#232323", progBg:"#3A3A3A", prog:"#EDEDED", rule:"#EDEDED", ambN:"#C7D0FF", ambR:"#8FA2FF", ambL:"#5A6FD6"}
+};
+let VC = VPALETA.claro;
+function vpaleta(){ VC = VPALETA.claro; }
+const VF = {h:'"Source Serif 4", Newsreader, Georgia, serif', b:'Inter, system-ui, sans-serif', n:'"Source Serif 4", Newsreader, Georgia, serif'};
 const vtono = t => VC[t] || VC.neu;
 const vease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
 const vin = (l, t0, d = 0.6) => vease((l - t0) / d);
@@ -23,21 +32,22 @@ const cargarMuxer = () => cargarScript("https://cdn.jsdelivr.net/npm/mp4-muxer@5
 
 /* Guion: qué escenas lleva el video y cuánto dura cada una. */
 function videoPlan(){
-  const d = parteData(), temasMap = new Map();
-  d.sem.forEach(m => { const k = temaDe(m), x = temasMap.get(k) || {n: 0, pos: 0, neu: 0, cri: 0, noticias: 0}; x.n += m.notas.length; x[m.tono] += m.notas.length; x.noticias++; temasMap.set(k, x); });
-  const temas = [...temasMap].map(([nombre, x]) => ({nombre: nombre === "General" ? "Otros temas" : nombre, otros: nombre === "General", ...x})).sort((a, b) => a.otros - b.otros || b.n - a.n).slice(0, 5);
+  const d = parteData(), temas = d.imp.slice(0, 4);
   const ficha = m => { const ids = [...new Set(m.notas.map(n => n.m))]; return {m, e: escalera(m.notas), ac: accion(m), tema: temaDe(m), medios: ids.map(i => MED[i].n), pubs: m.notas.length}; };
   const S0 = [{k: "intro", dur: 3.6}, {k: "veredicto", dur: 6.2}];
-  if (temas.length) S0.push({k: "temas", dur: 4.2 + temas.length * 0.5, temas});
+  if (d.M.vol) S0.push({k: "trato", dur: 7.5});
+  if (temas.length) S0.push({k: "impacto", dur: 5 + temas.length * 0.6, temas});
   d.asuntos.forEach((m, i) => S0.push({k: "asunto", dur: 9.5, f: ficha(m), i, de: d.asuntos.length}));
   if (!d.asuntos.length) S0.push({k: "calma", dur: 4.5});
   if (d.buena) S0.push({k: "buena", dur: 8, f: ficha(d.buena)});
   S0.push({k: "cierre", dur: 5.5});
   S0.forEach(s => { s.base = s.dur; });
-  const plan = {d, scenes: S0, total: 0, org: S.org, inst: inst(), per: d.per, sig: d.asuntos[0] ? ficha(d.asuntos[0]) : null, temas};
+  const plan = {d, P: d.P, scenes: S0, total: 0, org: S.org, inst: inst(), per: d.per, sig: d.asuntos[0] ? ficha(d.asuntos[0]) : null, temas};
   return retimar(plan);
 }
 
+/* Voz del video: apagada por decisión del cliente (nov 2026). Con true vuelve el recuadro «Voz» y la narración automática con ElevenLabs. */
+const VOZ_ACTIVA = false;
 /* Con voz, cada escena dura lo que su narración (más un respiro); sin voz, su duración base. */
 const VOZ_INI = 0.35, VOZ_COLA = 0.75;
 function retimar(plan){
@@ -46,21 +56,23 @@ function retimar(plan){
 }
 
 /* Guion de la voz: texto base armado con los datos, que la IA puede pulir sin agregar hechos. */
-const VNOMBRE = {intro: "Portada", veredicto: "Cómo te trató la prensa", temas: "Temas de la semana", asunto: "Asunto", calma: "Sin asuntos de riesgo", buena: "Para aprovechar", cierre: "Próximo paso"};
-const VPAL = {intro: 16, veredicto: 28, temas: 22, asunto: 38, calma: 20, buena: 28, cierre: 22};
+const VNOMBRE = {intro: "Portada", veredicto: "Cómo te trató la prensa", trato: "Tratamiento de las noticias", impacto: "Qué temas restan y cuáles suman", asunto: "Asunto", calma: "Sin asuntos de riesgo", buena: "Para aprovechar", cierre: "Próximo paso"};
+const VPAL = {intro: 18, veredicto: 30, trato: 32, impacto: 28, asunto: 38, calma: 20, buena: 28, cierre: 22};
 const ORD = ["Primer", "Segundo", "Tercer"];
 const fechaHablada = ts => new Date(ts).toLocaleDateString("es-CL", {day: "numeric", month: "long"});
 const yLista = a => a.length <= 1 ? a.join("") : a.slice(0, -1).join(", ") + " y " + a[a.length - 1];
 const resp = r => yLista(r.split(" · "));
 const minus = t => t.charAt(0).toLowerCase() + t.slice(1);
 function guionBase(plan){
-  const {M, v, comp} = plan.d, frase = t => t.trim().replace(/([^.!?])$/, "$1.");
+  const {M, v, comp, niv, criTot, resp: rsp} = plan.d, P = plan.P, frase = t => t.trim().replace(/([^.!?])$/, "$1.");
   return plan.scenes.map(s => {
-    if (s.k === "intro") return `Parte de prensa de ${plan.inst}, del ${fechaHablada(NOW - 6 * DAY)} al ${fechaHablada(NOW)}.`;
-    if (s.k === "veredicto") return `La prensa fue ${v.n.toLowerCase()} esta semana: ${plural(M.vol, "noticia", "noticias")}, ${M.pos} positivas, ${M.neu} neutras y ${M.cri} críticas. ${comp}`;
-    if (s.k === "temas") { const t = s.temas.filter(x => !x.otros).slice(0, 2); return t.length ? `Los temas con más publicaciones fueron ${t.map((x, i) => `${x.nombre.toLowerCase()}, con ${i ? x.n : plural(x.n, "publicación", "publicaciones")}`).join(", y ")}.` : "La cobertura de la semana no se concentró en un tema en particular."; }
+    if (s.k === "intro") return P.dias === 1 ? `Parte de prensa de ${plan.inst}, de las últimas 24 horas.` : `Parte de prensa de ${plan.inst}, del ${fechaHablada(NOW - (P.dias - 1) * DAY)} al ${fechaHablada(NOW)}.`;
+    if (s.k === "veredicto") return `La prensa fue ${v.n.toLowerCase()} ${P.tx}, con ${plural(M.vol, "noticia", "noticias")}: ${plural(M.pos, "positiva", "positivas")}, ${plural(M.neu, "neutra", "neutras")} y ${plural(M.cri, "crítica", "críticas")}. ${comp}`;
+    if (s.k === "trato") return `Hasta dónde llegaron: ${niv[2].n} a prensa nacional, ${niv[1].n} a regional y ${niv[0].n} se quedaron en la prensa comunal. ${criTot ? `De ${plural(criTot, "crítica que exigía respuesta", "críticas que exigían respuesta")}, ${rsp === criTot ? (criTot === 1 ? "la crítica fue atendida" : "todas fueron atendidas") : rsp ? `${rsp} ${rsp === 1 ? "fue atendida" : "fueron atendidas"}` : criTot === 1 ? "aún no ha sido atendida" : "ninguna ha sido atendida"}.` : "Ninguna crítica exigía respuesta."}`;
+    if (s.k === "impacto") { const T = s.temas.filter(x => x.k !== "Sin tema asignado"), peor = T.filter(x => x.bal < 0).sort((a, b) => a.bal - b.bal)[0], mejor = T.filter(x => x.bal > 0).sort((a, b) => b.bal - a.bal)[0];
+      return [peor ? `El tema que más resta es ${peor.k.toLowerCase()}.` : "Ningún tema resta.", mejor ? `El que más suma es ${mejor.k.toLowerCase()}.` : "", "Pesan más las notas en medios grandes."].filter(Boolean).join(" "); }
     if (s.k === "asunto") { const f = s.f; return `${ORD[s.i]} asunto: ${frase(minus(f.m.lead.res))} Salió en ${plural(f.medios.length, "medio", "medios")} y ${llego(f.e).toLowerCase().replace(/^solo/, "se quedó solo en la")}. Recomendación: ${frase(minus(f.ac.a))} Responsable: ${resp(f.ac.r)}.`; }
-    if (s.k === "calma") return "Esta semana no hay asuntos de riesgo. PregonIA sigue revisando los medios y avisará si algo cambia.";
+    if (s.k === "calma") return `${P.tx.charAt(0).toUpperCase() + P.tx.slice(1)} no hay asuntos de riesgo. PregonIA sigue revisando los medios y avisará si algo cambia.`;
     if (s.k === "buena") { const f = s.f; return `Para aprovechar: ${frase(minus(f.m.lead.res))} ${llego(f.e)}. La recomendación es ${frase(f.ac.a.charAt(0).toLowerCase() + f.ac.a.slice(1))}`; }
     if (s.k === "cierre") return plan.sig ? `Próximo paso: ${frase(minus(plan.sig.ac.a))} Preparado con PregonIA.` : "Próximo paso: aprovechar la buena noticia en la próxima vocería. Preparado con PregonIA.";
     return "";
@@ -69,7 +81,7 @@ function guionBase(plan){
 async function guionIA(plan, base, signal){
   const sample = await samplePromise; if (!sample) return null;
   const n = base.length, lista = plan.scenes.map((s, i) => `${i + 1}. [${VNOMBRE[s.k]}${s.k === "asunto" ? " " + (s.i + 1) : ""}, máximo ${VPAL[s.k]} palabras] ${base[i]}`).join("\n");
-  const p = `Eres guionista de PregonIA. Reescribe, para que lo lea en voz alta un locutor, el guion de un video interno de alrededor de un minuto para el alcalde de ${plan.org} y su equipo directivo. Escribe en español de Chile.
+  const p = `Eres guionista de PregonIA. Reescribe, para que lo lea en voz alta un locutor, el guion de un video interno de alrededor de un minuto para ${esAut() ? plan.inst + " y su equipo" : "el alcalde de " + plan.org + " y su equipo directivo"}. Escribe en español de Chile.
 
 Reglas obligatorias:
 1. Conserva exactamente los hechos, cifras, nombres de temas y medios, niveles de difusión, recomendaciones y responsables del texto base. No agregues datos, opiniones, adjetivos sobre autoridades ni frases de promoción personal o partidaria.
@@ -90,10 +102,18 @@ async function vozDisponible(){
   if (!/^https?:$/.test(location.protocol)) return "sin-servidor";
   try { const r = await fetch("/api/voz", {cache: "no-store"}); if (!r.ok) return "sin-servidor"; const j = await r.json(); return j.ok ? "ok" : "sin-clave"; } catch(e) { return "sin-servidor"; }
 }
+/* Caché de la sesión: el mismo texto no se vuelve a grabar ni el mismo guion a escribir al reabrir el video (cuida los créditos de ElevenLabs). */
+const VOZ_CACHE = new Map(), GUION_CACHE = new Map();
 async function vozGrabar(texto, ac, signal){
-  const r = await fetch("/api/voz", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({texto}), signal});
-  if (!r.ok) { let m = ""; try { m = (await r.json()).error; } catch(e) {} throw {code: r.status === 429 ? "rate_limited" : "voz", message: m || "El servicio de voz no respondió"}; }
-  const buf = await r.arrayBuffer();
+  let buf = VOZ_CACHE.get(texto); delete VOZ_CACHE.sinCredito;
+  if (!buf) {
+    const r = await fetch("/api/voz", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({texto}), signal});
+    if (!r.ok) { let m = ""; try { m = (await r.json()).error; } catch(e) {} throw {code: r.status === 429 ? "rate_limited" : "voz", message: m || "El servicio de voz no respondió"}; }
+    if (r.headers.get("x-voz") === "estandar") VOZ_CACHE.estandar = true;  // la cuenta de ElevenLabs no permite la voz chilena
+    buf = await r.arrayBuffer(); if (VOZ_CACHE.size > 60) VOZ_CACHE.clear(); VOZ_CACHE.set(texto, buf);
+  }
+  if (VOZ_CACHE.estandar && VID) VID.vozEstandar = true;
+  buf = buf.slice(0);  // decodeAudioData consume el buffer: se decodifica una copia
   return await new Promise((ok, no) => { const p = ac.decodeAudioData(buf, ok, no); if (p && p.then) p.then(ok, no); });
 }
 async function vozMezcla(plan){
@@ -125,29 +145,23 @@ function vlogo(ctx, cx, y, px, a){
   let x = cx - total / 2; x = vmarca(ctx, x, y, s, a) + px * 0.18;
   ctx.save(); ctx.globalAlpha *= a; ctx.textAlign = "left"; ctx.fillStyle = VC.text; ctx.fillText("Pregon", x, y); ctx.fillStyle = VC.blue; ctx.fillText("IA", x + w1, y); ctx.restore(); vspacing(ctx, 0);
 }
-let vgrid = null;
-function vfondo(ctx){
-  ctx.fillStyle = VC.bg; ctx.fillRect(0, 0, VW, VH);
-  if (!vgrid) { vgrid = document.createElement("canvas"); vgrid.width = VW; vgrid.height = VH; const g = vgrid.getContext("2d"); g.fillStyle = "rgba(33,150,243,.16)"; for (let y = 30; y < VH; y += 60) for (let x = 30; x < VW; x += 60) { g.beginPath(); g.arc(x, y, 2.2, 0, 7); g.fill(); } }
-  ctx.drawImage(vgrid, 0, 0);
-  const gr = ctx.createRadialGradient(VW * 0.15, VH * 0.05, 40, VW * 0.15, VH * 0.05, VH * 0.75); gr.addColorStop(0, "rgba(33,150,243,.20)"); gr.addColorStop(1, "rgba(8,11,18,0)"); ctx.fillStyle = gr; ctx.fillRect(0, 0, VW, VH);
-}
+function vfondo(ctx){ ctx.fillStyle = VC.bg; ctx.fillRect(0, 0, VW, VH); }
 function vprogreso(ctx, plan, t){
   const n = plan.scenes.length, x0 = 60, W = VW - 120, gap = 10, w = (W - gap * (n - 1)) / n;
-  plan.scenes.forEach((s, i) => { const p = Math.min(1, Math.max(0, (t - s.t0) / s.dur)); const x = x0 + i * (w + gap); ctx.fillStyle = "rgba(240,244,255,.22)"; vrr(ctx, x, 60, w, 8, 4); ctx.fill(); if (p > 0) { ctx.fillStyle = "rgba(240,244,255,.92)"; vrr(ctx, x, 60, Math.max(8, w * p), 8, 4); ctx.fill(); } });
+  plan.scenes.forEach((s, i) => { const p = Math.min(1, Math.max(0, (t - s.t0) / s.dur)); const x = x0 + i * (w + gap); ctx.fillStyle = VC.progBg; vrr(ctx, x, 60, w, 8, 4); ctx.fill(); if (p > 0) { ctx.fillStyle = VC.prog; vrr(ctx, x, 60, Math.max(8, w * p), 8, 4); ctx.fill(); } });
 }
 function vcabecera(ctx, plan){
   vfont(ctx, 700, 40, VF.h); ctx.textAlign = "left"; ctx.fillStyle = VC.text; ctx.fillText("Pregon", 60, 140); const w = ctx.measureText("Pregon").width; ctx.fillStyle = VC.blue; ctx.fillText("IA", 60 + w, 140);
   vfont(ctx, 500, 30, VF.b); ctx.textAlign = "right"; ctx.fillStyle = VC.muted; ctx.fillText(plan.org + " · " + plan.per, VW - 60, 138);
 }
-function vpie(ctx){ vfont(ctx, 400, 26, VF.b); ctx.textAlign = "center"; ctx.fillStyle = "rgba(139,157,195,.8)"; ctx.fillText(typeof MODO !== "undefined" && MODO.tipo !== "demo" ? "PregonIA · Noticias reales de medios digitales" : "PregonIA · Prototipo con noticias ficticias", VW / 2, VH - 60); }
-function vkicker(ctx, txt, y, color, a){ return vtexto(ctx, txt.toUpperCase(), 90, y, {px: 32, w: 700, fam: VF.h, color, a, ls: 5}); }
+function vpie(ctx){ vfont(ctx, 400, 26, VF.b); ctx.textAlign = "center"; ctx.fillStyle = VC.muted; ctx.fillText(typeof MODO !== "undefined" && MODO.tipo !== "demo" ? "PregonIA · Noticias reales de medios digitales" : "PregonIA · Prototipo con noticias ficticias", VW / 2, VH - 60); }
+function vkicker(ctx, txt, y, color, a){ return vtexto(ctx, txt.toUpperCase(), 90, y, {px: 32, w: 700, fam: VF.b, color, a, ls: 5}); }
 
 /* Escenas */
 const VESC = {
   intro(ctx, s, l, plan){
     vlogo(ctx, VW / 2, 860, 150, vin(l, 0.1, 0.8));
-    vtexto(ctx, "Parte semanal del alcalde", VW / 2, 1000, {px: 50, w: 500, fam: VF.h, color: VC.muted, a: vin(l, 0.5), align: "center"});
+    vtexto(ctx, plan.P.rotulo + " del alcalde", VW / 2, 1000, {px: 50, w: 500, fam: VF.h, color: VC.muted, a: vin(l, 0.5), align: "center"});
     vtexto(ctx, plan.inst, VW / 2, 1090, {px: 62, w: 700, fam: VF.h, a: vin(l, 0.75), align: "center"});
     vtexto(ctx, plan.per, VW / 2, 1175, {px: 42, w: 500, color: VC.blue, a: vin(l, 1), align: "center"});
   },
@@ -156,9 +170,9 @@ const VESC = {
     vkicker(ctx, "Cómo te trató la prensa", 330, VC.blue, vin(l, 0));
     vfont(ctx, 700, 150, VF.h); const px = Math.min(150, 150 * (VW - 180) / Math.max(1, ctx.measureText(v.n).width));
     vtexto(ctx, v.n, 90, 500, {px, w: 700, fam: VF.h, color: vtono(v.k), a: vin(l, 0.25, 0.7), ls: -px * 0.03});
-    vtexto(ctx, plural(M.vol, "noticia", "noticias") + " en la semana", 90, 600, {px: 46, w: 500, a: vin(l, 0.5)});
+    vtexto(ctx, plural(M.vol, "noticia", "noticias") + " " + plan.P.tx, 90, 600, {px: 46, w: 500, a: vin(l, 0.5)});
     const g = vin(l, 0.8, 1.4), W = VW - 180; let x = 90; const tot = Math.max(1, M.vol);
-    ctx.fillStyle = "rgba(240,244,255,.08)"; vrr(ctx, 90, 680, W, 72, 14); ctx.fill();
+    ctx.fillStyle = VC.track; vrr(ctx, 90, 680, W, 72, 14); ctx.fill();
     [["pos", M.pos], ["neu", M.neu], ["cri", M.cri]].forEach(([k, n]) => { if (!n) return; const w = (W * n / tot) * g; if (w > 2) { ctx.fillStyle = vtono(k); vrr(ctx, x, 680, Math.max(4, w - 6), 72, 12); ctx.fill(); } x += W * n / tot * g; });
     [["pos", M.pos, "positiva", "positivas"], ["neu", M.neu, "neutra", "neutras"], ["cri", M.cri, "crítica", "críticas"]].forEach(([k, n, a1, a2], i) => {
       const a = vin(l, 1.4 + i * 0.25), y = 880 + i * 92; ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = vtono(k); ctx.beginPath(); ctx.arc(110, y - 15, 16, 0, 7); ctx.fill(); ctx.restore();
@@ -166,41 +180,66 @@ const VESC = {
     });
     vtexto(ctx, comp, 90, 1230, {px: 42, w: 400, color: VC.muted, a: vin(l, 2.3), max: 3});
   },
-  temas(ctx, s, l){
-    vkicker(ctx, "De qué se habló", 330, VC.blue, vin(l, 0));
-    vtexto(ctx, "Temas de la semana", 90, 440, {px: 76, w: 700, fam: VF.h, a: vin(l, 0.2), ls: -2});
-    const max = Math.max(...s.temas.map(x => x.n)), W = VW - 180;
-    s.temas.forEach((x, i) => {
-      const y = 600 + i * 210, a = vin(l, 0.5 + i * 0.35), g = vin(l, 0.7 + i * 0.35, 1);
-      vtexto(ctx, x.nombre, 90, y, {px: 46, w: 700, a, maxW: W, max: 1});
-      const bw = W * x.n / max * g; let bx = 90;
-      ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = "rgba(240,244,255,.07)"; vrr(ctx, 90, y + 34, W, 38, 10); ctx.fill();
-      ["pos", "neu", "cri"].forEach(k => { if (!x[k]) return; const w = bw * x[k] / x.n; if (w > 2) { ctx.fillStyle = vtono(k); vrr(ctx, bx, y + 34, Math.max(4, w - 4), 38, 9); ctx.fill(); } bx += w; });
-      ctx.restore();
-      vtexto(ctx, plural(x.n, "publicación", "publicaciones") + " · " + plural(x.noticias, "noticia", "noticias") + (x.cri ? ` · ${x.cri} ${x.cri === 1 ? "crítica" : "críticas"}` : ""), 90, y + 120, {px: 32, w: 500, color: VC.muted, a});
+  trato(ctx, s, l, plan){
+    const {niv, criTot, resp: rsp} = plan.d, W = VW - 180, max = Math.max(1, ...niv.map(x => x.n));
+    vkicker(ctx, "Tratamiento de las noticias", 330, VC.blue, vin(l, 0));
+    vtexto(ctx, "Hasta dónde llegaron", 90, 440, {px: 76, w: 700, fam: VF.h, a: vin(l, 0.2), ls: -2});
+    [[2, "Prensa nacional", VC.ambN], [1, "Prensa regional", VC.ambR], [0, "Solo prensa comunal", VC.ambL]].forEach(([k, lbl, col], i) => {
+      const y = 580 + i * 170, a = vin(l, 0.5 + i * 0.3), g = vin(l, 0.7 + i * 0.3, 0.9), x = niv[k];
+      vtexto(ctx, lbl, 90, y, {px: 44, w: 600, a});
+      vtexto(ctx, String(x.n), VW - 90, y, {px: 56, w: 700, fam: VF.h, a, align: "right"});
+      ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = VC.track; vrr(ctx, 90, y + 28, W, 30, 10); ctx.fill();
+      if (x.n && g > 0) { ctx.fillStyle = col; vrr(ctx, 90, y + 28, Math.max(12, W * x.n / max * g), 30, 10); ctx.fill(); } ctx.restore();
+      if (x.cri) vtexto(ctx, `incluye ${plural(x.cri, "crítica", "críticas")}`, 90, y + 102, {px: 32, w: 600, color: VC.cri, a: vin(l, 0.9 + i * 0.3)});
     });
-    vtexto(ctx, "Una noticia suma una publicación por cada medio que la publicó.", 90, 1700, {px: 30, w: 400, color: VC.muted, a: vin(l, 1.4)});
+    const fuera = niv[1].cri + niv[2].cri;
+    vtexto(ctx, !criTot ? "Ninguna noticia crítica en el período." : !fuera ? (criTot === 1 ? "La crítica se quedó en la prensa comunal." : `Las ${criTot} críticas se quedaron en la prensa comunal.`) : `${fuera} de ${plural(criTot, "crítica", "críticas")} ${fuera === 1 ? "salió" : "salieron"} de la prensa comunal.`, 90, 1130, {px: 42, w: 600, color: fuera ? VC.cri : VC.muted, a: vin(l, 1.8), max: 2});
+    vkicker(ctx, "Críticas atendidas", 1330, VC.muted, vin(l, 2.3));
+    if (criTot) {
+      const a = vin(l, 2.5), col = rsp === criTot ? VC.pos : VC.cri;
+      const x2 = vtexto(ctx, String(rsp), 90, 1500, {px: 150, w: 700, fam: VF.h, color: col, a});
+      vfont(ctx, 700, 150, VF.h); const w = ctx.measureText(String(rsp)).width;
+      vtexto(ctx, `de ${criTot}`, 90 + w + 24, 1500, {px: 60, w: 600, color: VC.muted, a});
+      vtexto(ctx, rsp === criTot ? "Todas tienen respuesta o una decisión tomada." : `${plural(criTot - rsp, "sigue", "siguen")} sin decisión. Una crítica que nadie atiende marca el tono de la cobertura.`, 90, 1580, {px: 38, w: 500, color: VC.muted, a: vin(l, 2.8), max: 2});
+    } else vtexto(ctx, "Ninguna crítica exigía respuesta.", 90, 1440, {px: 52, w: 600, color: VC.pos, a: vin(l, 2.5)});
+  },
+  impacto(ctx, s, l, plan){
+    const W = VW - 180, cx = VW / 2, half = W / 2 - 8, max = Math.max(1, ...s.temas.map(x => Math.max(x.cri, x.pos)));
+    vkicker(ctx, "Tratamiento por tema · " + plan.P.sust, 330, VC.blue, vin(l, 0));
+    vtexto(ctx, "Qué temas restan y cuáles suman", 90, 440, {px: 70, w: 700, fam: VF.h, lh: 82, a: vin(l, 0.2), ls: -1.5, max: 2});
+    const ea = vin(l, 0.5); vtexto(ctx, "← resta (críticas)", cx - 16, 660, {px: 30, w: 500, color: VC.cri, a: ea, align: "right"}); vtexto(ctx, "suma (positivas) →", cx + 16, 660, {px: 30, w: 500, color: VC.pos, a: ea});
+    s.temas.forEach((x, i) => {
+      const y = 760 + i * 225, a = vin(l, 0.6 + i * 0.35), g = vin(l, 0.8 + i * 0.35, 0.9);
+      vtexto(ctx, x.k, 90, y, {px: 44, w: 700, a, maxW: W - 170, max: 1});
+      vtexto(ctx, signo(x.bal), VW - 90, y, {px: 50, w: 700, fam: VF.h, color: x.bal < 0 ? VC.cri : x.bal > 0 ? VC.pos : VC.muted, a, align: "right"});
+      ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = VC.track; vrr(ctx, 90, y + 32, half, 36, 10); ctx.fill(); vrr(ctx, cx + 8, y + 32, half, 36, 10); ctx.fill();
+      if (x.cri) { const w = Math.max(10, half * x.cri / max * g); ctx.fillStyle = VC.cri; vrr(ctx, cx - 8 - w, y + 32, w, 36, 10); ctx.fill(); }
+      if (x.pos) { const w = Math.max(10, half * x.pos / max * g); ctx.fillStyle = VC.pos; vrr(ctx, cx + 8, y + 32, w, 36, 10); ctx.fill(); }
+      ctx.restore();
+      vtexto(ctx, [plural(x.n, "noticia", "noticias"), x.c.pos ? plural(x.c.pos, "positiva", "positivas") : "", x.c.neu ? plural(x.c.neu, "neutra", "neutras") : "", x.c.cri ? plural(x.c.cri, "crítica", "críticas") : ""].filter(Boolean).join(" · "), 90, y + 122, {px: 32, w: 500, color: VC.muted, a});
+    });
+    vtexto(ctx, "Cada publicación pesa 3, 2 o 1 según el tamaño del medio.", 90, 1700, {px: 30, w: 400, color: VC.muted, a: vin(l, 1.6)});
   },
   ficha(ctx, s, l, kicker, color){
     const {m, e, ac, tema, medios, pubs} = s.f, W = VW - 180;
     vkicker(ctx, kicker, 320, color, vin(l, 0));
     // etiqueta de tema y tono
-    const ta = vin(l, 0.2), etq = `${tema} · ${tonoLbl[m.tono]}`; vfont(ctx, 700, 34, VF.b); const ew = ctx.measureText(etq).width + 56;
+    const ta = vin(l, 0.2), etq = `${categoriaDe(m).n} · ${m.grave ? "Hecho grave" : tonoLbl[m.tono]}`; vfont(ctx, 700, 34, VF.b); const ew = ctx.measureText(etq).width + 56;
     ctx.save(); ctx.globalAlpha *= ta; ctx.fillStyle = color + "33"; vrr(ctx, 90, 360, ew, 64, 32); ctx.fill(); ctx.restore();
     vtexto(ctx, etq, 118, 404, {px: 34, w: 700, color, a: ta});
     let y = vtexto(ctx, m.lead.res, 90, 530, {px: 68, w: 600, fam: VF.n, lh: 82, a: vin(l, 0.45, 0.8), max: 4});
     // dónde se publicó
-    y = vtexto(ctx, `Publicado en ${plural(medios.length, "medio", "medios")} · ${plural(pubs, "publicación", "publicaciones")}`, 90, y + 30, {px: 36, w: 500, color: VC.muted, a: vin(l, 1)});
+    y = vtexto(ctx, `Publicado en ${plural(medios.length, "medio", "medios")} · ${plural(pubs, "publicación", "publicaciones")}${m.tono === "cri" ? (atendida(m.g) ? " · ya atendida" : " · aún sin decisión") : ""}`, 90, y + 30, {px: 36, w: 500, color: VC.muted, a: vin(l, 1)});
     const ca = vin(l, 1.2); let cx = 90, cy = y - 8; vfont(ctx, 600, 32, VF.b);
     const chips = medios.slice(0, 4).concat(medios.length > 4 ? [`+${medios.length - 4} más`] : []);
     ctx.save(); ctx.globalAlpha *= ca;
-    chips.forEach(c => { const w = ctx.measureText(c).width + 44; if (cx + w > VW - 90) { cx = 90; cy += 74; } ctx.fillStyle = "rgba(240,244,255,.08)"; vrr(ctx, cx, cy, w, 58, 29); ctx.fill(); ctx.strokeStyle = VC.line; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = VC.text; ctx.textAlign = "left"; ctx.fillText(c, cx + 22, cy + 40); cx += w + 14; });
+    chips.forEach(c => { const w = ctx.measureText(c).width + 44; if (cx + w > VW - 90) { cx = 90; cy += 74; } ctx.fillStyle = VC.track; vrr(ctx, cx, cy, w, 58, 29); ctx.fill(); ctx.strokeStyle = VC.line; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = VC.text; ctx.textAlign = "left"; ctx.fillText(c, cx + 22, cy + 40); cx += w + 14; });
     ctx.restore(); y = cy + 130;
     // hasta dónde llegó
     vkicker(ctx, "Hasta dónde llegó", y, VC.muted, vin(l, 1.6)); y += 30;
     e.r.forEach((x, i) => {
       const colW = W / 3, bx = 90 + i * colW, h = [44, 78, 112][i], on = i <= e.max, g = vin(l, 1.9 + i * 0.35, 0.5), base = y + 120;
-      ctx.save(); ctx.globalAlpha *= vin(l, 1.7); ctx.fillStyle = "rgba(240,244,255,.10)"; vrr(ctx, bx, base - h, 64, h, 10); ctx.fill();
+      ctx.save(); ctx.globalAlpha *= vin(l, 1.7); ctx.fillStyle = VC.track; vrr(ctx, bx, base - h, 64, h, 10); ctx.fill();
       if (on && g > 0) { ctx.fillStyle = color; vrr(ctx, bx, base - h * g, 64, h * g, 10); ctx.fill(); } ctx.restore();
       vtexto(ctx, x.l, bx + 84, base - 44, {px: 34, w: 700, a: vin(l, 1.8 + i * 0.35), color: on ? VC.text : VC.muted});
       vtexto(ctx, x.n ? plural(x.n, "nota", "notas") : "sin notas", bx + 84, base - 2, {px: 28, w: 400, color: VC.muted, a: vin(l, 1.8 + i * 0.35)});
@@ -208,16 +247,16 @@ const VESC = {
     y = vtexto(ctx, llego(e), 90, y + 200, {px: 44, w: 700, fam: VF.h, color, a: vin(l, 2.9)});
     // qué hacer
     const aa = vin(l, 3.3, 0.7); vfont(ctx, 500, 42, VF.b); const L = vlineas(ctx, ac.a, W - 80).slice(0, 4); vfont(ctx, 700, 34, VF.b); const Lr = vlineas(ctx, "Responsable: " + ac.r, W - 80).slice(0, 2), hCard = 124 + L.length * 54 + 24 + (Lr.length - 1) * 43 + 52, top = Math.min(y + 10, VH - 150 - hCard);
-    ctx.save(); ctx.globalAlpha *= aa; ctx.fillStyle = VC.card; vrr(ctx, 90, top, W, hCard, 26); ctx.fill(); ctx.strokeStyle = VC.line; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = color; vrr(ctx, 90, top, 10, hCard, 5); ctx.fill(); ctx.restore();
-    vtexto(ctx, "QUÉ HACER", 140, top + 66, {px: 30, w: 700, fam: VF.h, color: VC.blue, a: aa, ls: 5});
+    ctx.save(); ctx.globalAlpha *= aa; ctx.fillStyle = VC.card; vrr(ctx, 90, top, W, hCard, 26); ctx.fill(); ctx.strokeStyle = VC.line; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = color; vrr(ctx, 90, top, 10, hCard, 5); ctx.fill(); ctx.restore();
+    vtexto(ctx, "QUÉ HACER", 140, top + 66, {px: 30, w: 700, fam: VF.b, color: VC.blue, a: aa, ls: 5});
     const y2 = vtexto(ctx, L.join("\n"), 140, top + 124, {px: 42, w: 500, lh: 54, a: aa, maxW: W - 80});
     vtexto(ctx, "Responsable: " + ac.r, 140, y2 + 24, {px: 34, w: 700, color: VC.muted, a: vin(l, 3.8), maxW: W - 80, max: 2});
   },
-  asunto(ctx, s, l){ VESC.ficha(ctx, s, l, `Lo que se puede complicar · ${s.i + 1} de ${s.de}`, vtono(s.f.m.tono)); },
+  asunto(ctx, s, l){ VESC.ficha(ctx, s, l, `Lo que se puede complicar · ${s.i + 1} de ${s.de}`, s.f.m.grave ? VC.grave : vtono(s.f.m.tono)); },
   buena(ctx, s, l){ VESC.ficha(ctx, s, l, "Para aprovechar", VC.pos); },
-  calma(ctx, s, l){
+  calma(ctx, s, l, plan){
     vkicker(ctx, "Lo que se puede complicar", 330, VC.pos, vin(l, 0));
-    vtexto(ctx, "Ningún asunto de riesgo esta semana.", 90, 760, {px: 92, w: 700, fam: VF.h, lh: 104, a: vin(l, 0.3, 0.8), ls: -2});
+    vtexto(ctx, "Ningún asunto de riesgo " + plan.P.tx + ".", 90, 760, {px: 92, w: 700, fam: VF.h, lh: 104, a: vin(l, 0.3, 0.8), ls: -2});
     vtexto(ctx, "PregonIA sigue revisando los medios todos los días y avisa si algo cambia.", 90, 1130, {px: 44, w: 400, color: VC.muted, a: vin(l, 1)});
   },
   cierre(ctx, s, l, plan){
@@ -226,7 +265,7 @@ const VESC = {
     let y = vtexto(ctx, txt, 90, 470, {px: 72, w: 700, fam: VF.h, lh: 86, a: vin(l, 0.25, 0.8), ls: -1.5, max: 6});
     if (sig) vtexto(ctx, "Responsable: " + sig.ac.r, 90, y + 30, {px: 42, w: 600, color: VC.muted, a: vin(l, 0.8), max: 2});
     vlogo(ctx, VW / 2, 1500, 96, vin(l, 1.4));
-    vtexto(ctx, "Escucha la plaza. Decide a tiempo.", VW / 2, 1590, {px: 38, w: 500, color: VC.blue, a: vin(l, 1.7), align: "center"});
+    vtexto(ctx, "La prensa no espera. Tú tampoco.", VW / 2, 1590, {px: 38, w: 500, color: VC.blue, a: vin(l, 1.7), align: "center"});
     vtexto(ctx, "Un producto de ALTKimia", VW / 2, 1660, {px: 32, w: 500, color: VC.muted, a: vin(l, 1.9), align: "center"});
     if (plan.audio) vtexto(ctx, "Guion y voz sintética generados con IA", VW / 2, 1730, {px: 28, w: 500, color: VC.muted, a: vin(l, 2.1), align: "center"});
   }
@@ -253,6 +292,8 @@ async function videoMP4(plan, onProg, signal){
   if (plan.audio && window.AudioEncoder && window.AudioData) {
     for (const [codec, mx] of [["mp4a.40.2", "aac"], ["opus", "opus"]]) { try { const c = {codec, sampleRate: 48000, numberOfChannels: 1, bitrate: 128000}; if ((await AudioEncoder.isConfigSupported(c)).supported) { acfg = {c, mx}; break; } } catch(e) {} }
   }
+  // Sin codificador de audio (Safari en iPhone, por ejemplo) el MP4 rápido saldría mudo: se graba en tiempo real, que sí lleva la voz.
+  if (plan.audio && !acfg && window.MediaRecorder) return null;
   const muxer = new Mx.Muxer({target: new Mx.ArrayBufferTarget(), video: {codec: "avc", width: w, height: h, frameRate: VFPS}, ...(acfg ? {audio: {codec: acfg.mx, numberOfChannels: 1, sampleRate: 48000}} : {}), fastStart: "in-memory"});
   plan.audioCodec = acfg ? acfg.mx : null;
   if (acfg) {
@@ -292,13 +333,15 @@ async function videoGrabado(plan, onProg, signal){
   if (!mime) return null;
   const [w, h] = VOUT, cv = document.createElement("canvas"); cv.width = w; cv.height = h; const ctx = cv.getContext("2d"); vdibujar(ctx, 0, plan);
   const pista = cv.captureStream(VFPS); let ac2 = null, fuente = null;
-  if (plan.audio) { try { ac2 = new (window.AudioContext || window.webkitAudioContext)(); const dest = ac2.createMediaStreamDestination(); fuente = ac2.createBufferSource(); fuente.buffer = plan.audio; fuente.connect(dest); dest.stream.getAudioTracks().forEach(t => pista.addTrack(t)); } catch(e) { ac2 = null; fuente = null; } }
+  // Se usa el contexto de audio del reproductor, habilitado por el toque que abrió el video: uno nuevo nacería suspendido en el iPhone.
+  const propio = !(VID && VID.ac);
+  if (plan.audio) { try { ac2 = propio ? new (window.AudioContext || window.webkitAudioContext)() : VID.ac; const dest = ac2.createMediaStreamDestination(); fuente = ac2.createBufferSource(); fuente.buffer = plan.audio; fuente.connect(dest); dest.stream.getAudioTracks().forEach(t => pista.addTrack(t)); } catch(e) { ac2 = null; fuente = null; } }
   const rec = new MediaRecorder(pista, {mimeType: mime, videoBitsPerSecond: 3_500_000}), partes = [];
   rec.ondataavailable = e => { if (e.data && e.data.size) partes.push(e.data); };
   const fin = new Promise(r => rec.onstop = r); rec.start(500); if (fuente) { await ac2.resume().catch(() => {}); fuente.start(); }
   const t0 = performance.now();
   await new Promise(ok => { const loop = () => { const t = (performance.now() - t0) / 1000; if ((signal && signal.aborted) || t >= plan.total) return ok(); vdibujar(ctx, t, plan); onProg(t / plan.total); requestAnimationFrame(loop); }; loop(); });
-  rec.stop(); await fin; if (ac2) ac2.close().catch(() => {});
+  rec.stop(); await fin; if (fuente) try { fuente.stop(); } catch(e) {} if (ac2 && propio) ac2.close().catch(() => {});
   if (signal && signal.aborted) throw {code: "cancelled"};
   return new Blob(partes, {type: mime.split(";")[0]});
 }
@@ -306,56 +349,74 @@ async function videoGrabado(plan, onProg, signal){
 /* Ventana del video */
 let VID = null;
 function videoAbrir(){
+  vpaleta();
   const plan = videoPlan();
   const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "vidBack";
-  ov.innerHTML = `<section class="vid" role="dialog" aria-modal="true" aria-labelledby="vidT">
-    <header class="vid-h"><div><h2 id="vidT">Video resumen</h2><p>Parte semanal · ${esc(plan.org)} · ${esc(plan.per)}</p></div><button class="btn ghost" type="button" data-act="vid-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+  ov.innerHTML = `<section class="vid rep" role="dialog" aria-modal="true" aria-labelledby="vidT">
+    <header class="vid-h"><div><h2 id="vidT">Video resumen y PDF</h2><p>${esc(plan.P.rotulo)} · ${esc(plan.org)} · ${esc(plan.per)}</p><span class="vid-hint" aria-hidden="true">Toca para pausar · desliza para compartir</span></div><button class="btn ghost" type="button" data-act="vid-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
     <div class="vid-b">
-      <div class="vid-stage"><canvas id="vidCv" width="${VOUT[0]}" height="${VOUT[1]}" role="img" aria-label="Vista previa del video: resultado de la semana, temas, asuntos que se pueden complicar con qué hacer, y la buena noticia."></canvas></div>
+      <div class="vid-stage" id="vidStage"><canvas id="vidCv" width="${VOUT[0]}" height="${VOUT[1]}" role="img" aria-label="Vista previa del video: resultado del período, tratamiento de las noticias, temas que restan y suman, asuntos que se pueden complicar con qué hacer, y la buena noticia."></canvas><span class="vid-pausa" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></span></div>
       <div class="vid-side">
-        <p class="vid-meta">${Math.round(plan.total)} segundos · vertical, para ver en el celular · ${plan.scenes.length} escenas armadas con el análisis de temas y publicaciones de la semana.</p>
+        <p class="vid-meta">${Math.round(plan.total)} segundos · vertical, para ver en el celular · ${plan.scenes.length} escenas con las noticias ${esc(plan.P.de)}: tono, hasta dónde llegaron, respuestas y temas.</p>
         <div class="vid-ctrl"><button class="btn" type="button" data-act="vid-play" id="vidPlay">Pausa</button><button class="btn" type="button" data-act="vid-replay">Desde el inicio</button></div>
         <div class="vid-voz" id="vozBox"><div class="vid-voz-h"><b>Voz</b><span id="vozEstado">Revisando…</span></div>
-          <button class="btn" type="button" data-act="voz-add" id="vozAdd" disabled><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Agregar voz</button>
+          <button class="btn" type="button" data-act="voz-add" id="vozAdd" disabled><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Escribir y grabar de nuevo</button>
           <details id="vozGuion" hidden><summary>Ver y editar el guion</summary><div class="vid-lineas" id="vozLineas"></div><button class="btn sm" type="button" data-act="voz-regrabar">Grabar de nuevo con este guion</button></details>
         </div>
         <button class="btn alt" type="button" data-act="vid-make" id="vidMake">Preparar video MP4</button>
         <div class="vid-prog" id="vidProg" hidden><span class="bar"><i style="width:0%"></i></span><span class="mono" id="vidPct">0%</span><button class="btn sm" type="button" data-act="vid-stop">Cancelar</button></div>
         <div class="vid-out" id="vidOut" hidden><button class="btn b-wa" type="button" data-act="vid-wa"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="vid-dl"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar</button></div>
+        <div class="vid-voz vid-pdf"><div class="vid-voz-h"><b>Informe en PDF</b><span>Informe ejecutivo · 24 horas, 7 y 30 días</span></div>
+          <div class="vid-out"><button class="btn b-wa" type="button" data-act="share" data-via="wa" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="share" data-via="pdf" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar PDF</button></div></div>
         <p class="note" id="vidNote">Uso interno del alcalde y su equipo. ${MODO.tipo !== "demo" ? "Hecho con noticias reales; los medios se citan por su nombre" : "Es un prototipo con noticias ficticias"}; no usa fotos ni logos de los medios.</p>
       </div>
     </div></section>`;
   document.body.appendChild(ov); document.body.classList.add("vid-on");
   const cv = $("#vidCv"), ctx = cv.getContext("2d"), quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  VID = {plan, ctx, t: quieto ? 2 : 0, play: !quieto, last: null, raf: 0, blob: null, ctl: null, origen: document.activeElement, ac: null, src: null, a0: 0};
-  vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const b = $("#vozAdd"), st = $("#vozEstado");
-    if (e === "ok") { b.disabled = false; st.textContent = "Sin voz · voz chilena con ElevenLabs"; }
-    else st.textContent = e === "sin-clave" ? "Falta configurar la clave de ElevenLabs en Vercel" : "Disponible en pregonia.vercel.app"; });
-  const fuentes = ['400 40px Inter', '500 40px Inter', '600 40px Inter', '700 40px Inter', '600 60px Newsreader'];
-  Promise.all(fuentes.map(f => document.fonts.load(f).catch(() => {}))).then(() => { vgrid = null; });
+  // El audio se habilita aquí, dentro del toque que abrió el video: así la voz puede sonar sola cuando llegue.
+  let ac0 = null; try { ac0 = new (window.AudioContext || window.webkitAudioContext)(); ac0.resume().catch(() => {}); } catch(e) {}
+  VID = {plan, ctx, t: quieto ? 2 : 0, play: !quieto, last: null, raf: 0, blob: null, ctl: null, origen: document.activeElement, ac: ac0, src: null, a0: 0};
+  // En iPhone, el audio de Web Audio se silencia con el interruptor de silencio; un elemento <audio> no. La voz suena por uno,
+  // que se habilita aquí, en el mismo toque que abrió el video, con un instante de silencio (después puede sonar solo).
+  try { const el = VID.el = new Audio(); el.setAttribute("playsinline", ""); el.preload = "auto";
+    if (ac0) { VID.mudoUrl = URL.createObjectURL(wavDe(ac0.createBuffer(1, 2400, 48000))); el.src = VID.mudoUrl; el.play().then(() => el.pause()).catch(() => {}); } } catch(e) { VID.el = null; }
+  // La voz se genera sola al abrir: guion con los datos del período y narración con ElevenLabs. Si falla, el video sigue sin voz.
+  if (!VOZ_ACTIVA) $("#vozBox").hidden = true;
+  if (VOZ_ACTIVA) vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const st = $("#vozEstado");
+    if (e === "ok" && VOZ_CACHE.sinCredito) { st.textContent = `Sin voz · ${VOZ_CACHE.sinCredito}. El video funciona igual, sin narración.`; const b = $("#vozAdd"); b.disabled = false; b.lastChild.textContent = "Intentar la voz de nuevo"; }
+    else if (e === "ok") VID.vozPromesa = vozAgregar(false).finally(() => { if (VID) VID.vozPromesa = null; });
+    else st.textContent = e === "sin-clave" ? "Sin voz: falta configurar la clave de ElevenLabs en Vercel" : "Sin voz: la voz se genera en pregonia.cl"; });
+  const fuentes = ['400 40px Inter', '500 40px Inter', '600 40px Inter', '700 40px Inter', '500 60px "Source Serif 4"', '600 60px "Source Serif 4"', '700 60px "Source Serif 4"'];
+  Promise.all(fuentes.map(f => document.fonts.load(f).catch(() => {})));
   const loop = now => {
     if (!VID) return; const pl = VID.plan;
     if (VID.play) {
-      if (VID.src) VID.t = VID.ac.currentTime - VID.a0; else if (VID.last != null) VID.t += (now - VID.last) / 1000;
+      if (VID.elOn && VID.el && !VID.el.paused) VID.t = VID.el.currentTime; else if (VID.src) VID.t = VID.ac.currentTime - VID.a0; else if (VID.last != null) VID.t += (now - VID.last) / 1000;
       if (VID.t > pl.total + 1) { VID.t = 0; vozSonar(); }
     }
     VID.last = now; vdibujar(ctx, Math.max(0, Math.min(VID.t, pl.total - 0.001)), pl); VID.raf = requestAnimationFrame(loop);
   };
   VID.raf = requestAnimationFrame(loop);
-  $("#vidPlay").textContent = VID.play ? "Pausa" : "Reproducir";
+  vidEstado();
+  // Tocar el video lo pausa o lo reanuda, como en cualquier reproductor del celular.
+  cv.addEventListener("click", () => vidAlternar());
   ov.querySelector('[data-act="vid-close"]').focus();
 }
+function vidEstado(){ const b = $("#vidPlay"); if (b) b.textContent = VID.play ? "Pausa" : "Reproducir"; $("#vidStage")?.classList.toggle("pausa", !VID.play); }
+function vidAlternar(){ if (!VID) return; VID.play = !VID.play; VID.last = null; vidEstado(); if (VID.play) vozSonar(); else vozCallar(); }
 function videoCerrar(){
-  if (!VID) return; cancelAnimationFrame(VID.raf); VID.ctl?.abort(); VID.vctl?.abort(); vozCallar(); VID.ac?.close().catch(() => {}); const o = VID.origen; VID = null;
+  if (!VID) return; cancelAnimationFrame(VID.raf); VID.ctl?.abort(); VID.vctl?.abort(); vozCallar(); VID.ac?.close().catch(() => {});
+  if (VID.el) { VID.el.pause(); VID.el.removeAttribute("src"); } [VID.audioUrl, VID.mudoUrl].forEach(u => u && URL.revokeObjectURL(u)); const o = VID.origen; VID = null;
   $("#vidBack")?.remove(); document.body.classList.remove("vid-on"); if (o && o.isConnected) o.focus();
 }
-const videoNombre = () => `PregonIA-Video-parte-semanal-${slug(S.org)}-${hoyISO()}.${VID && VID.blob && /webm/.test(VID.blob.type) ? "webm" : "mp4"}`;
+const videoNombre = () => `PregonIA-Video-${slug((VID ? VID.plan.P : partePer()).rotulo)}-${slug(S.org)}-${hoyISO()}.${VID && VID.blob && /webm/.test(VID.blob.type) ? "webm" : "mp4"}`;
 async function videoPreparar(){
   const btn = $("#vidMake"), prog = $("#vidProg"), bar = prog.querySelector("i"), pct = $("#vidPct"), note = $("#vidNote");
   btn.hidden = true; prog.hidden = false; $("#vidOut").hidden = true;
   const ctl = VID.ctl = new AbortController(), plan = VID.plan;
   const avance = p => { bar.style.width = Math.round(p * 100) + "%"; pct.textContent = Math.round(p * 100) + "%"; };
   try { await Promise.all(['700 80px Inter', '600 60px Newsreader', '500 40px Inter'].map(f => document.fonts.load(f).catch(() => {}))); } catch(e) {}
+  if (VID.vozPromesa) { note.textContent = "Esperando que termine la voz para incluirla en el video…"; await VID.vozPromesa.catch(() => {}); if (!VID) return; }
   let blob = null;
   try {
     plan.audioCodec = undefined; blob = await videoMP4(plan, avance, ctl.signal);
@@ -375,12 +436,12 @@ async function videoPreparar(){
 }
 async function videoWhatsApp(){
   if (!VID || !VID.blob) return;
-  const f = new File([VID.blob], videoNombre(), {type: VID.blob.type}), titulo = "Video del parte semanal · " + inst();
+  const f = new File([VID.blob], videoNombre(), {type: VID.blob.type}), titulo = "Video del " + VID.plan.P.rotulo.toLowerCase() + " · " + inst();
   if (navigator.canShare && movil() && navigator.canShare({files: [f]})) {
     try { await navigator.share({files: [f], title: titulo, text: titulo}); return; }
     catch(err) { if (err && err.name === "AbortError") return; if (err && err.name === "NotAllowedError") { toast("El video está listo: toca WhatsApp otra vez."); return; } }
   }
-  abrirEnlace("https://wa.me/?text=" + encodeURIComponent(`*${titulo}*\nTe envío el video resumen de la semana.`), true);
+  abrirEnlace("https://wa.me/?text=" + encodeURIComponent(`*${titulo}*\nTe envío el video resumen ${VID.plan.P.de}.`), true);
   await guardarArchivo(f.name, VID.blob, true);
   toast("Abrimos WhatsApp y guardamos el video: en el chat, adjúntalo con el clip o arrástralo.");
 }
@@ -389,9 +450,9 @@ document.addEventListener("click", e => {
   if (a === "vid-open") videoAbrir();
   if (!VID) return;
   if (a === "vid-close") videoCerrar();
-  if (a === "vid-play") { VID.play = !VID.play; VID.last = null; b.textContent = VID.play ? "Pausa" : "Reproducir"; if (VID.play) vozSonar(); else vozCallar(); }
-  if (a === "vid-replay") { VID.t = 0; VID.play = true; VID.last = null; $("#vidPlay").textContent = "Pausa"; vozSonar(); }
-  if (a === "voz-add") vozAgregar(false);
+  if (a === "vid-play") vidAlternar();
+  if (a === "vid-replay") { VID.t = 0; VID.play = true; VID.last = null; vidEstado(); vozSonar(); }
+  if (a === "voz-add") { GUION_CACHE.delete(guionBase(VID.plan).join("\u0001")); vozAgregar(false); }  // a mano: guion nuevo
   if (a === "voz-regrabar") vozAgregar(true);
   if (a === "vid-make") videoPreparar();
   if (a === "vid-stop") VID.ctl?.abort();
@@ -406,9 +467,26 @@ document.addEventListener("keydown", e => {
 });
 
 /* Voz en la vista previa, sincronizada con el reloj de audio */
-function vozCallar(){ if (VID && VID.src) { try { VID.src.stop(); } catch(e) {} VID.src = null; } }
+function vozCallar(){ if (!VID) return; if (VID.el && VID.elOn) { VID.el.pause(); VID.elOn = false; } if (VID.src) { try { VID.src.stop(); } catch(e) {} VID.src = null; } }
+/* Audio en WAV (16 bits, mono) para reproducir la voz con un elemento <audio>. */
+function wavDe(buf){
+  const d = buf.getChannelData(0), n = d.length, sr = buf.sampleRate, ab = new ArrayBuffer(44 + n * 2), v = new DataView(ab), w = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); w(8, "WAVE"); w(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) { const x = Math.max(-1, Math.min(1, d[i])); v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7FFF, true); }
+  return new Blob([ab], {type: "audio/wav"});
+}
 function vozSonar(){
-  if (!VID || !VID.plan.audio || !VID.ac) return; vozCallar();
+  if (!VID || !VID.plan.audio) return; vozCallar();
+  if (VID.el && VID.audioUrl) {
+    const el = VID.el, desde = Math.max(0, Math.min(VID.t, VID.plan.total - 0.05));
+    if (el.getAttribute("src") !== VID.audioUrl) el.src = VID.audioUrl;
+    try { el.currentTime = desde; } catch(e) {}
+    VID.elOn = true; el.onended = () => { if (VID) VID.elOn = false; };
+    el.play().catch(() => { if (!VID) return; VID.elOn = false; const st = $("#vozEstado"); if (st && !/Toca el video/.test(st.textContent)) st.textContent += " · Toca el video para escuchar la voz."; });
+    return;
+  }
+  if (!VID.ac) return;
   const src = VID.ac.createBufferSource(); src.buffer = VID.plan.audio; src.connect(VID.ac.destination);
   const desde = Math.max(0, Math.min(VID.t, VID.plan.total - 0.05)); VID.ac.resume().catch(() => {});
   src.start(0, desde); VID.a0 = VID.ac.currentTime - desde; VID.src = src;
@@ -423,23 +501,27 @@ async function vozAgregar(regrabar){
   let lineas;
   try {
     if (regrabar) lineas = [...document.querySelectorAll("#vozLineas textarea")].map(t => t.value.replace(/\s+/g, " ").trim());
-    else { st.textContent = "Escribiendo el guion…"; const base = guionBase(plan); lineas = (await guionIA(plan, base, ctl.signal)) || base; }
+    else { st.textContent = "Preparando la voz: escribiendo el guion…"; const base = guionBase(plan), kb = base.join("\u0001"); lineas = GUION_CACHE.get(kb) || (await guionIA(plan, base, ctl.signal)) || base; GUION_CACHE.set(kb, lineas); }
     if (lineas.some(x => x.length > 650)) throw {code: "largo"};
     $("#vozLineas").innerHTML = plan.scenes.map((s, i) => `<label><span>${i + 1}. ${VNOMBRE[s.k]}${s.k === "asunto" ? " " + (s.i + 1) : ""}</span><textarea rows="3">${esc(lineas[i])}</textarea></label>`).join("");
     det.hidden = false;
-    let hechas = 0; st.textContent = `Grabando la voz… 0 de ${lineas.length}`;
+    let hechas = 0; st.textContent = `Preparando la voz: grabando 0 de ${lineas.length}…`;
     const voces = new Array(lineas.length); let k = 0;
-    await Promise.all([0, 1, 2].map(async () => { while (k < lineas.length) { const i = k++; voces[i] = lineas[i] ? await vozGrabar(lineas[i], VID.ac, ctl.signal) : null; hechas++; if (VID) st.textContent = `Grabando la voz… ${hechas} de ${lineas.length}`; } }));
+    await Promise.all([0, 1, 2].map(async () => { while (k < lineas.length) { const i = k++; voces[i] = lineas[i] ? await vozGrabar(lineas[i], VID.ac, ctl.signal) : null; hechas++; if (VID) st.textContent = `Preparando la voz: grabando ${hechas} de ${lineas.length}…`; } }));
     if (!VID || ctl.signal.aborted) return;
     plan.scenes.forEach((s, i) => { s.voz = voces[i]; s.texto = lineas[i]; });
     retimar(plan); plan.audio = await vozMezcla(plan);
   } catch(err) {
     if (!VID || (err && err.name === "AbortError") || (err && err.code === "cancelled")) return;
-    btn.disabled = false; st.textContent = err && err.code === "largo" ? "Una escena es demasiado larga: acórtala a unas 90 palabras." : err && err.code === "rate_limited" ? "El servicio de voz está ocupado. Intenta en unos minutos." : (err && err.message) || "No se pudo grabar la voz.";
+    btn.disabled = false; btn.lastChild.textContent = "Intentar la voz de nuevo";
+    const motivo = (err && err.code === "largo" ? "una escena es demasiado larga: acórtala a unas 90 palabras" : err && err.code === "rate_limited" ? "el servicio de voz está ocupado; intenta en unos minutos" : (err && err.message) || "no se pudo grabar la voz").replace(/\.$/, "");
+    if (/créditos/.test(motivo)) VOZ_CACHE.sinCredito = motivo;  // sin saldo: en esta sesión no se vuelve a intentar sola
+    st.textContent = `Sin voz · ${motivo}. El video funciona igual, sin narración.`;
     return;
   }
   VID.blob = null; $("#vidOut").hidden = true; $("#vidMake").textContent = "Preparar video MP4";
-  $(".vid-meta").textContent = `${Math.round(plan.total)} segundos con voz · vertical, para ver en el celular · ${plan.scenes.length} escenas armadas con el análisis de temas y publicaciones de la semana.`;
-  st.textContent = `Voz lista · ${Math.round(plan.total)} segundos`; btn.disabled = false; btn.lastChild.textContent = "Escribir y grabar de nuevo";
+  $(".vid-meta").textContent = `${Math.round(plan.total)} segundos con voz · vertical, para ver en el celular · ${plan.scenes.length} escenas con las noticias ${plan.P.de}: tono, hasta dónde llegaron, respuestas y temas.`;
+  st.textContent = `Voz lista · ${Math.round(plan.total)} segundos${VID.vozEstandar ? " · voz estándar (la chilena requiere un plan pagado de ElevenLabs)" : ""}`; btn.disabled = false; btn.lastChild.textContent = "Escribir y grabar de nuevo";
+  if (VID.audioUrl) URL.revokeObjectURL(VID.audioUrl); VID.audioUrl = VID.el ? URL.createObjectURL(wavDe(plan.audio)) : null;
   VID.t = 0; VID.play = true; VID.last = null; $("#vidPlay").textContent = "Pausa"; vozSonar();
 }

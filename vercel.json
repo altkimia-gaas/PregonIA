@@ -1,22 +1,127 @@
 {
   "functions": {
     "api/noticias.js": {
-      "maxDuration": 60
+      "maxDuration": 120
     },
     "api/ingesta.js": {
-      "maxDuration": 60
+      "maxDuration": 300
     },
     "api/ia.js": {
       "maxDuration": 60
     },
     "api/voz.js": {
       "maxDuration": 60
+    },
+    "api/redaccion.js": {
+      "maxDuration": 60
+    },
+    "api/publicar.js": {
+      "maxDuration": 60
+    },
+    "api/nota.js": {
+      "maxDuration": 30
+    },
+    "api/asistente.js": {
+      "maxDuration": 30
+    },
+    "api/contacto.js": {
+      "maxDuration": 20
     }
   },
   "rewrites": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "sin-portada"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "prueba"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "ingresar"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "alerta"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "avisos"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "instalar"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "compartir"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/app",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "destination": "/servicio.html"
+    },
+    {
       "source": "/compartir",
       "destination": "/api/compartir"
+    },
+    {
+      "source": "/servicio",
+      "destination": "/servicio.html"
+    },
+    {
+      "source": "/redaccion",
+      "destination": "/redaccion.html"
+    },
+    {
+      "source": "/cobertura",
+      "destination": "/cobertura.html"
     }
   ],
   "headers": [
@@ -41,6 +146,46 @@
           "value": "application/manifest+json"
         }
       ]
+    },
+    {
+      "source": "/manifest-redaccion.json",
+      "headers": [
+        {
+          "key": "content-type",
+          "value": "application/manifest+json"
+        }
+      ]
+    },
+    {
+      "source": "/redaccion(.html)?",
+      "headers": [
+        {
+          "key": "x-robots-tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/version.json",
+      "headers": [
+        {
+          "key": "cache-control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/servicio",
+      "has": [
+        {
+          "type": "host",
+          "value": "pregonia.cl"
+        }
+      ],
+      "destination": "https://www.pregonia.cl/",
+      "permanent": true
     }
   ]
 }

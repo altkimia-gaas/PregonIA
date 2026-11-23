@@ -3,7 +3,7 @@
    tránsito, aseo y turismo/economía), pero cada cuenta las ve con el nombre, las palabras y los dolores de su territorio,
    y con la lente de su cargo: el municipio y el concejo miran la gestión local; el consejo regional, la inversión regional;
    diputados y senadores, la agenda legislativa y la red pública de su distrito o circunscripción.
-   TERR: perfil de cada una de las 38 comunas. p: identidad; l: localidades y sectores (sirven de contexto); x: homónimos a excluir;
+   TERR: perfil de cada comuna (las 38 de Valparaíso y las 9 de Antofagasta). p: identidad; l: localidades y sectores (sirven de contexto); x: homónimos a excluir;
    s: temas sensibles por defecto; e: foco de cada eje [nombre del tema, palabras propias del territorio].
    TERR_ZONA: nombre de cada eje para distritos, circunscripciones y circunscripciones provinciales del consejo regional.
    Se carga después de autoridades.js y antes de app.js. */
@@ -220,13 +220,71 @@ const TERR = {
     turismo: ["Turismo, temporada y segunda vivienda", ["segunda vivienda", "veraneantes", "turistas", "Cachagua"]]}}
 };
 
+/* Región de Antofagasta (II): perfiles de sus 9 comunas. */
+Object.assign(TERR, {
+  "Antofagasta": {p: "Capital regional minera y portuaria, con campamentos y crecimiento acelerado", l: ["La Chimba", "La Portada", "Juan López", "Caleta Coloso", "Centro Alto", "Bonilla", "Gran Vía", "La Negra"], x: ["Antofagasta de la Sierra", "Catamarca"], s: ["seguridad", "aseo", "salud"], e: {
+    agua: ["Agua: desaladora y cortes de Aguas Antofagasta", ["Aguas Antofagasta", "desaladora", "corte de agua", "agua potable"]],
+    emergencias: ["Aluviones, sismos y tsunami", ["aluvión", "quebrada", "sismo", "tsunami", "Senapred"]],
+    seguridad: ["Seguridad: crimen organizado y barrios", ["balacera", "homicidio", "crimen organizado", "narcotráfico", "migración irregular", "toma"]],
+    salud: ["Salud: Hospital Regional y atención primaria", ["Hospital Regional", "Cesfam", "SAR", "lista de espera"]],
+    transito: ["Costanera, congestión y transporte público", ["costanera", "congestión", "micro", "transporte público", "Ruta 28"]],
+    aseo: ["Medio ambiente: campamentos, basurales y contaminación", ["campamento", "microbasural", "La Chimba", "plomo", "contaminación"]],
+    turismo: ["Minería, puerto y comercio", ["minería", "puerto", "comercio", "empleo", "Escondida"]]}},
+  "Calama": {p: "Capital minera del cobre, junto a Chuquicamata", l: ["Chuquicamata", "Chiu Chiu", "Lasana", "Ayquina", "Caspana", "Toconce", "Cupo", "Topater"], x: [], s: ["seguridad", "aseo", "salud"], e: {
+    agua: ["Agua: río Loa, cortes y comunidades", ["río Loa", "Aguas Antofagasta", "corte de agua", "derechos de agua"]],
+    seguridad: ["Seguridad: crimen organizado y violencia", ["balacera", "homicidio", "narcotráfico", "crimen organizado", "paro"]],
+    salud: ["Salud: Hospital Carlos Cisternas", ["Hospital Carlos Cisternas", "Cesfam", "lista de espera", "especialistas"]],
+    transito: ["Tránsito y rutas mineras", ["Ruta 23", "Ruta 25", "camiones", "congestión"]],
+    aseo: ["Medio ambiente: aire y plan de descontaminación", ["contaminación", "material particulado", "plan de descontaminación", "polvo", "relaves"]],
+    turismo: ["Cobre, Codelco y empleo", ["Codelco", "Chuquicamata", "Radomiro Tomic", "Ministro Hales", "empleo"]]}},
+  "Mejillones": {p: "Puerto industrial y energético con proyectos de hidrógeno verde", l: ["Hornitos", "Michilla", "Punta Angamos", "Península de Mejillones"], x: [], s: ["aseo", "agua", "turismo"], e: {
+    agua: ["Agua: abastecimiento y desaladoras", ["desaladora", "agua potable", "corte de agua"]],
+    emergencias: ["Tsunami y emergencias industriales", ["tsunami", "derrame", "emergencia química", "Senapred"]],
+    aseo: ["Medio ambiente: termoeléctricas y bahía", ["termoeléctrica", "contaminación", "varamiento", "bahía", "descarbonización"]],
+    turismo: ["Puerto, industria e hidrógeno verde", ["puerto", "Angamos", "hidrógeno verde", "amoníaco", "industria", "empleo"]]}},
+  "Sierra Gorda": {p: "Comuna minera del desierto, con Baquedano y grandes faenas", l: ["Baquedano", "Caracoles"], x: [], s: ["salud", "transito", "turismo"], e: {
+    salud: ["Salud rural y traslados", ["posta", "Cesfam", "traslado", "ronda médica"]],
+    transito: ["Rutas mineras y Ruta 5", ["Ruta 25", "Ruta 5", "camiones", "accidente"]],
+    aseo: ["Medio ambiente: polvo y residuos mineros", ["polvo", "relaves", "contaminación"]],
+    turismo: ["Minería, empleo y patentes", ["minería", "Spence", "Centinela", "empleo", "patentes mineras"]]}},
+  "Taltal": {p: "Puerto pesquero y minero del sur de la región, con Paposo y Paranal", l: ["Paposo", "Cifuncho", "Las Breas", "Paranal"], x: [], s: ["agua", "salud", "turismo"], e: {
+    agua: ["Agua: desaladora y abastecimiento", ["agua potable", "desaladora", "corte de agua", "Aguas Antofagasta"]],
+    emergencias: ["Aluviones y tsunami", ["aluvión", "quebrada", "tsunami", "Senapred"]],
+    salud: ["Salud: hospital de Taltal y traslados", ["Hospital de Taltal", "traslado", "especialistas"]],
+    transito: ["Ruta 1 y Ruta 5", ["Ruta 1", "Ruta 5", "camino costero", "accidente"]],
+    turismo: ["Pesca, minería y astroturismo", ["pesca", "caleta", "pirquineros", "minería", "Paranal", "astroturismo"]]}},
+  "San Pedro de Atacama": {p: "Destino turístico del salar y comunidades atacameñas, en la zona del litio", l: ["Toconao", "Peine", "Socaire", "Talabre", "Camar", "Río Grande", "Solor", "Salar de Atacama"], x: [], s: ["agua", "turismo", "aseo"], e: {
+    agua: ["Agua: salar, litio y comunidades", ["litio", "salar", "SQM", "Codelco", "derechos de agua", "comunidades atacameñas"]],
+    seguridad: ["Seguridad y turistas", ["robo", "turistas", "Carabineros"]],
+    salud: ["Salud rural: Cesfam y traslados a Calama", ["Cesfam", "posta", "traslado"]],
+    aseo: ["Medio ambiente y basura turística", ["residuos", "basura", "microbasural", "contaminación"]],
+    turismo: ["Turismo, sitios y temporada", ["turistas", "turismo", "Valle de la Luna", "Tatio", "parque nacional"]]}},
+  "Ollagüe": {p: "Comuna fronteriza del altiplano, con población quechua", l: ["Puquios", "Amincha", "Salar de Carcote", "Salar de Ascotán", "Volcán Ollagüe"], x: [], s: ["salud", "transito", "agua"], e: {
+    agua: ["Agua y salares del altiplano", ["salar", "Carcote", "Ascotán", "agua potable", "derechos de agua"]],
+    seguridad: ["Frontera y contrabando", ["contrabando", "frontera", "migración irregular", "Carabineros"]],
+    salud: ["Salud rural y traslados a Calama", ["posta", "traslado", "ronda médica", "altura"]],
+    transito: ["Frontera, paso y ruta a Calama", ["paso fronterizo", "frontera", "Ruta 21", "Bolivia"]]}},
+  "Tocopilla": {p: "Puerto termoeléctrico en reconversión tras el cierre del carbón", l: ["Cobija", "Caleta Urco"], x: [], s: ["aseo", "salud", "turismo"], e: {
+    emergencias: ["Aluviones y tsunami", ["aluvión", "quebrada", "tsunami", "Senapred"]],
+    salud: ["Salud: Hospital Marcos Macuada", ["Hospital Marcos Macuada", "Cesfam", "lista de espera"]],
+    transito: ["Ruta 1 y conexión con Calama", ["Ruta 1", "Ruta 24", "accidente"]],
+    aseo: ["Medio ambiente: descarbonización y zona saturada", ["termoeléctrica", "carbón", "descarbonización", "contaminación", "zona saturada"]],
+    turismo: ["Reconversión, puerto y empleo", ["reconversión", "empleo", "puerto", "hidrógeno verde", "pesca"]]}},
+  "María Elena": {p: "Último pueblo salitrero en funciones, ligado a SQM", l: ["Quillagua", "Pedro de Valdivia"], x: [], s: ["salud", "agua", "turismo"], e: {
+    agua: ["Agua: río Loa y Quillagua", ["río Loa", "Quillagua", "agua potable", "contaminación del río"]],
+    salud: ["Salud: hospital comunitario y traslados", ["hospital", "traslado", "posta"]],
+    aseo: ["Medio ambiente y polvo", ["polvo", "contaminación", "residuos"]],
+    turismo: ["Salitre, SQM y empleo", ["SQM", "salitre", "yodo", "empleo", "minería"]]}}
+});
+
 /* Respaldo por tipo de territorio: un eje sin foco propio de la comuna toma el de su tipo, nunca el nombre genérico. */
 const TIPO_COMUNA = {
   rural: ["Cabildo", "Calle Larga", "Casablanca", "Catemu", "Hijuelas", "La Cruz", "Llaillay", "Nogales", "Olmué", "Panquehue", "Petorca", "Putaendo", "Rinconada", "San Esteban", "Santa María"],
   ciudad: ["La Calera", "La Ligua", "Limache", "Los Andes", "Quillota", "San Felipe"],
   metropolitana: ["Concón", "Quilpué", "Valparaíso", "Villa Alemana", "Viña del Mar"],
   litoral: ["Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Papudo", "Puchuncaví", "Quintero", "San Antonio", "Santo Domingo", "Zapallar"],
-  isla: ["Isla de Pascua", "Juan Fernández"]
+  isla: ["Isla de Pascua", "Juan Fernández"],
+  norte: ["Antofagasta", "Calama", "Mejillones", "Sierra Gorda", "Taltal", "San Pedro de Atacama", "Ollagüe", "Tocopilla", "María Elena"]
 };
 const tipoDe = c => Object.keys(TIPO_COMUNA).find(k => TIPO_COMUNA[k].includes(c)) || "";
 const TIPO_FOCO = {
@@ -246,7 +304,11 @@ const TIPO_FOCO = {
     seguridad: ["Seguridad en temporada y balnearios", ["balneario", "robo en casas", "segunda vivienda", "temporada"]], salud: ["Salud: atención primaria y temporada", ["SAPU", "posta", "temporada"]],
     educacion: ["Educación municipal: escuelas y liceos", ["escuela", "liceo", "matrícula"]], transito: ["Accesos al litoral y congestión en verano", ["congestión", "acceso", "ruta costera", "temporada"]],
     aseo: ["Aseo: basura en playas y temporada", ["playas", "recolección", "microbasural", "temporada"]], turismo: ["Turismo y temporada de verano", ["turistas", "veraneantes", "segunda vivienda", "temporada"]]},
-  isla: {seguridad: ["Seguridad en la isla", ["Carabineros", "robo"]], educacion: ["Educación: escuela y becas al continente", ["escuela", "liceo", "becas", "continente"]]}
+  isla: {seguridad: ["Seguridad en la isla", ["Carabineros", "robo"]], educacion: ["Educación: escuela y becas al continente", ["escuela", "liceo", "becas", "continente"]]},
+  norte: {agua: ["Agua: abastecimiento y desaladoras", ["Aguas Antofagasta", "corte de agua", "desaladora", "agua potable"]], emergencias: ["Aluviones, sismos y tsunami", ["aluvión", "quebrada", "sismo", "tsunami", "Senapred"]],
+    seguridad: ["Seguridad y crimen organizado", ["delincuencia", "balacera", "narcotráfico", "crimen organizado", "Carabineros"]], salud: ["Salud: hospitales y traslados", ["hospital", "Cesfam", "traslado", "lista de espera"]],
+    educacion: ["Educación pública: escuelas y liceos", ["liceo", "escuela", "matrícula", "SLEP"]], transito: ["Rutas, camiones y transporte", ["ruta", "camiones", "accidente", "transporte"]],
+    aseo: ["Medio ambiente: polvo, residuos y contaminación", ["contaminación", "polvo", "microbasural", "residuos"]], turismo: ["Minería, empleo y economía local", ["minería", "empleo", "comercio", "emprendedores"]]}
 };
 const focoDe = (c, k) => (TERR[c] && TERR[c].e[k]) || (TIPO_FOCO[tipoDe(c)] || {})[k] || null;
 
@@ -263,7 +325,13 @@ const TERR_ZONA = {
   SF: {p: "Provincia de San Felipe de Aconcagua: valle agrícola, fundición y minería", e: {agua: "Agua: sequía y río Aconcagua", emergencias: "Incendios y emergencias rurales", seguridad: "Seguridad rural en Aconcagua", salud: "Salud: Hospital San Camilo y red Aconcagua", educacion: "Educación pública rural", transito: "Conectividad: Ruta 5, Ruta 60 y caminos", aseo: "Medio ambiente: Chagres y Vizcachitas", turismo: "Agro, uva y vino del Aconcagua"}},
   LA: {p: "Provincia de Los Andes: paso fronterizo, cobre y valle agrícola", e: {agua: "Agua: sequía, glaciares y riego", emergencias: "Aluviones, nevazones e incendios", seguridad: "Seguridad y control fronterizo", salud: "Salud: Hospital San Juan de Dios de Los Andes", educacion: "Educación pública en Los Andes", transito: "Paso Cristo Redentor y camiones", aseo: "Medio ambiente: minería Andina y glaciares", turismo: "Minería, comercio y turismo de montaña"}},
   PET: {p: "Provincia de Petorca: crisis hídrica, tejidos y balnearios del norte", e: {agua: "Agua: crisis hídrica y APR de Petorca", emergencias: "Incendios y emergencias rurales", seguridad: "Seguridad rural y en la Ruta 5 Norte", salud: "Salud: Biprovincial y hospitales de Petorca", educacion: "Educación pública y escuelas rurales", transito: "Conectividad: Ruta 5 Norte y caminos", aseo: "Medio ambiente: minería y borde costero", turismo: "Agro, tejidos y turismo de playa"}},
-  IP: {p: "Rapa Nui, territorio especial", e: {}}
+  IP: {p: "Rapa Nui, territorio especial", e: {}},
+  // Región de Antofagasta (II)
+  D3: {p: "Toda la Región de Antofagasta: minería, puertos y comunas del altiplano", e: {agua: "Agua: desaladoras, salares y río Loa", emergencias: "Aluviones, sismos y tsunami", seguridad: "Seguridad: crimen organizado y frontera norte", salud: "Salud: hospitales de Antofagasta y Calama", educacion: "Educación pública en la región", transito: "Rutas mineras y conectividad", aseo: "Medio ambiente: aire de Calama y zonas industriales", turismo: "Minería, litio y empleo"}},
+  C3: {p: "Toda la Región de Antofagasta: 9 comunas, de la costa al altiplano", e: {agua: "Agua: desaladoras, salares y río Loa", emergencias: "Aluviones, sismos y tsunami", seguridad: "Seguridad: crimen organizado y frontera norte", salud: "Salud: hospitales y listas de espera", educacion: "Educación pública en la región", transito: "Rutas mineras y conectividad", aseo: "Medio ambiente: descarbonización y calidad del aire", turismo: "Minería, litio y empleo"}},
+  ANT: {p: "Provincia de Antofagasta: la capital, Mejillones, Sierra Gorda y Taltal", e: {agua: "Agua: desaladoras y abastecimiento", emergencias: "Aluviones y tsunami en la costa", seguridad: "Seguridad en Antofagasta y campamentos", salud: "Salud: Hospital Regional y Taltal", educacion: "Educación pública en la provincia", transito: "Costanera, Ruta 1 y rutas mineras", aseo: "Medio ambiente: puerto, plomo y termoeléctricas", turismo: "Minería, puerto e hidrógeno verde"}},
+  LOA: {p: "Provincia de El Loa: Calama, el cobre, el litio y el altiplano", e: {agua: "Agua: río Loa, salares y comunidades", emergencias: "Emergencias y aluviones en el altiplano", seguridad: "Seguridad en Calama y la frontera", salud: "Salud: Hospital Carlos Cisternas y postas rurales", educacion: "Educación pública en El Loa", transito: "Rutas mineras y pasos fronterizos", aseo: "Medio ambiente: aire de Calama y salares", turismo: "Cobre, litio y turismo en San Pedro"}},
+  TOC: {p: "Provincia de Tocopilla: reconversión energética y el salitre de María Elena", e: {agua: "Agua: río Loa y abastecimiento", emergencias: "Aluviones y tsunami", seguridad: "Seguridad en la provincia de Tocopilla", salud: "Salud: Hospital Marcos Macuada y traslados", educacion: "Educación pública en la provincia", transito: "Ruta 1 y conexión con Calama", aseo: "Medio ambiente: descarbonización y polvo", turismo: "Reconversión, salitre y empleo"}}
 };
 
 /* Lente del cargo: nombre genérico del eje y palabras propias de su trabajo. */
@@ -278,7 +346,10 @@ const LENTE = {
       educacion: ["SLEP", "Mineduc", "universidad", "CAE", "FES"], transito: ["MOP", "concesión", "autopista", "EFE", "tren", "puerto", "conectividad"],
       aseo: ["medio ambiente", "contaminación", "evaluación ambiental", "relleno sanitario", "zona de sacrificio"], turismo: ["empleo", "inversión", "pymes", "agricultura", "minería"]}}
 };
-const lenteDe = rol => rol === "diputado" || rol === "senador" ? "nac" : rol === "core" ? "reg" : "local";
+const lenteDe = rol => rol === "diputado" || rol === "senador" ? "nac" : rol === "core" || rol === "gobernador" || rol === "delegado" ? "reg" : "local";
+// Gobernador y delegación regional: la misma lectura del territorio que la circunscripción senatorial (las 38 comunas).
+TERR_ZONA.REG = TERR_ZONA.C6;
+TERR_ZONA["II-REG"] = TERR_ZONA.C3;
 const unicos = a => { const v = new Set(); return a.filter(x => { const k = norm(x); if (!x || v.has(k)) return false; v.add(k); return true; }); };
 const lugaresDe = cs => unicos(cs.flatMap(c => (TERR[c] && TERR[c].l) || []));
 /* Contexto del tema de la comuna: palabras de gestión local más sus localidades; homónimos propios de cada comuna. */

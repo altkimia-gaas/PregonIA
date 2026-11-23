@@ -1,10 +1,22 @@
 
-/* Modo piloto (etapa 2): inicio de sesión con Supabase y datos compartidos por municipio.
+/* Modo piloto (etapa 2): inicio de sesión con Supabase y datos compartidos por institución cliente: un municipio o una autoridad
+   (diputado, senador, consejero regional, concejal, gobernador o delegado). En la base ambas son filas de la tabla municipios;
+   las de autoridad traen tipo (el cargo) y autoridad (zona, nombre y, si está, el id de la nómina).
    Las noticias vienen de la base (lectura programada cada 30 minutos); temas, marcas, respuestas aprobadas y publicaciones
    agregadas se guardan en la base y las ve todo el equipo. La base registra sola quién hizo qué (tabla actividad).
-   Sin sesión, la aplicación sigue siendo la demostración de siempre. */
+   Sin sesión, la aplicación es la prueba gratis con noticias reales; sin prueba vigente, solo la portada. */
 PILOTO = {activo: false, disponible: false, sb: null, user: null, perfil: null, muni: null, editor: false, snap: null, timer: null, sinc: false, pendiente: false, estado: "", lectura: null};
-const ROLES = {admin: "Administración", comunicaciones: "Comunicaciones", alcalde: "Alcalde", directivo: "Equipo directivo", lector: "Solo lectura"};
+const ROLES = {admin: "Administración", comunicaciones: "Comunicaciones", alcalde: "Alcalde", autoridad: "Autoridad", directivo: "Equipo directivo", lector: "Solo lectura"};
+/* En una cuenta de autoridad, la persona titular se muestra con su cargo y el equipo directivo como su equipo. */
+const esPilotoAut = () => !!(PILOTO.muni && PILOTO.muni.tipo && PILOTO.muni.tipo !== "municipio");
+/* Región de la cuenta del piloto (src/regiones.js): la de su comuna o la de la zona de la autoridad. Cada región tiene su propio turno de lectura. */
+const regionPiloto = () => { const m = PILOTO.muni || {}; if (!esPilotoAut()) return regionDeComuna(m.comuna) || REGION_DEFECTO;
+  const a = m.autoridad || {}, z = zonaDe(m.tipo, a.zona); return (z && regionDeComuna(z.comunas[0])) || REGION_DEFECTO; };
+function rolNombre(rol){
+  if (!esPilotoAut()) return ROLES[rol] || rol;
+  const a = PILOTO.muni.autoridad || {};
+  return rol === "autoridad" || rol === "alcalde" ? cargoDe(PILOTO.muni.tipo, a.g) : rol === "directivo" ? "Equipo de la oficina" : ROLES[rol] || rol;
+}
 const cargarSupabase = () => cargarScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js", "supabase");
 const ICO_USR = '<circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-3.6 4.4-5.4 8-5.4s6.5 1.8 8 5.4"/>';
 
@@ -13,16 +25,25 @@ function pintarAcceso(){
   const tools = $(".tools"); if (!tools || !PILOTO.disponible) return;
   let b = $("#cuentaBtn");
   if (!b) { b = document.createElement("button"); b.id = "cuentaBtn"; b.type = "button"; b.className = "helpbtn"; tools.insertBefore(b, tools.firstChild); }
-  if (PILOTO.activo) { const n = PILOTO.perfil.nombre || PILOTO.user.email; b.dataset.act = "cuenta"; b.setAttribute("aria-haspopup", "menu"); b.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO_USR}</svg><span>${esc(n.split(" ")[0])}</span>`; b.title = `${n} · ${ROLES[PILOTO.perfil.rol] || PILOTO.perfil.rol}`; }
+  if (PILOTO.activo) { const n = PILOTO.perfil.nombre || PILOTO.user.email; b.dataset.act = "cuenta"; b.setAttribute("aria-haspopup", "menu"); b.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO_USR}</svg><span>${esc(n.split(" ")[0])}</span>`; b.title = `${n} · ${rolNombre(PILOTO.perfil.rol)}`; }
   else { b.dataset.act = "login"; b.removeAttribute("aria-haspopup"); b.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO_USR}</svg><span>Ingresar</span>`; b.title = "Ingresar al piloto"; }
+  // Cerrar sesión siempre a la vista: con sesión de cliente cierra la sesión; en la prueba gratis sale de la prueba.
+  let o = $("#salirBtn");
+  if (!o) { o = document.createElement("button"); o.id = "salirBtn"; o.type = "button"; o.className = "helpbtn"; b.insertAdjacentElement("afterend", o); }
+  const enPrueba = !PILOTO.activo && typeof pruebaVigente === "function" && !!pruebaVigente();
+  o.hidden = !(PILOTO.activo || enPrueba);
+  o.dataset.act = PILOTO.activo ? "salir" : "salir-prueba";
+  const tx = PILOTO.activo ? "Cerrar sesión" : "Salir de la prueba";
+  o.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>${tx}</span>`; o.title = tx; o.setAttribute("aria-label", tx);
+  if (typeof pintarAccesoPortada === "function") pintarAccesoPortada();
 }
 function pintarPiloto(){
-  const el = $("#demo"), p = PILOTO, l = p.lectura, n = NOTAS.length;
+  const el = $("#demo"), p = PILOTO, l = p.lectura, n = NOTAS.filter(x => NOW - x.ts < 30 * DAY).length;
   el.className = "demo real";
-  el.innerHTML = `<span class="demo-txt"><b>Piloto</b>${esc(p.muni.nombre)}<span class="demo-mas"> · ${plural(n, "nota", "notas")} en 30 días${l ? ` · última lectura de medios ${horaCorta(l.fin)} (${l.fuentes_ok} de ${l.fuentes_total} fuentes)` : " · aún sin lecturas de medios"}${p.estado ? " · " + p.estado : ""}</span></span>${p.editor ? "" : `<span class="solo-lect">Solo lectura</span>`}`;
+  el.innerHTML = `<span class="demo-txt"><b>Piloto</b>${esc(p.muni.nombre)}<span class="demo-mas"> · ${MODO.cargando ? "preparando tu edición…" : plural(n, "nota", "notas") + " en 30 días"}${MODO.cargando ? "" : l ? ` · última lectura de medios ${horaCorta(l.fin)} (${l.fuentes_ok} de ${l.fuentes_total} fuentes)` : " · aún sin lecturas de medios"}${p.estado ? " · " + p.estado : ""}</span></span>${p.editor ? "" : `<span class="solo-lect">Solo lectura</span>`}`;
 }
 
-/* Diálogos: ingreso, nueva contraseña y cuenta sin municipio */
+/* Diálogos: ingreso, nueva contraseña y cuenta sin institución */
 function dialogo(id, titulo, sub, cuerpo){
   cerrarDialogo();
   const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "dlgBack";
@@ -30,25 +51,38 @@ function dialogo(id, titulo, sub, cuerpo){
   dialogo.origen = document.activeElement; document.body.appendChild(ov); document.body.classList.add("vid-on");
   const f = ov.querySelector("input, button.btn:not(.ghost)"); if (f) f.focus();
 }
-function cerrarDialogo(){ const o = $("#dlgBack"); if (!o) return; if (aceptacion.pend) { const r = aceptacion.pend; aceptacion.pend = null; r(false); } o.remove(); document.body.classList.remove("vid-on"); if (dialogo.origen && dialogo.origen.isConnected) dialogo.origen.focus(); }
+function cerrarDialogo(){ const o = $("#dlgBack"); if (!o) return; if (aceptacion.pend) { const r = aceptacion.pend; aceptacion.pend = null; r(false); } if (avisoLegal.pend) { const r = avisoLegal.pend; avisoLegal.pend = null; r(false); } o.remove(); document.body.classList.remove("vid-on"); if (dialogo.origen && dialogo.origen.isConnected) dialogo.origen.focus(); }
+/* Claves guardadas en el dispositivo. Los formularios llevan name y autocomplete para que el administrador de contraseñas
+   del teléfono o del navegador (Google, iCloud, Samsung, Microsoft) ofrezca guardarla y la complete sola la próxima vez;
+   en Chrome, Edge y Android además se guarda y se completa con la Credential Management API.
+   PregonIA nunca guarda la contraseña: queda solo en el llavero del dispositivo de la persona. */
+async function claveGuardar(correo, clave, nombre){ try { if (window.PasswordCredential && navigator.credentials && correo && clave) await navigator.credentials.store(new PasswordCredential({id: correo, password: clave, name: nombre || correo})); } catch(e) {} }
+async function claveRecordada(){ try { if (!window.PasswordCredential || !navigator.credentials) return null; const c = await navigator.credentials.get({password: true, mediation: "optional"}); return c && c.type === "password" && c.password ? c : null; } catch(e) { return null; } }
 function abrirLogin(){
-  dialogo("login", "Ingresar a PregonIA", "Para los equipos de las instituciones clientes. Si aún no tienes cuenta, pide una invitación a ALTKimia.", `
-    <form class="cap-f" id="loginForm" novalidate>
-      <label class="cap-l">Correo<input id="lgCorreo" type="email" autocomplete="username" inputmode="email" required></label>
-      <label class="cap-l">Contraseña<input id="lgClave" type="password" autocomplete="current-password" required></label>
+  dialogo("login", "Ingresar a PregonIA", "Para los equipos de municipios y autoridades clientes. Si aún no tienes cuenta, pide una invitación a ALTKimia.", `
+    <form class="cap-f" id="loginForm" method="post" action="/" autocomplete="on" novalidate>
+      <label class="cap-l">Correo<input id="lgCorreo" name="username" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" required></label>
+      <label class="cap-l">Contraseña<input id="lgClave" name="password" type="password" autocomplete="current-password" required></label>
       <p class="cap-err" id="lgErr" role="alert" hidden></p>
       <p class="hint" style="margin:0">El uso del servicio se rige por los <a href="/legal.html#terminos" target="_blank" rel="noopener">Términos de uso</a> y la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a>.</p>
       <div class="cap-acts"><button class="btn alt" type="submit" id="lgOk">Ingresar</button><button class="btn" type="button" data-act="dlg-close">Cancelar</button><button class="btn ghost" type="button" data-act="olvide">Olvidé mi contraseña</button></div>
+      <p class="hint" style="margin:0">Cuando el teléfono o el navegador ofrezcan guardar la contraseña, acepta: la próxima vez se completa sola.</p>
     </form>`);
+  // Si el dispositivo ya tiene la clave guardada (Chrome, Edge, Android), se completa sola.
+  claveRecordada().then(c => { const a = $("#lgCorreo"), b = $("#lgClave"); if (!c || !a || a.value || b.value) return; a.value = c.id; b.value = c.password; $("#lgOk")?.focus(); });
 }
 function pedirClave(tipo){
   dialogo("clave", tipo === "invite" ? "Crea tu contraseña" : "Nueva contraseña", "Mínimo 10 caracteres. Úsala junto a tu correo para ingresar desde cualquier equipo.", `
-    <form class="cap-f" id="claveForm" novalidate>
-      <label class="cap-l">Contraseña<input id="ckA" type="password" autocomplete="new-password" minlength="10" required></label>
-      <label class="cap-l">Repítela<input id="ckB" type="password" autocomplete="new-password" minlength="10" required></label>
+    <form class="cap-f" id="claveForm" method="post" action="/" autocomplete="on" novalidate>
+      <label class="cap-l">Correo<input id="ckU" name="username" type="email" autocomplete="username" readonly></label>
+      <label class="cap-l">Contraseña<input id="ckA" name="new-password" type="password" autocomplete="new-password" minlength="10" required></label>
+      <label class="cap-l">Repítela<input id="ckB" name="confirm-password" type="password" autocomplete="new-password" minlength="10" required></label>
       <p class="cap-err" id="ckErr" role="alert" hidden></p>
       <div class="cap-acts"><button class="btn alt" type="submit">Guardar contraseña</button></div>
     </form>`);
+  $("#ckA").focus();
+  // El correo va en el formulario (solo lectura) para que el llavero guarde la clave junto a la cuenta correcta.
+  Promise.resolve().then(() => PILOTO.sb.auth.getSession()).then(({data}) => { const u = $("#ckU"), e = data && data.session && data.session.user.email; if (u && e) u.value = e; else if (u) u.closest("label").hidden = true; }).catch(() => {});
 }
 function errorEn(id, msg, foco){ const e = $(id); e.textContent = msg; e.hidden = false; if (foco) $(foco).focus(); }
 async function ingresar(e){
@@ -59,7 +93,8 @@ async function ingresar(e){
   ok.disabled = true; ok.textContent = "Ingresando…";
   const {data, error} = await PILOTO.sb.auth.signInWithPassword({email: correo, password: clave});
   if (error) { ok.disabled = false; ok.textContent = "Ingresar"; return errorEn("#lgErr", /invalid/i.test(error.message) ? "Correo o contraseña incorrectos." : "No se pudo ingresar: " + error.message, "#lgClave"); }
-  cerrarDialogo(); await entrarPiloto(data.user);
+  claveGuardar(correo, clave, data.user.user_metadata && data.user.user_metadata.full_name);
+  cerrarDialogo(); await entrarPiloto(data.user, true);
 }
 async function guardarClave(e){
   e.preventDefault();
@@ -68,26 +103,27 @@ async function guardarClave(e){
   if (a !== b) return errorEn("#ckErr", "Las contraseñas no coinciden.", "#ckB");
   const {error} = await PILOTO.sb.auth.updateUser({password: a});
   if (error) return errorEn("#ckErr", "No se pudo guardar: " + error.message);
-  cerrarDialogo(); toast("Contraseña guardada.");
+  claveGuardar(($("#ckU") && $("#ckU").value) || (PILOTO.user && PILOTO.user.email), a);
+  cerrarDialogo(); toast("Contraseña guardada. Si el dispositivo ofrece recordarla, acepta.");
 }
 async function olvide(){
   const correo = ($("#lgCorreo") && $("#lgCorreo").value.trim()) || "";
   if (!/^\S+@\S+\.\S+$/.test(correo)) return errorEn("#lgErr", "Escribe tu correo y vuelve a tocar «Olvidé mi contraseña».", "#lgCorreo");
-  const {error} = await PILOTO.sb.auth.resetPasswordForEmail(correo, {redirectTo: location.origin + "/"});
+  const {error} = await PILOTO.sb.auth.resetPasswordForEmail(correo, {redirectTo: location.origin + "/app"});
   if (error) return errorEn("#lgErr", "No se pudo enviar el correo: " + error.message);
   cerrarDialogo(); toast("Te enviamos un correo para crear una nueva contraseña.");
 }
 function menuCuenta(b){
   if ($("#shrPop")) { cerrarMenu(); return; }
   const p = PILOTO, m = document.createElement("div"); m.className = "shr-pop"; m.id = "shrPop"; m.setAttribute("role", "menu");
-  m.innerHTML = `<div class="cta-info"><b>${esc(p.perfil.nombre || p.user.email)}</b><span>${esc(p.user.email)}</span><span>${esc(ROLES[p.perfil.rol] || p.perfil.rol)} · ${esc(p.muni.nombre)}</span></div><button type="button" role="menuitem" data-act="recargar-piloto">Actualizar datos</button><button type="button" role="menuitem" data-act="salir">Salir</button>`;
+  m.innerHTML = `<div class="cta-info"><b>${esc(p.perfil.nombre || p.user.email)}</b><span>${esc(p.user.email)}</span><span>${esc(rolNombre(p.perfil.rol))} · ${esc(p.muni.nombre)}</span></div><button type="button" role="menuitem" data-act="recargar-piloto">Actualizar datos</button><button type="button" role="menuitem" data-act="salir">Cerrar sesión</button>`;
   document.body.appendChild(m); m._origen = b; ubicarMenu(); m.querySelector("button").focus({preventScroll: true});
 }
 
 /* Aceptación de Términos y Política de privacidad (control 6 y 12 del checklist legal).
    Se pide una vez por versión de los documentos; la base guarda quién aceptó, qué versión y cuándo (tabla aceptaciones).
    Si la tabla aún no existe (esquema sin actualizar), no bloquea el ingreso y lo deja anotado en la consola. */
-const LEGAL_VERSION = "2026-11-13";
+const LEGAL_VERSION = "2026-11-23";  // 23-nov-2026: la prueba gratis pasa de 48 horas a 7 días
 async function aceptacion(user){
   const {data, error} = await PILOTO.sb.from("aceptaciones").select("id").eq("usuario", user.id).eq("version", LEGAL_VERSION).limit(1);
   if (error) { console.warn("PregonIA: falta la tabla aceptaciones; corre de nuevo supabase/esquema.sql.", error.message); return true; }
@@ -103,6 +139,34 @@ async function aceptacion(user){
     aceptacion.pend = res;
   });
 }
+/* Aviso legal al entrar sin sesión (prueba gratis): se acepta una vez por versión y queda guardado solo en este navegador.
+   Con sesión iniciada no se muestra: la aceptación del servicio se registra en la base (aceptacion()). */
+const AVISO_KEY = "pregonia-aviso-legal";
+function avisoLegal(){
+  if (PILOTO.activo) return Promise.resolve(true);
+  try { if (localStorage.getItem(AVISO_KEY) === LEGAL_VERSION) return Promise.resolve(true); } catch(e) {}
+  return new Promise(res => {
+    dialogo("aviso", "Antes de empezar", "PregonIA es un servicio de ALTKIMIA Consultoría y Tecnología SpA para instituciones y autoridades públicas.", `
+      <form class="cap-f" id="avisoForm" novalidate>
+        <ul class="hint" style="margin:0;padding-left:18px;display:grid;gap:4px">
+          <li>Estás entrando a la <b>prueba gratis</b>: verás noticias reales de tu territorio del último mes, leídas de los medios del catálogo y resumidas con inteligencia artificial.</li>
+          <li>Para la prueba gratis te pediremos nombre, correo, tipo de autoridad y territorio, y validaremos tu correo con un código. Lo demás que configures queda solo en este navegador.</li>
+          <li>Los textos generados con inteligencia artificial pueden contener errores: revísalos antes de usarlos.</li>
+        </ul>
+        <p class="hint" style="margin:0">Lee los <a href="/legal.html#terminos" target="_blank" rel="noopener">Términos de uso</a> y la <a href="/legal.html#privacidad" target="_blank" rel="noopener">Política de privacidad</a> (versión ${LEGAL_VERSION}). Se abren en una pestaña nueva.</p>
+        <label class="cap-l" style="display:flex;align-items:flex-start;gap:10px;font-weight:500"><input id="avAcepto" type="checkbox" style="width:20px;min-height:20px;height:20px;margin:1px 0 0;padding:0;flex:none;accent-color:var(--accent)"> He leído y acepto los Términos de uso y la Política de privacidad.</label>
+        <p class="cap-err" id="avErr" role="alert" hidden></p>
+        <div class="cap-acts"><button class="btn alt" type="submit">Aceptar y continuar</button><button class="btn" type="button" data-act="dlg-close">Volver</button></div>
+      </form>`);
+    avisoLegal.pend = res;
+  });
+}
+function aceptarAviso(e){
+  e.preventDefault();
+  if (!$("#avAcepto").checked) return errorEn("#avErr", "Para continuar, marca la casilla de aceptación.", "#avAcepto");
+  try { localStorage.setItem(AVISO_KEY, LEGAL_VERSION); } catch(er) {}
+  const r = avisoLegal.pend; avisoLegal.pend = null; cerrarDialogo(); if (r) r(true);
+}
 async function registrarAceptacion(e){
   e.preventDefault();
   if (!$("#lgAcepto").checked) return errorEn("#lgaErr", "Para continuar, marca la casilla de aceptación.", "#lgAcepto");
@@ -113,21 +177,38 @@ async function registrarAceptacion(e){
 }
 
 /* Sesión */
-async function entrarPiloto(user){
-  const sb = PILOTO.sb;
-  const {data: perfil, error} = await sb.from("perfiles").select("nombre, rol, municipio_id, municipios(id, comuna, nombre, plan)").eq("id", user.id).maybeSingle();
-  if (error || !perfil || !perfil.municipios) {
-    dialogo("sinmuni", "Tu cuenta aún no tiene municipio", "Ingresaste bien, pero falta asignarte un municipio y un rol. Pídeselo a ALTKimia o al administrador del piloto.", `<div class="cap-f"><p class="hint" style="margin:0">${esc(user.email)}</p><div class="cap-acts"><button class="btn" type="button" data-act="salir">Salir</button></div></div>`);
-    return;
-  }
+/* Perfil con su institución. Si la base aún no tiene las columnas de autoridades (esquema sin actualizar), se lee como antes. */
+async function leerPerfil(user){
+  const q = cols => PILOTO.sb.from("perfiles").select(`nombre, rol, municipio_id, municipios(${cols})`).eq("id", user.id).maybeSingle();
+  const r = await q("id, comuna, nombre, plan, tipo, autoridad");
+  return r.error ? q("id, comuna, nombre, plan") : r;
+}
+/* Cuenta de la aplicación para la institución del piloto: el municipio de la comuna, o la autoridad (de la nómina si está, si no por nombre). */
+function cuentaPiloto(m){
+  if (!m.tipo || m.tipo === "municipio") return COMUNAS.includes(m.comuna) ? m.comuna : null;
+  const x = m.autoridad || {}, a = x.id ? AUTORIDADES.find(z => z.id === x.id && z.rol === m.tipo) : null;
+  return crearCuentaAutoridad({rol: m.tipo, zona: a ? a.zona : x.zona, a, nombre: String(x.nombre || "").trim(), g: x.g === "F" ? "F" : "M"});
+}
+function sinInstitucion(user, titulo, sub){
+  dialogo("sinmuni", titulo, sub, `<div class="cap-f"><p class="hint" style="margin:0">${esc(user.email)}</p><div class="cap-acts"><button class="btn" type="button" data-act="salir">Salir</button></div></div>`);
+}
+/* entrar: viene de «Ingresar»; si la portada está a la vista, se pasa directo a la edición mientras cargan los datos. */
+async function entrarPiloto(user, entrar){
+  const {data: perfil, error} = await leerPerfil(user);
+  if (error || !perfil || !perfil.municipios) return sinInstitucion(user, "Tu cuenta aún no tiene institución", "Ingresaste bien, pero falta asignarte un municipio o una autoridad, y un rol. Pídeselo a ALTKimia o al administrador del piloto.");
+  const key = cuentaPiloto(perfil.municipios);
+  if (!key) return sinInstitucion(user, "Falta completar tu institución", "La cuenta asignada no tiene comuna, cargo o zona válidos. Pídele a ALTKimia que revise su ficha en la base.");
   if (!(await aceptacion(user))) { salir(); return; }
   Object.assign(PILOTO, {activo: true, user, perfil, muni: perfil.municipios, editor: ["admin", "comunicaciones"].includes(perfil.rol)});
-  if (COMUNAS.includes(PILOTO.muni.comuna)) S.org = PILOTO.muni.comuna;
-  $("#org").disabled = true; $("#org").title = "En el piloto ves solo tu municipio";
+  S.org = key;
+  $("#org").disabled = true; $("#org").title = esPilotoAut() ? "En el piloto ves solo la cuenta de tu autoridad" : "En el piloto ves solo tu municipio";
+  MODO = {...MODO, cargando: true, inicio: Date.now()};  // pantalla de lectura, no la demostración, mientras llegan sus datos
   pintarAcceso();
+  if ((entrar || /[?&]sin-portada\b/.test(location.search)) && !$("#portada").hidden) salirPortada();  // ?sin-portada llega desde un aviso
+  render();
   if (typeof avisosAlEntrar === "function") await avisosAlEntrar();
-  try { await cargarDatosPiloto(); toast(`Hola, ${(perfil.nombre || "").split(" ")[0] || "bienvenido"}. Estás en el piloto de ${PILOTO.muni.nombre}.`); }
-  catch(e) { toast("No se pudieron cargar los datos del piloto: " + (e.message || e)); }
+  try { await cargarDatosPiloto(); toast(`Hola, ${(perfil.nombre || "").split(" ")[0] || "bienvenido"}. Estás en el piloto de ${PILOTO.muni.nombre}.`); if (typeof guiaIOSAuto === "function") guiaIOSAuto(); }
+  catch(e) { MODO.cargando = false; pintarModo(); render(); toast("No se pudieron cargar los datos del piloto: " + (e.message || e)); }
 }
 const capAFila = x => ({id: x.id, municipio_id: PILOTO.muni.id, medio_id: MED[x.m] && (x.m < FB_ID0 || x.m >= 10000) ? x.m : null, medio_nombre: MED[x.m] ? MED[x.m].n : "Página de Facebook", medio_ambito: MED[x.m] ? MED[x.m].a : "local",
   url: x.url || null, titulo: x.t, resumen: x.res, palabras: x.x, tono: x.tono, grupo: x.g, publicado: new Date(x.ts).toISOString(), indice: norm(x.t + " " + x.res + " " + x.x).slice(0, 1000)});
@@ -136,29 +217,43 @@ function paginaFB(nombre, ambito){
   if (!p) { p = {id: FB_ID0 + S.fbPaginas.length + 1, n: nombre, a: ambito || "local", c: ambito === "local" ? S.org : ""}; S.fbPaginas.push(p); registrarPagina(p); }
   return p.id;
 }
-const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null, hitos: c.hitos || [], prep: c.prep || {}, tv: c.tv || 0});
+const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null, hitos: c.hitos || [], prep: c.prep || {}, tv: c.tv || 0,
+  correcciones: c.correcciones || {}, compArea: c.compArea || {}, excOff: c.excOff || {}, logo: c.logo || null, plazos: c.plazos || {}, fv: c.fv || 0});  // ficha editorial: correcciones, competencias y plazos de la cuenta
 async function cargarDatosPiloto(){
-  const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 32 * DAY).toISOString();
+  if (PILOTO.timer) await sincronizarYa();  // un cambio a medio guardar se envía antes de releer la base
+  const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 62 * DAY).toISOString();  // 30 días y los 30 anteriores, para comparar (informe ejecutivo)
   const pide = q => q.then(r => { if (r.error) throw new Error(r.error.message); return r.data; });
+  const menQ = cols => sb.from("menciones").select(cols + ", notas!inner(id, medio_id, url, titulo, publicado)").eq("municipio_id", mid).eq("rel", true).gte("notas.publicado", desde).limit(5000);
   const [men, mar, com, cap, lec, mun] = await Promise.all([
-    pide(sb.from("menciones").select("tono, resumen, palabras, grupo, notas!inner(id, medio_id, url, titulo, publicado)").eq("municipio_id", mid).eq("rel", true).gte("notas.publicado", desde).limit(5000)),
+    pide(menQ("tono, resumen, palabras, grupo, sobre, ficha")).catch(() => pide(menQ("tono, resumen, palabras, grupo, sobre"))).catch(() => pide(menQ("tono, resumen, palabras, grupo"))),  // sin la columna sobre (esquema anterior), se lee sin ella
     pide(sb.from("marcas").select("grupo, tipo").eq("municipio_id", mid)),
     pide(sb.from("comunicados").select("id, grupo, pieza, origen, texto, creado").eq("municipio_id", mid).order("creado", {ascending: false}).limit(300)),
     pide(sb.from("capturas").select("*").eq("municipio_id", mid).gte("publicado", desde)),
-    pide(sb.from("lecturas").select("fin, fuentes_ok, fuentes_total").not("fin", "is", null).order("id", {ascending: false}).limit(1)),
+    // La última lectura del turno de su región; sin la columna region (esquema anterior), la última de todas.
+    pide(sb.from("lecturas").select("fin, fuentes_ok, fuentes_total").eq("region", regionPiloto()).not("fin", "is", null).order("id", {ascending: false}).limit(1))
+      .catch(() => pide(sb.from("lecturas").select("fin, fuentes_ok, fuentes_total").not("fin", "is", null).order("id", {ascending: false}).limit(1))),
     pide(sb.from("municipios").select("config").eq("id", mid).single()),
     cargarRedesPiloto(sb).catch(() => null)  // cuentas de Facebook e Instagram: antes de las notas, que las necesitan como medio
   ]);
-  const c = cuenta();
-  if (mun.config && mun.config.temas) { Object.assign(c, mun.config); c.tv = mun.config.tv || 0; adaptarCuenta(c); }  // configuración guardada antes de los temas por territorio: se adapta al leerla
+  const c = cuenta(), pend = PILOTO.editor ? leerPendiente() : null;
+  // Lo que la IA ya confirmó como propio se ancla a la cuenta: la comuna, o el nombre de la autoridad (su tema núcleo).
+  const ancla = esAut(c) ? " " + c.perfil.variantes[0] : " " + org + " comuna";
+  const anclaDe = r => esAut(c) && r.sobre === "institucion" ? " " + norm(organoDe(c.perfil.rol, regionDeComuna((c.perfil.comunas || [])[0]))) : ancla;  // lo de su institución va a ese tema, no a la persona
+  if (pend) {  // temas cambiados en este equipo que no alcanzaron a llegar a la base: se suben y prevalecen
+    const cfg = JSON.parse(pend.cfg);
+    const d = await pide(sb.from("municipios").update({config: cfg, actualizado: new Date().toISOString()}).eq("id", mid).select("id"));
+    if (d && d.length) { Object.assign(c, cfg); limpiarPendiente(pend.cfg); toast("Se guardaron en la base los cambios de temas que habían quedado pendientes."); }
+    else if (mun.config && mun.config.temas) { Object.assign(c, mun.config); c.tv = mun.config.tv || 0; adaptarCuenta(c); }
+  }
+  else if (mun.config && mun.config.temas) { Object.assign(c, mun.config); c.tv = mun.config.tv || 0; adaptarCuenta(c); }  // configuración guardada antes de los temas por territorio: se adapta al leerla
   else if (PILOTO.editor) await pide(sb.from("municipios").update({config: configDe(c)}).eq("id", mid).select("id"));  // primera vez: se sube la caracterización actual
   const notas = men.filter(r => MED[r.notas.medio_id]).map(r => { const n = r.notas, t = n.titulo, res = r.resumen || t, x = r.palabras || "";
-    return {id: n.id, m: n.medio_id, ts: Date.parse(n.publicado), t, b: "", x, tono: r.tono || "neu", res, g: String(r.grupo || n.id), url: n.url, hay: norm(t + " " + res + " " + x + " " + org + " comuna"), ht: norm(t), real: true}; });
+    return {id: n.id, m: n.medio_id, ts: Date.parse(n.publicado), t, b: "", x, tono: r.tono || "neu", res, g: String(r.grupo || n.id), url: n.url, ...(r.ficha ? {f: r.ficha} : {}), hay: norm(t + " " + res + " " + x + anclaDe(r)), ht: norm(t), real: true}; });
   Object.keys(S.fp).forEach(k => { if (k.startsWith(org + ":")) delete S.fp[k]; });
   Object.keys(S.resp).forEach(k => { if (k.startsWith(org + ":")) delete S.resp[k]; });
   mar.forEach(m => { (m.tipo === "respondida" ? S.resp : S.fp)[org + ":" + m.grupo] = true; });
   S.comunicados = S.comunicados.filter(x => x.org !== org).concat(com.map(x => ({org, ts: Date.parse(x.creado), pieza: x.pieza, origen: x.origen || "", texto: x.texto, g: x.grupo, dbid: x.id})));
-  S.capturas = S.capturas.filter(x => x.org !== org).concat(cap.map(x => ({id: x.id, org, m: x.medio_id && MED[x.medio_id] ? x.medio_id : paginaFB(x.medio_nombre, x.medio_ambito), via: "facebook", ts: Date.parse(x.publicado), t: x.titulo, res: x.resumen || x.titulo, x: x.palabras || "", tono: x.tono || "neu", g: x.grupo || x.id, url: x.url || "", hay: (x.indice || "") + " " + norm(org) + " comuna"})));
+  S.capturas = S.capturas.filter(x => x.org !== org).concat(cap.map(x => ({id: x.id, org, m: x.medio_id && MED[x.medio_id] ? x.medio_id : paginaFB(x.medio_nombre, x.medio_ambito), via: "facebook", ts: Date.parse(x.publicado), t: x.titulo, res: x.resumen || x.titulo, x: x.palabras || "", tono: x.tono || "neu", g: x.grupo || x.id, url: x.url || "", hay: (x.indice || "") + norm(ancla)})));
   PILOTO.lectura = lec[0] || null; PILOTO.estado = "";
   MODO = {...MODO, tipo: "piloto", info: null, cargando: false};
   guardarLocal(); refrescarNotas(notas); PILOTO.snap = serializar();
@@ -171,13 +266,27 @@ function serializar(){
   return {fp: lista(S.fp), resp: lista(S.resp), cap: S.capturas.filter(x => x.org === org).map(x => x.id), com: S.comunicados.filter(x => x.org === org && !x.dbid).length, config: JSON.stringify(configDe(cuenta()))};
 }
 const guardarLocal = save;
-save = function(){ guardarLocal(); if (PILOTO.activo) { clearTimeout(PILOTO.timer); PILOTO.timer = setTimeout(sincronizar, 400); } };
+/* Temas y configuración: cada cambio queda marcado como pendiente en este equipo hasta que la base confirma que lo guardó.
+   Si la pestaña se cierra antes, o la base falla, el cambio no se pierde: se sube en la próxima sesión antes de leer la base. */
+const PEND_KEY = "pregonia-config-pendiente";
+function marcarPendiente(){
+  if (!PILOTO.activo || !PILOTO.snap || !PILOTO.editor) return;
+  const cfg = JSON.stringify(configDe(cuenta()));
+  if (cfg === PILOTO.snap.config) return;
+  try { localStorage.setItem(PEND_KEY, JSON.stringify({mid: PILOTO.muni.id, cfg, ts: Date.now()})); } catch(e) {}
+}
+function leerPendiente(){ try { const p = JSON.parse(localStorage.getItem(PEND_KEY) || "null"); return p && p.mid === (PILOTO.muni && PILOTO.muni.id) ? p : null; } catch(e) { return null; } }
+function limpiarPendiente(cfg){ const p = leerPendiente(); if (p && (!cfg || p.cfg === cfg)) try { localStorage.removeItem(PEND_KEY); } catch(e) {} }
+function sincronizarYa(){ if (PILOTO.timer) { clearTimeout(PILOTO.timer); PILOTO.timer = null; return sincronizar(); } }
+save = function(){ guardarLocal(); if (PILOTO.activo) { marcarPendiente(); clearTimeout(PILOTO.timer); PILOTO.timer = setTimeout(() => { PILOTO.timer = null; sincronizar(); }, 400); } };
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") sincronizarYa(); });
+window.addEventListener("pagehide", () => { sincronizarYa(); });
 async function sincronizar(){
   if (!PILOTO.activo || !PILOTO.snap) return;
   if (PILOTO.sinc) { PILOTO.pendiente = true; return; }
   const ahora = serializar(), antes = PILOTO.snap, dif = (a, b) => a.filter(x => !b.includes(x));
   const hay = dif(ahora.fp, antes.fp).length || dif(antes.fp, ahora.fp).length || dif(ahora.resp, antes.resp).length || dif(antes.resp, ahora.resp).length || ahora.com || dif(ahora.cap, antes.cap).length || dif(antes.cap, ahora.cap).length || ahora.config !== antes.config;
-  if (!hay) return;
+  if (!hay) { limpiarPendiente(); return; }
   if (!PILOTO.editor) { toast("Tu perfil es de solo lectura: ese cambio no se guarda."); return cargarDatosPiloto().catch(() => {}); }
   PILOTO.sinc = true; PILOTO.estado = "guardando…"; pintarModo();
   const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, ops = [];
@@ -192,16 +301,27 @@ async function sincronizar(){
     const capAdd = dif(ahora.cap, antes.cap), capDel = dif(antes.cap, ahora.cap);
     if (capAdd.length) ops.push(pide(sb.from("capturas").upsert(S.capturas.filter(x => x.org === org && capAdd.includes(x.id)).map(capAFila), {onConflict: "id", ignoreDuplicates: true})));
     if (capDel.length) ops.push(pide(sb.from("capturas").delete().eq("municipio_id", mid).in("id", capDel)));
-    if (ahora.config !== antes.config) ops.push(pide(sb.from("municipios").update({config: JSON.parse(ahora.config), actualizado: new Date().toISOString()}).eq("id", mid)));
+    if (ahora.config !== antes.config) ops.push(pide(sb.from("municipios").update({config: JSON.parse(ahora.config), actualizado: new Date().toISOString()}).eq("id", mid).select("id")).then(d => {
+      if (!d || !d.length) throw new Error("la base no aceptó el cambio de temas (revisa el rol de tu cuenta)");
+    }));
     await Promise.all(ops);
-    guardarLocal(); PILOTO.snap = serializar(); PILOTO.estado = "cambios guardados " + horaHM(Date.now());
+    guardarLocal(); PILOTO.snap = serializar(); limpiarPendiente(ahora.config); PILOTO.estado = "cambios guardados " + horaHM(Date.now());
   } catch(e) {
-    PILOTO.estado = ""; toast("No se pudo guardar en la base (" + (e.message || e) + "). Recargamos los datos del equipo.");
-    await cargarDatosPiloto().catch(() => {});
+    PILOTO.estado = "cambios sin guardar"; marcarPendiente();
+    toast("No se pudo guardar en la base (" + (e.message || e) + "). Tus cambios quedan en este equipo y se reintentan en 30 segundos.");
+    clearTimeout(PILOTO.reintento); PILOTO.reintento = setTimeout(sincronizar, 30000);
   } finally {
     PILOTO.sinc = false; pintarModo();
     if (PILOTO.pendiente) { PILOTO.pendiente = false; sincronizar(); }
   }
+}
+/* Salir de la prueba gratis en este navegador: vuelve a la portada; las autoridades configuradas quedan guardadas
+   y la próxima entrada pide de nuevo la inscripción. */
+function salirPrueba(){
+  try { localStorage.removeItem(PRUEBA_KEY); } catch(e) {}
+  if (typeof ptVideo !== "undefined") ptVideo.pausar();
+  mostrarPortada(true); location.hash = "portada"; pintarAcceso();
+  toast("Saliste de la prueba. Para volver, toca «Prueba gratis».");
 }
 async function salir(){
   if (typeof avisosAlSalir === "function") await avisosAlSalir();
@@ -214,14 +334,16 @@ async function salir(){
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-act]"); if (!b) return; const a = b.dataset.act;
   if (a === "login") abrirLogin();
+  if (a === "prueba-salir") { b.disabled = true; b.textContent = "Cerrando sesión…"; salirAPrueba(); return; }
   if (a === "dlg-close") cerrarDialogo();
   if (a === "olvide") olvide();
   if (a === "cuenta") menuCuenta(b);
-  if (a === "salir") { cerrarMenu(); salir(); }
+  if (a === "salir") { cerrarMenu(); b.disabled = true; salir(); }
+  if (a === "salir-prueba") { salirPrueba(); return; }
   if (a === "recargar-piloto") { cerrarMenu(); cargarDatosPiloto().then(() => toast("Datos actualizados.")).catch(er => toast("No se pudieron actualizar: " + er.message)); }
 });
 document.addEventListener("click", e => { if (e.target.id === "dlgBack") cerrarDialogo(); });
-document.addEventListener("submit", e => { if (e.target.id === "loginForm") ingresar(e); if (e.target.id === "claveForm") guardarClave(e); if (e.target.id === "legalForm") registrarAceptacion(e); });
+document.addEventListener("submit", e => { if (e.target.id === "loginForm") ingresar(e); if (e.target.id === "claveForm") guardarClave(e); if (e.target.id === "legalForm") registrarAceptacion(e); if (e.target.id === "avisoForm") aceptarAviso(e); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#dlgBack")) { e.preventDefault(); cerrarDialogo(); } });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && PILOTO.activo && !PILOTO.sinc && !PILOTO.timer) cargarDatosPiloto().catch(() => {}); });
 setInterval(() => { if (PILOTO.activo && (document.visibilityState === "visible" || ("Notification" in window && Notification.permission === "granted")) && !PILOTO.sinc) cargarDatosPiloto().catch(() => {}); }, 5 * 60000);
@@ -238,4 +360,34 @@ setInterval(() => { if (PILOTO.activo && (document.visibilityState === "visible"
   const {data: {session}} = await PILOTO.sb.auth.getSession();
   if (/access_token=|type=/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search + "#inicio");
   if (session) { await entrarPiloto(session.user); if (tipoEnlace === "invite" || tipoEnlace === "recovery") pedirClave(tipoEnlace); }
-})();
+  // Enlace /?ingresar (desde la página del servicio): sin sesión abre el acceso de clientes; con sesión ya entró a su edición.
+  if (/[?&]ingresar\b/.test(location.search)) {
+    const resto = location.search.slice(1).split("&").filter(x => x && !/^ingresar(=|$)/.test(x)).join("&");
+    history.replaceState(null, "", location.pathname + (resto ? "?" + resto : "") + location.hash);
+    if (!session) abrirLogin();
+  }
+})().catch(() => {}).finally(() => {
+  // Enlace /?prueba (botón «Prueba gratis» de la página del servicio): sin sesión, aviso legal e inscripción sobre la portada.
+  // Corre también si la sesión de clientes no está disponible (sin configuración o sin red hacia Supabase).
+  if (!/[?&]prueba\b/.test(location.search)) return;
+  const resto = location.search.slice(1).split("&").filter(x => x && !/^prueba(=|$)/.test(x)).join("&");
+  history.replaceState(null, "", location.pathname + (resto ? "?" + resto : "") + location.hash);
+  if (!PILOTO.activo) avisoLegal().then(ok => { if (ok) entAbrir(true); });
+  else pruebaConSesion();  // con sesión de cliente abierta: antes el enlace se ignoraba y llevaba a su edición sin explicar nada
+});
+/* «Prueba gratis» con una sesión de cliente abierta en este navegador: la prueba corre fuera de esa sesión, así que se ofrece
+   cerrarla y abrir la prueba, o seguir en la edición. Para mostrar la demo sin cerrar la sesión, conviene una ventana de incógnito. */
+function pruebaConSesion(){
+  const inst = (PILOTO.muni && PILOTO.muni.nombre) || "tu institución";
+  dialogo("prs", "Tienes una sesión de cliente abierta", `Estás dentro de la edición de ${esc(inst)}. La prueba gratis se abre fuera de esa sesión.`, `
+    <div class="cap-f">
+      <p class="hint" style="margin:0">Para mostrar la prueba sin cerrar tu sesión, ábrela en una ventana de incógnito.</p>
+      <div class="cap-acts"><button class="btn alt" type="button" data-act="prueba-salir">Cerrar sesión y abrir la prueba</button><button class="btn" type="button" data-act="dlg-close">Seguir en mi edición</button></div>
+    </div>`);
+}
+async function salirAPrueba(){
+  if (typeof avisosAlSalir === "function") await avisosAlSalir();
+  try { await PILOTO.sb.auth.signOut(); } catch(e) {}
+  try { localStorage.removeItem(KEY); localStorage.setItem(MODO_KEY, "demo"); } catch(e) {}
+  location.href = "/app?prueba";
+}

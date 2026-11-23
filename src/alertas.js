@@ -7,13 +7,13 @@ S.avisos ||= {pref: null, porOrg: {}, push: null};
 Object.keys(S.avisos.porOrg).forEach(k => { if (!k.includes("|")) delete S.avisos.porOrg[k]; });  // formato anterior, sin modo
 const AV = {abierto: false, vuelta: null, cfg: null, destacar: null};
 const AV_ETQ = {urgente: "Urgente", importante: "Importante", info: "Buena noticia"};
-const AV_NIV = [["urgente", "Solo lo urgente", "Críticas que llegaron a prensa regional o nacional, o que crecen rápido. Pensado para el alcalde."],
+const AV_NIV = [["urgente", "Solo lo urgente", "Críticas que llegaron a prensa regional o nacional, o que crecen rápido. Pensado para el alcalde o la autoridad."],
   ["importante", "Lo crítico", "Además, toda noticia crítica nueva, aunque sea comunal. Pensado para comunicaciones."],
   ["todo", "Todo", "Además, las buenas noticias que llegan a prensa regional o nacional."],
   ["nada", "Nada", "Sin avisos; la campana sigue guardando la lista."]];
 fetch("/api/config").then(r => r.ok ? r.json() : {}).then(j => { AV.cfg = j.avisos || null; if (AV.abierto) avPintar(); }).catch(() => {});
 const avRol = () => typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo && PILOTO.perfil ? PILOTO.perfil.rol : "";
-function avPref(){ return S.avisos.pref || {nivel: ["alcalde", "directivo"].includes(avRol()) ? "urgente" : "importante", silencio: true, correo: true}; }
+function avPref(){ return S.avisos.pref || {nivel: ["alcalde", "autoridad", "directivo"].includes(avRol()) ? "urgente" : "importante", silencio: true, correo: true}; }
 /* Un estado por municipio y por modo: los avisos de la demostración no se mezclan con los de noticias reales ni con los del piloto,
    y la primera carga de cada modo solo arma la lista (no notifica lo que ya estaba). */
 const avModo = () => typeof MODO !== "undefined" && MODO && MODO.tipo ? MODO.tipo : "demo";
@@ -72,8 +72,13 @@ function avBoton(){
 }
 function avDispositivo(){
   const per = avPermiso(), push = avPushServidor(), ios = typeof esIOS !== "undefined" && esIOS, inst = typeof PWA !== "undefined" && PWA.instalada;
-  if (per === "no") return `<p class="muted">Esta vista no permite avisos del navegador. Ábrelo en pregonia.vercel.app${ios ? " e instálala en la pantalla de inicio" : ""}.</p>`;
-  if (ios && !inst) return `<p class="muted">En iPhone los avisos llegan solo con PregonIA instalada: toca Compartir en Safari, luego «Agregar a inicio», y abre PregonIA desde ese ícono.</p>`;
+  if (per === "no") return `<p class="muted">Esta vista no permite avisos del navegador. Ábrelo en pregonia.cl${ios ? " e instálala en la pantalla de inicio" : ""}.</p>`;
+  if (ios && !inst) return `<p class="muted">En iPhone los avisos llegan solo con PregonIA instalada en la pantalla de inicio. Son dos toques.</p><button class="btn alt sm" type="button" data-act="guia-ios">Ver cómo instalarla</button>`;
+  const instalar = !ios && !inst && typeof PWA !== "undefined" && PWA.aviso && typeof movil === "function" && movil()
+    ? `<p class="cap-inst" style="margin:0 0 12px"><span>Instala PregonIA en este celular: queda como una app más, con su ícono y los avisos aunque esté cerrada.</span><button class="btn sm alt" type="button" data-act="instalar">Instalar PregonIA</button></p>` : "";
+  return instalar + avDispositivoBase(per, push);
+}
+function avDispositivoBase(per, push){
   if (per === "denied") return `<p class="muted">Los avisos están bloqueados en este navegador. Actívalos desde el candado junto a la dirección (Configuración del sitio · Notificaciones).</p>`;
   if (per !== "granted") return `<p>${push ? "Recibe aquí lo urgente aunque PregonIA esté cerrada." : "Recibe aquí lo urgente mientras PregonIA esté abierta o instalada."}</p><button class="btn alt sm" type="button" data-act="avisos-activar">Activar avisos en este dispositivo</button>`;
   return `<p><span class="pill t-pos">Activos</span> ${push && S.avisos.push ? "Llegan aunque PregonIA esté cerrada." : push ? "Llegan con PregonIA abierta. <button class=\"btn ghost sm\" type=\"button\" data-act=\"avisos-activar\">Recibirlos también con la app cerrada</button>" : "Llegan mientras PregonIA esté abierta o instalada."}</p><button class="btn ghost sm" type="button" data-act="avisos-probar">Enviar un aviso de prueba</button>`;
@@ -96,6 +101,11 @@ function avPintar(){
       <label class="av-chk"><input type="checkbox" id="avSilencio" ${pref.silencio !== false ? "checked" : ""}> Silencio de 23:00 a 7:00, salvo lo urgente</label>
       ${piloto ? `<label class="av-chk"><input type="checkbox" id="avCorreo" ${pref.correo !== false ? "checked" : ""} ${AV.cfg && AV.cfg.correo ? "" : "disabled"}> También por correo${AV.cfg && AV.cfg.correo ? "" : ' <span class="muted">(el correo aún no está configurado en el servidor)</span>'}</label>` : ""}
     </section>
+    ${piloto ? `<section class="av-sec"><h3 class="hp-h">Parte diario por WhatsApp</h3>
+      <p class="muted" style="margin:0 0 8px">Cada mañana a las 8:00: cuántas noticias hubo en 24 horas, cuántas críticas y las dos principales, con el enlace a PregonIA.${AV.cfg && AV.cfg.whatsapp ? "" : " El envío se activa cuando el número de PregonIA quede habilitado; puedes dejar el tuyo desde ya."}</p>
+      <div class="field" style="margin:0 0 8px"><label for="avWa">Tu celular</label><input id="avWa" type="tel" inputmode="tel" autocomplete="tel" placeholder="9 1234 5678" value="${esc(pref.whatsapp || "")}"></div>
+      <label class="av-chk"><input type="checkbox" id="avWaOk" ${pref.whatsapp_ok ? "checked" : ""}> Acepto recibir el parte de prensa en este número por WhatsApp. Puedo darlo de baja aquí cuando quiera.</label>
+      <button class="btn sm" type="button" data-act="avisos-wa">Guardar</button></section>` : ""}
     <section class="av-sec"><div class="av-h"><h3 class="hp-h" style="margin:0">Avisos de ${esc(S.org)}</h3>${avNoLeidas() ? `<button class="btn ghost sm" type="button" data-act="avisos-leidos">Marcar todo como leído</button>` : ""}</div>
       ${grupos.length ? grupos.map(([t, l]) => `<h4 class="av-g">${t}</h4><ul class="av-l">${l.map(item).join("")}</ul>`).join("") : `<p class="muted">Sin avisos todavía. Aquí aparecerán las noticias críticas, las que escalan a prensa regional o nacional y los temas que crecen rápido.</p>`}
     </section>`;
@@ -113,7 +123,7 @@ function avCerrar(){
 }
 function avGuardarPref(p){
   S.avisos.pref = {...avPref(), ...p}; save();
-  if (typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo && PILOTO.sb) PILOTO.sb.from("avisos").upsert({usuario: PILOTO.user.id, municipio_id: PILOTO.muni.id, nivel: S.avisos.pref.nivel, silencio: S.avisos.pref.silencio !== false, correo: S.avisos.pref.correo !== false, actualizado: new Date().toISOString()}).then(r => { if (r.error) toast("No se pudo guardar la preferencia en el piloto."); });
+  if (typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo && PILOTO.sb) PILOTO.sb.from("avisos").upsert({usuario: PILOTO.user.id, municipio_id: PILOTO.muni.id, nivel: S.avisos.pref.nivel, silencio: S.avisos.pref.silencio !== false, correo: S.avisos.pref.correo !== false, ...("whatsapp" in S.avisos.pref ? {whatsapp: S.avisos.pref.whatsapp || null, whatsapp_ok: !!S.avisos.pref.whatsapp_ok} : {}), actualizado: new Date().toISOString()}).then(r => { if (r.error) toast("No se pudo guardar la preferencia en el piloto."); });
 }
 const b64u = s => { const p = (s + "===".slice((s.length + 3) % 4)).replace(/-/g, "+").replace(/_/g, "/"), b = atob(p); return Uint8Array.from(b, c => c.charCodeAt(0)); };
 async function avActivar(){
@@ -138,7 +148,7 @@ async function avisosAlSalir(){
 }
 /* Al entrar al piloto: preferencias guardadas de la persona. */
 async function avisosAlEntrar(){
-  try { const r = await PILOTO.sb.from("avisos").select("nivel, silencio, correo").eq("usuario", PILOTO.user.id).maybeSingle(); if (r.data) { S.avisos.pref = r.data; save(); } } catch(e) {}
+  try { const r = await PILOTO.sb.from("avisos").select("*").eq("usuario", PILOTO.user.id).maybeSingle(); if (r.data) { S.avisos.pref = r.data; save(); } } catch(e) {}
 }
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-act]"); if (!b) return; const a = b.dataset.act;
@@ -146,6 +156,13 @@ document.addEventListener("click", e => {
   if (a === "avisos-cerrar") avCerrar();
   if (a === "avisos-activar") avActivar();
   if (a === "avisos-probar") { const x = avEstado().lista[0]; notificar(x ? {...x, titulo: "Prueba · " + x.titulo} : {nivel: "info", titulo: "Aviso de prueba", titular: "Así se verán los avisos de PregonIA.", medio: "PregonIA"}, true).then(ok => toast(ok ? "Aviso de prueba enviado." : "No se pudo mostrar el aviso.")); }
+  if (a === "avisos-wa") {
+    const d = ($("#avWa").value || "").replace(/\D/g, ""), tel = /^569\d{8}$/.test(d) ? d : /^9\d{8}$/.test(d) ? "56" + d : d ? null : "";
+    if (tel === null) return toast("Escribe un celular chileno: 9 y ocho dígitos.");
+    const ok = $("#avWaOk").checked;
+    if (tel && !ok) return toast("Marca la casilla de aceptación para recibir el parte por WhatsApp.");
+    avGuardarPref({whatsapp: tel || null, whatsapp_ok: !!tel && ok}); toast(tel ? "Listo: recibirás el parte de las 8:00 en +" + tel + "." : "Quitamos tu número: ya no recibirás el parte por WhatsApp.");
+  }
   if (a === "avisos-leidos") { avEstado().lista.forEach(x => x.leida = true); save(); avBadge(); avPintar(); }
   if (AV.abierto && (a === "vocero" || a === "responder") && b.closest("#avisosPanel")) avCerrar();
 });
@@ -165,6 +182,6 @@ refrescarNotas = function(base){ refrescarSinAvisos(base); try { revisarAlertas(
 /* Con noticias reales y avisos activos, la lectura se repite cada 10 minutos aunque la pestaña esté en segundo plano. */
 setInterval(() => { if (typeof PILOTO !== "undefined" && PILOTO && PILOTO.activo) return; if (MODO.tipo === "real" && !MODO.cargando && (document.visibilityState === "visible" || avPermiso() === "granted")) cargarReales(true, true); }, 10 * 60000);
 avBoton(); revisarAlertas();
-/* Llegada desde una notificación: abre la campana en ese aviso. */
-(() => { const g = new URLSearchParams(location.search).get("alerta"); if (!g) return; const resto = location.search.slice(1).split("&").filter(x => x && !x.startsWith("alerta=")).join("&"); history.replaceState(null, "", location.pathname + (resto ? "?" + resto : "") + location.hash); setTimeout(() => avAbrir(g), 300); })();
+/* Llegada desde una notificación (abre la campana en ese aviso) o desde el atajo «Avisos» del ícono instalado (abre la campana). */
+(() => { const q = new URLSearchParams(location.search), g = q.get("alerta"), lista = q.has("avisos"); if (!g && !lista) return; const resto = location.search.slice(1).split("&").filter(x => x && !x.startsWith("alerta=") && !/^avisos(=|$)/.test(x)).join("&"); history.replaceState(null, "", location.pathname + (resto ? "?" + resto : "") + location.hash); setTimeout(() => avAbrir(g || undefined), 300); })();
 navigator.serviceWorker?.addEventListener?.("message", e => { if (e.data && e.data.tipo === "abrir-aviso") avAbrir(e.data.g); });

@@ -5,6 +5,10 @@
 // Función de Node con hasta 60 s (vercel.json): la de Edge cortaba las respuestas largas cerca de los 10 s.
 
 const VOZ_POR_DEFECTO = "M1BTnEdXPMEslfxGUtu1"; // Felipe · español de Chile, tono neutro para narración
+// El plan gratuito de ElevenLabs no permite voces de la biblioteca por API (Felipe lo es): en ese caso se usa una voz
+// estándar de ElevenLabs, que sí está en todos los planes. Se cambia con ELEVENLABS_VOICE_FALLBACK.
+const VOZ_RESPALDO = "JBFqnCBsd6RMkjVDRZzb"; // George · voz estándar de ElevenLabs; con el modelo multilingüe lee en español
+let soloEstandarHasta = 0;  // tras un rechazo por plan, por 30 minutos va directo a la voz estándar (si se sube el plan, vuelve sola a la chilena)
 const MODELO_POR_DEFECTO = "eleven_multilingual_v2";
 const VENTANA_MS = 10 * 60 * 1000;
 const MAX_CARACTERES = 700; // una escena; el video completo son 6 a 8 escenas
@@ -41,8 +45,8 @@ async function handler(req) {
   if (!texto) return json({ error: "Falta el texto" }, 400);
   if (texto.length > MAX_CARACTERES) return json({ error: "El texto es demasiado largo" }, 413);
 
-  const voz = (process.env.ELEVENLABS_VOICE_ID || VOZ_POR_DEFECTO).trim();
-  const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voz)}?output_format=mp3_44100_128`, {
+  const elegida = (process.env.ELEVENLABS_VOICE_ID || VOZ_POR_DEFECTO).trim(), respaldo = (process.env.ELEVENLABS_VOICE_FALLBACK || VOZ_RESPALDO).trim();
+  const pedir = voz => fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voz)}?output_format=mp3_44100_128`, {
     method: "POST",
     headers: { "xi-api-key": clave, "content-type": "application/json", accept: "audio/mpeg" },
     body: JSON.stringify({
@@ -51,15 +55,23 @@ async function handler(req) {
       voice_settings: { stability: 0.55, similarity_boost: 0.8, style: 0.1, use_speaker_boost: true, speed: Number(process.env.ELEVENLABS_SPEED || 1.06) }
     })
   });
+  let estandar = Date.now() < soloEstandarHasta && respaldo !== elegida, r = await pedir(estandar ? respaldo : elegida), detalle = "";
+  if (!r.ok && r.status === 402 && !estandar && respaldo !== elegida) {
+    detalle = await r.text().catch(() => "");
+    if (/paid_plan_required|library voices/i.test(detalle)) { soloEstandarHasta = Date.now() + 30 * 60 * 1000; estandar = true; r = await pedir(respaldo); detalle = ""; }
+  }
   if (!r.ok || !r.body) {
-    const detalle = await r.text().catch(() => "");
+    detalle = detalle || await r.text().catch(() => "");
     console.error("ElevenLabs", r.status, detalle.slice(0, 400));
-    const msg = r.status === 401 ? "La clave de ElevenLabs no es válida o no tiene permiso de texto a voz"
-      : r.status === 429 ? "ElevenLabs está ocupado o se agotó el saldo del plan"
-      : /quota|credits/i.test(detalle) ? "Se agotaron los caracteres del plan de ElevenLabs"
+    // ElevenLabs responde 401 también cuando se acabó el saldo del mes («quota_exceeded»): se revisa eso primero.
+    const msg = /quota_exceeded|quota|credits remaining/i.test(detalle) ? "Se acabaron los créditos del mes en ElevenLabs: hay que esperar la renovación o subir de plan"
+      : r.status === 402 && /paid_plan_required|library voices/i.test(detalle) ? "La voz elegida requiere un plan pagado de ElevenLabs"
+      : r.status === 401 ? "La clave de ElevenLabs no es válida o no tiene permiso de texto a voz"
+      : r.status === 429 ? "ElevenLabs está ocupado; intenta en unos minutos"
       : "El servicio de voz no respondió";
     return json({ error: msg }, r.status === 429 ? 429 : 502);
   }
-  return new Response(r.body, { headers: { "content-type": "audio/mpeg", "cache-control": "no-store" } });
+  // «x-voz: estandar» avisa a la aplicación que se usó la voz estándar en vez de la chilena.
+  return new Response(r.body, { headers: { "content-type": "audio/mpeg", "cache-control": "no-store", "x-voz": estandar ? "estandar" : "elegida" } });
 }
 export const GET = handler, POST = handler;

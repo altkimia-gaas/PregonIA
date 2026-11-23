@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="robots" content="noindex">
+<title>Sin conexión · PregonIA</title>
+<style>
+:root{--bg:#FFFFFF;--surface:#FFFFFF;--ink:#141414;--muted:#555555;--line:#DADADA;--btn:#2B4BE0;--btn-ink:#FFFFFF;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#121212;--surface:#1A1A1A;--ink:#EDEDED;--muted:#A8A8A8;--line:#2E2E2E;--btn:#8FA2FF;--btn-ink:#0B1240;color-scheme:dark}}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;display:grid;place-items:center}
+main{max-width:420px;padding:32px max(20px,env(safe-area-inset-left,0px));text-align:center}
+img{width:72px;height:72px;border-radius:16px}
+h1{font:700 26px/1.2 Georgia,"Times New Roman",serif;margin:18px 0 8px}
+p{margin:0 0 22px;color:var(--muted)}
+button{background:var(--btn);color:var(--btn-ink);border:0;border-radius:999px;padding:12px 22px;font:600 16px Inter,system-ui,sans-serif;min-height:44px;cursor:pointer}
+</style>
+</head>
+<body>
+<main>
+<img src="/icono-192.png" alt="" width="72" height="72">
+<h1>Sin conexión</h1>
+<p>PregonIA necesita internet para leer los medios. Revisa la señal o el wifi y vuelve a intentarlo; los avisos que lleguen mientras tanto quedan en la campana.</p>
+<button type="button" onclick="location.reload()">Reintentar</button>
+</main>
+<script>addEventListener("online", () => location.reload());</script>
+</body>
+</html>

@@ -70,7 +70,7 @@ async function capAnalizar(texto, medio, img){
   const recientes = menciones(cuenta(), 14).slice(0, 25), sample = await samplePromise;
   if (!sample) return null;
   if (img) { const puede = typeof sample.limits === "function" ? !!(await sample.limits().catch(() => ({}))).images : !!sample.imagenes; if (!puede) { if (texto.length < 20) throw {code: "sin_imagen"}; img = null; } }
-  const p = `Eres analista de prensa de PregonIA para ${esAut() ? "el equipo de " + inst() + " (" + cuenta().perfil.zonaNombre + ")" : inst()}, Región de Valparaíso, Chile. Analiza esta publicación ${medio ? `de la página "${medio}"` : "de una página"} en Facebook o redes sociales.${img ? " La publicación viene en la captura de pantalla adjunta: lee su texto (y la página que la publicó, si se ve)." : ""}
+  const p = `Eres analista de prensa de PregonIA para ${esAut() ? "el equipo de " + inst() + " (" + cuenta().perfil.zonaNombre + ")" : inst()}, ${regionCuenta().nombre}, Chile. Analiza esta publicación ${medio ? `de la página "${medio}"` : "de una página"} en Facebook o redes sociales.${img ? " La publicación viene en la captura de pantalla adjunta: lee su texto (y la página que la publicó, si se ve)." : ""}
 
 """${texto.slice(0, 3000) || "(sin texto pegado: usa la captura)"}"""
 
@@ -118,7 +118,7 @@ async function capGuardar(e){
     hay: norm(t + " " + res + " " + x + " " + texto.slice(0, 600) + " " + (esAut() ? cuenta().perfil.variantes[0] : S.org + " comuna"))};
   capImgBlob = null;
   S.capturas.push(c); save(); refrescarNotas(); capCerrar();
-  tState.tono = "todos"; tState.dias = "30"; tState.tema = "todos"; tState.q = "";
+  tState.tono = "todos"; tState.tema = "todos"; tState.q = "";
   if (route() !== "menciones") location.hash = "menciones"; else render(true);
   const unida = g !== id ? " Se sumó a una noticia que ya publicaron otros medios." : "";
   toast(sinIA ? "Agregada sin análisis de IA: revisa el tono y el resumen." : `Agregada como ${({cri: "crítica", neu: "neutra", pos: "positiva"})[tono]}.${unida}${r && r.rel === false ? ` Ojo: la IA cree que no trata de ${S.org}.` : ""}`, () => { S.capturas = S.capturas.filter(z => z.id !== id); save(); refrescarNotas(); render(); });

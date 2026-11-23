@@ -500,7 +500,7 @@ Los dos riesgos que pueden matar el producto son el legal y la pérdida de confi
 
 ## Decisiones abiertas
 
-- [x] Nombre: PregonIA, con la bajada "Escucha la plaza. Decide a tiempo." Pendiente: revisar la marca en INAPI (clases 9, 35, 38 y 42), inscribir pregonia.cl en NIC Chile y solicitar la marca mixta a nombre de ALTkimia.
+- [x] Nombre: PregonIA, con la bajada "La prensa no espera. Tú tampoco." (antes "Escucha la plaza. Decide a tiempo.", cambiada el 13-nov-2026) Pendiente: revisar la marca en INAPI (clases 9, 35, 38 y 42), inscribir pregonia.cl en NIC Chile y solicitar la marca mixta a nombre de ALTkimia.
 - [x] Sociedad operadora: ALTkimia.
 - [x] Listado de medios: todos los verificados, 50 nacionales y 50 de la Región de Valparaíso.
 - [x] Piloto con seis municipios: Casablanca, Algarrobo, El Quisco, El Tabo, Cartagena y San Antonio.
