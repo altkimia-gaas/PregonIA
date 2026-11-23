@@ -10,7 +10,7 @@ const CT = (k, n, t, r, w = 1) => ({k, n, t, r, w});
 const LOCAL = r => CT("local", "Vida local en el territorio", ["turismo", "temporada", "playa", "feria", "fiesta", "costumbrista", "cultura", "patrimonio", "deporte", "plaza", "calles", "veredas", "vecinos", "cesfam", "colegio", "basura", "microbasural", "humedal", "comercio", "obras", "salvavidas", "municipalidad", "municipio", "concejo"], r, 0.5);
 const CATS = {
   municipio: [
-    CT("agua", "Agua y servicios básicos", ["agua potable", "corte de agua", "cortes de agua", "apr", "aljibe", "sequia", "escasez hidrica", "hidric", "alcantarillado", "sanitaria", "esval", "pozo", "caudal", "riego", "estero", "agua"], ["Operaciones"]),
+    CT("agua", "Agua y servicios básicos", ["agua potable", "corte de agua", "cortes de agua", "apr", "aljibe", "sequia", "escasez hidrica", "hidric", "alcantarillado", "sanitaria", "esval", "aguas antofagasta", "pozo", "caudal", "riego", "estero", "agua"], ["Operaciones"]),
     CT("emergencias", "Emergencias y protección civil", ["incendio", "emergencia", "senapred", "bomberos", "brigadas", "marejada", "temporal", "evacuacion", "albergue", "damnificad", "alerta roja", "conaf", "socavon"], ["Emergencias"]),
     CT("seguridad", "Seguridad pública", ["seguridad", "robo", "delincuen", "delito", "carabineros", "patrullaje", "televigilancia", "camaras", "luminarias", "homicidio", "balacera", "detenid", "pdi", "portonazo"], ["Seguridad pública"]),
     CT("salud", "Salud primaria", ["cesfam", "consultorio", "posta", "sapu", "farmacia", "hospital", "vacunacion", "horas medicas", "salud"], ["Salud municipal"]),
@@ -116,15 +116,27 @@ CATS.alcalde = CATS.municipio;
 const CAT_OTROS = {k: "otros", n: "Otros asuntos", t: [], r: []};
 const catRe = k => k.length <= 3 ? termRe(k) : kwRe(k);
 const rolDe = (c = cuenta()) => c && c.perfil && c.perfil.tipo === "Autoridad" ? c.perfil.rol : "municipio";
-const catsDe = (c = cuenta()) => CATS[rolDe(c)] || CATS.municipio;
+/* Región de la cuenta: la categoría «region» y algunas palabras cambian por región; Valparaíso usa el set de siempre. */
+const CAT_REGION = {
+  II: {region: CT("region", "Región de Antofagasta", ["mineria", "minera", "cobre", "litio", "codelco", "puerto de antofagasta", "desalin", "hidrogeno verde", "logistic", "borde costero"], ["Equipo territorial"]),
+    extra: {agua: ["desaladora", "rio loa"], ambiente: ["tocopilla", "mejillones", "calama", "material particulado", "descarbonizacion", "termoelectrica", "relave", "litio"]}}
+};
+const CATS_REG = {};
+function catsRol(rol, reg){
+  const base = CATS[rol] || CATS.municipio, cr = CAT_REGION[reg]; if (!cr) return base;
+  const k = rol + "|" + reg;
+  return CATS_REG[k] || (CATS_REG[k] = base.map(x => x.k === "region" ? cr.region : cr.extra[x.k] ? {...x, t: x.t.concat(cr.extra[x.k])} : x));
+}
+const regDe = c => typeof regionCuenta === "function" && c ? regionCuenta(c).id : REGION_DEFECTO;
+const catsDe = (c = cuenta()) => catsRol(rolDe(c), regDe(c));
 /* Categoría de una noticia: la de más palabras calzadas, contando triple las del titular; empate, la primera del set.
    Sin ninguna palabra, «Otros asuntos». Se guarda por cargo en la noticia agrupada, porque se pide muchas veces por dibujo. */
 function categoriaDe(m, c = cuenta()){
-  const rol = rolDe(c); m._cat = m._cat || {}; if (m._cat[rol]) return m._cat[rol];
+  const reg = regDe(c), rol = rolDe(c), ck = reg === REGION_DEFECTO ? rol : rol + "|" + reg; m._cat = m._cat || {}; if (m._cat[ck]) return m._cat[ck];
   const tit = m.notas.map(n => n.ht || norm(n.t)).join(" | "), hay = m.notas.map(n => n.hay).join(" | ");
   let best = null, bs = 0;
-  (CATS[rol] || CATS.municipio).forEach(x => { const s = x.w * x.t.reduce((a, k) => { const re = catRe(k); return a + (re.test(tit) ? 3 : re.test(hay) ? 1 : 0); }, 0); if (s > bs) { bs = s; best = x; } });
-  return (m._cat[rol] = best || CAT_OTROS);
+  catsRol(rol, reg).forEach(x => { const s = x.w * x.t.reduce((a, k) => { const re = catRe(k); return a + (re.test(tit) ? 3 : re.test(hay) ? 1 : 0); }, 0); if (s > bs) { bs = s; best = x; } });
+  return (m._cat[ck] = best || CAT_OTROS);
 }
 
 /* Enfoque: el primero que calza en este orden. La opinión se reconoce por el titular; lo demás, por el texto completo. */

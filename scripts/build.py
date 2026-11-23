@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Arma index.html autónomo desde src/ y data/catalogo_medios.csv.
+"""Arma app.html (la aplicación, servida en «/» de pregonia.cl) autónomo desde src/ y data/catalogo_medios.csv.
 
 Uso: python3 scripts/build.py
 Orden del script embebido: base.js (constantes y catálogo) → corpus.js (noticias ficticias) → calendario.js (fechas de riesgo; antes de app.js porque la portada lo usa al primer dibujo) → autoridades.js + territorios.js (temas por territorio y cargo) + categorias.js (categoría, enfoque y papel de cada noticia) + cuentas.js (municipios y autoridades electas; antes de app.js por la misma razón) → app.js (aplicación) → captura.js → cuentasred.js + redes.js (cuentas de Facebook e Instagram) → vocero.js (kit de vocería) → compartir.js (app instalable y Compartir) → reglas.js + alertas.js (avisos) → piloto.js → video.js.
 """
-import csv, json, pathlib
+import csv, hashlib, json, pathlib
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 SRC, DATA = RAIZ / "src", RAIZ / "data"
@@ -12,7 +12,7 @@ SRC, DATA = RAIZ / "src", RAIZ / "data"
 def catalogo():
     filas = csv.DictReader(open(DATA / "catalogo_medios.csv", encoding="utf-8"))
     return [{"id": int(f["id"]), "n": f["nombre"], "a": f["ambito"], "c": f["comuna"], "t": f["tipo"],
-             "l": f["nivel"], "m": f["metodo"], "e": f["estado"], "o": f["observacion"], "u": f["url_lectura"]} for f in filas]
+             "l": f["nivel"], "m": f["metodo"], "e": f["estado"], "o": f["observacion"], "u": f["url_lectura"], "r": f.get("region") or ""} for f in filas]
 
 def main():
     # Un id repetido mezcla dos medios en la aplicación y rompe la semilla de la base: se detiene antes de generar nada.
@@ -24,12 +24,12 @@ def main():
     (RAIZ / "api" / "_reglas.js").write_text("// Generado por scripts/build.py desde src/reglas.js. No editar a mano.\n" + leer("reglas.js") +
         "export { NIVEL_AVISO, PREF_MINIMO, tonoHecho, rafagaDe, alertasDeHecho, horaChile, pasaPreferencia };\n", encoding="utf-8")
     # Zonas y nómina de autoridades: el mismo archivo en la aplicación y en el servidor (api/_autoridades.js).
-    (RAIZ / "api" / "_autoridades.js").write_text("// Generado por scripts/build.py desde src/autoridades.js. No editar a mano.\n" + leer("autoridades.js") +
-        "export { NOMINA_CORTE, PROVINCIAS, COMUNAS_V, CARGOS, ZONAS, AUTORIDADES, zonaDe, cargoDe, variantesNombre, provinciaDe };\n", encoding="utf-8")
+    (RAIZ / "api" / "_autoridades.js").write_text("// Generado por scripts/build.py desde src/regiones.js y src/autoridades.js. No editar a mano.\n" + leer("regiones.js") + "\n" + leer("autoridades.js") +
+        "export { REGIONES, REGION_DEFECTO, COMUNAS_DE, regionDeComuna, regionesActivas, regionValida, NOMINA_CORTE, PROVINCIAS, COMUNAS_V, CARGOS, ZONAS, AUTORIDADES, zonaDe, cargoDe, variantesNombre, provinciaDe };\n", encoding="utf-8")
     # Usuario y enlace de cuentas de redes: el mismo archivo en la aplicación y en el servidor (api/_cuentasred.js).
     (RAIZ / "api" / "_cuentasred.js").write_text("// Generado por scripts/build.py desde src/cuentasred.js. No editar a mano.\n" + leer("cuentasred.js") +
         "export { usuarioDe, urlDe };\n", encoding="utf-8")
-    js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("calendario.js") + "\n" + leer("autoridades.js") + "\n" + leer("territorios.js") + "\n" + leer("categorias.js") + "\n" + leer("cuentas.js") + "\n" + leer("app.js") + "\n" + leer("captura.js") + "\n" + leer("cuentasred.js") + "\n" + leer("redes.js") + "\n" + leer("vocero.js") + "\n" + leer("compartir.js") + "\n" + leer("reglas.js") + "\n" + leer("alertas.js") + "\n" + leer("piloto.js") + "\n" + leer("video.js")
+    js = leer("base.js") + "\n" + leer("corpus.js").rstrip("\n") + "\n" + leer("calendario.js") + "\n" + leer("regiones.js") + "\n" + leer("autoridades.js") + "\n" + leer("territorios.js") + "\n" + leer("categorias.js") + "\n" + leer("ficha.js") + "\n" + leer("cuentas.js") + "\n" + leer("app.js") + "\n" + leer("captura.js") + "\n" + leer("cuentasred.js") + "\n" + leer("redes.js") + "\n" + leer("vocero.js") + "\n" + leer("compartir.js") + "\n" + leer("reglas.js") + "\n" + leer("alertas.js") + "\n" + leer("piloto.js") + "\n" + leer("video.js") + "\n" + leer("ejecutivo.js")
     js = js.replace("/*CATALOG*/", json.dumps(catalogo(), ensure_ascii=False, separators=(",", ":")), 1)
     cuerpo = leer("shell.html") + "<script>\n" + js + "\n</script>\n"
     # Documento completo para Vercel o GitHub Pages: sin charset ni viewport el celular lo mostraría como escritorio.
@@ -41,9 +41,12 @@ def main():
               '<meta name="apple-mobile-web-app-title" content="PregonIA">\n'
               '</head>\n<body>\n')
     html = cabeza + cuerpo + "</body>\n</html>\n"
-    (RAIZ / "index.html").write_text(html, encoding="utf-8")
+    # Versión publicada: resumen del archivo; la app la compara con /version.json para recargarse sola tras un despliegue.
+    v_app = hashlib.sha256(html.encode("utf-8")).hexdigest()[:12]
+    html = html.replace("__PREGONIA_VERSION__", v_app)
+    (RAIZ / "app.html").write_text(html, encoding="utf-8")  # sin index.html: así vercel.json decide qué se sirve en «/» según el dominio
     # Catálogo para la función de noticias reales (api/noticias.js); el guion bajo evita que Vercel lo publique como ruta.
-    filas = [{"id": int(f["id"]), "nombre": f["nombre"], "ambito": f["ambito"], "comuna": f["comuna"], "metodo": f["metodo"], "url": f["url_lectura"], "estado": f["estado"]}
+    filas = [{"id": int(f["id"]), "nombre": f["nombre"], "ambito": f["ambito"], "comuna": f["comuna"], "metodo": f["metodo"], "url": f["url_lectura"], "estado": f["estado"], "region": f.get("region") or ""}
              for f in csv.DictReader(open(DATA / "catalogo_medios.csv", encoding="utf-8"))]
     # Semilla del catálogo para la base de datos del piloto (supabase/semilla.sql).
     q = lambda v: "null" if v in ("", None) else "'" + str(v).replace("'", "''") + "'"
@@ -58,17 +61,20 @@ def main():
     # (autoridades.js) y con el servidor el puntaje de impacto (impacto.js → api/_impacto.js), para que ambos puntúen igual.
     (RAIZ / "api" / "_impacto.js").write_text("// Generado por scripts/build.py desde src/impacto.js. No editar a mano.\n" + leer("impacto.js") +
         "export { IMP_PESOS, IMP_TEMAS, IMP_REGION, impNorm, impTiene, impAutoridades, impPalabras, impParecido, impAgrupar, impAlcance, impInteraccion, impPuntaje, IMP_UMBRAL_GRUPO };\n", encoding="utf-8")
-    rd_js = "\n".join(leer(n) for n in ["autoridades.js", "impacto.js", "piezas.js", "redaccion-prueba.js", "redaccion.js"])
+    rd_js = "\n".join(leer(n) for n in ["regiones.js", "autoridades.js", "impacto.js", "piezas.js", "redaccion-prueba.js", "redaccion.js"])
     rd_cabeza = ('<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n'
                  '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
                  '<link rel="manifest" href="/manifest-redaccion.json">\n<meta name="theme-color" content="#FFFFFF">\n'
-                 '<link rel="icon" type="image/png" sizes="192x192" href="/icono-192.png">\n<link rel="apple-touch-icon" href="/icono-180.png">\n'
+                 '<link rel="icon" type="image/png" sizes="192x192" href="/icono-redaccion-192.png">\n<link rel="apple-touch-icon" href="/icono-redaccion-180.png">\n'
                  '<meta name="apple-mobile-web-app-title" content="Redacción">\n<meta name="apple-mobile-web-app-capable" content="yes">\n')
-    (RAIZ / "redaccion.html").write_text(rd_cabeza + leer("redaccion.html").replace("</style>\n", "</style>\n</head>\n<body>\n", 1) +
-        "<script>\n" + rd_js + "\n</script>\n</body>\n</html>\n", encoding="utf-8")
+    rd_html = (rd_cabeza + leer("redaccion.html").replace("</style>\n", "</style>\n</head>\n<body>\n", 1) +
+        "<script>\n" + rd_js + "\n</script>\n</body>\n</html>\n")
+    v_rd = hashlib.sha256(rd_html.encode("utf-8")).hexdigest()[:12]
+    (RAIZ / "redaccion.html").write_text(rd_html.replace("__PREGONIA_VERSION__", v_rd), encoding="utf-8")
+    (RAIZ / "version.json").write_text(json.dumps({"app": v_app, "redaccion": v_rd}) + "\n", encoding="utf-8")
     # Versión para publicar como artifact en claude.ai, que pone su propio esqueleto.
     (RAIZ / "artifact.html").write_text(cuerpo, encoding="utf-8")
-    print(f"index.html listo ({len(html.encode('utf-8')) // 1024} KB) · redaccion.html listo ({(RAIZ / 'redaccion.html').stat().st_size // 1024} KB)")
+    print(f"app.html listo ({len(html.encode('utf-8')) // 1024} KB) · redaccion.html listo ({(RAIZ / 'redaccion.html').stat().st_size // 1024} KB)")
 
 if __name__ == "__main__":
     main()

@@ -1,17 +1,18 @@
 # PregonIA · la prensa no espera, tú tampoco
 
-Monitoreo de noticias sobre municipios y actores públicos en más de 100 medios digitales chilenos (nacionales, regionales y comunales de la Región de Valparaíso), con lectura de tono, alcance territorial (comunal, regional, nacional), informes por lector y redacción asistida de respuestas.
+Monitoreo de noticias sobre municipios y actores públicos en más de 100 medios digitales chilenos (nacionales, regionales y comunales de las regiones abiertas: Valparaíso y Antofagasta), con lectura de tono, alcance territorial (comunal, regional, nacional), informes por lector y redacción asistida de respuestas.
 
-Demo publicada: https://pregonia.vercel.app
+Demo publicada: https://pregonia.cl
 
 Producto de ALTKimia. Piloto: Casablanca, Algarrobo, El Quisco, El Tabo, Cartagena y San Antonio.
-Versión de demostración: el catálogo de medios es real; las noticias, cifras y fechas son ficticias.
+Sin demostración con noticias ficticias (retirada el 22-nov-2026): la aplicación se abre con la prueba gratis de 7 días (noticias reales del último mes de la comuna o la autoridad elegida) o con la cuenta del cliente (piloto). Sin prueba vigente ni sesión, solo se ve la portada.
 
 ## Qué incluye el prototipo
-- **Portada:** como la de un diario: cabezal con la fecha, nombre y lema, doble filete, titular con la propuesta de valor, botones «Ver demostración» e «Ingresar» (con sesión, «Entrar a mi edición»), la miniatura de la edición del día y tres columnas (Lee, Mide, Responde). Sin sesión la miniatura es siempre de "Comuna de Ejemplo", con datos de ejemplo; con sesión del piloto es la de la institución de esa persona, nunca la de otra. Aparece cada vez que se abre o recarga la aplicación, con `#portada` y al tocar el logo; la entrada lleva a la sección de la dirección o a Inicio. Para abrir sin portada: `?sin-portada`.
+- **Portada:** como la de un diario: cabezal con la fecha, nombre y lema, doble filete, titular con la propuesta de valor, botones «Prueba gratis» y «Agendar demostración» (reunión comercial), más «Acceso clientes» (con sesión, «Entrar a mi edición»), la miniatura de la edición del día y tres columnas (Lee, Mide, Responde). Sin sesión la miniatura es siempre de "Comuna de Ejemplo", con datos de ejemplo; con sesión del piloto es la de la institución de esa persona, nunca la de otra. Aparece cada vez que se abre o recarga la aplicación, con `#portada` y al tocar el logo; la entrada lleva a la sección de la dirección o a Inicio. Para abrir sin portada: `?sin-portada`.
 - **Entrada (¿Para quién es PregonIA?):** en pasos: cargo, comuna, persona y revisión. Siempre se pide la comuna y de ella se deducen el distrito, la circunscripción o la circunscripción provincial del consejo regional. También se puede buscar directo por nombre en toda la nómina. En el teléfono es una decisión por pantalla, a pantalla completa; desde 760 px suma un riel con los pasos. La contraseña de la demo se pide en la revisión.
 - **Inicio:** portada que responde cuatro preguntas, con período a elegir (24 horas, Semana o 30 días) comparado con el período anterior: cómo estamos (veredicto en una frase y cuatro cifras: noticias, tono, hasta dónde llegó y el alcalde o el territorio en la prensa), qué hacer hoy (críticas por responder, con un «dato para la respuesta» cuando hay una nota positiva del mismo asunto, y notas positivas para aprovechar), qué está cambiando (temas con tendencia y asuntos sin tema que se pueden seguir con un toque), qué viene en el calendario y quién marca la agenda. Cada noticia aparece una sola vez; el gráfico por día está en Reportes.
 - **Menciones:** cada noticia una vez aunque la publiquen varios medios; filtros por tono, período, tema y palabra; "¿Por qué aparece?" y "No corresponde".
+- **Informe ejecutivo** (primera pestaña de Reportes; la que abre una autoridad): 24 horas, 7 días y 30 días por separado, cada uno frente a su período anterior de igual largo (noticias, veredicto, tono, balance, hasta dónde llegaron y críticas atendidas), pulso de 30 días, temas que suben en críticas o en positivas, y emergencias y oportunidades de cada horizonte (cada asunto una sola vez). Se comparte como un PDF compacto, igual que el video (WhatsApp, Descargar PDF y correo): páginas del tamaño de la pantalla de un teléfono (1080 × 1920 como máximo) con el formato Edición, en JPEG, de unos 700 KB. También se copia como texto. En el piloto se cargan 62 días para poder comparar los 30 días con los 30 anteriores.
 - **Reportes por lector:** parte semanal del alcalde (copiable a WhatsApp), mesa diaria de comunicaciones, informe de gestión mensual y episodio crítico. Cada asunto muestra hasta dónde llegó: prensa comunal, regional o nacional.
 - **Comunicados:** seis piezas (comunicado, declaración, aclaración Ley 19.733, mensajes clave, preguntas probables, minuta) con datos del municipio; nada se publica sin aprobación.
 - **Ajustes:** temas, asistente de caracterización y estado de las 100 fuentes.
@@ -26,7 +27,7 @@ Lenguaje de diario: papel blanco, filete negro, titulares de prensa en serif (So
 - **Pantalla de lectura:** siete diarios en blanco y negro en órbita; el que se lee, con anillo azul.
 
 ## Estructura
-- `index.html` versión autónoma lista para publicar (se abre con doble clic; JS y CSS embebidos).
+- `app.html` (servida en «/» de pregonia.cl; www.pregonia.cl muestra servicio.html) versión autónoma lista para publicar (se abre con doble clic; JS y CSS embebidos).
 - `src/shell.html` estilos (diseño "Edición", en versión clara y oscura) y estructura de la página.
 - `src/base.js` constantes, planes y utilidades; recibe el catálogo de medios al compilar.
 - `src/corpus.js` noticias ficticias de la demo.
@@ -38,11 +39,11 @@ Lenguaje de diario: papel blanco, filete negro, titulares de prensa en serif (So
 - `api/voz.js` función de servidor que graba la voz del video resumen con ElevenLabs.
 - `src/video.js` video resumen del parte del alcalde: escenas en canvas, guion, voz y exportación a MP4 en el navegador.
 - `src/redes.js` cuentas de Facebook e Instagram de medios: inscripción desde Ajustes › Fuentes, estado de lectura y retiro. `api/_redes.js` las lee por la API de Meta; `src/cuentasred.js` (copiado a `api/_cuentasred.js`) reconoce el usuario a partir del enlace.
-- `scripts/build.py` arma `index.html` desde `src/`, `assets/` y `data/`.
+- `scripts/build.py` arma `app.html` desde `src/`, `assets/` y `data/`.
 
 ## Uso
 ```
-python3 scripts/build.py      # regenera index.html
+python3 scripts/build.py      # regenera app.html
 python3 -m http.server 8000   # vista local en http://localhost:8000
 ```
 Para publicar en Vercel o GitHub Pages basta servir `index.html` desde la raíz; no requiere compilación en el servidor.
@@ -67,7 +68,7 @@ Voz del video resumen (opcional; sin ella el video sale sin narración):
 - `ELEVENLABS_SPEED` (opcional): velocidad de lectura, de 0,7 a 1,2 (por defecto 1,06).
 - `VOZ_LIMITE` (opcional): grabaciones por IP cada 10 minutos (por defecto 60). Un video usa de 6 a 8.
 
-Estado en producción (15 nov 2026): `ELEVENLABS_API_KEY` configurada como variable secreta de Production, con una clave de ElevenLabs llamada «PregonIA voz», sin vencimiento y con acceso solo a «De texto a voz» (la única API que usa `api/voz.js`). Las variables se aplican en la publicación siguiente: tras crear o cambiar una, hay que volver a publicar (Redeploy en Vercel o un cambio en `main`). Para comprobarla: `GET /api/voz` responde `{"ok": true}` y en el video resumen el recuadro «Voz» deja activo «Agregar voz». Si la clave se rota, se crea una nueva en ElevenLabs (Desarrolladores › Claves de API), se reemplaza el valor en Vercel y se borra la anterior.
+Estado en producción (15 nov 2026): `ELEVENLABS_API_KEY` configurada como variable secreta de Production, con una clave de ElevenLabs llamada «PregonIA voz», sin vencimiento y con acceso solo a «De texto a voz» (la única API que usa `api/voz.js`). Las variables se aplican en la publicación siguiente: tras crear o cambiar una, hay que volver a publicar (Redeploy en Vercel o un cambio en `main`). Para comprobarla: `GET /api/voz` responde `{"ok": true}` y, al abrir el video resumen, la voz se genera sola («Preparando la voz…» y luego «Voz lista»). Si ElevenLabs no tiene saldo, el recuadro «Voz» lo dice y el video sigue sin narración; en esa sesión no se vuelve a intentar sola. La voz y el guion quedan en caché durante la sesión: reabrir el video no gasta créditos de nuevo. La vista previa suena por un elemento `<audio>` (en iPhone el audio de Web Audio se silencia con el interruptor de silencio) y, si el navegador no sabe codificar audio para el MP4 rápido (Safari en iPhone), el video se graba en tiempo real para no perder la voz. Si la clave se rota, se crea una nueva en ElevenLabs (Desarrolladores › Claves de API), se reemplaza el valor en Vercel y se borra la anterior.
 
 La función solo acepta pedidos desde el propio sitio, limita el largo del texto y las respuestas, y se niega a tareas ajenas a PregonIA. Sin la clave, la aplicación usa plantillas y lo indica en pantalla.
 
@@ -79,13 +80,22 @@ La función solo acepta pedidos desde el propio sitio, limita el largo del texto
 5. Ver el plan completo y los requisitos en `docs/especificacion.md`.
 
 
+## Regiones
+
+Todo lo que cambia de una región a otra vive en `src/regiones.js` (provincias y comunas, homónimos, contexto de Google News,
+Contraloría Regional, senado y sanitaria). Cada región tiene su turno de lectura (`/api/ingesta?region=V`, `?region=II`), su
+catálogo (columna `region` de `data/catalogo_medios.csv`) y su nómina (`src/autoridades.js`). Una región con `activa: false`
+está en preparación: la aplicación no la ofrece y sus datos solo responden con la clave del programador. Para abrir una
+región: catálogo y nómina cargados, perfiles de sus comunas en `src/territorios.js`, `activa: true`, sus medios en la tabla
+`medios` y su turno en `supabase/programador.sql`. Los textos comerciales no nombran regiones.
+
 ## Piloto con base de datos (etapa 2)
 
 Con sesión iniciada, la aplicación trabaja con datos compartidos por institución cliente, sea un municipio o una autoridad
 (diputado, senador, consejero regional, concejal, gobernador o delegado): noticias leídas cada 30 minutos, temas, marcas,
-respuestas aprobadas y publicaciones agregadas a mano. Sin sesión sigue siendo la demostración.
+respuestas aprobadas y publicaciones agregadas a mano. Sin sesión, la aplicación es la prueba gratis; sin prueba vigente, la portada.
 
-La portada ofrece dos puertas: «Ver demostración» (aviso legal y elección de autoridad o municipio) e «Ingresar» (equipos con invitación),
+La portada ofrece dos puertas: «Prueba gratis» (aviso legal, inscripción con código por correo y elección de autoridad o municipio) e «Ingresar» (equipos con invitación),
 más el enlace «Solicita un piloto» a soporte@altkimia.cl. Con sesión iniciada queda una sola: «Entrar a mi edición», directo a su institución.
 
 Piezas:
@@ -103,7 +113,7 @@ Piezas:
 Puesta en marcha:
 
 1. Crear el proyecto en Supabase (región São Paulo) y ejecutar en SQL Editor `supabase/esquema.sql` y luego `supabase/semilla.sql`.
-2. En Supabase › Authentication › URL Configuration, dejar `https://pregonia.vercel.app` como Site URL.
+2. En Supabase › Authentication › URL Configuration, dejar `https://pregonia.cl` como Site URL y en Redirect URLs `https://pregonia.cl/**`, `https://www.pregonia.cl/**` y `https://pregonia.vercel.app/**`.
 3. En Vercel, variables `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` y `CRON_SECRET` (una contraseña larga inventada).
 4. En GitHub › Settings › Secrets and variables › Actions, el secreto `CRON_SECRET` con el mismo valor.
 5. Invitar a cada persona en Supabase › Authentication › Users y asignarle municipio y rol con `supabase/alta_usuario.sql`.
@@ -113,15 +123,59 @@ Roles: `admin` y `comunicaciones` editan; `alcalde`, `autoridad`, `directivo` y 
 ### Autoridades en el piloto
 
 La tabla `municipios` guarda también cuentas de autoridad: `tipo` es el cargo y `autoridad` describe a la persona
-(`zona`, `nombre`, `g` y, si está en la nómina de `src/autoridades.js`, su `id`). La lectura programada busca lo que la nombra
-(Google News por nombre y cargo, más los medios del catálogo) y la IA juzga relevancia y tono respecto de la persona, igual que
-«Noticias reales» en la demostración. Los avisos llegan con el nombre de la autoridad.
+(`zona`, `nombre`, `g` y, si está en la nómina de `src/autoridades.js`, su `id`). Todas las autoridades se leen con las mismas
+reglas que un municipio, que sigue lo que trata de su comuna y de su municipalidad: lo que nombra a la persona (en el titular, en la
+bajada o, vía Google News, en el cuerpo de la nota) y lo que trata de la institución que integra en su territorio (Consejo Regional,
+Gobierno Regional, Delegación Presidencial, diputados del distrito, senadores por la región, concejo municipal). La IA juzga relevancia
+y tono respecto de la persona, y cada mención queda marcada como `persona` o `institucion` (columna `sobre` de `menciones`), igual que
+la prueba gratis. Los avisos llegan con el nombre de la autoridad.
 
 Para activarlo en una base existente:
 
-1. Correr de nuevo `supabase/esquema.sql` (agrega `tipo` y `autoridad` a `municipios`, deja la comuna opcional para autoridades y suma el rol `autoridad`).
+1. Correr de nuevo `supabase/esquema.sql` (agrega `tipo` y `autoridad` a `municipios`, deja la comuna opcional para autoridades, suma el rol `autoridad` y la columna `sobre` de `menciones`). Sin la columna, la lectura guarda y la app lee igual, pero sin distinguir lo de la persona de lo de su institución.
    Mientras no se corra, la aplicación y la lectura programada siguen funcionando solo con municipios.
 2. Crear la cuenta de la autoridad y asignar a su equipo con el bloque B de `supabase/alta_usuario.sql`.
+
+### Métodos de lectura de medios
+
+| Método | Para qué medio | Cómo |
+|---|---|---|
+| `rss`, `sitemap_noticias` | Los que publican feed o mapa de noticias | Titular, fecha y bajada del feed |
+| `sitemap`, `sitemap_mensual` | Mapas del sitio corrientes (Duna, UCV Radio, Radio Quintay) o índices de mapas mensuales comprimidos (24 Horas) | Dirección y fecha de modificación; titular del mapa o, si no trae, desde la dirección. Un índice se resuelve a sus dos hijos más recientes; los .gz se descomprimen; los mapas enormes ordenados del más nuevo se leen solo hasta 1,5 MB |
+| `portada` | Sin feed ni mapa con fechas (T13, SoyChile y sus ediciones, Radio U. de Chile, Radio Agricultura, El Observador, El Martutino, Quilpué Online) | Enlaces a notas de la portada o sección; fecha desde la dirección o, si no la trae, la de la primera lectura |
+| `*_filtrado` | Ediciones dentro del feed de otro medio (BioBío Región de Valparaíso, 24 Horas Valparaíso, Meganoticias Región de Valparaíso) | Se lee la fuente del medio padre una vez y la edición se queda con lo que calza con su filtro |
+| `google_news` | Bloquean la lectura o no tienen formato legible (El Mercurio, La Tercera, LUN, Publimetro…) | Solo vía Google News |
+
+Siempre se respeta robots.txt: si cierra el feed o los mapas, se usa una ruta permitida (portada o sección) o queda solo vía Google News.
+Verificar medios sin gastar la cuota de Google News: `/api/noticias?salud=1&ids=5,6,23`.
+
+### Búsqueda: cómo se asegura encontrar todas las noticias
+
+Medido el 17 de noviembre de 2026 con consultas reales a Google News. Estas eran las pérdidas, y esto es lo que hace hoy la lectura:
+
+| Pérdida medida | Qué hace la lectura |
+|---|---|
+| Google News responde 429 (demasiadas solicitudes) con varias consultas a la vez: en una prueba con 8 comunas en paralelo, 4 quedaron vacías. Producción, el 17-nov, perdió Google News en 5 de 9 lecturas | Cola con 2 consultas a la vez y una pausa entre ellas; ante un 429 o un error del servidor, todas las consultas esperan y se reintenta con una espera creciente (hasta 3 veces), dentro del plazo de la función |
+| Google limita también por volumen acumulado y a veces responde 200 sin notas | Las consultas son un recurso escaso: caché de 15 minutos por consulta; una respuesta vacía se reintenta una vez; tras el primer 429 entra en modo ahorro y lo prescindible (pares, tramos) cede el turno a las consultas principales. Cada respuesta trae `google_news` (consultas, caché, 429, reintentos, fallidas) para ver si algo se perdió |
+| Máximo 100 notas por consulta: Valparaíso tiene más de 250 en 14 días | Si una consulta llega al tope, se vuelve a pedir por tramos de fechas (mitades sucesivas, hasta 8 tramos), sin repetir notas |
+| Se descartaban los medios fuera del catálogo: un tercio en Valparaíso y Viña del Mar, y la mayoría de lo que nombra a algunas autoridades | Entran con una ficha común (296 regional, 297 nacional) que conserva el nombre real del medio. Quedan fuera los medios extranjeros y los de deportes, clima o agregadores |
+| El nombre de la comuna o de la autoridad se exigía en el titular, pero Google News no entrega la bajada: en Viña del Mar se perdía el 30% | Lo que Google News encontró buscando la comuna o la persona entra aunque el titular no la nombre; la IA lo sabe y decide por el tema |
+| Variantes de nombre incompletas | Se suma primer nombre y primer apellido («Juan Ibacache») y, en consejeros, «consejero Urrutia» |
+| Un medio lento en una pasada se perdía | Un reintento con más plazo |
+| Topes de clasificación | 120 notas por consulta al vuelo y 50 nuevas por cuenta en cada pasada programada (el resto entra en la siguiente); lo que nombra a la comuna o a la persona va primero |
+
+### Lectura cada 30 minutos
+
+La dispara el programador de Supabase (`supabase/programador.sql`: pg_cron a los minutos 7 y 37), con un pase de un solo uso que `/api/ingesta` valida y borra; no requiere copiar secretos. GitHub Actions (`lectura.yml`) quedó solo para lecturas a mano con `CRON_SECRET`, porque GitHub postergaba horas su tarea programada. Ver las últimas lecturas: tabla `lecturas`.
+
+## Clasificación editorial (ficha de cada hecho)
+
+Diseño completo y decisiones en el documento del proyecto «clasificacion-editorial-pregonia». Fase 1:
+
+- **IA (`api/_lectura.js`, misma llamada de clasificación):** área de gestión (14 áreas comunes), encuadre del medio, impulsor (quién puso el tema), papel de la cuenta, tono hacia la contraparte (persona o institución), gravedad (0 a 3) y confianza. Se guarda en `menciones.ficha` y viaja como `f` en `/api/noticias`.
+- **Reglas (`src/ficha.js`):** competencia según la matriz por cargo (propia, compartida, incidencia, ajena, ajena con exposición), vacío de vocería, prioridad P1 a P4 o ruido, acción sugerida (incluida «No amplificar») y plazo según el tipo de cliente. Sin ficha de la IA (demostración) se deduce de categoría, enfoque y papel por palabras clave.
+- **Pantallas:** ficha y acción en cada noticia de Menciones, filtros por prioridad y competencia, «Cola de decisiones» en la Mesa de comunicaciones y Configuración › Prioridades (plazos, matriz de competencias de la cuenta y correcciones).
+- **Correcciones y aprendizaje:** «Corregir ficha» en cada noticia. La corrección rige para ese hecho; la competencia corregida, para toda el área en la cuenta. En el piloto viajan en `municipios.config` y la lectura programada usa las 12 más recientes como criterios para la IA.
 
 ## Avisos (alertas)
 
@@ -131,16 +185,30 @@ PregonIA avisa de noticias críticas nuevas, de las que escalan a prensa regiona
 - **En el navegador:** notificación mientras PregonIA esté abierta o instalada. No requiere configuración.
 - **Con la aplicación cerrada (piloto):** la lectura programada evalúa las reglas y envía notificaciones (Web Push) y correos. Para activarlo:
   1. Correr de nuevo `supabase/esquema.sql` (agrega las tablas `alertas`, `avisos` y `suscripciones` y la función `destinatarios_avisos`, que solo puede usar el servidor).
-  2. Abrir `https://pregonia.vercel.app/llaves-avisos.html`, generar las llaves y crear en Vercel `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`. Las llaves se generan en el navegador; la privada va solo en Vercel.
+  2. Abrir `https://pregonia.cl/llaves-avisos.html`, generar las llaves y crear en Vercel `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT`. Las llaves se generan en el navegador; la privada va solo en Vercel. Hecho el 17 de noviembre de 2026 (producción, como secretas; `VAPID_SUBJECT` = `https://pregonia.cl`). Si se cambian las llaves, cada dispositivo debe volver a activar los avisos.
   3. Correo (opcional): cuenta en Resend con el dominio verificado, y en Vercel `RESEND_API_KEY` y `AVISOS_REMITENTE` (por ejemplo `PregonIA <avisos@altkimia.com>`).
   4. Volver a desplegar. Cada persona activa los avisos en la campana de su celular.
+
+### Parte diario por WhatsApp (8:00)
+
+Cada persona del piloto puede dejar su celular en la campana de avisos («Parte diario por WhatsApp») y aceptar recibirlo. La lectura programada de las 8:07 (hora de Chile) envía a cada cuenta, una vez al día, un mensaje con las noticias de las últimas 24 horas, cuántas son críticas y las dos principales, con el botón «Abrir PregonIA» (`api/_whatsapp.js`). La tabla `partes_whatsapp` evita que la lectura de las 8:37 lo repita.
+
+Puesta en marcha:
+1. Correr de nuevo `supabase/esquema.sql` (agrega `avisos.whatsapp`, `avisos.whatsapp_ok` y la tabla `partes_whatsapp`).
+2. En Meta Business Suite, en el portafolio de ALTKIMIA, crear la cuenta de WhatsApp Business y registrar un número que no esté en uso en la app de WhatsApp.
+3. En WhatsApp Manager, crear la plantilla `parte_diario` (categoría Utilidad, español) con este texto y un botón de enlace «Abrir PregonIA» → `https://pregonia.cl/?sin-portada#inicio`:
+   `Parte de prensa de {{1}}, últimas 24 horas: {{2}}. Lo principal: {{3}}. Detalle, plazos y respuestas en PregonIA.`
+4. Darle al usuario del sistema el permiso `whatsapp_business_messaging` y generar su token.
+5. En Vercel (Production): `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID` y, si cambian, `WHATSAPP_PLANTILLA` (por defecto `parte_diario`) y `WHATSAPP_IDIOMA` (por defecto `es`). Luego Redeploy.
+
+Costo: Meta cobra por mensaje de plantilla de utilidad enviado; con un mensaje diario por persona, una cuenta con 3 personas son unos 90 mensajes al mes. Verificar la tarifa vigente para Chile en la página de precios de WhatsApp Business. Sin las variables no se envía nada y la campana avisa que el envío aún no está habilitado.
 
 ### App en el celular
 
 PregonIA se instala como app (PWA) desde el navegador, sin pasar por App Store ni Google Play:
 
 - **Android (Chrome):** la campana de avisos ofrece «Instalar PregonIA» cuando el navegador lo permite; también desde el menú ⋮ › Instalar app.
-- **iPhone (Safari):** Compartir › «Agregar a inicio». En iPhone los avisos con la app cerrada solo llegan con PregonIA instalada así. Como Apple no permite un botón «Instalar», la app muestra una guía paso a paso: sola al entrar al piloto (si la persona elige «Ahora no», vuelve a los 3 días), desde la campana («Ver cómo instalarla») y con el enlace `https://pregonia.vercel.app/?instalar`, pensado para enviarlo por WhatsApp a una autoridad. Si se abre dentro de Facebook, Instagram u otra app, la guía pide primero abrirla en Safari.
+- **iPhone (Safari):** Compartir › «Agregar a inicio». En iPhone los avisos con la app cerrada solo llegan con PregonIA instalada así. Como Apple no permite un botón «Instalar», la app muestra una guía paso a paso: sola al entrar al piloto (si la persona elige «Ahora no», vuelve a los 3 días), desde la campana («Ver cómo instalarla») y con el enlace `https://pregonia.cl/?instalar`, pensado para enviarlo por WhatsApp a una autoridad. Si se abre dentro de Facebook, Instagram u otra app, la guía pide primero abrirla en Safari.
 - **Atajos:** manteniendo presionado el ícono aparecen «Avisos» (abre la campana) y «Menciones» (en Android).
 - **Sin señal:** `sw.js` muestra `offline.html` en vez del error del navegador. La aplicación no se guarda en caché: con conexión siempre se carga la versión vigente.
 
@@ -192,7 +260,7 @@ En la base del piloto: volver a ejecutar `supabase/esquema.sql` (agrega las colu
 
 ## Redacción: cuentas propias de PregonIA en Facebook e Instagram
 
-Espacio privado del editor, en `https://pregonia.vercel.app/redaccion` (no aparece en la aplicación de los clientes ni en buscadores).
+Espacio privado del editor, en `https://pregonia.cl/redaccion` (no aparece en la aplicación de los clientes ni en buscadores).
 
 - **Propuestas:** la lectura programada (cada 30 minutos) junta las noticias de las últimas 48 horas de las comunas elegidas en Ajustes, más las regionales y nacionales que afectan a la región, las agrupa por hecho y les da un **puntaje de impacto** de 0 a 100: repercusión en medios (35), interacción en redes de las cuentas de medios (20), autoridades de la nómina (15), temas críticos y gravedad (20) y recencia (10). Es por palabras y conteos (`src/impacto.js`, el mismo en el servidor como `api/_impacto.js`). Claude Haiku escribe un titular y un resumen neutrales solo para lo que llega a 30 puntos (máximo 12 hechos por pasada).
 - **Redacción:** desde una propuesta, Claude Sonnet redacta con reglas de neutralidad estricta los textos de Facebook (con enlace) e Instagram (sin enlaces, con hashtags), la pieza gráfica, la historia, el carrusel y el guion del reel. Sin IA disponible, deja una plantilla.
@@ -212,3 +280,12 @@ Puesta en marcha:
 Prueba local sin base de datos: `python3 scripts/build.py && python3 -m http.server 8000` y abrir `http://localhost:8000/redaccion.html`: entra en **modo prueba** con noticias, medios y personas ficticias guardadas en el navegador.
 
 Costo variable estimado (validar con los precios vigentes): la detección agrega una llamada corta a Haiku por pasada solo cuando hay hechos nuevos sobre 30 puntos; cada redacción es una llamada a Sonnet; la voz solo se graba en los reels que se piden (ElevenLabs cobra por caracteres; para uso comercial en redes se necesita un plan pagado). El render de imágenes y videos es en el navegador, sin costo de servidor.
+
+### Publicación en Facebook (fase 2, desde el 17-nov-2026)
+
+Con la página conectada, una publicación **aprobada** se puede publicar de inmediato o programar en Facebook desde Redacción, con la pieza del feed o el carrusel como imágenes. Meta publica sola a la hora programada; al abrir Redacción se confirma qué salió y se marca como publicada. Instagram, historias y reels siguen a mano.
+
+Variables en Vercel (Production) y luego Redeploy:
+- `META_PAGE_ID`: id de la página de Facebook de El Pregonero.
+- `META_PAGE_TOKEN`: token de un usuario del sistema del portafolio de ALTKIMIA (o de la página) con `pages_show_list`, `pages_read_engagement` y `pages_manage_posts`. Con el del usuario del sistema, el servidor obtiene el de la página.
+- `META_GRAPH_VERSION` (opcional): por defecto `v25.0`.

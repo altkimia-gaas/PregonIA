@@ -70,7 +70,7 @@ async function capAnalizar(texto, medio, img){
   const recientes = menciones(cuenta(), 14).slice(0, 25), sample = await samplePromise;
   if (!sample) return null;
   if (img) { const puede = typeof sample.limits === "function" ? !!(await sample.limits().catch(() => ({}))).images : !!sample.imagenes; if (!puede) { if (texto.length < 20) throw {code: "sin_imagen"}; img = null; } }
-  const p = `Eres analista de prensa de PregonIA para ${esAut() ? "el equipo de " + inst() + " (" + cuenta().perfil.zonaNombre + ")" : inst()}, Región de Valparaíso, Chile. Analiza esta publicación ${medio ? `de la página "${medio}"` : "de una página"} en Facebook o redes sociales.${img ? " La publicación viene en la captura de pantalla adjunta: lee su texto (y la página que la publicó, si se ve)." : ""}
+  const p = `Eres analista de prensa de PregonIA para ${esAut() ? "el equipo de " + inst() + " (" + cuenta().perfil.zonaNombre + ")" : inst()}, ${regionCuenta().nombre}, Chile. Analiza esta publicación ${medio ? `de la página "${medio}"` : "de una página"} en Facebook o redes sociales.${img ? " La publicación viene en la captura de pantalla adjunta: lee su texto (y la página que la publicó, si se ve)." : ""}
 
 """${texto.slice(0, 3000) || "(sin texto pegado: usa la captura)"}"""
 

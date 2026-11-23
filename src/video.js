@@ -46,6 +46,8 @@ function videoPlan(){
   return retimar(plan);
 }
 
+/* Voz del video: apagada por decisión del cliente (nov 2026). Con true vuelve el recuadro «Voz» y la narración automática con ElevenLabs. */
+const VOZ_ACTIVA = false;
 /* Con voz, cada escena dura lo que su narración (más un respiro); sin voz, su duración base. */
 const VOZ_INI = 0.35, VOZ_COLA = 0.75;
 function retimar(plan){
@@ -79,7 +81,7 @@ function guionBase(plan){
 async function guionIA(plan, base, signal){
   const sample = await samplePromise; if (!sample) return null;
   const n = base.length, lista = plan.scenes.map((s, i) => `${i + 1}. [${VNOMBRE[s.k]}${s.k === "asunto" ? " " + (s.i + 1) : ""}, máximo ${VPAL[s.k]} palabras] ${base[i]}`).join("\n");
-  const p = `Eres guionista de PregonIA. Reescribe, para que lo lea en voz alta un locutor, el guion de un video interno de alrededor de un minuto para el alcalde de ${plan.org} y su equipo directivo. Escribe en español de Chile.
+  const p = `Eres guionista de PregonIA. Reescribe, para que lo lea en voz alta un locutor, el guion de un video interno de alrededor de un minuto para ${esAut() ? plan.inst + " y su equipo" : "el alcalde de " + plan.org + " y su equipo directivo"}. Escribe en español de Chile.
 
 Reglas obligatorias:
 1. Conserva exactamente los hechos, cifras, nombres de temas y medios, niveles de difusión, recomendaciones y responsables del texto base. No agregues datos, opiniones, adjetivos sobre autoridades ni frases de promoción personal o partidaria.
@@ -100,11 +102,18 @@ async function vozDisponible(){
   if (!/^https?:$/.test(location.protocol)) return "sin-servidor";
   try { const r = await fetch("/api/voz", {cache: "no-store"}); if (!r.ok) return "sin-servidor"; const j = await r.json(); return j.ok ? "ok" : "sin-clave"; } catch(e) { return "sin-servidor"; }
 }
+/* Caché de la sesión: el mismo texto no se vuelve a grabar ni el mismo guion a escribir al reabrir el video (cuida los créditos de ElevenLabs). */
+const VOZ_CACHE = new Map(), GUION_CACHE = new Map();
 async function vozGrabar(texto, ac, signal){
-  const r = await fetch("/api/voz", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({texto}), signal});
-  if (!r.ok) { let m = ""; try { m = (await r.json()).error; } catch(e) {} throw {code: r.status === 429 ? "rate_limited" : "voz", message: m || "El servicio de voz no respondió"}; }
-  if (r.headers.get("x-voz") === "estandar" && VID) VID.vozEstandar = true;  // la cuenta de ElevenLabs no permite la voz chilena
-  const buf = await r.arrayBuffer();
+  let buf = VOZ_CACHE.get(texto); delete VOZ_CACHE.sinCredito;
+  if (!buf) {
+    const r = await fetch("/api/voz", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({texto}), signal});
+    if (!r.ok) { let m = ""; try { m = (await r.json()).error; } catch(e) {} throw {code: r.status === 429 ? "rate_limited" : "voz", message: m || "El servicio de voz no respondió"}; }
+    if (r.headers.get("x-voz") === "estandar") VOZ_CACHE.estandar = true;  // la cuenta de ElevenLabs no permite la voz chilena
+    buf = await r.arrayBuffer(); if (VOZ_CACHE.size > 60) VOZ_CACHE.clear(); VOZ_CACHE.set(texto, buf);
+  }
+  if (VOZ_CACHE.estandar && VID) VID.vozEstandar = true;
+  buf = buf.slice(0);  // decodeAudioData consume el buffer: se decodifica una copia
   return await new Promise((ok, no) => { const p = ac.decodeAudioData(buf, ok, no); if (p && p.then) p.then(ok, no); });
 }
 async function vozMezcla(plan){
@@ -283,6 +292,8 @@ async function videoMP4(plan, onProg, signal){
   if (plan.audio && window.AudioEncoder && window.AudioData) {
     for (const [codec, mx] of [["mp4a.40.2", "aac"], ["opus", "opus"]]) { try { const c = {codec, sampleRate: 48000, numberOfChannels: 1, bitrate: 128000}; if ((await AudioEncoder.isConfigSupported(c)).supported) { acfg = {c, mx}; break; } } catch(e) {} }
   }
+  // Sin codificador de audio (Safari en iPhone, por ejemplo) el MP4 rápido saldría mudo: se graba en tiempo real, que sí lleva la voz.
+  if (plan.audio && !acfg && window.MediaRecorder) return null;
   const muxer = new Mx.Muxer({target: new Mx.ArrayBufferTarget(), video: {codec: "avc", width: w, height: h, frameRate: VFPS}, ...(acfg ? {audio: {codec: acfg.mx, numberOfChannels: 1, sampleRate: 48000}} : {}), fastStart: "in-memory"});
   plan.audioCodec = acfg ? acfg.mx : null;
   if (acfg) {
@@ -322,13 +333,15 @@ async function videoGrabado(plan, onProg, signal){
   if (!mime) return null;
   const [w, h] = VOUT, cv = document.createElement("canvas"); cv.width = w; cv.height = h; const ctx = cv.getContext("2d"); vdibujar(ctx, 0, plan);
   const pista = cv.captureStream(VFPS); let ac2 = null, fuente = null;
-  if (plan.audio) { try { ac2 = new (window.AudioContext || window.webkitAudioContext)(); const dest = ac2.createMediaStreamDestination(); fuente = ac2.createBufferSource(); fuente.buffer = plan.audio; fuente.connect(dest); dest.stream.getAudioTracks().forEach(t => pista.addTrack(t)); } catch(e) { ac2 = null; fuente = null; } }
+  // Se usa el contexto de audio del reproductor, habilitado por el toque que abrió el video: uno nuevo nacería suspendido en el iPhone.
+  const propio = !(VID && VID.ac);
+  if (plan.audio) { try { ac2 = propio ? new (window.AudioContext || window.webkitAudioContext)() : VID.ac; const dest = ac2.createMediaStreamDestination(); fuente = ac2.createBufferSource(); fuente.buffer = plan.audio; fuente.connect(dest); dest.stream.getAudioTracks().forEach(t => pista.addTrack(t)); } catch(e) { ac2 = null; fuente = null; } }
   const rec = new MediaRecorder(pista, {mimeType: mime, videoBitsPerSecond: 3_500_000}), partes = [];
   rec.ondataavailable = e => { if (e.data && e.data.size) partes.push(e.data); };
   const fin = new Promise(r => rec.onstop = r); rec.start(500); if (fuente) { await ac2.resume().catch(() => {}); fuente.start(); }
   const t0 = performance.now();
   await new Promise(ok => { const loop = () => { const t = (performance.now() - t0) / 1000; if ((signal && signal.aborted) || t >= plan.total) return ok(); vdibujar(ctx, t, plan); onProg(t / plan.total); requestAnimationFrame(loop); }; loop(); });
-  rec.stop(); await fin; if (ac2) ac2.close().catch(() => {});
+  rec.stop(); await fin; if (fuente) try { fuente.stop(); } catch(e) {} if (ac2 && propio) ac2.close().catch(() => {});
   if (signal && signal.aborted) throw {code: "cancelled"};
   return new Blob(partes, {type: mime.split(";")[0]});
 }
@@ -340,34 +353,45 @@ function videoAbrir(){
   const plan = videoPlan();
   const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "vidBack";
   ov.innerHTML = `<section class="vid rep" role="dialog" aria-modal="true" aria-labelledby="vidT">
-    <header class="vid-h"><div><h2 id="vidT">Video resumen</h2><p>${esc(plan.P.rotulo)} · ${esc(plan.org)} · ${esc(plan.per)}</p><span class="vid-hint" aria-hidden="true">Toca para pausar · desliza para compartir</span></div><button class="btn ghost" type="button" data-act="vid-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+    <header class="vid-h"><div><h2 id="vidT">Video resumen y PDF</h2><p>${esc(plan.P.rotulo)} · ${esc(plan.org)} · ${esc(plan.per)}</p><span class="vid-hint" aria-hidden="true">Toca para pausar · desliza para compartir</span></div><button class="btn ghost" type="button" data-act="vid-close" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
     <div class="vid-b">
       <div class="vid-stage" id="vidStage"><canvas id="vidCv" width="${VOUT[0]}" height="${VOUT[1]}" role="img" aria-label="Vista previa del video: resultado del período, tratamiento de las noticias, temas que restan y suman, asuntos que se pueden complicar con qué hacer, y la buena noticia."></canvas><span class="vid-pausa" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></span></div>
       <div class="vid-side">
         <p class="vid-meta">${Math.round(plan.total)} segundos · vertical, para ver en el celular · ${plan.scenes.length} escenas con las noticias ${esc(plan.P.de)}: tono, hasta dónde llegaron, respuestas y temas.</p>
         <div class="vid-ctrl"><button class="btn" type="button" data-act="vid-play" id="vidPlay">Pausa</button><button class="btn" type="button" data-act="vid-replay">Desde el inicio</button></div>
         <div class="vid-voz" id="vozBox"><div class="vid-voz-h"><b>Voz</b><span id="vozEstado">Revisando…</span></div>
-          <button class="btn" type="button" data-act="voz-add" id="vozAdd" disabled><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Agregar voz</button>
+          <button class="btn" type="button" data-act="voz-add" id="vozAdd" disabled><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Escribir y grabar de nuevo</button>
           <details id="vozGuion" hidden><summary>Ver y editar el guion</summary><div class="vid-lineas" id="vozLineas"></div><button class="btn sm" type="button" data-act="voz-regrabar">Grabar de nuevo con este guion</button></details>
         </div>
         <button class="btn alt" type="button" data-act="vid-make" id="vidMake">Preparar video MP4</button>
         <div class="vid-prog" id="vidProg" hidden><span class="bar"><i style="width:0%"></i></span><span class="mono" id="vidPct">0%</span><button class="btn sm" type="button" data-act="vid-stop">Cancelar</button></div>
         <div class="vid-out" id="vidOut" hidden><button class="btn b-wa" type="button" data-act="vid-wa"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="vid-dl"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar</button></div>
+        <div class="vid-voz vid-pdf"><div class="vid-voz-h"><b>Informe en PDF</b><span>Informe ejecutivo · 24 horas, 7 y 30 días</span></div>
+          <div class="vid-out"><button class="btn b-wa" type="button" data-act="share" data-via="wa" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${SH_ICO.wa}</svg>WhatsApp</button><button class="btn alt" type="button" data-act="share" data-via="pdf" data-src="ejec"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>Descargar PDF</button></div></div>
         <p class="note" id="vidNote">Uso interno del alcalde y su equipo. ${MODO.tipo !== "demo" ? "Hecho con noticias reales; los medios se citan por su nombre" : "Es un prototipo con noticias ficticias"}; no usa fotos ni logos de los medios.</p>
       </div>
     </div></section>`;
   document.body.appendChild(ov); document.body.classList.add("vid-on");
   const cv = $("#vidCv"), ctx = cv.getContext("2d"), quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  VID = {plan, ctx, t: quieto ? 2 : 0, play: !quieto, last: null, raf: 0, blob: null, ctl: null, origen: document.activeElement, ac: null, src: null, a0: 0};
-  vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const b = $("#vozAdd"), st = $("#vozEstado");
-    if (e === "ok") { b.disabled = false; st.textContent = "Sin voz · voz chilena con ElevenLabs"; }
-    else st.textContent = e === "sin-clave" ? "Falta configurar la clave de ElevenLabs en Vercel" : "Disponible en pregonia.vercel.app"; });
+  // El audio se habilita aquí, dentro del toque que abrió el video: así la voz puede sonar sola cuando llegue.
+  let ac0 = null; try { ac0 = new (window.AudioContext || window.webkitAudioContext)(); ac0.resume().catch(() => {}); } catch(e) {}
+  VID = {plan, ctx, t: quieto ? 2 : 0, play: !quieto, last: null, raf: 0, blob: null, ctl: null, origen: document.activeElement, ac: ac0, src: null, a0: 0};
+  // En iPhone, el audio de Web Audio se silencia con el interruptor de silencio; un elemento <audio> no. La voz suena por uno,
+  // que se habilita aquí, en el mismo toque que abrió el video, con un instante de silencio (después puede sonar solo).
+  try { const el = VID.el = new Audio(); el.setAttribute("playsinline", ""); el.preload = "auto";
+    if (ac0) { VID.mudoUrl = URL.createObjectURL(wavDe(ac0.createBuffer(1, 2400, 48000))); el.src = VID.mudoUrl; el.play().then(() => el.pause()).catch(() => {}); } } catch(e) { VID.el = null; }
+  // La voz se genera sola al abrir: guion con los datos del período y narración con ElevenLabs. Si falla, el video sigue sin voz.
+  if (!VOZ_ACTIVA) $("#vozBox").hidden = true;
+  if (VOZ_ACTIVA) vozDisponible().then(e => { if (!VID) return; VID.vozEstado = e; const st = $("#vozEstado");
+    if (e === "ok" && VOZ_CACHE.sinCredito) { st.textContent = `Sin voz · ${VOZ_CACHE.sinCredito}. El video funciona igual, sin narración.`; const b = $("#vozAdd"); b.disabled = false; b.lastChild.textContent = "Intentar la voz de nuevo"; }
+    else if (e === "ok") VID.vozPromesa = vozAgregar(false).finally(() => { if (VID) VID.vozPromesa = null; });
+    else st.textContent = e === "sin-clave" ? "Sin voz: falta configurar la clave de ElevenLabs en Vercel" : "Sin voz: la voz se genera en pregonia.cl"; });
   const fuentes = ['400 40px Inter', '500 40px Inter', '600 40px Inter', '700 40px Inter', '500 60px "Source Serif 4"', '600 60px "Source Serif 4"', '700 60px "Source Serif 4"'];
   Promise.all(fuentes.map(f => document.fonts.load(f).catch(() => {})));
   const loop = now => {
     if (!VID) return; const pl = VID.plan;
     if (VID.play) {
-      if (VID.src) VID.t = VID.ac.currentTime - VID.a0; else if (VID.last != null) VID.t += (now - VID.last) / 1000;
+      if (VID.elOn && VID.el && !VID.el.paused) VID.t = VID.el.currentTime; else if (VID.src) VID.t = VID.ac.currentTime - VID.a0; else if (VID.last != null) VID.t += (now - VID.last) / 1000;
       if (VID.t > pl.total + 1) { VID.t = 0; vozSonar(); }
     }
     VID.last = now; vdibujar(ctx, Math.max(0, Math.min(VID.t, pl.total - 0.001)), pl); VID.raf = requestAnimationFrame(loop);
@@ -381,7 +405,8 @@ function videoAbrir(){
 function vidEstado(){ const b = $("#vidPlay"); if (b) b.textContent = VID.play ? "Pausa" : "Reproducir"; $("#vidStage")?.classList.toggle("pausa", !VID.play); }
 function vidAlternar(){ if (!VID) return; VID.play = !VID.play; VID.last = null; vidEstado(); if (VID.play) vozSonar(); else vozCallar(); }
 function videoCerrar(){
-  if (!VID) return; cancelAnimationFrame(VID.raf); VID.ctl?.abort(); VID.vctl?.abort(); vozCallar(); VID.ac?.close().catch(() => {}); const o = VID.origen; VID = null;
+  if (!VID) return; cancelAnimationFrame(VID.raf); VID.ctl?.abort(); VID.vctl?.abort(); vozCallar(); VID.ac?.close().catch(() => {});
+  if (VID.el) { VID.el.pause(); VID.el.removeAttribute("src"); } [VID.audioUrl, VID.mudoUrl].forEach(u => u && URL.revokeObjectURL(u)); const o = VID.origen; VID = null;
   $("#vidBack")?.remove(); document.body.classList.remove("vid-on"); if (o && o.isConnected) o.focus();
 }
 const videoNombre = () => `PregonIA-Video-${slug((VID ? VID.plan.P : partePer()).rotulo)}-${slug(S.org)}-${hoyISO()}.${VID && VID.blob && /webm/.test(VID.blob.type) ? "webm" : "mp4"}`;
@@ -391,6 +416,7 @@ async function videoPreparar(){
   const ctl = VID.ctl = new AbortController(), plan = VID.plan;
   const avance = p => { bar.style.width = Math.round(p * 100) + "%"; pct.textContent = Math.round(p * 100) + "%"; };
   try { await Promise.all(['700 80px Inter', '600 60px Newsreader', '500 40px Inter'].map(f => document.fonts.load(f).catch(() => {}))); } catch(e) {}
+  if (VID.vozPromesa) { note.textContent = "Esperando que termine la voz para incluirla en el video…"; await VID.vozPromesa.catch(() => {}); if (!VID) return; }
   let blob = null;
   try {
     plan.audioCodec = undefined; blob = await videoMP4(plan, avance, ctl.signal);
@@ -426,7 +452,7 @@ document.addEventListener("click", e => {
   if (a === "vid-close") videoCerrar();
   if (a === "vid-play") vidAlternar();
   if (a === "vid-replay") { VID.t = 0; VID.play = true; VID.last = null; vidEstado(); vozSonar(); }
-  if (a === "voz-add") vozAgregar(false);
+  if (a === "voz-add") { GUION_CACHE.delete(guionBase(VID.plan).join("\u0001")); vozAgregar(false); }  // a mano: guion nuevo
   if (a === "voz-regrabar") vozAgregar(true);
   if (a === "vid-make") videoPreparar();
   if (a === "vid-stop") VID.ctl?.abort();
@@ -441,9 +467,26 @@ document.addEventListener("keydown", e => {
 });
 
 /* Voz en la vista previa, sincronizada con el reloj de audio */
-function vozCallar(){ if (VID && VID.src) { try { VID.src.stop(); } catch(e) {} VID.src = null; } }
+function vozCallar(){ if (!VID) return; if (VID.el && VID.elOn) { VID.el.pause(); VID.elOn = false; } if (VID.src) { try { VID.src.stop(); } catch(e) {} VID.src = null; } }
+/* Audio en WAV (16 bits, mono) para reproducir la voz con un elemento <audio>. */
+function wavDe(buf){
+  const d = buf.getChannelData(0), n = d.length, sr = buf.sampleRate, ab = new ArrayBuffer(44 + n * 2), v = new DataView(ab), w = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); w(8, "WAVE"); w(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) { const x = Math.max(-1, Math.min(1, d[i])); v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7FFF, true); }
+  return new Blob([ab], {type: "audio/wav"});
+}
 function vozSonar(){
-  if (!VID || !VID.plan.audio || !VID.ac) return; vozCallar();
+  if (!VID || !VID.plan.audio) return; vozCallar();
+  if (VID.el && VID.audioUrl) {
+    const el = VID.el, desde = Math.max(0, Math.min(VID.t, VID.plan.total - 0.05));
+    if (el.getAttribute("src") !== VID.audioUrl) el.src = VID.audioUrl;
+    try { el.currentTime = desde; } catch(e) {}
+    VID.elOn = true; el.onended = () => { if (VID) VID.elOn = false; };
+    el.play().catch(() => { if (!VID) return; VID.elOn = false; const st = $("#vozEstado"); if (st && !/Toca el video/.test(st.textContent)) st.textContent += " · Toca el video para escuchar la voz."; });
+    return;
+  }
+  if (!VID.ac) return;
   const src = VID.ac.createBufferSource(); src.buffer = VID.plan.audio; src.connect(VID.ac.destination);
   const desde = Math.max(0, Math.min(VID.t, VID.plan.total - 0.05)); VID.ac.resume().catch(() => {});
   src.start(0, desde); VID.a0 = VID.ac.currentTime - desde; VID.src = src;
@@ -458,23 +501,27 @@ async function vozAgregar(regrabar){
   let lineas;
   try {
     if (regrabar) lineas = [...document.querySelectorAll("#vozLineas textarea")].map(t => t.value.replace(/\s+/g, " ").trim());
-    else { st.textContent = "Escribiendo el guion…"; const base = guionBase(plan); lineas = (await guionIA(plan, base, ctl.signal)) || base; }
+    else { st.textContent = "Preparando la voz: escribiendo el guion…"; const base = guionBase(plan), kb = base.join("\u0001"); lineas = GUION_CACHE.get(kb) || (await guionIA(plan, base, ctl.signal)) || base; GUION_CACHE.set(kb, lineas); }
     if (lineas.some(x => x.length > 650)) throw {code: "largo"};
     $("#vozLineas").innerHTML = plan.scenes.map((s, i) => `<label><span>${i + 1}. ${VNOMBRE[s.k]}${s.k === "asunto" ? " " + (s.i + 1) : ""}</span><textarea rows="3">${esc(lineas[i])}</textarea></label>`).join("");
     det.hidden = false;
-    let hechas = 0; st.textContent = `Grabando la voz… 0 de ${lineas.length}`;
+    let hechas = 0; st.textContent = `Preparando la voz: grabando 0 de ${lineas.length}…`;
     const voces = new Array(lineas.length); let k = 0;
-    await Promise.all([0, 1, 2].map(async () => { while (k < lineas.length) { const i = k++; voces[i] = lineas[i] ? await vozGrabar(lineas[i], VID.ac, ctl.signal) : null; hechas++; if (VID) st.textContent = `Grabando la voz… ${hechas} de ${lineas.length}`; } }));
+    await Promise.all([0, 1, 2].map(async () => { while (k < lineas.length) { const i = k++; voces[i] = lineas[i] ? await vozGrabar(lineas[i], VID.ac, ctl.signal) : null; hechas++; if (VID) st.textContent = `Preparando la voz: grabando ${hechas} de ${lineas.length}…`; } }));
     if (!VID || ctl.signal.aborted) return;
     plan.scenes.forEach((s, i) => { s.voz = voces[i]; s.texto = lineas[i]; });
     retimar(plan); plan.audio = await vozMezcla(plan);
   } catch(err) {
     if (!VID || (err && err.name === "AbortError") || (err && err.code === "cancelled")) return;
-    btn.disabled = false; st.textContent = err && err.code === "largo" ? "Una escena es demasiado larga: acórtala a unas 90 palabras." : err && err.code === "rate_limited" ? "El servicio de voz está ocupado. Intenta en unos minutos." : (err && err.message) || "No se pudo grabar la voz.";
+    btn.disabled = false; btn.lastChild.textContent = "Intentar la voz de nuevo";
+    const motivo = (err && err.code === "largo" ? "una escena es demasiado larga: acórtala a unas 90 palabras" : err && err.code === "rate_limited" ? "el servicio de voz está ocupado; intenta en unos minutos" : (err && err.message) || "no se pudo grabar la voz").replace(/\.$/, "");
+    if (/créditos/.test(motivo)) VOZ_CACHE.sinCredito = motivo;  // sin saldo: en esta sesión no se vuelve a intentar sola
+    st.textContent = `Sin voz · ${motivo}. El video funciona igual, sin narración.`;
     return;
   }
   VID.blob = null; $("#vidOut").hidden = true; $("#vidMake").textContent = "Preparar video MP4";
   $(".vid-meta").textContent = `${Math.round(plan.total)} segundos con voz · vertical, para ver en el celular · ${plan.scenes.length} escenas con las noticias ${plan.P.de}: tono, hasta dónde llegaron, respuestas y temas.`;
   st.textContent = `Voz lista · ${Math.round(plan.total)} segundos${VID.vozEstandar ? " · voz estándar (la chilena requiere un plan pagado de ElevenLabs)" : ""}`; btn.disabled = false; btn.lastChild.textContent = "Escribir y grabar de nuevo";
+  if (VID.audioUrl) URL.revokeObjectURL(VID.audioUrl); VID.audioUrl = VID.el ? URL.createObjectURL(wavDe(plan.audio)) : null;
   VID.t = 0; VID.play = true; VID.last = null; $("#vidPlay").textContent = "Pausa"; vozSonar();
 }

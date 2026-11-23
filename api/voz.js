@@ -63,10 +63,11 @@ async function handler(req) {
   if (!r.ok || !r.body) {
     detalle = detalle || await r.text().catch(() => "");
     console.error("ElevenLabs", r.status, detalle.slice(0, 400));
-    const msg = r.status === 401 ? "La clave de ElevenLabs no es válida o no tiene permiso de texto a voz"
-      : r.status === 429 ? "ElevenLabs está ocupado o se agotó el saldo del plan"
+    // ElevenLabs responde 401 también cuando se acabó el saldo del mes («quota_exceeded»): se revisa eso primero.
+    const msg = /quota_exceeded|quota|credits remaining/i.test(detalle) ? "Se acabaron los créditos del mes en ElevenLabs: hay que esperar la renovación o subir de plan"
       : r.status === 402 && /paid_plan_required|library voices/i.test(detalle) ? "La voz elegida requiere un plan pagado de ElevenLabs"
-      : /quota|credits/i.test(detalle) ? "Se agotaron los caracteres del plan de ElevenLabs"
+      : r.status === 401 ? "La clave de ElevenLabs no es válida o no tiene permiso de texto a voz"
+      : r.status === 429 ? "ElevenLabs está ocupado; intenta en unos minutos"
       : "El servicio de voz no respondió";
     return json({ error: msg }, r.status === 429 ? 429 : 502);
   }

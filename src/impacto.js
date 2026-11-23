@@ -7,7 +7,7 @@
    Todo es por palabras y conteos, sin IA: es barato, explicable y se puede auditar. */
 const IMP_PESOS = {repercusion: 35, redes: 20, autoridades: 15, temas: 20, recencia: 10};
 const IMP_TEMAS = {
-  agua: {n: "Agua y sequía", p: ["agua potable", "sequia", "escasez hidrica", "camion aljibe", "aljibe", "corte de agua", "sin agua", "esval", "embalse", "napas", "acuifero", "apr ", "agua potable rural", "derechos de agua", "desalinizadora"]},
+  agua: {n: "Agua y sequía", p: ["agua potable", "sequia", "escasez hidrica", "camion aljibe", "aljibe", "corte de agua", "sin agua", "esval", "aguas antofagasta", "embalse", "napas", "acuifero", "apr ", "agua potable rural", "derechos de agua", "desalinizadora"]},
   emergencias: {n: "Emergencias", p: ["incendio", "evacuacion", "senapred", "alerta roja", "alerta amarilla", "temporal", "marejada", "tsunami", "sismo", "terremoto", "aluvion", "inundacion", "corte de luz", "sin luz", "emergencia", "bomberos", "derrame"]},
   seguridad: {n: "Seguridad", p: ["homicidio", "balacera", "disparos", "baleado", "asalto", "portonazo", "robo", "delincuencia", "narcotrafico", "detenido", "carabineros", "pdi", "fiscalia", "seguridad publica", "toma de terreno", "crimen", "secuestro", "encerrona"]},
   salud: {n: "Salud", p: ["hospital", "cesfam", "sapu", "urgencia", "lista de espera", "brote", "virus", "contagio", "vacunacion", "seremi de salud", "intoxicacion", "medicos", "salud primaria", "dengue", "influenza"]},

@@ -98,6 +98,11 @@ create table if not exists menciones (
   clasificado  timestamptz not null default now(),
   primary key (nota_id, municipio_id)
 );
+-- En cuentas de autoridad: 'persona' si la nota la nombra, 'institucion' si trata del órgano que integra en su territorio
+-- (las mismas reglas que un municipio, que lee lo que trata de la comuna). En municipios queda vacío.
+alter table menciones add column if not exists sobre text check (sobre in ('persona', 'institucion'));
+-- Ficha editorial de la IA: área, encuadre, impulsor, papel, tono hacia la contraparte, gravedad y confianza (ver api/_lectura.js).
+alter table menciones add column if not exists ficha jsonb;
 create index if not exists menciones_muni on menciones (municipio_id, clasificado desc);
 create index if not exists menciones_grupo on menciones (municipio_id, grupo);
 
@@ -361,6 +366,20 @@ create table if not exists avisos (
   correo       boolean not null default true,
   actualizado  timestamptz not null default now()
 );
+-- Parte diario por WhatsApp (nov 2026): celular de la persona y su aceptación expresa (Meta exige consentimiento previo).
+alter table avisos add column if not exists whatsapp    text;
+alter table avisos add column if not exists whatsapp_ok boolean not null default false;
+-- Un parte por cuenta y día: la lectura de las 8:07 toma la fila antes de enviar; la de las 8:37 la encuentra y no repite.
+create table if not exists partes_whatsapp (
+  municipio_id uuid not null references municipios (id) on delete cascade,
+  fecha        date not null,
+  enviados     int,
+  noticias     int,
+  criticas     int,
+  creado       timestamptz not null default now(),
+  primary key (municipio_id, fecha)
+);
+alter table partes_whatsapp enable row level security;  -- sin políticas: solo el servidor (clave secreta) la usa
 -- Celulares y computadores suscritos a notificaciones (Web Push). Las llaves son del navegador, no secretos del municipio.
 create table if not exists suscripciones (
   endpoint     text primary key,
@@ -513,6 +532,8 @@ create table if not exists redaccion_posts (
   actualizado  timestamptz not null default now()
 );
 create index if not exists redaccion_posts_estado on redaccion_posts (estado, programado);
+-- Publicación por la API de Meta (fase 2): id de la publicación en Facebook, si quedó programada en Meta o ya salió, y cuándo.
+alter table redaccion_posts add column if not exists meta jsonb;
 
 -- Celulares y computadores del editor suscritos a los avisos de Redacción (Web Push).
 create table if not exists redaccion_suscripciones (
@@ -564,3 +585,60 @@ do $$ begin
 end $$;
 -- Para habilitar a un editor (una vez, en SQL Editor, con el correo de su cuenta de Supabase):
 --   insert into editores (usuario, nombre) select id, 'Nombre' from auth.users where email = 'correo@dominio.cl' on conflict do nothing;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Contacto (nov 2026): solicitudes del formulario de la página del servicio (/servicio).
+-- Solo las escribe y lee el servidor (api/contacto.js) con la clave secreta: sin políticas para anon ni authenticated.
+-- Plazo: 12 meses desde la solicitud, o antes si la persona pide eliminarla (ver legal.html).
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists contactos (
+  id                 bigint generated always as identity primary key,
+  creado_en          timestamptz not null default now(),
+  nombre             text not null,
+  cargo              text,
+  institucion        text not null,
+  correo             text not null,
+  telefono           text,
+  interes            text,
+  mensaje            text,
+  origen             text,
+  version_privacidad text
+);
+alter table contactos enable row level security;
+
+-- Prueba gratis (/api/contacto?prueba): inscripción con verificación del correo por código de 6 dígitos.
+-- Guarda solo el resumen con sal del código (se borra al verificar). Sin políticas: solo la clave secreta del servidor accede.
+create table if not exists public.pruebas (
+  id bigint generated always as identity primary key,
+  creado_en timestamptz not null default now(),
+  nombre text not null,
+  correo text not null,
+  rol text not null,
+  territorio text not null,
+  codigo_hash text,
+  expira timestamptz not null,
+  intentos int not null default 0,
+  verificado_en timestamptz,
+  acepta_contacto boolean not null default false,
+  version_privacidad text
+);
+create index if not exists pruebas_correo_creado on public.pruebas (correo, creado_en desc);
+alter table public.pruebas enable row level security;
+
+-- Ingresos a la demostración de los correos sin límite (PRUEBA_SIN_LIMITE): fecha, cargo, territorio y autoridad elegida.
+create table if not exists public.pruebas_ingresos (
+  id bigint generated always as identity primary key,
+  creado_en timestamptz not null default now(),
+  correo text not null,
+  rol text not null,
+  territorio text,
+  autoridad text,
+  cuenta text
+);
+create index if not exists pruebas_ingresos_correo_creado on public.pruebas_ingresos (correo, creado_en desc);
+alter table public.pruebas_ingresos enable row level security;
+
+-- Regiones (src/regiones.js): un turno de lectura por región. Cada lectura queda marcada con su región para que la app y la
+-- página de cobertura muestren el estado del turno que corresponde. Las lecturas anteriores son de la Región de Valparaíso.
+alter table lecturas add column if not exists region text not null default 'V';
+create index if not exists lecturas_region_fin on lecturas (region, fin desc);

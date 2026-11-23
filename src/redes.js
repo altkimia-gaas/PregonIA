@@ -33,7 +33,7 @@ function estadoRed(m){
   const M = META || {}, st = (RED_EST || {})[m.id] || (m.err ? {ok: false, error: m.err} : m.ult ? {ok: true, ts: Date.parse(m.ult)} : null);
   const activa = m.m === "instagram" ? M.instagram : M.facebook;
   if (!activa) return !M.sabido
-    ? {k: "requiere_ajuste", l: "Se lee en el sitio", o: "Se lee sola en pregonia.vercel.app. Aquí, sus publicaciones se agregan con Agregar publicación."}
+    ? {k: "requiere_ajuste", l: "Se lee en el sitio", o: "Se lee sola en pregonia.cl. Aquí, sus publicaciones se agregan con Agregar publicación."}
     : m.m === "instagram"
     ? {k: "requiere_ajuste", l: "Sin lector conectado", o: "Se leerá sola cuando PregonIA tenga conectado un lector de redes. Mientras tanto, sus publicaciones se agregan con Agregar publicación."}
     : {k: "captura_asistida", l: "Captura asistida", o: "Aún no hay lector de Facebook conectado. Sus publicaciones se agregan con Agregar publicación, en Menciones."};
@@ -58,7 +58,7 @@ function redesParam(){
 const RED_F = {red: "instagram", verificada: null, insistir: false};
 function redAbrir(){
   RED_F.verificada = null; RED_F.insistir = false;
-  const terr = territorio(), local = COMUNAS_V.includes(terr[0]) ? terr[0] : "";
+  const terr = territorio(), local = comunaAbierta(terr[0]) ? terr[0] : "", provs = regionCuenta().provincias;
   const ov = document.createElement("div"); ov.className = "vid-back"; ov.id = "redBack";
   ov.innerHTML = `<section class="vid cap" role="dialog" aria-modal="true" aria-labelledby="redT">
     <header class="vid-h"><div><h2 id="redT">Inscribir cuenta de red social</h2><p>Un medio local o regional que publica en Instagram o Facebook. Queda en el listado de fuentes para todas las cuentas de PregonIA.</p></div><button class="btn ghost" type="button" data-act="red-cerrar" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
@@ -71,7 +71,7 @@ function redAbrir(){
         <label class="cap-l">Nombre del medio<input id="redN" required autocomplete="off" placeholder="Por ejemplo: Litoral Noticias"></label>
         <label class="cap-l">Alcance<select id="redA"><option value="local">Comunal</option><option value="regional">Regional</option><option value="nacional">Nacional</option></select></label>
       </div>
-      <label class="cap-l" id="redCL">Comuna que cubre<select id="redC">${Object.entries(PROVINCIAS).map(([pv, cs]) => `<optgroup label="Provincia de ${esc(pv)}">${cs.map(c => `<option ${c === local ? "selected" : ""}>${esc(c)}</option>`).join("")}</optgroup>`).join("")}</select></label>
+      <label class="cap-l" id="redCL">Comuna que cubre<select id="redC">${Object.entries(provs).map(([pv, cs]) => `<optgroup label="Provincia de ${esc(pv)}">${cs.map(c => `<option ${c === local ? "selected" : ""}>${esc(c)}</option>`).join("")}</optgroup>`).join("")}</select></label>
       <p class="hint" id="redHint" style="margin:0"></p>
       <p class="cap-err" id="redErr" role="alert" hidden></p>
       <div class="cap-acts"><button class="btn alt" type="submit" id="redOk">Inscribir</button><button class="btn" type="button" data-act="red-cerrar">Cancelar</button></div>
@@ -120,7 +120,7 @@ async function redGuardar(ev){
       m = registrarRed(filaARed(data));
     } else {
       const id = Math.max(RED_ID0, ...S.redes.map(r => r.id)) + 1;
-      if (id >= 10000) throw new Error("Llegaste al máximo de cuentas en esta demostración.");
+      if (id >= 10000) throw new Error("Llegaste al máximo de cuentas en esta prueba.");
       const r = {id, red, u, n, a, c, ins: Date.now()}; S.redes.push(r); save(); m = registrarRed({...r, propia: true});
     }
   } catch(e) { btn.disabled = false; btn.textContent = "Inscribir"; return redError("No se pudo inscribir: " + (e.message || e)); }

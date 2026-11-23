@@ -9,7 +9,7 @@ import { alertasDeHecho, pasaPreferencia } from "./_reglas.js";
 const MEDIO = new Map(CATALOGO.map(m => [m.id, m]));
 const NIVEL = {nacional: 2, regional: 1};
 const ETIQUETA = {urgente: "Urgente", importante: "Importante", info: "Buena noticia"};
-const SITIO = () => process.env.SITIO_URL || "https://pregonia.vercel.app";
+const SITIO = () => process.env.SITIO_URL || "https://pregonia.cl";
 const lista = xs => "(" + xs.map(x => '"' + String(x).replace(/["\\]/g, "") + '"').join(",") + ")";
 const esc = s => String(s || "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]);
 
@@ -52,7 +52,7 @@ async function enviarCorreo(destino, alertas, cuenta, institucion){
     <p style="font:12px/1.5 Arial,sans-serif;color:#8A94A6;margin-top:18px">Recibes este correo porque tienes activados los avisos por correo en PregonIA. Puedes cambiarlo en la campana de avisos.</p></div>`;
   const r = await fetch("https://api.resend.com/emails", {method: "POST", signal: AbortSignal.timeout(10000),
     headers: {authorization: "Bearer " + process.env.RESEND_API_KEY, "content-type": "application/json"},
-    body: JSON.stringify({from: process.env.AVISOS_REMITENTE || "PregonIA <onboarding@resend.dev>", to: [destino], subject: asunto, html})});
+    body: JSON.stringify({from: process.env.AVISOS_REMITENTE || "PregonIA <pregonia@avala.altkimia.com>", to: [destino], subject: asunto, html})});
   return r.ok;
 }
 
