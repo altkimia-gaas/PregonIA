@@ -1922,7 +1922,7 @@ function pintarModo(){
   if (!pv) { el.hidden = true; return; }
   el.hidden = false; el.className = "demo real";
   const etiqueta = pv.ilimitada ? "Prueba comercial" : "Prueba gratis", hasta = pv.ilimitada ? "" : ` hasta el ${new Date(pv.hasta).toLocaleString("es-CL", {weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23"})}`;
-  if (MODO.cargando) { el.innerHTML = `<span class="demo-txt"><b>${etiqueta}</b>Leyendo ${N_MEDIOS} medios para ${esc(S.org)}<span class="demo-mas">; puede tardar hasta un minuto</span>…</span>`; return; }
+  if (MODO.cargando) { el.innerHTML = `<span class="demo-txt"><b>${etiqueta}</b>Leyendo ${prMedios().length} medios para ${esc(S.org)}<span class="demo-mas">; puede tardar hasta un minuto</span>…</span>`; return; }
   el.innerHTML = `<span class="demo-txt"><b>${MODO.actualizando ? "Actualizando…" : etiqueta}</b>${real ? `${plural(i.notas.length, "nota", "notas")} en ${i.ventana_dias} días<span class="demo-mas"> · ${i.fuentes.leidas} de ${i.fuentes.total} fuentes leídas a las ${horaCorta(i.generado)}${i.ia ? "" : i.ia_parcial ? " · tono clasificado en parte" : " · tono sin clasificar"}${hasta}</span>` : `<span class="demo-mas">${hasta.trim()}</span>`}</span>`;
 }
 /* Última lectura guardada en el navegador: al recargar, la edición aparece al instante con lo último leído
@@ -1964,33 +1964,46 @@ async function cargarReales(force, silencioso){
 const IP_PAG = '<path class="ip-p" d="M32 14H54.5a1.5 1.5 0 0 1 1.5 1.5v33a1.5 1.5 0 0 1-1.5 1.5H32Z"/><line class="ip-t" x1="36" y1="19.5" x2="52" y2="19.5"/><line class="ip-l" x1="36" y1="26" x2="42.5" y2="26"/><line class="ip-l" x1="36" y1="30.5" x2="42.5" y2="30.5"/><line class="ip-l" x1="36" y1="35" x2="42.5" y2="35"/><line class="ip-l" x1="36" y1="39.5" x2="42.5" y2="39.5"/><line class="ip-l" x1="36" y1="44" x2="41" y2="44"/><line class="ip-l" x1="45.5" y1="26" x2="52" y2="26"/><line class="ip-l" x1="45.5" y1="30.5" x2="52" y2="30.5"/><rect class="ip-f" x="45.5" y="34" width="6.5" height="11" rx="1.2"/>';
 const icoPeriodico = (px = 20) => `<svg class="ico-per" viewBox="0 0 64 64" width="${px}" height="${px}" aria-hidden="true"><g class="ip-izq">${IP_PAG}</g><g>${IP_PAG}</g><path class="ip-som" d="M32 14H56V50H32Z"/><g class="ip-hoja">${IP_PAG}</g><line class="ip-lomo" x1="32" y1="14" x2="32" y2="50"/></svg>`;
 /* Pantalla de lectura: posiciona a PregonIA mientras el servidor lee los medios y la IA clasifica.
-   Siete diarios de colores giran en órbita; uno a la vez pasa al centro, se abre y se le dan vuelta las páginas;
-   al terminar queda con visto en la órbita y entra el siguiente. Sin movimiento si el sistema lo pide. */
-const DIARIOS = [
-  {n: "DIARIO", c: "#1976D2", p: "#E3F0FB"}, {n: "NOTICIAS", c: "#D9443C", p: "#FBE7E5"}, {n: "CRÓNICA", c: "#2E9E6B", p: "#E2F4EA"},
-  {n: "GACETA", c: "#C98A0B", p: "#FBF0D9"}, {n: "EL PREGÓN", c: "#7B4BC4", p: "#EFE7FA"}, {n: "SEMANARIO", c: "#0F8C99", p: "#DDF2F4"}, {n: "LA VOZ", c: "#E0598B", p: "#FBE5EE"}
-];
-const PR_ORB = 7, PR_MS = 2600;  // 3 páginas por diario
-function diarioMini(d, i){
-  // Edición · Edición: diarios en blanco y negro (papel, cabezal en tinta, foto gris); los colores salen del modo claro u oscuro.
+   Doce diarios giran en órbita, cada uno con el color de su tipo de medio; al centro, el nombre real del medio que «se lee»
+   (los del catálogo que aplican a la cuenta: nacionales, los de su región y comuna, fuentes oficiales y redes), su tipo y el
+   contador. El anillo se llena con el color de cada medio leído y debajo quedan los tres últimos. El ritmo es visual: la
+   respuesta del servidor llega de una vez; al completar la cuenta, sigue la vuelta con el contador lleno hasta que llega.
+   Sin movimiento de la órbita si el sistema lo pide. */
+const PR_TIPOS = {loc: ["#D85A30", "Comunal"], nac: ["#378ADD", "Nacional"], reg: ["#1D9E75", "Regional"], ofi: ["#7F77DD", "Oficial"], red: ["#D4537E", "Redes"]};
+const PR_ORB = 12, PR_MS = 260, PR_R = 112;
+const prTipo = m => esRed(m) ? "red" : m.a === "institucional" ? "ofi" : m.a === "local" ? "loc" : m.a === "regional" ? "reg" : "nac";
+/* Medios de la cuenta, intercalados por tipo para que los colores se mezclen (los comunales de la cuenta abren la lista). */
+function prMedios(){
+  const terr = territorio(), reg = regionCuenta().id, deTerr = m => (m.c || "").split(";").some(c => terr.includes(c.trim()));
+  const ms = CATALOG.filter(m => m.e !== "retirado" && m.t !== "Otro medio" && !/^Otr[oa] (medio|fuente)/i.test(m.n) && (!m.r || m.r === reg)
+    && (m.a === "nacional" || m.a === "regional" || (m.a === "institucional" && (!m.c || deTerr(m))) || (m.a === "local" && deTerr(m))));
+  const grupos = {}; ms.forEach(m => (grupos[prTipo(m)] = grupos[prTipo(m)] || []).push(m));
+  const orden = Object.keys(PR_TIPOS);
+  return Object.entries(grupos).flatMap(([k, g]) => g.map((m, i) => ({n: m.n, k, f: (i + .5) / g.length - (k === "loc" && i < 2 ? 1 : 0)})))
+    .sort((x, y) => x.f - y.f || orden.indexOf(x.k) - orden.indexOf(y.k));
+}
+function diarioMini(i){
+  // Diario en miniatura: papel, cabezal y filete con el color de su tipo (--tc), foto gris y líneas de texto.
   const ln = (y, w) => `<rect class="dm-l" x="5" y="${y}" width="${w}" height="2" rx="1"/>`;
   return `<svg viewBox="0 0 40 50" aria-hidden="true"><rect class="dm-papel" x=".75" y=".75" width="38.5" height="48.5" rx="3"/><rect class="dm-cab" x="5" y="4.5" width="30" height="3.5" rx="1"/><rect class="dm-filete" x="5" y="10" width="30" height="1"/>
     <rect class="dm-foto" x="5" y="15" width="${i % 2 ? 30 : 14}" height="${i % 2 ? 10 : 14}" rx="1.5"/>${i % 2 ? ln(29, 30) + ln(33, 26) : ln(16, 12) + ln(20, 12) + ln(24, 10)}${ln(37, 30)}${ln(41, 24)}</svg>`;
 }
-const prPagina = lado => `<div class="pr-pag ${lado}">${[0, 1, 2, 3, 4, 5].map(k => `<i style="width:${[86, 70, 92, 64, 88, 74][(k + (lado === "der" ? 2 : 0)) % 6]}%"></i>`).join("")}</div>`;
-function prLibro(d){
-  return `<div class="pr-libro" style="--c:var(--ink);--p:var(--surface)"><div class="pr-cab"><span>${d.n}</span></div>
-    <div class="pr-abierto">${prPagina("izq")}${prPagina("der")}<div class="pr-hoja"><div class="pr-cara fr">${prPagina("der")}</div><div class="pr-cara re">${prPagina("izq")}</div></div></div></div>`;
-}
+const prCentro = (m, n, total) => `<span class="pr-ahora">Leyendo ahora</span><b class="pr-nm">${esc(m.n)}</b>
+  <span class="pr-tp" style="--tc:${PR_TIPOS[m.k][0]}">${PR_TIPOS[m.k][1]}</span><span class="pr-cnt">${n} de ${total} medios</span>`;
 const PR_PASOS = [[0, "Leyendo los medios nacionales, regionales y locales…"], [8, "Juntando la misma noticia publicada en varios medios…"], [18, "La IA está leyendo el tono y escribiendo resúmenes propios…"], [32, "Ordenando por alcance y preparando qué conviene hacer…"], [55, "Unos segundos más: hay muchas fuentes para revisar…"]];
 function procesandoHtml(){
   const quien = esAut() ? cuenta().perfil.nombre : S.org, hoy = new Date(NOW).toLocaleDateString("es-CL", {weekday: "long", day: "numeric", month: "long"});
-  const orbita = DIARIOS.map((d, i) => `<span class="pr-o${i ? "" : " leyendo"}" style="--a:${i * 360 / PR_ORB}deg"><span class="pr-oi">${diarioMini(d, i)}<span class="pr-ok">✓</span></span></span>`).join("");
+  const ms = prMedios(); procesandoHtml.ms = ms;
+  const orbita = Array.from({length: PR_ORB}, (_, i) => { const m = ms[i % ms.length];
+    return `<span class="pr-o${i ? "" : " leyendo"}" style="--a:${i * 360 / PR_ORB}deg;--tc:${PR_TIPOS[m.k][0]}"><span class="pr-oi">${diarioMini(i)}<span class="pr-ok">✓</span></span></span>`; }).join("");
+  const largo = (2 * Math.PI * PR_R).toFixed(1);
   return `<section class="pr" role="status" aria-live="polite" aria-labelledby="prT">
-    <div class="pr-circ" aria-hidden="true"><span class="pr-pista"></span><div class="pr-orbita">${orbita}</div><div class="pr-centro" id="prCentro">${prLibro(DIARIOS[0])}</div></div>
+    <div class="pr-circ" aria-hidden="true"><svg class="pr-anillo" viewBox="0 0 284 284"><circle class="pr-pista" cx="142" cy="142" r="${PR_R}"/><g id="prArco" transform="rotate(-90 142 142)" data-largo="${largo}"></g></svg>
+      <div class="pr-orbita">${orbita}</div><div class="pr-centro" id="prCentro">${prCentro(ms[0], 0, ms.length)}</div></div>
+    <p class="pr-rec" id="prRec" aria-hidden="true"></p>
     <span class="ini-ekick">Leyendo la prensa · ${esc(hoy)}</span>
     <h2 id="prT" class="pr-t" tabindex="-1">Estamos leyendo la prensa por ti</h2>
-    <p class="pr-s">${N_MEDIOS} medios nacionales, regionales y locales en una sola lectura: qué se dice de <b>${esc(quien)}</b>, hasta dónde llegó y qué conviene hacer.</p>
+    <p class="pr-s">${ms.length} medios y fuentes nacionales, regionales y locales en una sola lectura: qué se dice de <b>${esc(quien)}</b>, hasta dónde llegó y qué conviene hacer.</p>
     <p class="pr-paso">${icoPeriodico(24)}<span id="prPaso">${PR_PASOS[0][1]}</span></p>
     <p class="pr-nota" id="prNota">Suele tardar menos de un minuto.</p>
   </section>`;
@@ -2000,12 +2013,21 @@ function procesandoPaso(){
   const tick = () => { const el = $("#prPaso"); if (!el || !MODO.cargando) { clearInterval(procesandoPaso.t); return; }
     const seg = Math.round((Date.now() - (MODO.inicio || Date.now())) / 1000), p = PR_PASOS.filter(x => seg >= x[0]).pop()[1];
     if (el.textContent !== p) el.textContent = p; const n = $("#prNota"); if (n) n.textContent = seg < 5 ? "Suele tardar menos de un minuto." : `Llevamos ${seg} s · suele tardar menos de un minuto.`; };
-  // Un diario a la vez: el leído queda con visto en la órbita y el siguiente pasa al centro. Al completar la vuelta, empieza otra tanda.
-  let i = 0; const leer = () => { const c = $("#prCentro"); if (!c || !MODO.cargando) { clearInterval(procesandoPaso.l); return; }
-    const os = [...document.querySelectorAll(".pr-o")]; os[i].classList.remove("leyendo"); os[i].classList.add("leido");
-    i = (i + 1) % PR_ORB; if (!i) os.forEach(o => o.classList.remove("leido"));
-    os[i].classList.add("leyendo"); c.innerHTML = prLibro(DIARIOS[i]); };
-  tick(); procesandoPaso.t = setInterval(tick, 1000); procesandoPaso.l = setInterval(leer, PR_MS);
+  // Un medio a la vez: el diario de la órbita que lo representa se agranda con su color, los tres anteriores quedan con visto,
+  // el anillo suma un tramo de su color y la línea de abajo muestra los tres últimos. Completa la cuenta y sigue girando.
+  const ms = procesandoHtml.ms || prMedios(), total = ms.length, rec = [];
+  let n = 0; const leer = () => { const c = $("#prCentro"), arco = $("#prArco"); if (!c || !arco || !MODO.cargando) { clearInterval(procesandoPaso.l); return; }
+    const os = [...document.querySelectorAll(".pr-o")], i = n % PR_ORB, m = ms[n % total], ant = os[(i + PR_ORB - 1) % PR_ORB];
+    ant.classList.remove("leyendo"); if (n) ant.classList.add("leido");
+    const viejo = os[(i + PR_ORB - 4) % PR_ORB]; if (n >= 4) viejo.classList.remove("leido");
+    os[i].style.setProperty("--tc", PR_TIPOS[m.k][0]); os[i].classList.remove("leido"); os[i].classList.add("leyendo");
+    const leidos = Math.min(n + 1, total); c.innerHTML = prCentro(m, leidos, total);
+    if (n < total) { const largo = +arco.dataset.largo, tramo = largo / total;
+      arco.insertAdjacentHTML("beforeend", `<circle cx="142" cy="142" r="${PR_R}" style="stroke:${PR_TIPOS[m.k][0]}" stroke-dasharray="${(tramo + .5).toFixed(2)} ${largo}" stroke-dashoffset="${(-n * tramo).toFixed(2)}"/>`); }
+    rec.unshift(m); rec.length = Math.min(rec.length, 4);
+    const r = $("#prRec"); if (r) r.innerHTML = rec.slice(1).length ? "Recién leídos: " + rec.slice(1).map(x => `<span><i style="background:${PR_TIPOS[x.k][0]}"></i>${esc(x.n)}</span>`).join("") : "";
+    n++; };
+  tick(); leer(); procesandoPaso.t = setInterval(tick, 1000); procesandoPaso.l = setInterval(leer, PR_MS);
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (b && b.dataset.act === "modo-real") cargarReales(true); });
 $("#org").addEventListener("change", () => { if ($("#entBack")) return; pintarModo(); if (pruebaVigente() && MODO.disponible) cargarReales(true); });  // con el selector de cuentas abierto no hay cambio todavía
