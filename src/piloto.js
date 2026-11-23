@@ -9,6 +9,9 @@ PILOTO = {activo: false, disponible: false, sb: null, user: null, perfil: null, 
 const ROLES = {admin: "Administración", comunicaciones: "Comunicaciones", alcalde: "Alcalde", autoridad: "Autoridad", directivo: "Equipo directivo", lector: "Solo lectura"};
 /* En una cuenta de autoridad, la persona titular se muestra con su cargo y el equipo directivo como su equipo. */
 const esPilotoAut = () => !!(PILOTO.muni && PILOTO.muni.tipo && PILOTO.muni.tipo !== "municipio");
+/* Región de la cuenta del piloto (src/regiones.js): la de su comuna o la de la zona de la autoridad. Cada región tiene su propio turno de lectura. */
+const regionPiloto = () => { const m = PILOTO.muni || {}; if (!esPilotoAut()) return regionDeComuna(m.comuna) || REGION_DEFECTO;
+  const a = m.autoridad || {}, z = zonaDe(m.tipo, a.zona); return (z && regionDeComuna(z.comunas[0])) || REGION_DEFECTO; };
 function rolNombre(rol){
   if (!esPilotoAut()) return ROLES[rol] || rol;
   const a = PILOTO.muni.autoridad || {};
@@ -226,7 +229,9 @@ async function cargarDatosPiloto(){
     pide(sb.from("marcas").select("grupo, tipo").eq("municipio_id", mid)),
     pide(sb.from("comunicados").select("id, grupo, pieza, origen, texto, creado").eq("municipio_id", mid).order("creado", {ascending: false}).limit(300)),
     pide(sb.from("capturas").select("*").eq("municipio_id", mid).gte("publicado", desde)),
-    pide(sb.from("lecturas").select("fin, fuentes_ok, fuentes_total").not("fin", "is", null).order("id", {ascending: false}).limit(1)),
+    // La última lectura del turno de su región; sin la columna region (esquema anterior), la última de todas.
+    pide(sb.from("lecturas").select("fin, fuentes_ok, fuentes_total").eq("region", regionPiloto()).not("fin", "is", null).order("id", {ascending: false}).limit(1))
+      .catch(() => pide(sb.from("lecturas").select("fin, fuentes_ok, fuentes_total").not("fin", "is", null).order("id", {ascending: false}).limit(1))),
     pide(sb.from("municipios").select("config").eq("id", mid).single()),
     cargarRedesPiloto(sb).catch(() => null)  // cuentas de Facebook e Instagram: antes de las notas, que las necesitan como medio
   ]);

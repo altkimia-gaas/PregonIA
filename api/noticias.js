@@ -3,8 +3,8 @@
 // La lectura y la clasificación viven en _lectura.js, compartido con la lectura programada (/api/ingesta).
 import { leerOficiales } from "./_oficiales.js";
 import { tituloFinal, COMUNAS, VENTANA_DIAS, MAX_IA, DIAG, norm, clasificar, fichaNota, json, leerCatalogo, leerGoogleNews, leerGoogleNewsConsulta, candidatasDe, candidatasPorNombre, saludFuentes, plazoGoogleNews, statsGoogleNews, ahorroGoogleNews } from "./_lectura.js";
-import { AUTORIDADES, PROVINCIAS, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
-import { limpio, consulta, sujeto, fichaIA, institucion, leerSujeto } from "./_sujetos.js";
+import { AUTORIDADES, PROVINCIAS, REGIONES, regionDeComuna, cargoDe, zonaDe, variantesNombre, provinciaDe } from "./_autoridades.js";
+import { limpio, consulta, sujeto, fichaIA, institucion, leerSujeto, regionDeAut } from "./_sujetos.js";
 import { CATALOGO } from "./_catalogo.js";
 import { leerRedes, usuarioDe, cuentasCatalogo } from "./_redes.js";
 
@@ -47,7 +47,7 @@ async function deAutoridad(u){
   const a = sujetoDe(u); if (!a) return json({ error: "Autoridad no disponible" }, 400);
   const dias = diasDe(u), z = zonaDe(a.rol, a.zona), cargo = cargoDe(a.rol, a.g), ahora = Date.now(), desde = ahora - dias * 864e5, desdePares = ahora - VENTANA_DIAS * 864e5;
   // Primero lo que trae notas; la comparación con pares va después en la cola de Google News, mientras la IA clasifica.
-  const [cat, gn, rs] = await Promise.all([leerCatalogo(), leerSujeto(a, dias).catch(() => null), leerRedes(redesDe(u))]);
+  const [cat, gn, rs] = await Promise.all([leerCatalogo(regionDeAut(a).id), leerSujeto(a, dias).catch(() => null), leerRedes(redesDe(u))]);
   const paresP = a.nomina ? paresDe(a, desdePares).catch(() => []) : Promise.resolve([]);
   const errores = cat.errores.concat(gn ? [] : ["Google News"], rs.errores);
   const candidatas = candidatasPorNombre(variantesNombre(a), cat.items.concat(gn || [], rs.items), desde, ahora, institucion(a)), lote = candidatas.slice(0, MAX_IA);
@@ -81,9 +81,10 @@ const PULSO_DIAS = 3;
 async function pulso(u){
   // ?prov=San Antonio: las comunas de una provincia (comparación de un municipio con sus vecinas). ?todos=1: todos los titulares.
   const prov = u.searchParams.get("prov"), todos = u.searchParams.has("todos");
-  const z = prov ? (PROVINCIAS[prov] ? {n: "Provincia de " + prov, comunas: PROVINCIAS[prov]} : null) : zonaDe(u.searchParams.get("rol"), u.searchParams.get("zona"));
+  const provs = prov && (Object.values(REGIONES).find(r => r.provincias[prov]) || {}).provincias;
+  const z = prov ? (provs ? {n: "Provincia de " + prov, comunas: provs[prov]} : null) : zonaDe(u.searchParams.get("rol"), u.searchParams.get("zona"));
   if (!z || z.comunas.length < 2) return json({error: "Zona no disponible"}, 400);
-  const ahora = Date.now(), desde = ahora - PULSO_DIAS * 864e5, mitad = ahora - 864e5, cat = await leerCatalogo();
+  const ahora = Date.now(), desde = ahora - PULSO_DIAS * 864e5, mitad = ahora - 864e5, cat = await leerCatalogo(regionDeComuna(z.comunas[0]));
   // Solo lo que nombra a la comuna en el titular o la bajada: un medio local que cubre varias comunas no suma todas sus notas a cada una.
   const RUTINA = /pronostico del tiempo|el tiempo en|horoscopo|resultados del loto|farmacias de turno|cortes programados de/;
   const comunas = z.comunas.filter(c => COMUNAS[c]).map(c => {
@@ -96,6 +97,9 @@ async function pulso(u){
     200, {"cache-control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=3600"});
 }
 
+/* Una región en preparación (src/regiones.js, activa: false) solo se lee con la clave del programador, para probarla antes de abrirla. */
+const regionAbierta = (id, req) => Boolean(REGIONES[id] && (REGIONES[id].activa ||
+  ((process.env.CRON_SECRET || "").trim() && (req.headers.get("authorization") || "").trim() === "Bearer " + (process.env.CRON_SECRET || "").trim())));
 export async function GET(req){
   const u = new URL(req.url); DIAG.length = 0; plazoGoogleNews(32000);  // deja tiempo a la clasificación dentro de los 60 s de la función
   if (u.searchParams.has("ping")) return json({ ok: true, ia: Boolean(process.env.ANTHROPIC_API_KEY) }, 200, { "cache-control": "no-store" });
@@ -113,10 +117,10 @@ export async function GET(req){
   if (u.searchParams.has("pulso")) return pulso(u);
   if (u.searchParams.has("autoridad") || u.searchParams.has("rol")) return deAutoridad(u);
   const comuna = u.searchParams.get("comuna") || "Casablanca";
-  if (!COMUNAS[comuna]) return json({ error: "Comuna no disponible" }, 400);
+  if (!COMUNAS[comuna] || !regionAbierta(regionDeComuna(comuna), req)) return json({ error: "Comuna no disponible" }, 400);
   const dias = diasDe(u), ahora = Date.now(), desde = ahora - dias * 864e5;
   const alcalde = AUTORIDADES.find(x => x.rol === "alcalde" && x.zona === comuna);
-  const [cat, gn, rs] = await Promise.all([leerCatalogo(), leerGoogleNews(comuna, dias).catch(() => null), leerRedes(redesDe(u))]);
+  const [cat, gn, rs] = await Promise.all([leerCatalogo(regionDeComuna(comuna)), leerGoogleNews(comuna, dias).catch(() => null), leerRedes(redesDe(u))]);
   const paresP = alcalde ? paresDe(alcalde, ahora - VENTANA_DIAS * 864e5).catch(() => []) : Promise.resolve([]);
   const errores = cat.errores.concat(gn ? [] : ["Google News"], rs.errores);
   const candidatas = candidatasDe(comuna, cat.items.concat(gn || [], rs.items), desde, ahora), lote = candidatas.slice(0, MAX_IA);

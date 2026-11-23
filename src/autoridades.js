@@ -9,17 +9,9 @@
    De los alcaldes y delegados provinciales no se registra partido: la ficha muestra solo el cargo.
    Los delegados son de exclusiva confianza del Presidente: revisar la nómina ante cualquier cambio de gabinete. */
 const NOMINA_CORTE = "11 de noviembre de 2026";
-const PROVINCIAS = {
-  "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández"],
-  "Marga Marga": ["Quilpué", "Villa Alemana", "Limache", "Olmué"],
-  "Quillota": ["Quillota", "La Calera", "La Cruz", "Hijuelas", "Nogales"],
-  "San Antonio": ["San Antonio", "Cartagena", "El Tabo", "El Quisco", "Algarrobo", "Santo Domingo"],
-  "San Felipe de Aconcagua": ["San Felipe", "Llaillay", "Putaendo", "Santa María", "Catemu", "Panquehue"],
-  "Los Andes": ["Los Andes", "Calle Larga", "Rinconada", "San Esteban"],
-  "Petorca": ["La Ligua", "Petorca", "Cabildo", "Papudo", "Zapallar"],
-  "Isla de Pascua": ["Isla de Pascua"]
-};
-const COMUNAS_V = Object.values(PROVINCIAS).flat().sort((a, b) => a.localeCompare(b, "es"));
+/* Provincias y comunas de cada región: src/regiones.js. Esta nómina es la de la Región de Valparaíso (región V). */
+const PROVINCIAS = REGIONES.V.provincias;
+const COMUNAS_V = COMUNAS_DE("V");
 const D6 = ["Cabildo", "Calle Larga", "Catemu", "Hijuelas", "La Calera", "La Cruz", "La Ligua", "Limache", "Llaillay", "Los Andes", "Nogales", "Olmué", "Panquehue", "Papudo", "Petorca", "Puchuncaví", "Putaendo", "Quillota", "Quilpué", "Quintero", "Rinconada", "San Esteban", "San Felipe", "Santa María", "Villa Alemana", "Zapallar"];
 const D7 = ["Algarrobo", "Cartagena", "Casablanca", "Concón", "El Quisco", "El Tabo", "Isla de Pascua", "Juan Fernández", "San Antonio", "Santo Domingo", "Valparaíso", "Viña del Mar"];
 /* Roles: cómo se nombra el cargo (femenino y masculino), qué zona lo define y su órgano. */

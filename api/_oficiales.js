@@ -10,7 +10,7 @@
 //       cortafuegos no atiende fuera de Chile). Queda apagado salvo ESVAL_DIRECTO=1 (por ejemplo, si la lectura corre desde Chile).
 // Solo se leen datos públicos; no se guarda el texto completo de los documentos, solo un titular y una bajada propios.
 import { CATALOGO } from "./_catalogo.js";
-import { COMUNAS_V } from "./_autoridades.js";
+import { REGIONES, COMUNAS_DE, REGION_DEFECTO } from "./_autoridades.js";
 
 const UA = "PregonIA/0.1 (monitoreo de prensa municipal; +https://pregonia.cl)";
 const MED = id => CATALOGO.find(m => m.id === id);
@@ -20,7 +20,7 @@ const corto = (s, n) => { s = limpio(s); return s.length > n ? s.slice(0, n - 1)
 /* «MUNICIPALIDAD DE CASABLANCA» → «Municipalidad de Casablanca». */
 const MINUS = new Set(["de", "del", "la", "las", "los", "el", "y", "en", "para", "por", "a", "al"]);
 const nombrePropio = s => limpio(s).toLowerCase().split(" ").map((w, i) => i && MINUS.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-const COMUNA_POR_NORM = new Map(COMUNAS_V.map(c => [norm(c), c]));
+const COMUNA_POR_NORM = new Map(Object.keys(REGIONES).flatMap(id => COMUNAS_DE(id)).map(c => [norm(c), c]));
 
 async function pedir(url, {method = "GET", body, ms = 12000, headers = {}} = {}){
   const r = await fetch(url, {method, headers: {"user-agent": UA, accept: "application/json", ...(body ? {"content-type": "application/json"} : {}), ...headers},
@@ -35,17 +35,19 @@ async function pedir(url, {method = "GET", body, ms = 12000, headers = {}} = {})
    informes antiguos, por eso se descartan los documentos de más de 120 días. Medido el 23-nov-2026: el Informe Final 514/2026
    de la Municipalidad de Casablanca (documento del 29-sep) se publicó el 18-nov. */
 const CGR_TIPOS = /informe final|investigaci[oó]n especial|seguimiento/i;
-async function leerContraloria(ahora){
+async function leerContraloria(ahora, region = REGION_DEFECTO){
   const m = MED(227); if (!m) return [];
+  // La Contraloría Regional de la región del turno (src/regiones.js: «Regional Valparaíso», «Regional Antofagasta»).
+  const unidad = (REGIONES[region] || REGIONES[REGION_DEFECTO]).contraloria, clave = norm(unidad.replace(/^Regional\s+/i, "")).slice(0, 6);
   const pagina = page => pedir("https://www.contraloria.cl/apibusca/search/auditoria", {method: "POST",
-    body: {search: '"Regional Valparaíso"', options: [], order: "date", date_name: "fecha_documento", source: "auditoria", page}});
+    body: {search: `"${unidad}"`, options: [], order: "date", date_name: "fecha_documento", source: "auditoria", page}});
   const hits = (await Promise.all([0, 1].map(p => pagina(p).catch(() => null)))).flatMap(r => (r && r.hits && r.hits.hits) || []);
   if (!hits.length) throw new Error("Contraloría sin respuesta");
   const vistos = new Set();
   return hits.map(h => h._source || {}).filter(s => {
     if (!s.pdf || vistos.has(s.pdf)) return false; vistos.add(s.pdf);
     const doc = Date.parse(s.fecha_documento), pub = Date.parse(s.fecha_indexacion);
-    return s.pdf && /valpara/i.test(s.unidad_cgr || "") && CGR_TIPOS.test(s.tipo || "") && Number.isFinite(pub) && Number.isFinite(doc) && ahora - doc < 120 * 864e5;
+    return s.pdf && norm(s.unidad_cgr).includes(clave) && CGR_TIPOS.test(s.tipo || "") && Number.isFinite(pub) && Number.isFinite(doc) && ahora - doc < 120 * 864e5;
   }).map(s => {
     const servicio = nombrePropio(s.servicio_ || s.servicio_raw || ""), num = limpio(s["número"] || s.numero || "");
     const art = /^(municipalidad|corporaci|universidad|delegaci|direcci|secretar|superintendencia|subsecretar|gobernaci|empresa)/i.test(servicio) ? "la "
@@ -154,9 +156,11 @@ export async function leerMercadoPublico(comunas, ahora = Date.now(), plazoMs = 
   return {items, consultas, organismos: [...MP.org.keys()].filter(c => comunas.includes(c)).length};
 }
 
-/* Contraloría y Esval: dos o tres consultas por pasada, en paralelo con la lectura de medios. */
-export async function leerOficiales(ahora = Date.now()){
-  const fuentes = [["Contraloría", leerContraloria]].concat(process.env.ESVAL_DIRECTO === "1" ? [["Esval", leerEsval]] : []), errores = [], detalle = {};
-  const items = (await Promise.all(fuentes.map(([n, f]) => f(ahora).catch(e => { errores.push(n); detalle[n] = [e.message, e.cause && (e.cause.code || e.cause.message)].filter(Boolean).join(" · ").slice(0, 160); return []; })))).flat();
+/* Contraloría y Esval: dos o tres consultas por pasada, en paralelo con la lectura de medios. Por región: su Contraloría Regional;
+   Esval solo en la Región de Valparaíso. Sin región, la de siempre (Valparaíso). */
+export async function leerOficiales(ahora = Date.now(), region = null){
+  const reg = region || REGION_DEFECTO;
+  const fuentes = [["Contraloría", leerContraloria]].concat(process.env.ESVAL_DIRECTO === "1" && reg === "V" ? [["Esval", leerEsval]] : []), errores = [], detalle = {};
+  const items = (await Promise.all(fuentes.map(([n, f]) => f(ahora, reg).catch(e => { errores.push(n); detalle[n] = [e.message, e.cause && (e.cause.code || e.cause.message)].filter(Boolean).join(" · ").slice(0, 160); return []; })))).flat();
   return {items, total: fuentes.length, errores, detalle};
 }
