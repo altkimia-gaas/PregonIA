@@ -1153,6 +1153,87 @@ export const CATALOGO = [
 "estado": "listo"
 },
 {
+"id": 117,
+"nombre": "MasContainer",
+"ambito": "nacional",
+"comuna": "",
+"metodo": "rss",
+"url": "https://www.mascontainer.com/feed/",
+"estado": "listo"
+},
+{
+"id": 118,
+"nombre": "MundoMaritimo",
+"ambito": "nacional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.mundomaritimo.cl/",
+"estado": "listo"
+},
+{
+"id": 212,
+"nombre": "Subdere",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.subdere.gov.cl/",
+"estado": "listo"
+},
+{
+"id": 213,
+"nombre": "Asociación Chilena de Municipalidades",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.achm.cl/",
+"estado": "listo"
+},
+{
+"id": 214,
+"nombre": "AMUCH",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://amuch.cl/",
+"estado": "listo"
+},
+{
+"id": 215,
+"nombre": "Servicio de Evaluación Ambiental",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.sea.gob.cl/",
+"estado": "listo"
+},
+{
+"id": 216,
+"nombre": "Superintendencia del Medio Ambiente",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://sma.gob.cl/",
+"estado": "listo"
+},
+{
+"id": 217,
+"nombre": "CONAF",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.conaf.cl/",
+"estado": "listo"
+},
+{
+"id": 218,
+"nombre": "Ministerio de Obras Públicas",
+"ambito": "institucional",
+"comuna": "",
+"metodo": "google_news",
+"url": "https://www.mop.gob.cl/",
+"estado": "listo"
+},
+{
 "id": 296,
 "nombre": "Otro medio regional (vía Google News)",
 "ambito": "regional",
