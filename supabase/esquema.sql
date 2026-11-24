@@ -249,8 +249,9 @@ create policy comunicados_leer on comunicados for select to authenticated using 
 drop policy if exists comunicados_crear on comunicados;
 create policy comunicados_crear on comunicados for insert to authenticated with check (municipio_id = mi_municipio() and puedo_editar());
 
+-- lecturas ya no tiene política de lectura para cuentas con sesión (24 nov 2026): su detalle incluye a todas las cuentas. La aplicación lee solo el
+-- estado por la función estado_lectura (abajo); el panel de consumo, por consumo_plataforma.
 drop policy if exists lecturas_leer on lecturas;
-create policy lecturas_leer on lecturas for select to authenticated using (true);
 
 drop policy if exists actividad_leer on actividad;
 create policy actividad_leer on actividad for select to authenticated using (municipio_id = mi_municipio());
@@ -681,3 +682,18 @@ end;
 $$;
 revoke all on function consumo_plataforma(int) from public, anon;
 grant execute on function consumo_plataforma(int) to authenticated;
+
+-- Estado de la última lectura de una región para las cuentas con sesión: solo fin y fuentes leídas, sin el detalle de otras cuentas.
+create or replace function public.estado_lectura(p_region text default null)
+returns table (fin timestamptz, fuentes_ok integer, fuentes_total integer)
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select l.fin, l.fuentes_ok, l.fuentes_total from public.lecturas l
+  where l.fin is not null and l.fuentes_total is not null and (p_region is null or l.region = p_region)
+  order by l.id desc limit 1
+$$;
+revoke all on function public.estado_lectura(text) from public, anon;
+grant execute on function public.estado_lectura(text) to authenticated;
