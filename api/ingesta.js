@@ -22,6 +22,7 @@ import { leerMercadoPublico, mercadoPublicoListo } from "./_oficiales.js";
 /* Cuentas de Facebook e Instagram de la base: las del catálogo fijo y las inscritas desde la aplicación. */
 const cuentaDe = r => ({id: r.id, nombre: r.nombre, ambito: r.ambito, comuna: r.comunas || "", red: r.metodo, usuario: r.usuario_red || usuarioDe(r.metodo, r.url_lectura)});
 
+const TOPE_DIARIO_IA = 1500;  // clasificaciones por día (hora de Chile) y por región; pasado el tope, los turnos se saltan hasta el día siguiente
 const UMBRAL_IA_CICLO = 80;  // clasificaciones por ciclo sobre las que se marca una alerta en lecturas.detalle
 const MAX_POR_COMUNA = 50;  // tope de notas nuevas que se clasifican por cuenta en cada pasada; el resto entra en la siguiente
 
@@ -125,6 +126,19 @@ async function manejar(req){
   const [lectura] = await sb("lecturas", {method: "POST", prefer: "return=representation", body: {inicio: new Date(ahora).toISOString(), region}})
     .catch(e => { if (!/region/.test(String(e.message))) throw e; return sb("lecturas", {method: "POST", prefer: "return=representation", body: {inicio: new Date(ahora).toISOString()}}); });
   try {
+    // Tope diario de IA: si la región ya clasificó el tope hoy (hora de Chile), el turno termina sin leer ni clasificar y queda marcado.
+    // Las notas pendientes no se pierden: siguen en la ventana de 14 días y entran al día siguiente. La lectura a mano con ?sintope=1 lo salta.
+    if (!new URL(req.url).searchParams.has("sintope")) {
+      const inicioDia = new Date(ahora - (hChile * 60 + minChile) * 60000).toISOString();
+      const hoy = await sb(`lecturas?region=eq.${region}&inicio=gte.${inicioDia}&select=clasificadas&limit=1000`).catch(() => []);
+      const usadas = (hoy || []).reduce((t, x) => t + (x.clasificadas || 0), 0);
+      if (usadas >= TOPE_DIARIO_IA) {
+        const alerta = {tipo: "tope_diario_ia", mensajes: [`la región ${region} ya clasificó ${usadas} notas hoy (tope ${TOPE_DIARIO_IA}); turno omitido`]};
+        console.error("ALERTA tope diario IA", region, usadas);
+        await sb(`lecturas?id=eq.${lectura.id}`, {method: "PATCH", body: {fin: new Date().toISOString(), candidatas: 0, nuevas: 0, clasificadas: 0, detalle: {alerta}}, prefer: "return=minimal"});
+        return json({ok: true, lectura: lectura.id, region, omitida: "tope diario de IA", usadas}, 200, {"cache-control": "no-store"});
+      }
+    }
     const munis = await cuentasActivas(region);
     // Región sin ninguna cuenta activa (cliente o autoridad): no hay a quién entregarle la lectura, así que no se gastan lecturas de medios ni IA.
     // Se reanuda sola cuando se activa la primera cuenta de la región, sin tocar el programador.
