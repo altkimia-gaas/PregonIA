@@ -6249,7 +6249,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search) || !pruebaV
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "5a9635cb80c6", K = "app";
+  const V = "e39715ef6d39", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
@@ -7384,9 +7384,9 @@ async function cargarDatosPiloto(){
     pide(sb.from("marcas").select("grupo, tipo").eq("municipio_id", mid)),
     pide(sb.from("comunicados").select("id, grupo, pieza, origen, texto, creado").eq("municipio_id", mid).order("creado", {ascending: false}).limit(300)),
     pide(sb.from("capturas").select("*").eq("municipio_id", mid).gte("publicado", desde)),
-    // La última lectura del turno de su región; sin la columna region (esquema anterior), la última de todas.
-    pide(sb.from("lecturas").select("fin, fuentes_ok, fuentes_total").eq("region", regionPiloto()).not("fin", "is", null).order("id", {ascending: false}).limit(1))
-      .catch(() => pide(sb.from("lecturas").select("fin, fuentes_ok, fuentes_total").not("fin", "is", null).order("id", {ascending: false}).limit(1))),
+    // Estado de la última lectura del turno de su región: lo entrega la función estado_lectura (solo fin y fuentes leídas); la tabla lecturas
+    // ya no se lee desde la aplicación, porque su detalle incluye a las demás cuentas.
+    pide(sb.rpc("estado_lectura", {p_region: regionPiloto()})).catch(() => []),
     pide(sb.from("municipios").select("config").eq("id", mid).single()),
     cargarRedesPiloto(sb).catch(() => null)  // cuentas de Facebook e Instagram: antes de las notas, que las necesitan como medio
   ]);
