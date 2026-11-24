@@ -22,6 +22,7 @@ import { leerMercadoPublico, mercadoPublicoListo } from "./_oficiales.js";
 /* Cuentas de Facebook e Instagram de la base: las del catálogo fijo y las inscritas desde la aplicación. */
 const cuentaDe = r => ({id: r.id, nombre: r.nombre, ambito: r.ambito, comuna: r.comunas || "", red: r.metodo, usuario: r.usuario_red || usuarioDe(r.metodo, r.url_lectura)});
 
+const UMBRAL_IA_CICLO = 80;  // clasificaciones por ciclo sobre las que se marca una alerta en lecturas.detalle
 const MAX_POR_COMUNA = 50;  // tope de notas nuevas que se clasifican por cuenta en cada pasada; el resto entra en la siguiente
 
 async function sb(ruta, {method = "GET", body, prefer} = {}){
@@ -168,6 +169,12 @@ async function manejar(req){
       candidatas: suma("candidatas"), nuevas: suma("nuevas"), clasificadas: suma("clasificadas"), detalle: {comunas: res, ia: DIAG.slice(0, 8), google_news: statsGoogleNews(), redaccion,
       oficiales: {contraloria: cat0.items.filter(x => x.m.id === 227).length, esval: cat0.items.filter(x => x.m.id === 229).length,
         mercado_publico: mp ? {licitaciones: mp.items.length, consultas: mp.consultas, organismos: mp.organismos, error: mp.error} : (mercadoPublicoListo() ? "fuera de turno" : "sin ticket")}}};
+    // Alerta de consumo de IA: un ciclo normal clasifica unas pocas notas por cuenta. Si el ciclo supera el umbral, o una cuenta llega al tope por pasada,
+    // queda marcado en detalle.alerta (consultable en lecturas) y en el registro de Vercel. Así una fuga como la del 21-23 nov se ve el mismo día.
+    const alertas = [];
+    if (resumen.clasificadas > UMBRAL_IA_CICLO) alertas.push(`ciclo con ${resumen.clasificadas} clasificaciones (umbral ${UMBRAL_IA_CICLO})`);
+    res.filter(r => (r.nuevas || 0) >= MAX_POR_COMUNA).forEach(r => alertas.push(`${r.comuna || r.autoridad} llegó al tope de ${MAX_POR_COMUNA} notas nuevas`));
+    if (alertas.length) { resumen.detalle.alerta = {tipo: "consumo_ia", mensajes: alertas}; console.error("ALERTA consumo IA", region, JSON.stringify(alertas)); }
     await sb(`lecturas?id=eq.${lectura.id}`, {method: "PATCH", body: resumen, prefer: "return=minimal"});
     return json({ok: true, lectura: lectura.id, region, ...resumen}, 200, {"cache-control": "no-store"});
   } catch(e) {
