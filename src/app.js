@@ -158,7 +158,7 @@ const MAIN = [["inicio","Inicio"],["menciones","Menciones"],["reportes","Reporte
 const CONFIG = [["temas","Mis temas"],["asistente","Asistente de temas"],["prioridades","Prioridades"],["fuentes","Fuentes"]];
 const ALIAS = {panel:"inicio", caracterizacion:"asistente"};
 const route = () => { const k = (location.hash || "#inicio").slice(1); return ALIAS[k] || k; };
-const isConfig = k => CONFIG.some(([x]) => x === k);
+const isConfig = k => k === "consumo" || CONFIG.some(([x]) => x === k);
 /* Período global (24 horas, semana o 30 días): uno solo para todas las pestañas, recordado entre sesiones. */
 const PER_KEY = "pregonia-periodo";
 const PER0 = (() => { try { const v = localStorage.getItem(PER_KEY); return ["1", "7", "30"].includes(v) ? v : "7"; } catch(e) { return "7"; } })();
@@ -625,7 +625,7 @@ function vPrioridades(){
     ${cors.length ? `<ul class="cors">${cors.slice(0, 30).map(([g, x]) => `<li><b>${esc(x.t || "Noticia")}</b><span>${Object.keys(etq).filter(k => x[k]).map(k => `${etq[k]}: ${esc(nom[k][x[k]] || x[k])}`).join(" · ")} · ${fecha(x.ts)}</span><button class="btn ghost sm" type="button" data-act="cor-del" data-g="${esc(g)}">Quitar</button></li>`).join("")}</ul>` : `<p class="empty">Aún no hay correcciones. Se hacen desde «Corregir ficha», en cada noticia de Menciones.</p>`}</section>`;
 }
 /* Configuración */
-function subtabs(){ const k = route(); return `<div class="subtabs" role="navigation" aria-label="Configuración">${CONFIG.map(([key,n]) => `<a href="#${key}" ${key===k?'aria-current="page"':""}>${n}</a>`).join("")}</div>`; }
+function subtabs(){ const k = route(); return `<div class="subtabs" role="navigation" aria-label="Configuración">${CONFIG.concat(typeof PILOTO !== "undefined" && PILOTO && PILOTO.consumo ? [["consumo","Consumo"]] : []).map(([key,n]) => `<a href="#${key}" ${key===k?'aria-current="page"':""}>${n}</a>`).join("")}</div>`; }
 function chipEd(t, k, label, hint, limit){
   const all = t[k], showAll = tState.ctxAll[t.id + k] || !limit || all.length <= limit, list = showAll ? all : all.slice(0, limit);
   return `<div class="field"><span class="lbl" id="l-${t.id}-${k}">${label}</span>
@@ -695,6 +695,19 @@ function propHtml(){
   <div class="prop">${propuesta.base.map((t,i) => `<div class="prow"><span class="num">${i+1}</span><div><b>${esc(t.nombre)}</b><div class="muted" style="font-size:12px"><span class="origin">${esc(t.origen)}</span> · ${t.vol} noticias en 30 días${t.cri?` · ${t.cri} críticas`:""}</div></div></div>`).join("")}</div>
   ${propuesta.sugeridos.length ? `<p class="muted" style="margin:0;font-size:12.5px">Quedan como sugeridos para más adelante: ${propuesta.sugeridos.map(t => esc(t.nombre)).join(", ")}.</p>` : ""}
   <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="activar">Usar estos temas</button><button class="btn" data-act="descartar">Descartar</button></div></div>`;
+}
+/* Consumo de la plataforma (solo equipo de la plataforma): lo entrega la función consumo_plataforma de la base; a cualquier otra cuenta le devuelve nulo. */
+function vConsumo(){
+  const c = typeof PILOTO !== "undefined" && PILOTO && PILOTO.consumo;
+  if (!c) return `<div class="head"><div><h2 tabindex="-1">Consumo</h2><p>Esta vista es solo para el equipo de la plataforma.</p></div></div>`;
+  const lim = c.limites || {}, fmt = n => Number(n || 0).toLocaleString("es-CL"), hoy = (c.dias || [])[0] && c.dias[0].dia;
+  const filas = (c.dias || []).map(d => { const alto = d.clasificadas >= (lim.tope_diario || 1500) * 0.7;
+    return `<tr><td>${esc(String(d.dia))}</td><td>${esc(d.region)}</td><td class="num">${fmt(d.ciclos)}</td><td class="num">${alto ? "<b>" + fmt(d.clasificadas) + "</b>" : fmt(d.clasificadas)}</td><td class="num">${fmt(d.max_ciclo)}</td><td class="num">${d.alertas ? "<b>" + d.alertas + "</b>" : "0"}</td><td class="num">${d.fuentes_ok == null ? "–" : esc(String(d.fuentes_ok)) + " de " + esc(String(d.fuentes_total))}</td></tr>`; }).join("");
+  const alertas = (c.alertas || []).map(a => `<li><b>${esc(String(a.inicio).slice(0, 16).replace("T", " "))} UTC · región ${esc(a.region)}</b>: ${esc((a.mensajes || []).join("; "))}</li>`).join("");
+  return `<div class="head"><div><h2 tabindex="-1">Consumo</h2><p>Últimos 14 días de la lectura programada. Tope diario de IA por región: ${fmt(lim.tope_diario)}; alerta por ciclo sobre ${fmt(lim.umbral_ciclo)}. Los límites de Vercel (CPU, memoria, invocaciones) se ven en su panel de uso.</p></div></div>
+  ${subtabs()}
+  <div class="card scroll" style="padding:0"><table class="ftab"><thead><tr><th>Día (Chile)</th><th>Región</th><th class="num">Ciclos</th><th class="num">Clasificadas con IA</th><th class="num">Máx. por ciclo</th><th class="num">Alertas</th><th class="num">Fuentes leídas (prom.)</th></tr></thead><tbody>${filas || '<tr><td colspan="7">Sin lecturas en el período.</td></tr>'}</tbody></table></div>
+  <div class="card" style="margin-top:12px"><h3 style="margin:0 0 6px">Alertas recientes</h3>${alertas ? `<ul>${alertas}</ul>` : "<p>Sin alertas en el período.</p>"}</div>`;
 }
 function vFuentes(){
   // Las cuentas de Facebook e Instagram tienen un estado vivo (lectura automática, pendiente de Meta, captura asistida o error): src/redes.js.
@@ -1539,7 +1552,7 @@ async function compartir(b){
 }
 
 /* Render y navegación */
-const VIEWFN = {inicio:vInicio, menciones:vMenciones, reportes:vReportes, comunicados:vComunicados, temas:vTemas, asistente:vAsistente, prioridades:vPrioridades, fuentes:vFuentes};
+const VIEWFN = {inicio:vInicio, menciones:vMenciones, reportes:vReportes, comunicados:vComunicados, temas:vTemas, asistente:vAsistente, prioridades:vPrioridades, fuentes:vFuentes, consumo:vConsumo};
 function render(focus){
   // Mientras se leen los medios no se muestra una portada a medias: va la pantalla de lectura (Ajustes sigue disponible).
   if (MODO.cargando && !isConfig(route())) { renderChrome(); $("#view").innerHTML = procesandoHtml(); cerrarMenu(); procesandoPaso(); return; }
@@ -1761,6 +1774,7 @@ const AYUDA_VISTA = {
   comunicados:["Comunicados", "Prepara una respuesta en tres decisiones: a qué respondes, qué pieza necesitas y con qué enfoque. La IA redacta solo con la noticia y los datos del municipio; lo que falta queda marcado [completar]. Nada se publica: tú apruebas y difundes. Desde el borrador o la lista de aprobados lo envías en PDF por WhatsApp, por correo (Gmail, Outlook o tu programa) o lo guardas en PDF."],
   temas:["Mis temas", "Los temas que PregonIA vigila. Cada tema tiene términos (lo que se busca), contexto (palabras que deben acompañar) y exclusiones (lo que descarta). Tu plan define cuántos temas activos puedes tener."],
   asistente:["Asistente de temas", "Responde cinco preguntas sobre el municipio y PregonIA propone los temas base de tu plan, más sugerencias para sumar. Revisa la propuesta antes de activarla."],
+  consumo:["Consumo", "Uso de la lectura programada por día y región: ciclos, clasificaciones con IA y alertas. Solo lo ve el equipo de la plataforma."],
   fuentes:["Fuentes", "Los medios web del catálogo: nacionales, regionales y comunales. Cada uno muestra cómo se lee y su estado: listo, requiere ajuste o restringido (se lee vía Google News)."],
   rep_alcalde:["Reportes · Parte del alcalde", "Para el alcalde, cada lunes, en dos minutos. Dice cómo lo trató la prensa en la semana, hasta tres asuntos que se pueden complicar con qué hacer y quién se encarga, y una buena noticia para aprovechar. Se envía en PDF por WhatsApp, por correo o se guarda en PDF, y el botón Video resumen lo convierte en un video corto para el celular."],
   rep_diario:["Reportes · Informe diario", "Indicadores del período (publicaciones, noticias distintas, tono, críticas sin respuesta, alcance, temas y medios) y el clipping: cada mención agrupa las publicaciones del mismo hecho, con un código para citarla y el enlace a cada nota original. Elige últimas 24 horas, hoy o ayer, y compártelo en PDF por WhatsApp o correo."],
