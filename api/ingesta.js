@@ -114,6 +114,10 @@ async function manejar(req){
   if (!porClave && !porPase) return json({error: "No autorizado"}, 401);
   const region = regionValida(new URL(req.url).searchParams.get("region") || REGION_DEFECTO);
   if (!region) return json({error: "Región desconocida"}, 400);
+  // Madrugada (00:00-06:59 de Chile): solo el turno de la hora en punto, no el de la media; los disparos del programador se acortan a una lectura por hora.
+  // Se decide aquí y no en el cron para que siga bien con el cambio de hora. La lectura a mano (clave) no se salta.
+  const hChile = Number(new Intl.DateTimeFormat("es-CL", {timeZone: "America/Santiago", hour: "2-digit", hourCycle: "h23"}).format(new Date())), minChile = new Date().getMinutes();
+  if (porPase && hChile < 7 && minChile >= 30) return json({ok: true, region, omitida: "madrugada: lectura cada hora"}, 200, {"cache-control": "no-store"});
   DIAG.length = 0; plazoGoogleNews(45000);  // Google News va en cola (responde 429 si se le pide mucho a la vez); el resto de los 300 s es para clasificar
   const ahora = Date.now(), desde = ahora - VENTANA_DIAS * 864e5;
   // La columna region de lecturas (supabase/esquema.sql) separa el estado de cada turno; si aún no existe, se registra sin ella.
@@ -121,6 +125,13 @@ async function manejar(req){
     .catch(e => { if (!/region/.test(String(e.message))) throw e; return sb("lecturas", {method: "POST", prefer: "return=representation", body: {inicio: new Date(ahora).toISOString()}}); });
   try {
     const munis = await cuentasActivas(region);
+    // Región sin ninguna cuenta activa (cliente o autoridad): no hay a quién entregarle la lectura, así que no se gastan lecturas de medios ni IA.
+    // Se reanuda sola cuando se activa la primera cuenta de la región, sin tocar el programador.
+    if (!munis.length) {
+      // La fila de este turno se borra: una lectura vacía como "la última" mostraría 0 fuentes en el estado de la región.
+      await sb(`lecturas?id=eq.${lectura.id}`, {method: "DELETE", prefer: "return=minimal"}).catch(() => null);
+      return json({ok: true, lectura: lectura.id, region, omitida: "sin cuentas activas en la región"}, 200, {"cache-control": "no-store"});
+    }
     // Mercado Público: cada dos horas (la primera lectura de las horas pares), solo para las comunas cliente; ver _oficiales.js.
     const horaCl = Number(new Intl.DateTimeFormat("es-CL", {timeZone: "America/Santiago", hour: "2-digit", hourCycle: "h23"}).format(new Date(ahora)));
     const mpToca = mercadoPublicoListo() && (horaCl % 2 === 0 && new Date(ahora).getMinutes() < 30 || new URL(req.url).searchParams.has("mercado"));
