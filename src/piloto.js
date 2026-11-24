@@ -200,6 +200,9 @@ async function entrarPiloto(user, entrar){
   if (!key) return sinInstitucion(user, "Falta completar tu institución", "La cuenta asignada no tiene comuna, cargo o zona válidos. Pídele a ALTKimia que revise su ficha en la base.");
   if (!(await aceptacion(user))) { salir(); return; }
   Object.assign(PILOTO, {activo: true, user, perfil, muni: perfil.municipios, editor: ["admin", "comunicaciones"].includes(perfil.rol)});
+  // Panel de consumo: la base responde solo a las cuentas del equipo de la plataforma (plataforma_admins); a las demás les devuelve nulo.
+  PILOTO.consumo = null;
+  try { PILOTO.sb.rpc("consumo_plataforma", {dias: 14}).then(({data}) => { PILOTO.consumo = data || null; if (PILOTO.consumo && route() === "consumo") render(); }).catch(() => {}); } catch(e) {}
   S.org = key;
   $("#org").disabled = true; $("#org").title = esPilotoAut() ? "En el piloto ves solo la cuenta de tu autoridad" : "En el piloto ves solo tu municipio";
   MODO = {...MODO, cargando: true, inicio: Date.now()};  // pantalla de lectura, no la demostración, mientras llegan sus datos

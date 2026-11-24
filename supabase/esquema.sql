@@ -642,3 +642,42 @@ alter table public.pruebas_ingresos enable row level security;
 -- página de cobertura muestren el estado del turno que corresponde. Las lecturas anteriores son de la Región de Valparaíso.
 alter table lecturas add column if not exists region text not null default 'V';
 create index if not exists lecturas_region_fin on lecturas (region, fin desc);
+
+-- Panel de consumo de la plataforma (23-24 nov 2026): solo para el equipo de la plataforma, no para los administradores de cada institución.
+-- La lista plataforma_admins no tiene políticas: solo la lee la función de abajo, que corre con permisos de la base.
+create table if not exists plataforma_admins (user_id uuid primary key references auth.users(id) on delete cascade);
+alter table plataforma_admins enable row level security;
+revoke all on plataforma_admins from anon, authenticated;
+-- Cuenta inicial: la única administración existente al crear el panel (Casablanca).
+insert into plataforma_admins (user_id) select id from perfiles where rol = 'admin' on conflict do nothing;
+
+create or replace function consumo_plataforma(dias int default 14)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+stable
+as $$
+declare r jsonb;
+begin
+  if not exists (select 1 from plataforma_admins where user_id = auth.uid()) then return null; end if;
+  dias := greatest(1, least(coalesce(dias, 14), 60));
+  select jsonb_build_object(
+    'dias', coalesce((select jsonb_agg(x order by x->>'dia' desc, x->>'region') from (
+      select jsonb_build_object('dia', (inicio at time zone 'America/Santiago')::date, 'region', region, 'ciclos', count(*),
+        'clasificadas', coalesce(sum(clasificadas), 0), 'max_ciclo', coalesce(max(clasificadas), 0),
+        'alertas', count(*) filter (where detalle ? 'alerta'),
+        'fuentes_ok', round(avg(fuentes_ok) filter (where fuentes_total is not null), 1),
+        'fuentes_total', round(avg(fuentes_total) filter (where fuentes_total is not null), 0)) x
+      from lecturas where inicio >= now() - make_interval(days => dias)
+      group by (inicio at time zone 'America/Santiago')::date, region) t), '[]'::jsonb),
+    'alertas', coalesce((select jsonb_agg(a order by a->>'inicio' desc) from (
+      select jsonb_build_object('inicio', inicio, 'region', region, 'tipo', detalle->'alerta'->>'tipo', 'mensajes', detalle->'alerta'->'mensajes') a
+      from lecturas where inicio >= now() - make_interval(days => dias) and detalle ? 'alerta' order by inicio desc limit 20) t), '[]'::jsonb),
+    'limites', jsonb_build_object('tope_diario', 1500, 'umbral_ciclo', 80),
+    'generado', now()) into r;
+  return r;
+end;
+$$;
+revoke all on function consumo_plataforma(int) from public, anon;
+grant execute on function consumo_plataforma(int) to authenticated;
