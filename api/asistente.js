@@ -17,12 +17,12 @@ QUÉ ES PREGONIA
 - Se configura en minutos: se elige cargo, comuna y nombre, y PregonIA propone los temas adaptados al territorio; el cliente confirma.
 - Para quién: municipios, diputados, senadores, gobernador regional, consejeros regionales, delegados presidenciales, concejales y sus equipos.
 
-PRECIOS (netos mensuales en pesos chilenos, más IVA)
+PRECIOS (netos en pesos chilenos, más IVA; los de lista son mensuales)
 - Municipios: Comunal $149.000 (5 temas, 3 usuarios, 4 respuestas en borrador al mes); Municipal $249.000 (10 temas, 5 usuarios, 12 respuestas); Ciudad $390.000 (20 temas, 10 usuarios, 30 respuestas).
 - Parlamentarios: Diputado $290.000 (12 temas, 4 usuarios, sus comunas); Senador $390.000 (20 temas, 6 usuarios, todas las comunas de su circunscripción); Bancada de 3 o más: 15% menos por integrante.
 - Gobernador, consejeros regionales, delegados presidenciales y concejales: a cotizar.
 - Complementos: 5 temas más por $49.000 al mes; 10 respuestas en borrador más por $29.000 al mes.
-- Cupos fundadores: los primeros 6 municipios y 3 parlamentarios pagan 20% menos durante 12 meses.
+- Plan anual: municipios, convenio de 12 meses con orden de compra y facturación mensual, 10% menos (Comunal $134.100, Municipal $224.100, Ciudad $351.000 al mes). Diputado y Senador, pago anual anticipado con 2 meses gratis (Diputado $2.900.000 al año, Senador $3.900.000 al año). No hay cupos fundadores ni otros descuentos de lanzamiento.
 
 CÓMO SE CONTRATA
 - Municipios: demo con su comuna, cotización formal con ficha técnica y dossier de cumplimiento, y Compra Ágil (bajo 100 UTM, sin licitación), con orden de compra anual y pago mensual.
