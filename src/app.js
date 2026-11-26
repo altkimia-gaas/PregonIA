@@ -1612,7 +1612,7 @@ document.addEventListener("change", e => {
 let qTimer;
 document.addEventListener("input", e => {
   if (e.target.id === "fQ") { clearTimeout(qTimer); const v = e.target.value; qTimer = setTimeout(() => { tState.q = v; render(); const el = $("#fQ"); if (el) { el.focus(); el.setSelectionRange(v.length, v.length); } }, 250); }
-  if (e.target.id === "kOut") { const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = e.target.value; save(); const has = !!e.target.value.trim(); $("#btnAprob").disabled = !has; $("#btnCopy").disabled = !has; document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
+  if (e.target.id === "kOut") { const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = e.target.value; save(); const has = !!e.target.value.trim(); $("#btnAprob").disabled = !has; $("#btnCopy").disabled = !has; habRev(has); document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
 });
 function chipAdd(el){
   const v = el.value.replace(/,/g, "").trim(); if (!v) return;
@@ -1764,7 +1764,7 @@ function marcarEjemplos(texto, base){
   });
   return out;
 }
-function setDraft(txt){ const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = txt; const has = !!txt.trim(); const a = $("#btnAprob"), k = $("#btnCopy"), pb = $("#btnProbar"); if (pb) pb.disabled = !has; if (a) a.disabled = !has; if (k) k.disabled = !has; document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
+function setDraft(txt){ const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = txt; const has = !!txt.trim(); const a = $("#btnAprob"), k = $("#btnCopy"), pb = $("#btnProbar"); if (pb) pb.disabled = !has; if (a) a.disabled = !has; if (k) k.disabled = !has; habRev(has); document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
 async function generar(){
   const c = cuenta(), pl = PLANES[c.perfil.plan];
   const m = tState.draft && menciones().find(x => x.g === tState.draft);
@@ -1789,6 +1789,7 @@ async function generar(){
   } finally { btn.disabled = false; stop.hidden = true; }
 }
 /* Revisión interna: qué versión vio cada persona (jurídico, gabinete, autoridad) y si el texto cambió después de su visto bueno. Sin servidor: queda en esta cuenta. */
+const habRev = has => document.querySelectorAll('[data-act="copiar-rev"],[data-act="rev-reg"],[data-act="enviar-aprobar"]').forEach(x => x.disabled = !has);  // los botones de revisión siguen al texto del borrador
 const hTxt = t => { let h = 5381; const x = (t || "").trim(); for (let i = 0; i < x.length; i++) h = ((h << 5) + h + x.charCodeAt(i)) | 0; return (h >>> 0).toString(36).slice(0, 5); };
 const ROLES_REV = ["Jurídico", "Jefatura de gabinete", "Autoridad", "Área técnica"];
 const fechaCorta = ts => new Date(ts).toLocaleString("es-CL", {day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"});
