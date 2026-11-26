@@ -1309,6 +1309,7 @@ function vComunicados(){
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="aprobar" id="btnAprob" ${draft.trim()?"":"disabled"}>Aprobar</button><button class="btn" data-act="copiar" id="btnCopy" ${draft.trim()?"":"disabled"}>Copiar</button><button class="btn" data-act="probar" id="btnProbar" ${draft.trim()?"":"disabled"}>Probar el titular</button></div>
       <div id="kProbe" class="note" aria-live="polite" hidden></div>
       <details class="kb" id="kRevD"><summary>Revisión interna${((c.revis || {})[tState.draft || "_"] || []).length ? " (" + ((c.revis || {})[tState.draft || "_"] || []).length + ")" : ""}</summary><div id="kRev" style="margin-top:8px">${revisHtml(tState.draft || "_", draft)}</div></details>
+      <details class="kb" id="kCtcD"><summary>Contacto del medio</summary><div id="kCtc" style="margin-top:8px">${contactoHtml()}</div></details>
       ${shareBar("draft", {off: !draft.trim(), id: "shareDraft"})}
     </div>
   </div>
@@ -1687,6 +1688,22 @@ document.addEventListener("click", async e => {
   if (act === "stop") ctl?.abort();
   if (act === "probar") { probarTitular(b); return; }
   if (act === "probar-usar") { const o = $("#kOut"), pr = tState.probe; if (o && pr && pr.fr && o.value.includes(pr.fr)) { o.value = o.value.replace(pr.fr, pr.alt); setDraft(o.value); save(); const bx = $("#kProbe"); if (bx) bx.textContent = "Alternativa aplicada. Léela completa antes de aprobar."; } return; }
+  if (act === "ctc-guardar" || act === "ctc-borrar" || act === "ctc-correo" || act === "ctc-wa" || act === "ctc-importar") {
+    const cu = cuenta(), m = tState.draft && menciones().find(x => x.g === tState.draft), nom = m ? nomMedio(m.lead) : "";
+    if (act === "ctc-importar") { const lineas = ($("#ctLista")?.value || "").split(/\n+/).map(l => l.split(/[;\t]/).map(x => x.trim())).filter(l => l[0] && (l[3] || l[4])); let n = 0;
+      lineas.forEach(([med, nombre, cargo, correo, tel]) => { if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return; ((cu.contactos ||= {})[ctcKey(med)] = {nombre: (nombre || "").slice(0, 80), cargo: (cargo || "").slice(0, 80), correo: (correo || "").slice(0, 120), tel: (tel || "").replace(/[^\d+]/g, "").slice(0, 16)}); n++; });
+      save(); ctcRepintar(); toast(n ? "Se importaron " + n + (n === 1 ? " contacto." : " contactos.") : "No se importó nada: revisa que cada línea tenga medio y correo o celular."); return; }
+    if (!nom) return;
+    if (act === "ctc-guardar") { const correo = ($("#ctMail").value || "").trim(); if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { toast("Revisa el correo."); return; }
+      ((cu.contactos ||= {})[ctcKey(nom)] = {nombre: ($("#ctNom").value || "").trim().slice(0, 80), cargo: ($("#ctCar").value || "").trim().slice(0, 80), correo, tel: ($("#ctTel").value || "").replace(/[^\d+]/g, "").slice(0, 16)}); save(); ctcRepintar(); toast("Contacto guardado."); return; }
+    if (act === "ctc-borrar") { delete (cu.contactos || {})[ctcKey(nom)]; save(); ctcRepintar(); toast("Contacto borrado."); return; }
+    const ct = ctcDe(nom), msg = ctcMensaje(); if (!ct) return;
+    if (!msg.cuerpo) { toast("Escribe o genera primero el texto de la respuesta."); return; }
+    const saludo = "Estimado/a" + (ct.nombre ? " " + ct.nombre : "") + ":\n\n";
+    if (act === "ctc-wa") { window.open("https://wa.me/" + ct.tel.replace(/\D/g, "") + "?text=" + encodeURIComponent(saludo + msg.cuerpo), "_blank", "noopener"); return; }
+    const cuerpo = saludo + msg.cuerpo + "\n\nSaludos cordiales.";
+    if (cuerpo.length > 1800) { try { await navigator.clipboard.writeText(cuerpo); } catch(e) {} location.href = "mailto:" + ct.correo + "?subject=" + encodeURIComponent(msg.asunto) + "&body=" + encodeURIComponent("Pega aquí el texto (ya está copiado)."); toast("El texto es largo: quedó copiado, pégalo en el correo."); return; }
+    location.href = "mailto:" + ct.correo + "?subject=" + encodeURIComponent(msg.asunto) + "&body=" + encodeURIComponent(cuerpo); return; }
   if (act === "enviar-aprobar") { enviarAprobar(); return; }
   if (act === "traer-aprob") { traerAprob(); return; }
   if (act === "copiar-enlace") { const t = b.dataset.t; try { await navigator.clipboard.writeText(location.origin + "/aprobar/" + t); toast("Enlace copiado."); } catch(e) { toast("No se pudo copiar."); } return; }
@@ -1796,6 +1813,22 @@ const fechaCorta = ts => new Date(ts).toLocaleString("es-CL", {day: "numeric", m
 function revPendientes(lista, h){
   const ult = {}; lista.forEach(x => { ult[x.rol] = x; });
   return Object.values(ult).filter(x => !x.ok || x.h !== h);
+}
+/* Contactos de prensa: los carga el propio cliente (nada se arma desde fuera ni se comparte entre cuentas). Se guardan en esta cuenta, por medio. */
+const ctcKey = nombre => String(nombre || "").trim().toLowerCase().replace(/\s+/g, " ");
+const ctcDe = nombre => ((cuenta().contactos || {})[ctcKey(nombre)]) || null;
+function contactoHtml(){
+  const m = tState.draft && menciones().find(x => x.g === tState.draft), nom = m ? nomMedio(m.lead) : "", c = nom ? ctcDe(nom) : null, tot = Object.keys(cuenta().contactos || {}).length;
+  const campo = (id, ph, v, tipo = "text") => `<input id="${id}" type="${tipo}" aria-label="${ph}" placeholder="${ph}" value="${esc(v || "")}" style="padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-height:34px;flex:1;min-width:130px">`;
+  const sel = nom ? `<p style="margin:0 0 8px;font-size:13.5px">Medio de esta noticia: <b>${esc(nom)}</b>${c ? "" : ` · <span class="muted">aún sin contacto</span>`}</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${campo("ctNom", "Nombre del periodista o editor", c && c.nombre)}${campo("ctCar", "Cargo", c && c.cargo)}${campo("ctMail", "Correo", c && c.correo, "email")}${campo("ctTel", "Celular (con +56)", c && c.tel, "tel")}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"><button class="btn sm" type="button" data-act="ctc-guardar">Guardar contacto</button>${c ? `<button class="btn sm primary" type="button" data-act="ctc-correo" ${c.correo ? "" : "disabled"}>Escribir al medio</button><button class="btn sm" type="button" data-act="ctc-wa" ${c.tel ? "" : "disabled"}>WhatsApp</button><button class="btn sm" type="button" data-act="ctc-borrar">Borrar</button>` : ""}</div>` : `<p class="muted" style="margin:0 0 8px;font-size:13px">Abre una noticia para guardar o usar el contacto de su medio.</p>`;
+  return sel + `<details style="margin-top:6px"><summary class="muted" style="font-size:13px;cursor:pointer">Importar mi lista (${tot} guardados)</summary><p class="muted" style="margin:6px 0;font-size:12.5px">Pega una línea por contacto: medio; nombre; cargo; correo; celular. Solo se guarda en esta cuenta. Usa datos que ya tengas de forma legítima y que las personas conozcan.</p><textarea id="ctLista" rows="4" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface)" placeholder="Diario El Mercurio de Valparaíso; Ana Pérez; Editora regional; ana@medio.cl; +56911112222"></textarea><button class="btn sm" type="button" data-act="ctc-importar" style="margin-top:6px">Importar</button></details>`;
+}
+const ctcRepintar = () => { const box = $("#kCtc"); if (box) box.innerHTML = contactoHtml(); };
+function ctcMensaje(){
+  const m = tState.draft && menciones().find(x => x.g === tState.draft), txt = ($("#kOut")?.value || "").trim();
+  return {asunto: "Respuesta oficial" + (m ? " sobre: " + m.lead.t.slice(0, 90) : ""), cuerpo: txt};
 }
 /* Aprobación por enlace: quien decide abre /aprobar/<código> en su celular, sin cuenta; aquí se crea el enlace y se traen sus respuestas. */
 const aprobHex = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join("");
