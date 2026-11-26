@@ -1272,12 +1272,13 @@ const PIEZAS = {
   redes:["Publicación para redes","Texto breve para X, Instagram o Facebook","Publicación para redes sociales de la autoridad: un texto de máximo 600 caracteres, con una idea central, un dato y un llamado o compromiso concreto, sin hashtags innecesarios"],
   columna:["Columna de opinión","Para un medio regional","Columna de opinión de 450 a 600 palabras para un medio regional, firmada por la autoridad, con título, una tesis clara, dos o tres argumentos con datos y un cierre"],
   intervencion:["Minuta de intervención","Para sala, comisión o sesión","Minuta de intervención de 2 a 3 minutos para la sala, una comisión o una sesión: contexto, posición, dos argumentos con datos, propuesta o petición concreta y frase de cierre"],
+  kit:["Kit de crisis","Todo para la primera hora","Kit de crisis para la primera hora, en este orden y con estos títulos: 1) DECLARACIÓN: 3 frases listas para decir o enviar. 2) MENSAJES CLAVE: tres ideas, cada una con su dato de respaldo. 3) PREGUNTAS PROBABLES: las cinco más difíciles que haría la prensa, con una respuesta sugerida. 4) QUÉ NO DECIR: tres frases o actitudes que empeorarían el tema. 5) ANTES DE SALIR: tres cosas que verificar con jurídico, el área técnica y la autoridad"],
   minuta:["Minuta interna","Una página para la autoridad","Minuta de una página para la autoridad: situación, cobertura, riesgos y opciones"]
 };
-const PIEZAS_MUNI = ["declaracion", "comunicado", "aclaracion", "mensajes", "preguntas", "minuta"], PIEZAS_AUT = ["declaracion", "redes", "columna", "intervencion", "comunicado", "aclaracion", "mensajes", "preguntas"];
+const PIEZAS_MUNI = ["kit", "declaracion", "comunicado", "aclaracion", "mensajes", "preguntas", "minuta"], PIEZAS_AUT = ["kit", "declaracion", "redes", "columna", "intervencion", "comunicado", "aclaracion", "mensajes", "preguntas"];
 const piezasDe = () => esAut() ? PIEZAS_AUT : PIEZAS_MUNI;
 const ENFOQUES = {datos:"Responder con datos", aclarar:"Aclarar los hechos", contextualizar:"Contextualizar", reconocer:"Reconocer y corregir", anunciar:"Anunciar un logro"};
-const recPieza = m => !m ? "comunicado" : m.tono === "cri" ? "declaracion" : "comunicado";
+const recPieza = m => !m ? "comunicado" : m.tono === "cri" ? (fichaDe(m).prio === "P1" ? "kit" : "declaracion") : "comunicado";
 const recEnf = m => !m ? "anunciar" : m.tono === "cri" ? "datos" : m.tono === "pos" ? "anunciar" : "contextualizar";
 const baseConocimiento = () => `[Ejemplo] Teléfono de emergencias municipales: 800 000 000 (ficticio).\n[Ejemplo] El municipio dispone de 2 camiones aljibe propios.\n[Ejemplo] Vocero autorizado: encargado(a) de comunicaciones.\n[Completar] Agrega cifras oficiales, documentos y decisiones del municipio.`;
 function vComunicados(){
