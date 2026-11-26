@@ -1297,7 +1297,8 @@ function vComunicados(){
     <div class="card" style="display:grid;gap:10px;align-content:start"><h3 style="margin:0">Borrador</h3>
       <textarea id="kOut" class="draft" aria-label="Borrador" placeholder="El borrador aparecerá aquí. También puedes escribirlo tú.">${esc(draft)}</textarea>
       <p class="note" id="kNote">Antes de aprobar, completa lo marcado [completar] y valida las citas con el vocero.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="aprobar" id="btnAprob" ${draft.trim()?"":"disabled"}>Aprobar</button><button class="btn" data-act="copiar" id="btnCopy" ${draft.trim()?"":"disabled"}>Copiar</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="aprobar" id="btnAprob" ${draft.trim()?"":"disabled"}>Aprobar</button><button class="btn" data-act="copiar" id="btnCopy" ${draft.trim()?"":"disabled"}>Copiar</button><button class="btn" data-act="probar" id="btnProbar" ${draft.trim()?"":"disabled"}>Probar el titular</button></div>
+      <div id="kProbe" class="note" aria-live="polite" hidden></div>
       ${shareBar("draft", {off: !draft.trim(), id: "shareDraft"})}
     </div>
   </div>
@@ -1674,6 +1675,8 @@ document.addEventListener("click", async e => {
   if (act === "share") compartir(b);
   if (act === "lectura") lectura(b);
   if (act === "stop") ctl?.abort();
+  if (act === "probar") { probarTitular(b); return; }
+  if (act === "probar-usar") { const o = $("#kOut"), pr = tState.probe; if (o && pr && pr.fr && o.value.includes(pr.fr)) { o.value = o.value.replace(pr.fr, pr.alt); setDraft(o.value); save(); const bx = $("#kProbe"); if (bx) bx.textContent = "Alternativa aplicada. Léela completa antes de aprobar."; } return; }
   if (act === "aprobar") {
     const txt = $("#kOut").value.trim(); if (!txt) return;
     const m = tState.draft && menciones().find(x => x.g === tState.draft);
@@ -1739,7 +1742,7 @@ function marcarEjemplos(texto, base){
   });
   return out;
 }
-function setDraft(txt){ const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = txt; const has = !!txt.trim(); const a = $("#btnAprob"), k = $("#btnCopy"); if (a) a.disabled = !has; if (k) k.disabled = !has; document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
+function setDraft(txt){ const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = txt; const has = !!txt.trim(); const a = $("#btnAprob"), k = $("#btnCopy"), pb = $("#btnProbar"); if (pb) pb.disabled = !has; if (a) a.disabled = !has; if (k) k.disabled = !has; document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
 async function generar(){
   const c = cuenta(), pl = PLANES[c.perfil.plan];
   const m = tState.draft && menciones().find(x => x.g === tState.draft);
@@ -1762,6 +1765,36 @@ async function generar(){
     else note.textContent = "No se pudo terminar el borrador. Intenta de nuevo en un momento.";
     setDraft(out.value); save();
   } finally { btn.disabled = false; stop.hidden = true; }
+}
+/* Probar el titular: antes de aprobar, cómo lo titularía un medio crítico, qué frase da pie a eso y una alternativa. */
+async function probarTitular(btn){
+  const c = cuenta(), out = $("#kOut"), box = $("#kProbe"), txt = (out?.value || "").trim();
+  if (!txt || !box) return;
+  const sample = await samplePromise;
+  box.hidden = false;
+  if (!sample) { box.textContent = "La IA no está disponible en esta vista."; return; }
+  btn.disabled = true; box.textContent = "Leyendo tu texto como lo leería un periodista crítico…";
+  try {
+    const {text} = await sample(`Eres editor de un medio chileno exigente con ${inst()}. Lees este borrador de comunicado y piensas cómo lo titularías si quisieras destacar lo más débil o evasivo. No inventes hechos: usa solo lo que dice el texto.
+Responde exactamente en tres líneas, sin nada más:
+TITULAR: el titular más probable en un medio crítico (máximo 14 palabras)
+FRASE: la frase del borrador que más da pie a ese titular, copiada tal cual
+ALTERNATIVA: la misma idea reescrita para que no dé pie a ese titular, sin cambiar los hechos ni inventar datos
+Si el borrador es sólido y no hay frase riesgosa, escribe en FRASE: ninguna, y en ALTERNATIVA: sin cambios.
+
+Borrador:
+${txt.slice(0, 4000)}`, {cache: false, modelTier: "quick"});
+    const g = k => ((text || "").match(new RegExp("^" + k + ":\\s*(.+)$", "mi")) || [])[1]?.trim() || "";
+    const tit = g("TITULAR"), fr = g("FRASE"), alt = g("ALTERNATIVA");
+    if (!tit) { box.textContent = "No se pudo leer el resultado. Intenta de nuevo."; return; }
+    const sin = !fr || /^ninguna\b/i.test(fr), puede = !sin && alt && !/^sin cambios/i.test(alt) && txt.includes(fr);
+    tState.probe = {fr, alt};
+    box.innerHTML = `<b>Titular más probable en un medio crítico:</b> «${esc(tit)}»` +
+      (sin ? `<br>No hay una frase que dé pie a un titular negativo.` : `<br><b>Frase que lo provoca:</b> «${esc(fr)}»<br><b>Alternativa:</b> «${esc(alt)}»`) +
+      (puede ? `<br><button class="btn sm" type="button" data-act="probar-usar">Usar la alternativa en el borrador</button>` : "") +
+      `<br><span class="muted">Es una lectura de la IA sobre tu texto, no una predicción: sirve para revisar el tono antes de enviar.</span>`;
+  } catch(err) { box.textContent = "No se pudo probar el titular. Intenta de nuevo en un momento."; }
+  finally { btn.disabled = false; }
 }
 async function lectura(btn){
   const c = cuenta(), ms = menciones(c, GP().d), M = metricas(ms), el = $("#lectura");
