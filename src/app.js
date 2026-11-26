@@ -107,7 +107,9 @@ const sobreCuenta = (ms, c = cuenta()) => esAut(c) ? ms.filter(m => papelDe(m).k
 const delTerritorio = (ms, c = cuenta()) => esAut(c) ? ms.filter(m => papelDe(m).k === "terr") : [];
 /* Críticas que exigen respuesta. Municipio: toda crítica de su comuna. Autoridad: las que la nombran y además la tienen de protagonista,
    llegaron a prensa regional o salieron en tres o más medios. */
-const exigeRespuesta = (m, c = cuenta()) => m.tono === "cri" && (!esAut(c) || (papelDe(m).k !== "terr" && (papelDe(m).k === "prot" || escalera(m.notas).max >= 1 || new Set(m.notas.map(n => n.m)).size >= 3)));
+/* Una sola definición para Inicio, Menciones, Reportes, video y avisos: exige respuesta lo que la ficha clasifica P1 o P2 y es crítico
+   (o P1 por probidad o tribunales). Antes Inicio usaba tono y palabras clave, y Menciones, la prioridad: se contradecían. */
+const exigeRespuesta = (m, c = cuenta()) => { const f = fichaDe(m, c); return (f.prio === "P1" || f.prio === "P2") && (m.tono === "cri" || f.tono2 === "cri" || f.prio === "P1"); };
 
 /* Menciones y métricas */
 function menciones(c = cuenta(), dias = 30){
@@ -138,7 +140,8 @@ function metricas(ms){
   const vol = ms.length, pos = ms.filter(m => m.tono==="pos").length, cri = ms.filter(m => m.tono==="cri").length, neu = vol - pos - cri;
   return {vol, pos, neu, cri, neto: vol ? Math.round((pos - cri) / vol * 100) : 0, alcance: ms.reduce((s,m) => s + m.alcance, 0)};
 }
-const pendientes = (c = cuenta()) => sobreCuenta(menciones(c, 7), c).filter(m => (esAut(c) ? exigeRespuesta(m, c) : m.critico) && !atendida(m.g));
+/* Pendientes: todo lo que exige respuesta y nadie decidió, de los últimos 30 días. Una crisis sin decisión no caduca a los 7 días. */
+const pendientes = (c = cuenta()) => sobreCuenta(menciones(c, 30), c).filter(m => exigeRespuesta(m, c) && !atendida(m.g));
 function genericaComuna(c){ return {id:"g-"+norm(c), nombre:c, terminos:[c, "Municipalidad de "+c], contexto: ctxComuna(c), exclusiones: excComuna(c), activo:true}; }
 
 /* Utilidades de interfaz */
@@ -315,7 +318,7 @@ function vInicio(){
       ${noRespHtml(m)}
     </article>`; }).join("") + (resp.length > 3 ? `<a class="btn ghost sm" href="#menciones" data-act="ver-criticas">Ver las ${resp.length} críticas sin respuesta</a>` : "");
   // Aprovechar: lo positivo que llegó más lejos, para compartir o convertir en nota propia.
-  const apro = ms.filter(m => m.tono === "pos" && !usadas.has(m.g)).sort((a, b) => E.get(b.g).max - E.get(a.g).max || b.notas.length - a.notas.length || b.last - a.last).slice(0, 2);
+  const apro = ms.filter(m => m.tono === "pos" && !usadas.has(m.g) && NOW - m.last < 5 * DAY).sort((a, b) => E.get(b.g).max - E.get(a.g).max || b.notas.length - a.notas.length || b.last - a.last).slice(0, 2);
   apro.forEach(m => usadas.add(m.g));
   const aproHtml = apro.map((m, i) => { const e = E.get(m.g);
     return `<article class="ini-card pos ${i ? "chico" : ""}">
@@ -475,26 +478,28 @@ function vInicio(){
         ${cola.length ? cola.map(card).join("") : `<p class="allgood">${ri("ok")} Nada por decidir: ninguna noticia pide acción ${perTx}.</p>`}
         <a class="ini-mov-mas" href="#iniKpis" data-act="ini-ir">Ver todos los indicadores ↓</a></div>`; })()}
     ${aut && msK.length ? `<p class="ini-lead">${M.vol ? "Aparte, en" : "En"} su territorio hubo ${plural(msK.length, "noticia", "noticias")} que no ${c.perfil.g === "F" ? "la" : "lo"} nombran${msK.filter(m => m.grave).length ? `, ${plural(msK.filter(m => m.grave).length, "hecho grave", "hechos graves")}` : ""}${MK.cri ? `${msK.filter(m => m.grave).length ? " y" : ","} ${plural(MK.cri, "reclamo", "reclamos")}` : ""}: no cuentan en su tono, pero pueden ser gestión o presencia. <button class="ini-link" ${kAttr("pers")}>Ver el radar</button></p>` : ""}
+  </section>
+  <section aria-labelledby="hoyT">
+    ${sec("hoyT", "Qué hacer hoy")}
+    <div class="ini-hoy ${apro.length ? "" : "solo"}">
+      <div class="ini-col"><p class="ini-colt cri">${ri("cri")} Responder · ${resp.length}</p>${resp.length ? respHtml : `<div class="allgood">${ri("ok")} ${aut ? `Nada que ${c.perfil.g === "F" ? "la" : "lo"} nombre exige respuesta en los últimos 30 días.` : "Todo al día: ninguna crítica sin decisión en los últimos 30 días."}</div>`}
+        ${graves.length ? `<p class="ini-colt neu">${ri("neu")} Informar · ${graves.length}</p>${gravesHtml}` : ""}</div>
+      ${apro.length ? `<div class="ini-col"><p class="ini-colt pos">${ri("up")} Aprovechar · ${apro.length}</p>${aproHtml}</div>` : ""}
+    </div>
+  </section>
+  <section class="ini-ver" aria-label="Indicadores">
     <div class="ini-kpis" id="iniKpis">
       ${aut && !M.vol ? "" : `<button class="ini-kpi" ${kAttr("vol")}><span class="l">Noticias ${perTx}</span><span class="v"><span class="mono">${M.vol}</span>${delta(M.vol, P.vol, hayPrev)}</span><span class="s">${hayPrev ? `frente a ${P.vol} ${per === 1 ? "en " : ""}${antTx}` : `sin datos de ${antTx} para comparar`} · en ${plural(Object.keys(med).length, "medio", "medios")}</span></button>
       <button class="ini-kpi" ${kAttr("tono")}><span class="l">Tono ${per === 7 ? "de la semana" : perTx}</span><span class="v word ${v.k}">${v.n}</span>${segbar([{l: "Críticas", v: M.cri, c: "var(--cri)"}, {l: "Neutras", v: M.neu, c: "var(--neu)"}, {l: "Positivas", v: M.pos, c: "var(--pos)"}])}<span class="s">${conteoCorto(M)}${hayPrev && P.vol ? ` · antes: ${vP.n.toLowerCase()}` : ""}</span></button>
       <button class="ini-kpi" ${kAttr("lejos")}><span class="l">Hasta dónde llegaron</span>${escaleraKpi()}<span class="s ini-lad-s ${criFueraN ? "c" : ""}">${fraseAlcance}</span></button>
       <button class="ini-kpi ${pendC.length ? "alerta" : ""}" ${kAttr("resp")}><span class="l">Críticas atendidas</span><span class="v"><span class="mono">${resps.length}</span><small>de ${criP.length}</small></span><span class="s">${!criP.length ? `ninguna exigía respuesta ${perTx}` : med_h != null ? `tardan ${fH(med_h)} (mediana) desde la primera nota${pendC.length ? ` · ${pendC.length} sin decisión` : ""}` : `${pendC.length} sin decisión; la más antigua lleva ${fH(viejaH)}`}</span></button>
-      <button class="ini-kpi" ${kAttr("conc")}><span class="l">De dónde viene la crítica</span><span class="v word ${concentrada ? "cri" : ""}">${!notasC.length ? "Sin críticas" : notasC.length < 3 ? "Pocas para medir" : concentrada ? "Concentrada" : "Repartida"}</span><span class="s">${!topC ? `ninguna nota crítica ${perTx}` : concentrada || notasC.length < 3 ? `${esc(MED[topC[0]].n)} publicó ${topC[1]} de ${plural(notasC.length, "nota crítica", "notas críticas")} (${shareC}%)` : `${plural(notasC.length, "nota crítica", "notas críticas")} en ${plural(rankC.length, "medio", "medios")}; ninguno publicó más de ${topC[1]}`}</span></button>`}
+      <button class="ini-kpi" ${kAttr("conc")}><span class="l">De dónde viene la crítica</span><span class="v word ${concentrada ? "cri" : ""}">${!notasC.length ? "Sin críticas" : notasC.length < 3 ? "Pocas para medir" : concentrada ? "Concentrada" : "Repartida"}</span><span class="s">${!topC ? `ninguna nota crítica ${perTx}` : concentrada || notasC.length < 3 ? `${esc(MED[topC[0]].n)} publicó ${topC[1]} de ${plural(notasC.length, "publicación crítica", "publicaciones críticas")} (${shareC}%)` : `${plural(notasC.length, "publicación crítica", "publicaciones críticas")} (de ${plural(criTot, "hecho crítico", "hechos críticos")}) en ${plural(rankC.length, "medio", "medios")}; ninguno publicó más de ${topC[1]}`}</span></button>`}
       ${kTema ? `<button class="ini-kpi ${aut && !M.vol ? "ancho" : ""}" ${kAttr("pers")}><span class="l">${esc(kLbl)}</span><span class="v"><span class="mono">${MK.vol}</span><small>${MK.vol === 1 ? "mención" : "menciones"}</small>${delta(MK.vol, msKP.length, hayPrev)}</span><span class="s">${conteoCorto(MK)}</span></button>` : ""}
       ${impL.length ? `<button class="ini-kpi ancho" ${kAttr("imp")}><span class="l">Impacto por tema</span><span class="ini-imp-ej" aria-hidden="true"><span>Tema</span><span class="neg">← resta (críticas)</span><span class="pos">suma (positivas) →</span><span>Balance</span></span><ul class="ini-imp">${impL.slice(0, 4).map(x => filaImp(x, false)).join("")}</ul><span class="s">${peorImp ? `Mayor impacto negativo: <b>${esc(peorImp.k.toLowerCase())}</b> (${signo(peorImp.bal)})` : "Ningún tema con impacto negativo"}${mejorImp ? ` · mayor impacto positivo: <b>${esc(mejorImp.k.toLowerCase())}</b> (${signo(mejorImp.bal)})` : ""}</span></button>` : ""}
     </div>
     ${detalleKpi()}
     ${M.vol ? `<div class="ini-pulso"><div class="ini-pulso-h"><h3>Cómo se movió la prensa ${perTx}</h3><div class="legend"><span><i style="background:var(--cri)"></i>Críticas</span><span><i style="background:var(--neu)"></i>Neutras</span><span><i style="background:var(--pos)"></i>Positivas</span></div></div>${chartPulso(ms, per)}</div>` : ""}
     <p class="ini-valor">${ri("reloj")}<span>Hoy leímos <b>${medN} medios</b> de la región y el país. De todo lo publicado, estas son las notas sobre ${esc(quien)} que importan y lo que conviene hacer con ellas.</span></p>
-  </section>
-  <section aria-labelledby="hoyT">
-    ${sec("hoyT", "Qué hacer hoy")}
-    <div class="ini-hoy ${apro.length ? "" : "solo"}">
-      <div class="ini-col"><p class="ini-colt cri">${ri("cri")} Responder · ${resp.length}</p>${resp.length ? respHtml : `<div class="allgood">${ri("ok")} ${aut ? `Nada que ${c.perfil.g === "F" ? "la" : "lo"} nombre exige respuesta en los últimos 7 días.` : "Todo al día: ninguna crítica sin decisión en los últimos 7 días."}</div>`}
-        ${graves.length ? `<p class="ini-colt neu">${ri("neu")} Informar · ${graves.length}</p>${gravesHtml}` : ""}</div>
-      ${apro.length ? `<div class="ini-col"><p class="ini-colt pos">${ri("up")} Aprovechar · ${apro.length}</p>${aproHtml}</div>` : ""}
-    </div>
   </section>
   <div class="ini-bajo">
     <section aria-labelledby="camT">
@@ -541,6 +546,8 @@ function mDetalle(m){
     <div class="acts"><button class="btn ${ctaPrim(m, f) ? "primary" : ""}" data-act="responder" data-g="${m.g}" data-from="menciones">${ctaTxt(m, f)}</button><button class="btn" data-act="vocero" data-g="${m.g}">${ri("mic")} Vocería</button>${m.lead.url ? `<a class="btn ghost" href="${esc(m.lead.url)}" target="_blank" rel="noopener">Abrir la nota<span class="sr"> (abre el medio en otra pestaña)</span></a>` : ""}${m.tono === "cri" && !resp && !nr ? noRespHtml(m) : ""}<button class="btn ghost" data-act="fp" data-g="${m.g}">No corresponde</button>${m.notas.some(n => n.captura) ? `<button class="btn ghost" data-act="cap-del" data-g="${m.g}">Quitar lo que agregué</button>` : ""}</div>
     <details class="mf-mas"><summary>Ver ficha completa</summary>
       ${fichaDetalle(m, f)}
+      <p class="mf-por"><b>Por qué esta prioridad:</b> ${esc(porQuePrio(m, f))}</p>
+      <p class="mf-por"><b>Por qué este tono:</b> ${esc(porQueTono(m, f))}</p>
       <p class="mf-por"><b>Por qué aparece:</b> ${temas.map(x => `tema <b>${esc(x.tema.nombre)}</b>, contiene «${[...x.found].map(esc).join("», «")}»${x.enTitulo ? " en el titular" : ""}.`).join(" ")}${otros.length ? ` También la publicaron ${otros.join(", ")}.` : ""}</p>
       ${correccionHtml(m)}
     </details>
@@ -880,11 +887,13 @@ function riesgo(m){ const e = escalera(m.notas); return (m.tono === "cri" ? 10 :
 function accion(m){
   if (esAut()) return accionAut(m);
   const e = escalera(m.notas), cat = categoriaDe(m), area = cat.r.length ? cat.r.join(" · ") : null; let a, r;
+  // Un hecho de hace más de tres días no pide «vocería hoy»: se revisa si ya hay versión oficial.
+  const tarde = s => NOW - m.last > 3 * DAY ? "Si aún no hay versión oficial: " + s.charAt(0).toLowerCase() + s.slice(1) : s;
   if (m.tono === "cri") {
     if (respondida(m.g)) { a = "La respuesta ya está aprobada. Seguir el tema y avisar si aparece en otro medio."; r = ["Comunicaciones"]; }
-    else if (e.max === 2) { a = "Vocería del alcalde hoy, con datos oficiales y una sola versión."; r = ["Alcalde","Comunicaciones",area]; }
-    else if (e.max === 1) { a = "Declaración institucional antes de que el tema llegue a medios nacionales."; r = ["Comunicaciones",area]; }
-    else { a = "Responder en el medio comunal y contactar a los vecinos afectados."; r = [area || "Dirección del área","Comunicaciones"]; }
+    else if (e.max === 2) { a = tarde("Vocería del alcalde hoy, con datos oficiales y una sola versión."); r = ["Alcalde","Comunicaciones",area]; }
+    else if (e.max === 1) { a = tarde("Declaración institucional antes de que el tema llegue a medios nacionales."); r = ["Comunicaciones",area]; }
+    else { a = tarde("Responder en el medio comunal y contactar a los vecinos afectados."); r = [area || "Dirección del área","Comunicaciones"]; }
   } else if (m.tono === "neu") { a = "Preparar información para los vecinos en los canales municipales, por si el tema crece."; r = ["Comunicaciones",area]; }
   else { a = e.max === 0 ? "Llevarla a medios regionales: hasta ahora solo la publicó la prensa comunal." : "Difundirla en redes municipales y usarla en la próxima vocería."; r = ["Comunicaciones",area]; }
   return {a, r: [...new Set(r.filter(Boolean).join(" · ").split(" · "))].join(" · ")};

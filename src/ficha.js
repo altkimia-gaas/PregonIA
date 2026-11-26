@@ -16,11 +16,12 @@ const ENCUADRES = {
   probidad: "Probidad o irregularidad", judicial: "Judicial", politico: "Político-electoral", opinion: "Opinión", humano: "Historia humana"
 };
 const IMPULSORES = {propia: "Agenda propia", autoridad: "Otra autoridad", vecinos: "Vecinos u organizaciones", gremio: "Gremio o empresa", fiscalizador: "Fiscalizador", medio: "Iniciativa del medio"};
-const PAPELES_F = {prot: "Protagonista", fuente: "Fuente citada", menc: "Mencionada", alud: "Aludida sin nombre", aus: "Ausente: vacío de vocería", no: "No aparece"};
+const PAPELES_F = {prot: "Protagonista", fuente: "Fuente citada", menc: "Mencionada", alud: "Aludida sin nombre", aus: "Ausente: vacío de vocería", no: "No la nombran"};
 const COMPETENCIAS = {P: "Competencia propia", C: "Competencia compartida", I: "Incidencia (fiscaliza o legisla)", AE: "Ajena, pero la exponen", A: "Competencia ajena"};
 /* Fuentes oficiales leídas directo (catálogo 227 Contraloría, 228 Mercado Público, 229 Esval). */
 const OFICIALES = {227: "Contraloría", 228: "Mercado Público", 229: "Esval"};
-const PRIORIDADES = {P1: "P1 · Crisis", P2: "P2 · Atender", P3: "P3 · Oportunidad", P4: "P4 · Monitoreo", R: "Ruido"};
+/* Los códigos P1 a P4 siguen en el motor; al usuario se le muestra cuándo actuar. */
+const PRIORIDADES = {P1: "Hoy · Crisis", P2: "Hoy · Atender", P3: "Esta semana · Oportunidad", P4: "Por si acaso", R: "Poco relevante"};
 const ACCIONES = {
   responder: ["Responder", "Dar la versión propia con vocería, por los canales que el tema exige."],
   aclarar: ["Aclarar con datos", "Es de su competencia y la prensa no recoge su versión ni su gestión: informar qué se está haciendo, con datos y una vocería breve."],
@@ -203,8 +204,29 @@ function fichaCorta(m, f = fichaDe(m)){
 const accionHtml = (f = {}) => { if (f.decidido) return ""; const [an, ad] = ACCIONES[f.acc]; return `<p class="acc sm accion-${f.acc}"><b>Qué hacer: ${esc(an)}.</b> ${esc(ad)}</p>`; };
 function fichaDetalle(m, f = fichaDe(m)){
   const ex = f.exc ? EXCEPCIONES.find(x => x.id === f.exc) : null, quien = typeof esAut === "function" && esAut() ? "a la autoridad" : "al municipio";
-  const filas = [["Área", AREAS[f.area]], ["¿Le corresponde " + quien + "?", COMPETENCIAS[f.comp] + (ex ? " · " + ex.n : "")], ["Cómo lo cuenta la prensa", ENCUADRES[f.encuadre]], ["Papel " + (quien === "al municipio" ? "del municipio" : "de la autoridad"), PAPELES_F[f.papel] || ""], ["Quién lo instaló", f.impulsor ? IMPULSORES[f.impulsor] : ""]].filter(x => x[1]);
+  const filas = [["Área", AREAS[f.area]], ["¿Le corresponde " + quien + "?", COMPETENCIAS[f.comp] + (ex ? " · " + ex.n : "")], ["Cómo lo presenta la prensa", ENCUADRES[f.encuadre]], ["Rol " + (quien === "al municipio" ? "del municipio" : "de la autoridad") + " en la noticia", PAPELES_F[f.papel] || ""], ["Quién lo impulsa", f.impulsor ? IMPULSORES[f.impulsor] : ""]].filter(x => x[1]);
   return `<dl class="mf-dl">${filas.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>`;
+}
+/* «Por qué»: lo que justifica el tono y la prioridad, para poder defenderlos ante el alcalde. Refleja las reglas de fichaDe; no inventa motivos. */
+function porQueTono(m, f = fichaDe(m)){
+  const t = {cri: "crítica", neu: "neutra", pos: "positiva"}[m.tono];
+  const pal = typeof CRIT !== "undefined" && m.tono === "cri" ? [...new Set(m.notas.flatMap(n => CRIT.filter(w => (n.hay || "").includes(w))))].slice(0, 4) : [];
+  const motivo = pal.length ? `el texto contiene «${pal.join("», «")}»` : f.ia ? "así la leyó la IA a partir del texto de la nota" : "por las palabras de la nota";
+  return `Tono ${t}: ${motivo}${f.confianza === "b" ? " (confianza baja: revísalo)" : ""}.`;
+}
+function porQuePrio(m, f = fichaDe(m), c = cuenta()){
+  const comp = {P: "es de su competencia", C: "es de competencia compartida", AE: "no es de su competencia, pero la exponen", I: "le toca fiscalizar o legislar", A: "no es de su competencia"}[f.comp] || "";
+  const nivel = f.alcance === 2 ? "llegó a prensa nacional" : f.alcance === 1 ? "llegó a prensa regional" : "";
+  const escala = nivel || (f.v6 >= 3 ? `${f.v6} medios la publicaron en 6 horas` : f.gravedad >= 3 ? "es de gravedad alta" : "");
+  const h = (plazosDe(c) || {})[f.prio];
+  const plazo = h ? ` El plazo (${h} h) corre desde la última publicación.` : "";
+  let x;
+  if (f.prio === "R") x = "no es de su competencia y no la nombran: no pide acción.";
+  else if (f.prio === "P1") x = ["probidad", "judicial"].includes(f.encuadre) && !escala ? "trata de probidad o tribunales y la nombra." : `crítica que ${comp}${escala ? " y " + escala : ""}.`;
+  else if (f.prio === "P2") x = f.papel === "aus" ? "es de su competencia y la prensa no recoge su versión (vacío de vocería)." : `crítica que ${comp}, sin señales de escalada.`;
+  else if (f.prio === "P3") x = f.tono === "pos" ? "noticia positiva que se puede llevar a más medios." : f.acc === "anticipar" ? "aviso con fecha próxima o documento oficial que la prensa aún no publica." : "tema de terceros donde puede aportar.";
+  else x = "informativa o de bajo impacto: basta revisarla una vez por semana.";
+  return `${PRIORIDADES[f.prio]}: ${x}${f.prio === "R" || f.prio === "P4" ? "" : plazo}`;
 }
 /* Corrección de la ficha: los mismos campos que calcula el sistema; lo que no se toca queda automático. */
 function correccionHtml(m){
