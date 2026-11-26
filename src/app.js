@@ -312,11 +312,12 @@ function vInicio(){
       <p class="ini-kick cri">${esc(temaCorto(m))}${area ? " · " + esc(area) : ""}</p>
       <h3 class="ini-h">${esc(m.lead.t)}</h3>
       <p class="ini-meta">${esc(medioN(m.lead))} · ${ago(m.last)}${m.notas.length > 1 ? ` · en ${plural(m.notas.length, "medio", "medios")}` : ""}</p>
+      <p class="ini-por"><b>Por qué:</b> ${esc(porQuePrio(m))}</p>
       <div class="ini-esc">${escHtml(e)}${k24 > 1 ? `<span>${k24} medios en 24 horas</span>` : ""}</div>
       ${d ? `<p class="ini-dato">${ri("rank")}<span><b>Dato para la respuesta:</b> ${ago(d.last)}, ${esc(nomMedio(d.lead))} publicó «${esc(d.lead.t)}».</span></p>` : ""}
-      <div class="ini-acts"><button class="btn primary" data-act="responder" data-g="${m.g}" data-from="inicio">Preparar respuesta</button><button class="btn" data-act="vocero" data-g="${m.g}">${ri("mic")} ${m === resp[0] ? "Me llaman de la radio" : "Vocería"}</button></div>
+      <div class="ini-acts"><button class="btn primary" data-act="responder" data-g="${m.g}" data-from="inicio">Preparar respuesta</button><button class="btn" data-act="vocero" data-g="${m.g}">${ri("mic")} ${m === resp[0] ? "Me llaman de la radio" : "Vocería"}</button>${m.lead.url ? `<a class="btn ghost" href="${esc(m.lead.url)}" target="_blank" rel="noopener">Ver nota original</a>` : ""}</div>
       ${noRespHtml(m)}
-    </article>`; }).join("") + (resp.length > 3 ? `<a class="btn ghost sm" href="#menciones" data-act="ver-criticas">Ver las ${resp.length} críticas sin respuesta</a>` : "");
+    </article>`; }).join("") + (resp.length ? `<a class="btn ghost sm" href="#menciones" data-act="ver-criticas">Ver ${resp.length === 1 ? "la nota" : "las " + resp.length + " notas"} en Menciones</a>` : "");
   // Aprovechar: lo positivo que llegó más lejos, para compartir o convertir en nota propia.
   const apro = ms.filter(m => m.tono === "pos" && !usadas.has(m.g) && NOW - m.last < 5 * DAY).sort((a, b) => E.get(b.g).max - E.get(a.g).max || b.notas.length - a.notas.length || b.last - a.last).slice(0, 2);
   apro.forEach(m => usadas.add(m.g));
@@ -573,7 +574,8 @@ function vMenciones(){
   if (tState.fcat) base = base.filter(m => categoriaDe(m, c).k === tState.fcat);
   if (tState.fenf) base = base.filter(m => enfoqueDe(m).k === tState.fenf);
   if (tState.fpap) base = base.filter(m => papelDe(m).k === tState.fpap);
-  if (tState.fprio) base = base.filter(m => fichaDe(m, c).prio === tState.fprio);
+  if (tState.fprio === "pide") base = base.filter(m => exigeRespuesta(m, c) && !atendida(m.g));
+  else if (tState.fprio) base = base.filter(m => fichaDe(m, c).prio === tState.fprio);
   if (tState.fcomp) base = base.filter(m => fichaDe(m, c).comp === tState.fcomp);
   const cnt = k => k === "todos" ? base.length : base.filter(m => m.tono === k).length;
   const ms = tState.tono === "todos" ? base : base.filter(m => m.tono === tState.tono);
@@ -591,7 +593,7 @@ function vMenciones(){
   const sheet = tState.fOpen ? `<div class="fs-back" data-act="f-close"></div><section class="fsheet" role="dialog" aria-modal="true" aria-labelledby="fsT">
     <div class="fs-h"><h3 id="fsT">Filtrar</h3><button class="btn ghost sm" type="button" data-act="f-limpiar">Limpiar</button><button class="fs-x" type="button" data-act="f-close" aria-label="Cerrar filtros">×</button></div>
     <div class="fs-body">
-      <label class="fs-f">Prioridad<select id="fPrio"><option value="">Todas</option>${Object.entries(PRIORIDADES).map(([k, n]) => `<option value="${k}" ${tState.fprio === k ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>
+      <label class="fs-f">Prioridad<select id="fPrio"><option value="">Todas</option><option value="pide" ${tState.fprio === "pide" ? "selected" : ""}>Pide respuesta (sin decisión)</option>${Object.entries(PRIORIDADES).map(([k, n]) => `<option value="${k}" ${tState.fprio === k ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>
       <label class="fs-f">Tema<select id="fTema"><option value="todos">Todos los temas</option>${c.temas.filter(t => t.activo).map(t => `<option value="${t.id}" ${tState.tema === t.id ? "selected" : ""}>${esc(t.nombre)}</option>`).join("")}</select></label>
       <label class="fs-f">¿Le corresponde ${quien}?<select id="fComp"><option value="">Todas</option>${Object.entries(COMPETENCIAS).map(([k, n]) => `<option value="${k}" ${tState.fcomp === k ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>
       <label class="fs-f">Hasta dónde llegó<select id="fLlego"><option value="">Cualquier alcance</option>${["Solo prensa comunal", "Llegó a prensa regional", "Llegó a prensa nacional"].map((n, k) => `<option value="${k}" ${tState.llego != null && Number(tState.llego) === k ? "selected" : ""}>${n}</option>`).join("")}</select></label>
@@ -1631,9 +1633,9 @@ document.addEventListener("click", async e => {
   const b = e.target.closest("[data-act]"); if (!b) return;
   const act = b.dataset.act, c = cuenta();
   if (act === "responder") { e.preventDefault(); tState.draft = b.dataset.g; tState.from = b.dataset.from || null; tState.pieza = null; tState.enf = null; if (route() === "comunicados") render(true); else location.hash = "comunicados"; }
-  if (act === "goto") goMenciones(Object.fromEntries(["tono", "dias", "tema", "llego", "medio", "fcat", "fenf", "fpap", "alc"].filter(k => b.dataset[k] != null).map(k => [k, b.dataset[k]])));
+  if (act === "goto") goMenciones(Object.fromEntries(["tono", "dias", "tema", "llego", "medio", "fcat", "fenf", "fpap", "fprio", "alc"].filter(k => b.dataset[k] != null).map(k => [k, b.dataset[k]])));
   if (act === "goto-tema") goMenciones({tema: b.dataset.id});
-  if (act === "ver-criticas") { e.preventDefault(); goMenciones({tono:"cri", dias:"7"}); }
+  if (act === "ver-criticas") { e.preventDefault(); goMenciones({fprio:"pide", dias:"30"}); }
   if (act === "f-tono") { tState.tono = b.dataset.k; render(); }
   if (act === "f-alc") { tState.alc = b.dataset.k; render(); }
   if (act === "no-resp") { const k = S.org + ":" + b.dataset.g; S.noResp = S.noResp || {}; S.noResp[k] = {k: b.dataset.k, ts: Date.now()}; save(); render();
