@@ -289,7 +289,8 @@ function vInicio(){
   const E = new Map(ms.map(m => [m.g, escalera(m.notas)]));
   const usadas = new Set();
   // Responder: críticas de la semana sin respuesta, primero las que llegaron más lejos y más rápido.
-  const resp = pend.slice().sort((a, b) => escalera(b.notas).max - escalera(a.notas).max || b.notas.length - a.notas.length || b.last - a.last);
+  const vieja = m => NOW - m.last > 7 * DAY ? 1 : 0, rP = m => fichaDe(m).prio === "P1" ? 0 : 1;  // primero las P1 y lo reciente; lo de más de una semana, al final de la fila
+  const resp = pend.slice().sort((a, b) => vieja(a) - vieja(b) || rP(a) - rP(b) || escalera(b.notas).max - escalera(a.notas).max || b.notas.length - a.notas.length || b.last - a.last);
   resp.forEach(m => usadas.add(m.g));
   const ms30 = menciones(c, 30);
   const datoDe = m => { const ids = [...m.temas.values()].filter(x => x.tema.origen !== "Núcleo").map(x => x.tema.id); if (!ids.length) return null;
@@ -311,7 +312,7 @@ function vInicio(){
     return `<article class="ini-card cri">
       <p class="ini-kick cri">${esc(temaCorto(m))}${area ? " · " + esc(area) : ""}</p>
       <h3 class="ini-h">${esc(m.lead.t)}</h3>
-      <p class="ini-meta">${esc(medioN(m.lead))} · ${ago(m.last)}${m.notas.length > 1 ? ` · en ${plural(m.notas.length, "medio", "medios")}` : ""}</p>
+      <p class="ini-meta">${esc(medioN(m.lead))} · ${ago(m.last)}${m.notas.length > 1 ? ` · en ${plural(m.notas.length, "medio", "medios")}` : ""}${vieja(m) ? " · sin decisión hace más de una semana" : ""}</p>
       <p class="ini-por"><b>Por qué:</b> ${esc(porQuePrio(m))}</p>
       <div class="ini-esc">${escHtml(e)}${k24 > 1 ? `<span>${k24} medios en 24 horas</span>` : ""}</div>
       ${d ? `<p class="ini-dato">${ri("rank")}<span><b>Dato para la respuesta:</b> ${ago(d.last)}, ${esc(nomMedio(d.lead))} publicó «${esc(d.lead.t)}».</span></p>` : ""}
