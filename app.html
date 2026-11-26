@@ -5761,6 +5761,9 @@ document.addEventListener("click", async e => {
   if (act === "stop") ctl?.abort();
   if (act === "probar") { probarTitular(b); return; }
   if (act === "probar-usar") { const o = $("#kOut"), pr = tState.probe; if (o && pr && pr.fr && o.value.includes(pr.fr)) { o.value = o.value.replace(pr.fr, pr.alt); setDraft(o.value); save(); const bx = $("#kProbe"); if (bx) bx.textContent = "Alternativa aplicada. Léela completa antes de aprobar."; } return; }
+  if (act === "enviar-aprobar") { enviarAprobar(); return; }
+  if (act === "traer-aprob") { traerAprob(); return; }
+  if (act === "copiar-enlace") { const t = b.dataset.t; try { await navigator.clipboard.writeText(location.origin + "/aprobar/" + t); toast("Enlace copiado."); } catch(e) { toast("No se pudo copiar."); } return; }
   if (act === "copiar-rev") { const el = $("#kOut"), key = tState.draft || "_", h = hTxt(el.value), lista = (cuenta().revis || {})[key] || [];
     const t = `BORRADOR PARA REVISIÓN · versión ${h} · ${fechaCorta(Date.now())}\n${lista.length ? "Revisiones previas: " + lista.map(x => x.rol + (x.ok ? " ✓" : " (cambios)") + " sobre " + x.h).join("; ") + "\n" : ""}\n${el.value.trim()}\n\n— Responde con tu visto bueno o tus cambios, indicando la versión ${h}.`;
     try { await navigator.clipboard.writeText(t); toast("Copiado con la versión " + h + "."); } catch(err) { toast("No se pudo copiar. Selecciona el texto del borrador."); } return; }
@@ -5867,11 +5870,42 @@ function revPendientes(lista, h){
   const ult = {}; lista.forEach(x => { ult[x.rol] = x; });
   return Object.values(ult).filter(x => !x.ok || x.h !== h);
 }
+/* Aprobación por enlace: quien decide abre /aprobar/<código> en su celular, sin cuenta; aquí se crea el enlace y se traen sus respuestas. */
+const aprobHex = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join("");
+function enlacesHtml(key){
+  const l = ((cuenta().aprob || {})[key] || []).slice().reverse(); if (!l.length) return "";
+  return `<ul style="list-style:none;margin:0 0 10px;padding:0;display:grid;gap:4px;font-size:13px">${l.map(x => `<li>Enlace enviado ${fechaCorta(x.ts)} · versión <span class="mono">${esc(x.h)}</span> · ${x.est === "aprobado" ? "<b>aprobado</b>" : x.est === "cambios" ? "<b>pidió cambios</b>" : Date.now() > x.ts + 7 * DAY ? "venció" : "esperando respuesta"} · <button class="btn sm" type="button" data-act="copiar-enlace" data-t="${esc(x.t)}">Copiar enlace</button></li>`).join("")}</ul>`;
+}
+async function enviarAprobar(){
+  const txt = ($("#kOut")?.value || "").trim(); if (!txt) return;
+  const pl = typeof PILOTO !== "undefined" && PILOTO; if (!pl || !pl.activo || !pl.sb) { toast("El enlace de aprobación está disponible en las cuentas con sesión (no en la prueba ni en el ejemplo)."); return; }
+  if (txt.length > 12000) { toast("El texto es demasiado largo para enviarlo (máximo 12.000 caracteres)."); return; }
+  const key = tState.draft || "_", m = tState.draft && menciones().find(x => x.g === tState.draft), t = aprobHex(), h = hTxt(txt);
+  const {error} = await pl.sb.from("aprobaciones").insert({token: t, municipio_id: pl.muni.id, clave: key, titulo: (m ? "Respuesta a: " + m.lead.t : "Texto para aprobar").slice(0, 140), texto: txt, h});
+  if (error) { toast("No se pudo crear el enlace. Si es la primera vez, falta correr supabase/esquema.sql."); console.warn("PregonIA aprobaciones:", error.message); return; }
+  const url = location.origin + "/aprobar/" + t;
+  ((cuenta().aprob ||= {})[key] ||= []).push({t, h, ts: Date.now()}); save();
+  const box = $("#kRev"); if (box) box.innerHTML = revisHtml(key, txt);
+  try { await navigator.clipboard.writeText(url); toast("Enlace copiado. Envíalo por WhatsApp o correo; vence en 7 días."); } catch(e) { toast("Enlace creado. Pulsa «Copiar enlace»."); }
+}
+async function traerAprob(){
+  const pl = typeof PILOTO !== "undefined" && PILOTO; if (!pl || !pl.activo || !pl.sb) { toast("Disponible en las cuentas con sesión."); return; }
+  const c = cuenta(), key = tState.draft || "_", l = (c.aprob || {})[key] || []; if (!l.length) { toast("Aún no enviaste ningún enlace."); return; }
+  const {data, error} = await pl.sb.from("aprobaciones").select("token, estado, revisor, comentario, resuelto, h").in("token", l.map(x => x.t));
+  if (error) { toast("No se pudo consultar. Intenta de nuevo."); return; }
+  let nuevas = 0;
+  (data || []).forEach(r => { const x = l.find(y => y.t === r.token); if (!x || r.estado === "pendiente" || x.est === r.estado) return; x.est = r.estado;
+    ((c.revis ||= {})[key] ||= []).push({ts: r.resuelto ? Date.parse(r.resuelto) : Date.now(), rol: r.revisor + " (por enlace)", ok: r.estado === "aprobado", nota: (r.comentario || "").slice(0, 200), h: r.h}); nuevas++; });
+  save(); const txt = ($("#kOut")?.value || "").trim(), box = $("#kRev"); if (box) box.innerHTML = revisHtml(key, txt);
+  const d = $("#kRevD"); if (d && c.revis && c.revis[key]) { d.open = true; d.querySelector("summary").textContent = "Revisión interna (" + c.revis[key].length + ")"; }
+  toast(nuevas ? (nuevas === 1 ? "Llegó 1 respuesta." : "Llegaron " + nuevas + " respuestas.") : "Sin respuestas nuevas todavía.");
+}
 function revisHtml(key, txt){
   const lista = (cuenta().revis || {})[key] || [], h = hTxt(txt), pend = revPendientes(lista, h);
   const sel = "padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-height:34px";
   return `<p class="muted" style="margin:0 0 8px;font-size:12.5px">Versión actual del texto: <b class="mono">${h}</b>. Cambia si editas una sola palabra, así nadie aprueba una versión distinta de la que ve.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button class="btn sm" type="button" data-act="copiar-rev" ${txt.trim() ? "" : "disabled"}>Copiar para revisión</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button class="btn sm" type="button" data-act="copiar-rev" ${txt.trim() ? "" : "disabled"}>Copiar para revisión</button><button class="btn sm primary" type="button" data-act="enviar-aprobar" ${txt.trim() ? "" : "disabled"}>Enviar para aprobar por enlace</button><button class="btn sm" type="button" data-act="traer-aprob">Ver respuestas</button></div>
+    ${enlacesHtml(key)}
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
       <select id="rvRol" aria-label="Quién revisó" style="${sel}">${ROLES_REV.map(r => `<option>${r}</option>`).join("")}</select>
       <select id="rvEst" aria-label="Resultado" style="${sel}"><option value="ok">Dio su visto bueno</option><option value="cambios">Pidió cambios</option></select>
@@ -6360,7 +6394,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search) || !pruebaV
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "d6aa586ecc3a", K = "app";
+  const V = "d3c3b3ee2083", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;

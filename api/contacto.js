@@ -5,6 +5,7 @@
 // para que la página ofrezca escribir directo al correo.
 import { sb, json } from "./_servidor.js";
 import { pruebaPOST } from "./_prueba.js";
+import { aprobacion } from "./_aprobacion.js";
 
 const VENTANA_MS = 10 * 60 * 1000, LIMITE = 5;
 const visitas = new Map(); // freno simple por IP e instancia
@@ -32,6 +33,7 @@ async function avisarCorreo(c){
 }
 
 export async function POST(req){
+  { const t = new URL(req.url).searchParams.get("aprobar"); if (t !== null) return aprobacion(req, t); }  // respuesta de quien aprueba por enlace (/aprobar/<código>)
   if (new URL(req.url).searchParams.has("prueba")) return pruebaPOST(req);  // inscripción de la prueba gratis
   const propio = new URL(req.url).origin, origen = req.headers.get("origin");
   if (origen && origen !== propio) return json({error: "Origen no permitido"}, 403);
@@ -53,4 +55,4 @@ export async function POST(req){
   if (!guardado && !correo) return json({error: "No pudimos registrar tu solicitud. Escríbenos a soporte@altkimia.cl."}, 502);
   return json({ok: true});
 }
-export const GET = () => json({ok: true});
+export const GET = req => { const t = new URL(req.url).searchParams.get("aprobar"); return t !== null ? aprobacion(req, t) : json({ok: true}); };
