@@ -107,7 +107,9 @@ const sobreCuenta = (ms, c = cuenta()) => esAut(c) ? ms.filter(m => papelDe(m).k
 const delTerritorio = (ms, c = cuenta()) => esAut(c) ? ms.filter(m => papelDe(m).k === "terr") : [];
 /* Críticas que exigen respuesta. Municipio: toda crítica de su comuna. Autoridad: las que la nombran y además la tienen de protagonista,
    llegaron a prensa regional o salieron en tres o más medios. */
-const exigeRespuesta = (m, c = cuenta()) => m.tono === "cri" && (!esAut(c) || (papelDe(m).k !== "terr" && (papelDe(m).k === "prot" || escalera(m.notas).max >= 1 || new Set(m.notas.map(n => n.m)).size >= 3)));
+/* Una sola definición para Inicio, Menciones, Reportes, video y avisos: exige respuesta lo que la ficha clasifica P1 o P2 y es crítico
+   (o P1 por probidad o tribunales). Antes Inicio usaba tono y palabras clave, y Menciones, la prioridad: se contradecían. */
+const exigeRespuesta = (m, c = cuenta()) => { const f = fichaDe(m, c); return (f.prio === "P1" || f.prio === "P2") && (m.tono === "cri" || f.tono2 === "cri" || f.prio === "P1"); };
 
 /* Menciones y métricas */
 function menciones(c = cuenta(), dias = 30){
@@ -138,7 +140,8 @@ function metricas(ms){
   const vol = ms.length, pos = ms.filter(m => m.tono==="pos").length, cri = ms.filter(m => m.tono==="cri").length, neu = vol - pos - cri;
   return {vol, pos, neu, cri, neto: vol ? Math.round((pos - cri) / vol * 100) : 0, alcance: ms.reduce((s,m) => s + m.alcance, 0)};
 }
-const pendientes = (c = cuenta()) => sobreCuenta(menciones(c, 7), c).filter(m => (esAut(c) ? exigeRespuesta(m, c) : m.critico) && !atendida(m.g));
+/* Pendientes: todo lo que exige respuesta y nadie decidió, de los últimos 30 días. Una crisis sin decisión no caduca a los 7 días. */
+const pendientes = (c = cuenta()) => sobreCuenta(menciones(c, 30), c).filter(m => exigeRespuesta(m, c) && !atendida(m.g));
 function genericaComuna(c){ return {id:"g-"+norm(c), nombre:c, terminos:[c, "Municipalidad de "+c], contexto: ctxComuna(c), exclusiones: excComuna(c), activo:true}; }
 
 /* Utilidades de interfaz */
@@ -286,7 +289,8 @@ function vInicio(){
   const E = new Map(ms.map(m => [m.g, escalera(m.notas)]));
   const usadas = new Set();
   // Responder: críticas de la semana sin respuesta, primero las que llegaron más lejos y más rápido.
-  const resp = pend.slice().sort((a, b) => escalera(b.notas).max - escalera(a.notas).max || b.notas.length - a.notas.length || b.last - a.last);
+  const vieja = m => NOW - m.last > 7 * DAY ? 1 : 0, rP = m => fichaDe(m).prio === "P1" ? 0 : 1;  // primero las P1 y lo reciente; lo de más de una semana, al final de la fila
+  const resp = pend.slice().sort((a, b) => vieja(a) - vieja(b) || rP(a) - rP(b) || escalera(b.notas).max - escalera(a.notas).max || b.notas.length - a.notas.length || b.last - a.last);
   resp.forEach(m => usadas.add(m.g));
   const ms30 = menciones(c, 30);
   const datoDe = m => { const ids = [...m.temas.values()].filter(x => x.tema.origen !== "Núcleo").map(x => x.tema.id); if (!ids.length) return null;
@@ -308,14 +312,15 @@ function vInicio(){
     return `<article class="ini-card cri">
       <p class="ini-kick cri">${esc(temaCorto(m))}${area ? " · " + esc(area) : ""}</p>
       <h3 class="ini-h">${esc(m.lead.t)}</h3>
-      <p class="ini-meta">${esc(medioN(m.lead))} · ${ago(m.last)}${m.notas.length > 1 ? ` · en ${plural(m.notas.length, "medio", "medios")}` : ""}</p>
+      <p class="ini-meta">${esc(medioN(m.lead))} · ${ago(m.last)}${m.notas.length > 1 ? ` · en ${plural(m.notas.length, "medio", "medios")}` : ""}${vieja(m) ? " · sin decisión hace más de una semana" : ""}</p>
+      <p class="ini-por"><b>Por qué:</b> ${esc(porQuePrio(m))}</p>
       <div class="ini-esc">${escHtml(e)}${k24 > 1 ? `<span>${k24} medios en 24 horas</span>` : ""}</div>
       ${d ? `<p class="ini-dato">${ri("rank")}<span><b>Dato para la respuesta:</b> ${ago(d.last)}, ${esc(nomMedio(d.lead))} publicó «${esc(d.lead.t)}».</span></p>` : ""}
-      <div class="ini-acts"><button class="btn primary" data-act="responder" data-g="${m.g}" data-from="inicio">Preparar respuesta</button><button class="btn" data-act="vocero" data-g="${m.g}">${ri("mic")} ${m === resp[0] ? "Me llaman de la radio" : "Vocería"}</button></div>
+      <div class="ini-acts"><button class="btn primary" data-act="responder" data-g="${m.g}" data-from="inicio">Preparar respuesta</button><button class="btn" data-act="vocero" data-g="${m.g}">${ri("mic")} ${m === resp[0] ? "Me llaman de la radio" : "Vocería"}</button>${m.lead.url ? `<a class="btn ghost" href="${esc(m.lead.url)}" target="_blank" rel="noopener">Ver nota original</a>` : ""}</div>
       ${noRespHtml(m)}
-    </article>`; }).join("") + (resp.length > 3 ? `<a class="btn ghost sm" href="#menciones" data-act="ver-criticas">Ver las ${resp.length} críticas sin respuesta</a>` : "");
+    </article>`; }).join("") + (resp.length ? `<a class="btn ghost sm" href="#menciones" data-act="ver-criticas">Ver ${resp.length === 1 ? "la nota" : "las " + resp.length + " notas"} en Menciones</a>` : "");
   // Aprovechar: lo positivo que llegó más lejos, para compartir o convertir en nota propia.
-  const apro = ms.filter(m => m.tono === "pos" && !usadas.has(m.g)).sort((a, b) => E.get(b.g).max - E.get(a.g).max || b.notas.length - a.notas.length || b.last - a.last).slice(0, 2);
+  const apro = ms.filter(m => m.tono === "pos" && !usadas.has(m.g) && NOW - m.last < 5 * DAY).sort((a, b) => E.get(b.g).max - E.get(a.g).max || b.notas.length - a.notas.length || b.last - a.last).slice(0, 2);
   apro.forEach(m => usadas.add(m.g));
   const aproHtml = apro.map((m, i) => { const e = E.get(m.g);
     return `<article class="ini-card pos ${i ? "chico" : ""}">
@@ -475,26 +480,28 @@ function vInicio(){
         ${cola.length ? cola.map(card).join("") : `<p class="allgood">${ri("ok")} Nada por decidir: ninguna noticia pide acción ${perTx}.</p>`}
         <a class="ini-mov-mas" href="#iniKpis" data-act="ini-ir">Ver todos los indicadores ↓</a></div>`; })()}
     ${aut && msK.length ? `<p class="ini-lead">${M.vol ? "Aparte, en" : "En"} su territorio hubo ${plural(msK.length, "noticia", "noticias")} que no ${c.perfil.g === "F" ? "la" : "lo"} nombran${msK.filter(m => m.grave).length ? `, ${plural(msK.filter(m => m.grave).length, "hecho grave", "hechos graves")}` : ""}${MK.cri ? `${msK.filter(m => m.grave).length ? " y" : ","} ${plural(MK.cri, "reclamo", "reclamos")}` : ""}: no cuentan en su tono, pero pueden ser gestión o presencia. <button class="ini-link" ${kAttr("pers")}>Ver el radar</button></p>` : ""}
+  </section>
+  <section aria-labelledby="hoyT">
+    ${sec("hoyT", "Qué hacer hoy")}
+    <div class="ini-hoy ${apro.length ? "" : "solo"}">
+      <div class="ini-col"><p class="ini-colt cri">${ri("cri")} Responder · ${resp.length}</p>${resp.length ? respHtml : `<div class="allgood">${ri("ok")} ${aut ? `Nada que ${c.perfil.g === "F" ? "la" : "lo"} nombre exige respuesta en los últimos 30 días.` : "Todo al día: ninguna crítica sin decisión en los últimos 30 días."}</div>`}
+        ${graves.length ? `<p class="ini-colt neu">${ri("neu")} Informar · ${graves.length}</p>${gravesHtml}` : ""}</div>
+      ${apro.length ? `<div class="ini-col"><p class="ini-colt pos">${ri("up")} Aprovechar · ${apro.length}</p>${aproHtml}</div>` : ""}
+    </div>
+  </section>
+  <section class="ini-ver" aria-label="Indicadores">
     <div class="ini-kpis" id="iniKpis">
       ${aut && !M.vol ? "" : `<button class="ini-kpi" ${kAttr("vol")}><span class="l">Noticias ${perTx}</span><span class="v"><span class="mono">${M.vol}</span>${delta(M.vol, P.vol, hayPrev)}</span><span class="s">${hayPrev ? `frente a ${P.vol} ${per === 1 ? "en " : ""}${antTx}` : `sin datos de ${antTx} para comparar`} · en ${plural(Object.keys(med).length, "medio", "medios")}</span></button>
       <button class="ini-kpi" ${kAttr("tono")}><span class="l">Tono ${per === 7 ? "de la semana" : perTx}</span><span class="v word ${v.k}">${v.n}</span>${segbar([{l: "Críticas", v: M.cri, c: "var(--cri)"}, {l: "Neutras", v: M.neu, c: "var(--neu)"}, {l: "Positivas", v: M.pos, c: "var(--pos)"}])}<span class="s">${conteoCorto(M)}${hayPrev && P.vol ? ` · antes: ${vP.n.toLowerCase()}` : ""}</span></button>
       <button class="ini-kpi" ${kAttr("lejos")}><span class="l">Hasta dónde llegaron</span>${escaleraKpi()}<span class="s ini-lad-s ${criFueraN ? "c" : ""}">${fraseAlcance}</span></button>
       <button class="ini-kpi ${pendC.length ? "alerta" : ""}" ${kAttr("resp")}><span class="l">Críticas atendidas</span><span class="v"><span class="mono">${resps.length}</span><small>de ${criP.length}</small></span><span class="s">${!criP.length ? `ninguna exigía respuesta ${perTx}` : med_h != null ? `tardan ${fH(med_h)} (mediana) desde la primera nota${pendC.length ? ` · ${pendC.length} sin decisión` : ""}` : `${pendC.length} sin decisión; la más antigua lleva ${fH(viejaH)}`}</span></button>
-      <button class="ini-kpi" ${kAttr("conc")}><span class="l">De dónde viene la crítica</span><span class="v word ${concentrada ? "cri" : ""}">${!notasC.length ? "Sin críticas" : notasC.length < 3 ? "Pocas para medir" : concentrada ? "Concentrada" : "Repartida"}</span><span class="s">${!topC ? `ninguna nota crítica ${perTx}` : concentrada || notasC.length < 3 ? `${esc(MED[topC[0]].n)} publicó ${topC[1]} de ${plural(notasC.length, "nota crítica", "notas críticas")} (${shareC}%)` : `${plural(notasC.length, "nota crítica", "notas críticas")} en ${plural(rankC.length, "medio", "medios")}; ninguno publicó más de ${topC[1]}`}</span></button>`}
+      <button class="ini-kpi" ${kAttr("conc")}><span class="l">De dónde viene la crítica</span><span class="v word ${concentrada ? "cri" : ""}">${!notasC.length ? "Sin críticas" : notasC.length < 3 ? "Pocas para medir" : concentrada ? "Concentrada" : "Repartida"}</span><span class="s">${!topC ? `ninguna nota crítica ${perTx}` : concentrada || notasC.length < 3 ? `${esc(MED[topC[0]].n)} publicó ${topC[1]} de ${plural(notasC.length, "publicación crítica", "publicaciones críticas")} (${shareC}%)` : `${plural(notasC.length, "publicación crítica", "publicaciones críticas")} (de ${plural(criTot, "hecho crítico", "hechos críticos")}) en ${plural(rankC.length, "medio", "medios")}; ninguno publicó más de ${topC[1]}`}</span></button>`}
       ${kTema ? `<button class="ini-kpi ${aut && !M.vol ? "ancho" : ""}" ${kAttr("pers")}><span class="l">${esc(kLbl)}</span><span class="v"><span class="mono">${MK.vol}</span><small>${MK.vol === 1 ? "mención" : "menciones"}</small>${delta(MK.vol, msKP.length, hayPrev)}</span><span class="s">${conteoCorto(MK)}</span></button>` : ""}
       ${impL.length ? `<button class="ini-kpi ancho" ${kAttr("imp")}><span class="l">Impacto por tema</span><span class="ini-imp-ej" aria-hidden="true"><span>Tema</span><span class="neg">← resta (críticas)</span><span class="pos">suma (positivas) →</span><span>Balance</span></span><ul class="ini-imp">${impL.slice(0, 4).map(x => filaImp(x, false)).join("")}</ul><span class="s">${peorImp ? `Mayor impacto negativo: <b>${esc(peorImp.k.toLowerCase())}</b> (${signo(peorImp.bal)})` : "Ningún tema con impacto negativo"}${mejorImp ? ` · mayor impacto positivo: <b>${esc(mejorImp.k.toLowerCase())}</b> (${signo(mejorImp.bal)})` : ""}</span></button>` : ""}
     </div>
     ${detalleKpi()}
     ${M.vol ? `<div class="ini-pulso"><div class="ini-pulso-h"><h3>Cómo se movió la prensa ${perTx}</h3><div class="legend"><span><i style="background:var(--cri)"></i>Críticas</span><span><i style="background:var(--neu)"></i>Neutras</span><span><i style="background:var(--pos)"></i>Positivas</span></div></div>${chartPulso(ms, per)}</div>` : ""}
     <p class="ini-valor">${ri("reloj")}<span>Hoy leímos <b>${medN} medios</b> de la región y el país. De todo lo publicado, estas son las notas sobre ${esc(quien)} que importan y lo que conviene hacer con ellas.</span></p>
-  </section>
-  <section aria-labelledby="hoyT">
-    ${sec("hoyT", "Qué hacer hoy")}
-    <div class="ini-hoy ${apro.length ? "" : "solo"}">
-      <div class="ini-col"><p class="ini-colt cri">${ri("cri")} Responder · ${resp.length}</p>${resp.length ? respHtml : `<div class="allgood">${ri("ok")} ${aut ? `Nada que ${c.perfil.g === "F" ? "la" : "lo"} nombre exige respuesta en los últimos 7 días.` : "Todo al día: ninguna crítica sin decisión en los últimos 7 días."}</div>`}
-        ${graves.length ? `<p class="ini-colt neu">${ri("neu")} Informar · ${graves.length}</p>${gravesHtml}` : ""}</div>
-      ${apro.length ? `<div class="ini-col"><p class="ini-colt pos">${ri("up")} Aprovechar · ${apro.length}</p>${aproHtml}</div>` : ""}
-    </div>
   </section>
   <div class="ini-bajo">
     <section aria-labelledby="camT">
@@ -541,6 +548,8 @@ function mDetalle(m){
     <div class="acts"><button class="btn ${ctaPrim(m, f) ? "primary" : ""}" data-act="responder" data-g="${m.g}" data-from="menciones">${ctaTxt(m, f)}</button><button class="btn" data-act="vocero" data-g="${m.g}">${ri("mic")} Vocería</button>${m.lead.url ? `<a class="btn ghost" href="${esc(m.lead.url)}" target="_blank" rel="noopener">Abrir la nota<span class="sr"> (abre el medio en otra pestaña)</span></a>` : ""}${m.tono === "cri" && !resp && !nr ? noRespHtml(m) : ""}<button class="btn ghost" data-act="fp" data-g="${m.g}">No corresponde</button>${m.notas.some(n => n.captura) ? `<button class="btn ghost" data-act="cap-del" data-g="${m.g}">Quitar lo que agregué</button>` : ""}</div>
     <details class="mf-mas"><summary>Ver ficha completa</summary>
       ${fichaDetalle(m, f)}
+      <p class="mf-por"><b>Por qué esta prioridad:</b> ${esc(porQuePrio(m, f))}</p>
+      <p class="mf-por"><b>Por qué este tono:</b> ${esc(porQueTono(m, f))}</p>
       <p class="mf-por"><b>Por qué aparece:</b> ${temas.map(x => `tema <b>${esc(x.tema.nombre)}</b>, contiene «${[...x.found].map(esc).join("», «")}»${x.enTitulo ? " en el titular" : ""}.`).join(" ")}${otros.length ? ` También la publicaron ${otros.join(", ")}.` : ""}</p>
       ${correccionHtml(m)}
     </details>
@@ -566,7 +575,8 @@ function vMenciones(){
   if (tState.fcat) base = base.filter(m => categoriaDe(m, c).k === tState.fcat);
   if (tState.fenf) base = base.filter(m => enfoqueDe(m).k === tState.fenf);
   if (tState.fpap) base = base.filter(m => papelDe(m).k === tState.fpap);
-  if (tState.fprio) base = base.filter(m => fichaDe(m, c).prio === tState.fprio);
+  if (tState.fprio === "pide") base = base.filter(m => exigeRespuesta(m, c) && !atendida(m.g));
+  else if (tState.fprio) base = base.filter(m => fichaDe(m, c).prio === tState.fprio);
   if (tState.fcomp) base = base.filter(m => fichaDe(m, c).comp === tState.fcomp);
   const cnt = k => k === "todos" ? base.length : base.filter(m => m.tono === k).length;
   const ms = tState.tono === "todos" ? base : base.filter(m => m.tono === tState.tono);
@@ -584,7 +594,7 @@ function vMenciones(){
   const sheet = tState.fOpen ? `<div class="fs-back" data-act="f-close"></div><section class="fsheet" role="dialog" aria-modal="true" aria-labelledby="fsT">
     <div class="fs-h"><h3 id="fsT">Filtrar</h3><button class="btn ghost sm" type="button" data-act="f-limpiar">Limpiar</button><button class="fs-x" type="button" data-act="f-close" aria-label="Cerrar filtros">×</button></div>
     <div class="fs-body">
-      <label class="fs-f">Prioridad<select id="fPrio"><option value="">Todas</option>${Object.entries(PRIORIDADES).map(([k, n]) => `<option value="${k}" ${tState.fprio === k ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>
+      <label class="fs-f">Prioridad<select id="fPrio"><option value="">Todas</option><option value="pide" ${tState.fprio === "pide" ? "selected" : ""}>Pide respuesta (sin decisión)</option>${Object.entries(PRIORIDADES).map(([k, n]) => `<option value="${k}" ${tState.fprio === k ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>
       <label class="fs-f">Tema<select id="fTema"><option value="todos">Todos los temas</option>${c.temas.filter(t => t.activo).map(t => `<option value="${t.id}" ${tState.tema === t.id ? "selected" : ""}>${esc(t.nombre)}</option>`).join("")}</select></label>
       <label class="fs-f">¿Le corresponde ${quien}?<select id="fComp"><option value="">Todas</option>${Object.entries(COMPETENCIAS).map(([k, n]) => `<option value="${k}" ${tState.fcomp === k ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>
       <label class="fs-f">Hasta dónde llegó<select id="fLlego"><option value="">Cualquier alcance</option>${["Solo prensa comunal", "Llegó a prensa regional", "Llegó a prensa nacional"].map((n, k) => `<option value="${k}" ${tState.llego != null && Number(tState.llego) === k ? "selected" : ""}>${n}</option>`).join("")}</select></label>
@@ -880,11 +890,13 @@ function riesgo(m){ const e = escalera(m.notas); return (m.tono === "cri" ? 10 :
 function accion(m){
   if (esAut()) return accionAut(m);
   const e = escalera(m.notas), cat = categoriaDe(m), area = cat.r.length ? cat.r.join(" · ") : null; let a, r;
+  // Un hecho de hace más de tres días no pide «vocería hoy»: se revisa si ya hay versión oficial.
+  const tarde = s => NOW - m.last > 3 * DAY ? "Si aún no hay versión oficial: " + s.charAt(0).toLowerCase() + s.slice(1) : s;
   if (m.tono === "cri") {
     if (respondida(m.g)) { a = "La respuesta ya está aprobada. Seguir el tema y avisar si aparece en otro medio."; r = ["Comunicaciones"]; }
-    else if (e.max === 2) { a = "Vocería del alcalde hoy, con datos oficiales y una sola versión."; r = ["Alcalde","Comunicaciones",area]; }
-    else if (e.max === 1) { a = "Declaración institucional antes de que el tema llegue a medios nacionales."; r = ["Comunicaciones",area]; }
-    else { a = "Responder en el medio comunal y contactar a los vecinos afectados."; r = [area || "Dirección del área","Comunicaciones"]; }
+    else if (e.max === 2) { a = tarde("Vocería del alcalde hoy, con datos oficiales y una sola versión."); r = ["Alcalde","Comunicaciones",area]; }
+    else if (e.max === 1) { a = tarde("Declaración institucional antes de que el tema llegue a medios nacionales."); r = ["Comunicaciones",area]; }
+    else { a = tarde("Responder en el medio comunal y contactar a los vecinos afectados."); r = [area || "Dirección del área","Comunicaciones"]; }
   } else if (m.tono === "neu") { a = "Preparar información para los vecinos en los canales municipales, por si el tema crece."; r = ["Comunicaciones",area]; }
   else { a = e.max === 0 ? "Llevarla a medios regionales: hasta ahora solo la publicó la prensa comunal." : "Difundirla en redes municipales y usarla en la próxima vocería."; r = ["Comunicaciones",area]; }
   return {a, r: [...new Set(r.filter(Boolean).join(" · ").split(" · "))].join(" · ")};
@@ -1622,9 +1634,9 @@ document.addEventListener("click", async e => {
   const b = e.target.closest("[data-act]"); if (!b) return;
   const act = b.dataset.act, c = cuenta();
   if (act === "responder") { e.preventDefault(); tState.draft = b.dataset.g; tState.from = b.dataset.from || null; tState.pieza = null; tState.enf = null; if (route() === "comunicados") render(true); else location.hash = "comunicados"; }
-  if (act === "goto") goMenciones(Object.fromEntries(["tono", "dias", "tema", "llego", "medio", "fcat", "fenf", "fpap", "alc"].filter(k => b.dataset[k] != null).map(k => [k, b.dataset[k]])));
+  if (act === "goto") goMenciones(Object.fromEntries(["tono", "dias", "tema", "llego", "medio", "fcat", "fenf", "fpap", "fprio", "alc"].filter(k => b.dataset[k] != null).map(k => [k, b.dataset[k]])));
   if (act === "goto-tema") goMenciones({tema: b.dataset.id});
-  if (act === "ver-criticas") { e.preventDefault(); goMenciones({tono:"cri", dias:"7"}); }
+  if (act === "ver-criticas") { e.preventDefault(); goMenciones({fprio:"pide", dias:"30"}); }
   if (act === "f-tono") { tState.tono = b.dataset.k; render(); }
   if (act === "f-alc") { tState.alc = b.dataset.k; render(); }
   if (act === "no-resp") { const k = S.org + ":" + b.dataset.g; S.noResp = S.noResp || {}; S.noResp[k] = {k: b.dataset.k, ts: Date.now()}; save(); render();
