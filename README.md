@@ -1,6 +1,6 @@
 # PregonIA · la prensa no espera, tú tampoco
 
-Monitoreo de noticias sobre municipios y actores públicos en más de 100 medios digitales chilenos (nacionales, regionales y comunales de las regiones abiertas: Valparaíso y Antofagasta), con lectura de tono, alcance territorial (comunal, regional, nacional), informes por lector y redacción asistida de respuestas.
+Monitoreo de noticias sobre municipios y actores públicos en más de 130 medios digitales chilenos (nacionales, regionales y comunales de las regiones abiertas: Valparaíso y Antofagasta), con lectura de tono, alcance territorial (comunal, regional, nacional), informes por lector y redacción asistida de respuestas.
 
 Demo publicada: https://pregonia.cl
 

@@ -187,7 +187,7 @@ function dia(ts){ const a = new Date(NOW); a.setHours(0,0,0,0); const d = Math.r
 const tonoLbl = {pos:"Positivo", neu:"Neutro", cri:"Crítico"};
 const tonoPl = {pos:"Positivas", neu:"Neutras", cri:"Críticas"};
 const pillTono = t => `<span class="pill ic t-${t}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${({cri:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.4h.01"/>',pos:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.2 9.6"/>',neu:'<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>'})[t]}</svg>${tonoLbl[t]}</span>`;
-const nomMedio = n => n.fuente || MED[n.m].n;  // las fuentes institucionales sin ficha propia guardan su nombre real
+const nomMedio = n => n.fuente || (/^Otr[oa] (medio|fuente)/i.test(MED[n.m].n) ? "Medio " + (MED[n.m].a === "nacional" ? "nacional" : "regional") + " no catalogado" : MED[n.m].n);  // nunca mostrar «Otro medio…» como si fuera un medio; el nombre real viene en n.fuente  // las fuentes institucionales sin ficha propia guardan su nombre real
 const medioN = n => { const nm = nomMedio(n), red = n.via === "instagram" || MED[n.m].t === "Instagram" ? "Instagram" : n.via === "facebook" || MED[n.m].t === "Facebook" ? "Facebook" : ""; return nm + (red ? (nm.includes(red) ? "" : " · " + red) : MED[n.m].e === "restringido" ? " (vía Google News)" : ""); };
 const signo = n => (n > 0 ? "+" : "") + n;
 const plural = (n, s, p) => n + " " + (n === 1 ? s : p);
@@ -2215,6 +2215,7 @@ function pintarAccesoPortada(){
   const pl = typeof PILOTO !== "undefined" && PILOTO, dentro = !!(pl && pl.activo);
   $("#ptGoTx").textContent = dentro ? "Entrar a mi edición" : pruebaVigente() ? "Continuar mi prueba" : "Prueba gratis";
   $("#ptIn").hidden = dentro || !(pl && pl.disponible);
+  const mesa = $("#ptMesa"); if (mesa) mesa.hidden = !dentro;  // la mesa de redacción es herramienta interna: solo con sesión de cliente
   const out = $("#ptOut"); if (out) { const prueba = !dentro && pruebaVigente(); out.hidden = !(dentro || prueba); out.dataset.act = dentro ? "salir" : "salir-prueba"; out.lastChild.textContent = dentro ? "Cerrar sesión" : "Salir de la prueba"; }  // sin Supabase configurado (por ejemplo, el archivo suelto) no hay a qué ingresar
   $("#ptPiloto").hidden = dentro;
   $("#ptDemo").hidden = dentro;
