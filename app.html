@@ -4161,6 +4161,14 @@ try { if (navigator.storage && navigator.storage.persist) navigator.storage.pers
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
 const cuenta = () => S.cuentas[S.org];
 const respondida = g => !!S.resp[S.org + ":" + g];
+/* ¿Sirvió responder? Con las notas del mismo hecho publicadas después de aprobar la respuesta: cuántas, en cuántos medios y con qué tono, en las 24 h siguientes. Mide lo que pasó con el tema; no atribuye causa. */
+function efectoResp(m){
+  const t = S.resp[S.org + ":" + m.g]; if (typeof t !== "number") return null;
+  if (NOW - t < DAY) return {k: "pronto", txt: "aún es pronto para medir (faltan " + Math.max(1, Math.ceil((t + DAY - NOW) / 36e5)) + " h)"};
+  const post = m.notas.filter(n => n.ts > t && n.ts <= t + DAY), medios = new Set(post.map(n => n.m)).size, cri = post.filter(n => n.tono === "cri").length;
+  if (!post.length) return {k: "apagado", txt: "el tema se apagó: ninguna nota nueva en las 24 h siguientes"};
+  return {k: cri ? "sigue" : "baja", txt: `siguió con ${post.length} ${post.length === 1 ? "nota" : "notas"} en ${medios} ${medios === 1 ? "medio" : "medios"} en las 24 h siguientes` + (cri ? ` (${cri} ${cri === 1 ? "crítica" : "críticas"})` : ", ninguna crítica")};
+}
 /* Decidir no responder también es atender una crítica (no amplificarla, resolverla directo, no corresponde): queda registrado con su motivo. */
 const NO_RESP = {amplifica: "Responder la amplificaría", directo: "Se resolvió directo con el medio o los vecinos", noCorresponde: "No nos corresponde responder"};
 const noResp = g => (S.noResp || {})[S.org + ":" + g] || null;
@@ -4516,7 +4524,7 @@ function vInicio(){
     }
     if (abierto === "resp") {
       const filaR = m => { const r = respondida(m.g), nr = noResp(m.g), h = tResp(m), edad = (NOW - m.first) / 36e5;
-        return `<li><button class="ini-dr" ${r || nr ? `data-act="goto" data-dias="${per}" data-tono="cri"` : `data-act="responder" data-g="${m.g}" data-from="inicio"`}><span class="ini-dn">${esc(m.lead.t)}<small>${esc(nomMedio(m.lead))} · ${r ? (h != null ? `respondida en ${fH(h)}` : "respondida") : nr ? `decidimos no responder: ${esc(NO_RESP[nr.k] || "")}` : `<span class="${edad > 24 ? "c" : ""}">sin decisión, hace ${fH(edad)}</span>`}</small></span><span class="ini-dv">${r ? pillTono("pos").replace("Positivo", "Respondida") : nr ? `<span class="pill">No responder</span>` : `<span class="btn sm primary">Preparar respuesta</span>`}</span>${ri("sig", "ini-dg")}</button></li>`; };
+        return `<li><button class="ini-dr" ${r || nr ? `data-act="goto" data-dias="${per}" data-tono="cri"` : `data-act="responder" data-g="${m.g}" data-from="inicio"`}><span class="ini-dn">${esc(m.lead.t)}<small>${esc(nomMedio(m.lead))} · ${r ? (h != null ? `respondida en ${fH(h)}` : "respondida") + (efectoResp(m) ? " · tras responder, " + efectoResp(m).txt : "") : nr ? `decidimos no responder: ${esc(NO_RESP[nr.k] || "")}` : `<span class="${edad > 24 ? "c" : ""}">sin decisión, hace ${fH(edad)}</span>`}</small></span><span class="ini-dv">${r ? pillTono("pos").replace("Positivo", "Respondida") : nr ? `<span class="pill">No responder</span>` : `<span class="btn sm primary">Preparar respuesta</span>`}</span>${ri("sig", "ini-dg")}</button></li>`; };
       body = criP.length ? `<ul class="ini-dl">${criP.map(filaR).join("")}</ul><p class="ini-nota">Cuenta como atendida al aprobar su respuesta en Comunicados o al registrar la decisión de no responder${aut ? ". Solo entran las críticas que la nombran y que la tienen de protagonista, llegaron a prensa regional o salieron en tres o más medios" : ""}. Se marcan las que llevan más de 24 horas sin decisión.</p>` : `<p class="ini-nota">Ninguna crítica ${perTx} exigía respuesta${aut ? " (las críticas de su territorio que no la nombran van al radar)" : ""}.</p>`;
       return `<section class="ini-det" id="iniDet" aria-labelledby="iniDetT">${head(`Críticas atendidas: ${resps.length} de ${criP.length}`, `mide si el equipo toma una decisión a tiempo frente a cada crítica que lo exige: responder, o no responder con un motivo (no amplificarla, resolverla directo). Una crítica que nadie decide suele repetirse en otros medios sin la versión ${aut ? "de la oficina" : "del municipio"}.`, aut ? "la autoridad, para evaluar a su equipo de prensa; el equipo, para priorizar." : "el alcalde, para evaluar la gestión de comunicaciones; el encargado, para priorizar.")}${body}</section>`;
     }
@@ -6319,7 +6327,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search) || !pruebaV
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "28802b1dfb93", K = "app";
+  const V = "f60dc3ec8319", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
