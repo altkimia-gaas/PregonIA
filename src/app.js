@@ -1307,6 +1307,7 @@ function vComunicados(){
       <p class="note" id="kNote">Antes de aprobar, completa lo marcado [completar] y valida las citas con el vocero.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="aprobar" id="btnAprob" ${draft.trim()?"":"disabled"}>Aprobar</button><button class="btn" data-act="copiar" id="btnCopy" ${draft.trim()?"":"disabled"}>Copiar</button><button class="btn" data-act="probar" id="btnProbar" ${draft.trim()?"":"disabled"}>Probar el titular</button></div>
       <div id="kProbe" class="note" aria-live="polite" hidden></div>
+      <details class="kb" id="kRevD"><summary>Revisión interna${((c.revis || {})[tState.draft || "_"] || []).length ? " (" + ((c.revis || {})[tState.draft || "_"] || []).length + ")" : ""}</summary><div id="kRev" style="margin-top:8px">${revisHtml(tState.draft || "_", draft)}</div></details>
       ${shareBar("draft", {off: !draft.trim(), id: "shareDraft"})}
     </div>
   </div>
@@ -1685,11 +1686,20 @@ document.addEventListener("click", async e => {
   if (act === "stop") ctl?.abort();
   if (act === "probar") { probarTitular(b); return; }
   if (act === "probar-usar") { const o = $("#kOut"), pr = tState.probe; if (o && pr && pr.fr && o.value.includes(pr.fr)) { o.value = o.value.replace(pr.fr, pr.alt); setDraft(o.value); save(); const bx = $("#kProbe"); if (bx) bx.textContent = "Alternativa aplicada. Léela completa antes de aprobar."; } return; }
+  if (act === "copiar-rev") { const el = $("#kOut"), key = tState.draft || "_", h = hTxt(el.value), lista = (cuenta().revis || {})[key] || [];
+    const t = `BORRADOR PARA REVISIÓN · versión ${h} · ${fechaCorta(Date.now())}\n${lista.length ? "Revisiones previas: " + lista.map(x => x.rol + (x.ok ? " ✓" : " (cambios)") + " sobre " + x.h).join("; ") + "\n" : ""}\n${el.value.trim()}\n\n— Responde con tu visto bueno o tus cambios, indicando la versión ${h}.`;
+    try { await navigator.clipboard.writeText(t); toast("Copiado con la versión " + h + "."); } catch(err) { toast("No se pudo copiar. Selecciona el texto del borrador."); } return; }
+  if (act === "rev-reg") { const c = cuenta(), key = tState.draft || "_", el = $("#kOut"), txt = (el?.value || "").trim(); if (!txt) return;
+    ((c.revis ||= {})[key] ||= []).push({ts: Date.now(), rol: $("#rvRol").value, ok: $("#rvEst").value === "ok", nota: ($("#rvNota").value || "").trim().slice(0, 200), h: hTxt(txt)});
+    save(); const box = $("#kRev"); if (box) box.innerHTML = revisHtml(key, txt); const d = $("#kRevD"); if (d) { d.open = true; d.querySelector("summary").textContent = "Revisión interna (" + c.revis[key].length + ")"; } toast("Revisión registrada."); return; }
   if (act === "aprobar") {
     const txt = $("#kOut").value.trim(); if (!txt) return;
+    const kRev = tState.draft || "_", lRev = (cuenta().revis || {})[kRev] || [], pRev = lRev.length ? revPendientes(lRev, hTxt(txt)) : [];
+    if (pRev.length && tState.avisoRev !== kRev) { tState.avisoRev = kRev; const nt = $("#kNote"); if (nt) nt.textContent = "Antes de aprobar: " + pRev.map(x => x.rol + (x.ok ? " dio su visto bueno sobre una versión anterior" : " pidió cambios")).join("; ") + ". Si ya está resuelto, vuelve a pulsar Aprobar."; const d = $("#kRevD"); if (d) d.open = true; return; }
+    tState.avisoRev = null;
     const m = tState.draft && menciones().find(x => x.g === tState.draft);
     const pz = document.querySelector('input[name="pieza"]:checked')?.value || "comunicado";
-    S.comunicados.unshift({org: S.org, ts: Date.now(), pieza: PIEZAS[pz][0], origen: m ? m.lead.t.slice(0,70) : "Anuncio propio", texto: txt, g: m ? m.g : null});
+    S.comunicados.unshift({org: S.org, ts: Date.now(), pieza: PIEZAS[pz][0], origen: m ? m.lead.t.slice(0,70) : "Anuncio propio", texto: txt, g: m ? m.g : null, revis: lRev.slice()});
     if (m) S.resp[S.org + ":" + m.g] = Date.now();  // hora de aprobación: mide el tiempo de respuesta
     save(); render(); toast(m ? "Aprobado. La noticia quedó como respondida." : "Aprobado y guardado.");
   }
@@ -1773,6 +1783,27 @@ async function generar(){
     else note.textContent = "No se pudo terminar el borrador. Intenta de nuevo en un momento.";
     setDraft(out.value); save();
   } finally { btn.disabled = false; stop.hidden = true; }
+}
+/* Revisión interna: qué versión vio cada persona (jurídico, gabinete, autoridad) y si el texto cambió después de su visto bueno. Sin servidor: queda en esta cuenta. */
+const hTxt = t => { let h = 5381; const x = (t || "").trim(); for (let i = 0; i < x.length; i++) h = ((h << 5) + h + x.charCodeAt(i)) | 0; return (h >>> 0).toString(36).slice(0, 5); };
+const ROLES_REV = ["Jurídico", "Jefatura de gabinete", "Autoridad", "Área técnica"];
+const fechaCorta = ts => new Date(ts).toLocaleString("es-CL", {day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"});
+function revPendientes(lista, h){
+  const ult = {}; lista.forEach(x => { ult[x.rol] = x; });
+  return Object.values(ult).filter(x => !x.ok || x.h !== h);
+}
+function revisHtml(key, txt){
+  const lista = (cuenta().revis || {})[key] || [], h = hTxt(txt), pend = revPendientes(lista, h);
+  const sel = "padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-height:34px";
+  return `<p class="muted" style="margin:0 0 8px;font-size:12.5px">Versión actual del texto: <b class="mono">${h}</b>. Cambia si editas una sola palabra, así nadie aprueba una versión distinta de la que ve.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button class="btn sm" type="button" data-act="copiar-rev" ${txt.trim() ? "" : "disabled"}>Copiar para revisión</button></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <select id="rvRol" aria-label="Quién revisó" style="${sel}">${ROLES_REV.map(r => `<option>${r}</option>`).join("")}</select>
+      <select id="rvEst" aria-label="Resultado" style="${sel}"><option value="ok">Dio su visto bueno</option><option value="cambios">Pidió cambios</option></select>
+      <input id="rvNota" aria-label="Nota" placeholder="Nota (opcional)" style="${sel};flex:1;min-width:120px">
+      <button class="btn sm" type="button" data-act="rev-reg" ${txt.trim() ? "" : "disabled"}>Registrar</button></div>
+    ${lista.length ? `<ul style="list-style:none;margin:10px 0 0;padding:0;display:grid;gap:4px;font-size:13px">${lista.slice().reverse().map(x => `<li><b>${esc(x.rol)}</b> · ${x.ok ? "visto bueno" : "pidió cambios"} · ${fechaCorta(x.ts)} · <span class="muted">${x.h === h ? "sobre esta versión" : "sobre una versión anterior (" + esc(x.h) + ")"}</span>${x.nota ? `<br><span class="muted">${esc(x.nota)}</span>` : ""}</li>`).join("")}</ul>` : `<p class="muted" style="margin:10px 0 0;font-size:12.5px">Aún no hay revisiones registradas.</p>`}
+    ${pend.length ? `<p class="note" style="margin-top:8px">Pendiente o desactualizado: ${pend.map(x => esc(x.rol)).join(", ")}.</p>` : ""}`;
 }
 /* Probar el titular: antes de aprobar, cómo lo titularía un medio crítico, qué frase da pie a eso y una alternativa. */
 async function probarTitular(btn){
