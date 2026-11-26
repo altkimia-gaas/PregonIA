@@ -2099,7 +2099,7 @@ body.cliente .tools{flex:none}
 .repsel-acc{display:flex;align-items:center;gap:8px;margin-left:auto}
 .repsel-acc .shr{margin:0;display:flex;gap:8px;padding-top:0;border-top:0}
 .repsel-acc .shr .lbl{display:none}
-@media (max-width:820px){ .repsel-op{flex-wrap:nowrap;overflow-x:auto;width:100%;padding-bottom:2px;scrollbar-width:none} .repsel-b,.repsel-mas select{white-space:nowrap} .repsel-acc{margin-left:0} }
+@media (max-width:820px){ .repsel-op{position:relative;flex-wrap:nowrap;overflow-x:auto;width:100%;padding-bottom:2px;scrollbar-width:none} .repsel-b,.repsel-mas select{white-space:nowrap} .repsel-acc{margin-left:0} }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><pattern id="pat-pos" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" style="fill:var(--pos)"/></pattern></defs></svg>
@@ -5686,7 +5686,7 @@ document.addEventListener("change", e => {
 let qTimer;
 document.addEventListener("input", e => {
   if (e.target.id === "fQ") { clearTimeout(qTimer); const v = e.target.value; qTimer = setTimeout(() => { tState.q = v; render(); const el = $("#fQ"); if (el) { el.focus(); el.setSelectionRange(v.length, v.length); } }, 250); }
-  if (e.target.id === "kOut") { const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = e.target.value; save(); const has = !!e.target.value.trim(); $("#btnAprob").disabled = !has; $("#btnCopy").disabled = !has; document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
+  if (e.target.id === "kOut") { const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = e.target.value; save(); const has = !!e.target.value.trim(); $("#btnAprob").disabled = !has; $("#btnCopy").disabled = !has; habRev(has); document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
 });
 function chipAdd(el){
   const v = el.value.replace(/,/g, "").trim(); if (!v) return;
@@ -5838,7 +5838,7 @@ function marcarEjemplos(texto, base){
   });
   return out;
 }
-function setDraft(txt){ const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = txt; const has = !!txt.trim(); const a = $("#btnAprob"), k = $("#btnCopy"), pb = $("#btnProbar"); if (pb) pb.disabled = !has; if (a) a.disabled = !has; if (k) k.disabled = !has; document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
+function setDraft(txt){ const c = cuenta(); (c.drafts ||= {})[tState.draft || "_"] = txt; const has = !!txt.trim(); const a = $("#btnAprob"), k = $("#btnCopy"), pb = $("#btnProbar"); if (pb) pb.disabled = !has; if (a) a.disabled = !has; if (k) k.disabled = !has; habRev(has); document.querySelectorAll("#shareDraft button").forEach(x => x.disabled = !has); }
 async function generar(){
   const c = cuenta(), pl = PLANES[c.perfil.plan];
   const m = tState.draft && menciones().find(x => x.g === tState.draft);
@@ -5863,6 +5863,7 @@ async function generar(){
   } finally { btn.disabled = false; stop.hidden = true; }
 }
 /* Revisión interna: qué versión vio cada persona (jurídico, gabinete, autoridad) y si el texto cambió después de su visto bueno. Sin servidor: queda en esta cuenta. */
+const habRev = has => document.querySelectorAll('[data-act="copiar-rev"],[data-act="rev-reg"],[data-act="enviar-aprobar"]').forEach(x => x.disabled = !has);  // los botones de revisión siguen al texto del borrador
 const hTxt = t => { let h = 5381; const x = (t || "").trim(); for (let i = 0; i < x.length; i++) h = ((h << 5) + h + x.charCodeAt(i)) | 0; return (h >>> 0).toString(36).slice(0, 5); };
 const ROLES_REV = ["Jurídico", "Jefatura de gabinete", "Autoridad", "Área técnica"];
 const fechaCorta = ts => new Date(ts).toLocaleString("es-CL", {day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"});
@@ -6394,7 +6395,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search) || !pruebaV
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "d3c3b3ee2083", K = "app";
+  const V = "3e112356dd08", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
