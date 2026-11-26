@@ -697,3 +697,30 @@ as $$
 $$;
 revoke all on function public.estado_lectura(text) from public, anon;
 grant execute on function public.estado_lectura(text) to authenticated;
+
+-- Aprobación externa por enlace: quien decide (alcalde, gerente, jurídico) abre un enlace privado desde el celular, lee el texto exacto
+-- y responde «Aprobado» o «Pido cambios» sin tener cuenta. El enlace lleva un código al azar (128 bits), vence a los 7 días y se responde una sola vez.
+-- Las cuentas ven y crean solo lo de su institución; la página pública lee y responde únicamente a través de /api/contacto?aprobar=… con la clave secreta.
+create table if not exists aprobaciones (
+  id           uuid primary key default gen_random_uuid(),
+  token        text not null unique check (token ~ '^[a-f0-9]{32}$'),
+  municipio_id uuid not null references municipios (id) on delete cascade,
+  clave        text not null,
+  titulo       text,
+  texto        text not null check (length(texto) between 1 and 12000),
+  h            text not null,
+  estado       text not null default 'pendiente' check (estado in ('pendiente', 'aprobado', 'cambios')),
+  revisor      text,
+  comentario   text,
+  creado_por   uuid references auth.users (id) on delete set null default auth.uid(),
+  creado       timestamptz not null default now(),
+  vence        timestamptz not null default now() + interval '7 days',
+  resuelto     timestamptz
+);
+create index if not exists aprobaciones_muni on aprobaciones (municipio_id, creado desc);
+alter table aprobaciones enable row level security;
+drop policy if exists aprobaciones_leer on aprobaciones;
+create policy aprobaciones_leer on aprobaciones for select to authenticated using (municipio_id = mi_municipio());
+drop policy if exists aprobaciones_crear on aprobaciones;
+create policy aprobaciones_crear on aprobaciones for insert to authenticated
+  with check (municipio_id = mi_municipio() and puedo_editar() and estado = 'pendiente' and resuelto is null and revisor is null);

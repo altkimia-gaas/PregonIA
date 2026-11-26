@@ -295,3 +295,8 @@ Variables en Vercel (Production) y luego Redeploy:
 - `META_PAGE_ID`: id de la página de Facebook de El Pregonero.
 - `META_PAGE_TOKEN`: token de un usuario del sistema del portafolio de ALTKIMIA (o de la página) con `pages_show_list`, `pages_read_engagement` y `pages_manage_posts`. Con el del usuario del sistema, el servidor obtiene el de la página.
 - `META_GRAPH_VERSION` (opcional): por defecto `v25.0`.
+
+## Aprobación externa por enlace
+
+En Comunicados › Revisión interna, «Enviar para aprobar por enlace» guarda el texto exacto en la tabla `aprobaciones` y copia un enlace `/aprobar/<código>`. Quien decide (alcalde, gerente, jurídico) lo abre en el celular sin cuenta, lee el texto y responde «Aprobar» o «Pido cambios» con su nombre y cargo. «Ver respuestas» trae el resultado a la revisión interna, ligado a la versión enviada: si el texto cambia después, la aprobación aparece como de una versión anterior.
+Seguridad: código al azar de 128 bits, vence a los 7 días, se responde una sola vez, la página no se indexa ni reenvía el referente, y se sirve desde `/api/contacto?aprobar=` (Vercel está en el límite de 12 funciones). La tabla tiene RLS: las cuentas ven y crean solo lo de su institución; la página pública usa la clave secreta del servidor.

@@ -30,6 +30,10 @@
   },
   "rewrites": [
     {
+      "source": "/aprobar/:t",
+      "destination": "/api/contacto?aprobar=:t"
+    },
+    {
       "source": "/",
       "has": [
         {
