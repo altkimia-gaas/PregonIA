@@ -5897,7 +5897,7 @@ function contactoHtml(){
   const sel = nom ? `<p style="margin:0 0 8px;font-size:13.5px">Medio de esta noticia: <b>${esc(nom)}</b>${c ? "" : ` · <span class="muted">aún sin contacto</span>`}</p>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${campo("ctNom", "Nombre del periodista o editor", c && c.nombre)}${campo("ctCar", "Cargo", c && c.cargo)}${campo("ctMail", "Correo", c && c.correo, "email")}${campo("ctTel", "Celular (con +56)", c && c.tel, "tel")}</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"><button class="btn sm" type="button" data-act="ctc-guardar">Guardar contacto</button>${c ? `<button class="btn sm primary" type="button" data-act="ctc-correo" ${c.correo ? "" : "disabled"}>Escribir al medio</button><button class="btn sm" type="button" data-act="ctc-wa" ${c.tel ? "" : "disabled"}>WhatsApp</button><button class="btn sm" type="button" data-act="ctc-borrar">Borrar</button>` : ""}</div>` : `<p class="muted" style="margin:0 0 8px;font-size:13px">Abre una noticia para guardar o usar el contacto de su medio.</p>`;
-  return sel + `<details style="margin-top:6px"><summary class="muted" style="font-size:13px;cursor:pointer">Importar mi lista (${tot} guardados)</summary><p class="muted" style="margin:6px 0;font-size:12.5px">Pega una línea por contacto: medio; nombre; cargo; correo; celular. Solo se guarda en esta cuenta. Usa datos que ya tengas de forma legítima y que las personas conozcan.</p><textarea id="ctLista" rows="4" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface)" placeholder="Diario El Mercurio de Valparaíso; Ana Pérez; Editora regional; ana@medio.cl; +56911112222"></textarea><button class="btn sm" type="button" data-act="ctc-importar" style="margin-top:6px">Importar</button></details>`;
+  return sel + `<details style="margin-top:6px"><summary class="muted" style="font-size:13px;cursor:pointer">Importar mi lista (${tot} guardados)</summary><p class="muted" style="margin:6px 0;font-size:12.5px">Pega una línea por contacto: medio; nombre; cargo; correo; celular. Se guarda en la cuenta de tu institución (con sesión, el equipo los ve en cualquier dispositivo). Usa datos que ya tengas de forma legítima y que las personas conozcan.</p><textarea id="ctLista" rows="4" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface)" placeholder="Diario El Mercurio de Valparaíso; Ana Pérez; Editora regional; ana@medio.cl; +56911112222"></textarea><button class="btn sm" type="button" data-act="ctc-importar" style="margin-top:6px">Importar</button></details>`;
 }
 const ctcRepintar = () => { const box = $("#kCtc"); if (box) box.innerHTML = contactoHtml(); };
 function ctcMensaje(){
@@ -6428,7 +6428,7 @@ mostrarPortada(!/[?&](sin-portada|ingresar)\b/.test(location.search) || !pruebaV
    /version.json; si hay una versión publicada más nueva, se recarga al volver a ella, o en cuanto no haya nada a medio
    escribir ni un diálogo abierto. La versión la pone scripts/build.py (resumen del archivo publicado). */
 (() => {
-  const V = "c410beb6600c", K = "app";
+  const V = "53892c998c5c", K = "app";
   if (/^__/.test(V) || !/^https?:$/.test(location.protocol)) return;
   let nueva = false;
   const ocupado = () => { const a = document.activeElement;
@@ -7552,7 +7552,7 @@ function paginaFB(nombre, ambito){
   return p.id;
 }
 const configDe = c => ({perfil: c.perfil, temas: c.temas, sugeridos: c.sugeridos, caracterizada: c.caracterizada, base: c.base || null, hitos: c.hitos || [], prep: c.prep || {}, tv: c.tv || 0,
-  correcciones: c.correcciones || {}, compArea: c.compArea || {}, excOff: c.excOff || {}, logo: c.logo || null, plazos: c.plazos || {}, fv: c.fv || 0});  // ficha editorial: correcciones, competencias y plazos de la cuenta
+  correcciones: c.correcciones || {}, compArea: c.compArea || {}, excOff: c.excOff || {}, logo: c.logo || null, plazos: c.plazos || {}, contactos: c.contactos || {}, fv: c.fv || 0});  // ficha editorial: correcciones, competencias y plazos de la cuenta
 async function cargarDatosPiloto(){
   if (PILOTO.timer) await sincronizarYa();  // un cambio a medio guardar se envía antes de releer la base
   const sb = PILOTO.sb, mid = PILOTO.muni.id, org = S.org, desde = new Date(Date.now() - 62 * DAY).toISOString();  // 30 días y los 30 anteriores, para comparar (informe ejecutivo)
